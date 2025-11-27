@@ -1,4 +1,4 @@
-#include "errorlog.hpp"
+#include "Errorlog.hpp"
 
 #include <iostream>
 

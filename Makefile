@@ -10,18 +10,19 @@ ifeq ($(OS),Windows_NT)
   CLEAN_OBJ = obj\*.o obj\*.d
   CLEAN_BIN = bin\*.exe
   NULL = nul
-  SHELL   = cmd.exe   # ensures 'del' works
+#   SHELL   = cmd.exe   # ensures 'del' works
 else 
   UNAME_S := $(shell uname -s 2>/dev/null)
   
+
   # MAC
   ifeq ($(UNAME_S),Darwin)
     EXLINKS = ./lib/libglfw.3.dylib -framework OpenGL -framework Cocoa -framework IOKit
     TARGET  = ./bin/build
     RM      = rm -f
-	CLEAN_OBJ = ./obj/*.o ./obj/*.d
-  	CLEAN_BIN = ./bin/*
-  	NULL = /dev/null
+    CLEAN_OBJ = ./obj/*.o ./obj/*.d
+    CLEAN_BIN = ./bin/*
+    NULL = /dev/null
   endif
 endif
 
