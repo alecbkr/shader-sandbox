@@ -1,8 +1,9 @@
-// YOU'LL NEED TO INSTALL CMAKE (available through msys2) BEFORE RUNNING THESE COMMANDS
-
-
 // SETTING UP BUILD ENVIRONMENT (only needed once)
 run: cmake -S . -B build
+
+// TRY THIS
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=./clang-toolchain.cmake
+
 
 // COMPILING PROJECT:
 run: cmake --build build --config Release
