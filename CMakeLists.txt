@@ -34,6 +34,10 @@ set(SRC_C
     "${CMAKE_SOURCE_DIR}/lib/glad/glad.c"
 )
 
+# ADDING GLFW SUBDIR
+add_subdirectory(lib/glfw)
+
+
 # ---------------------------------------------------------
 # CREATE EXECUTABLE
 # ---------------------------------------------------------
@@ -47,7 +51,7 @@ add_executable(build
 # ---------------------------------------------------------
 if (WIN32)
     target_link_libraries(build
-        ${CMAKE_SOURCE_DIR}/lib/glfw/libglfw3dll.a
+        glfw
         opengl32
         gdi32
         user32
@@ -63,12 +67,4 @@ elseif (APPLE)
         "-framework IOKit"
     )
 
-elseif (UNIX)
-    target_link_libraries(build
-        glfw
-        GL
-        X11
-        pthread
-        dl
-    )
 endif()
