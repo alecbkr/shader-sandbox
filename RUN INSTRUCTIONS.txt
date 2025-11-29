@@ -1,3 +1,5 @@
+// **REQUIRES CMAKE INSTALLATION (available through msys2)**
+
 // SETTING UP BUILD ENVIRONMENT AND FORCE CLANG(only needed once)
 run:
 cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=./clang-toolchain.cmake
