@@ -1,0 +1,6 @@
+// SETTING UP BUILD ENVIRONMENT (only needed once)
+run: cmake -S . -B build
+
+// COMPILING PROJECT:
+run: cmake --build build --config Release
+
