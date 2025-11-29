@@ -1,10 +1,9 @@
-// SETTING UP BUILD ENVIRONMENT (only needed once)
-run: cmake -S . -B build
-
-// TRY THIS
+// SETTING UP BUILD ENVIRONMENT AND FORCE CLANG(only needed once)
+run:
 cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=./clang-toolchain.cmake
 
 
 // COMPILING PROJECT:
-run: cmake --build build --config Release
+run: 
+cmake --build build --config Release
 
