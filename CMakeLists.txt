@@ -1,20 +1,25 @@
 cmake_minimum_required(VERSION 3.20)
 project(MyProject C CXX)
 
-# ---------------------------------------------------------
-# COMPILER SETTINGS
-# ---------------------------------------------------------
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 17)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall")
 
-# Output executable in ./bin/
+# Output to ./bin/
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 # ---------------------------------------------------------
-# INCLUDE DIRECTORIES
+# ADD GLFW (source version)
+# ---------------------------------------------------------
+add_subdirectory(lib/glfw)
+
+# GLFW exposes this include path
+include_directories(lib/glfw/include)
+
+# ---------------------------------------------------------
+# INCLUDE PROJECT DIRECTORIES
 # ---------------------------------------------------------
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
@@ -24,7 +29,7 @@ include_directories(
 )
 
 # ---------------------------------------------------------
-# FIND SOURCES RECURSIVELY
+# RECURSIVE SOURCE COLLECTION
 # ---------------------------------------------------------
 file(GLOB_RECURSE SRC_CPP
     "${CMAKE_SOURCE_DIR}/src/*.cpp"
@@ -34,12 +39,8 @@ set(SRC_C
     "${CMAKE_SOURCE_DIR}/lib/glad/glad.c"
 )
 
-# ADDING GLFW SUBDIR
-add_subdirectory(lib/glfw)
-
-
 # ---------------------------------------------------------
-# CREATE EXECUTABLE
+# EXECUTABLE
 # ---------------------------------------------------------
 add_executable(build
     ${SRC_CPP}
@@ -47,24 +48,32 @@ add_executable(build
 )
 
 # ---------------------------------------------------------
-# LINKER SETTINGS
+# LINK GLFW AND SYSTEM LIBS
+# (GLFW builds a target called glfw)
 # ---------------------------------------------------------
+target_link_libraries(build glfw)
+
 if (WIN32)
-    target_link_libraries(build
-        glfw
+    target_link_libraries(build 
         opengl32
         gdi32
         user32
         shell32
         winmm
     )
-
-elseif (APPLE)
+elseif(APPLE)
     target_link_libraries(build
-        ${CMAKE_SOURCE_DIR}/lib/libglfw.3.dylib
-        "-framework OpenGL"
         "-framework Cocoa"
         "-framework IOKit"
+        "-framework CoreFoundation"
+        "-framework CoreVideo"
+        "-framework OpenGL"
     )
-
+else() # Linux / Unix
+    target_link_libraries(build
+        GL
+        X11
+        pthread
+        dl
+    )
 endif()
