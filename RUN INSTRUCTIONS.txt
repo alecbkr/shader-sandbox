@@ -1,3 +1,6 @@
+// YOU'LL NEED TO INSTALL CMAKE (available through msys2) BEFORE RUNNING THESE COMMANDS
+
+
 // SETTING UP BUILD ENVIRONMENT (only needed once)
 run: cmake -S . -B build
 
