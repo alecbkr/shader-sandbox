@@ -5,7 +5,7 @@
 #include "engine/Window.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "engine/Errorlog.hpp"
-
+#include "ui/UIContext.hpp"
 
 int main() {
     
@@ -13,7 +13,7 @@ int main() {
 
     ShaderProgram shader("../shaders/default.vert", "../shaders/default.frag");
 
-    
+    UIContext* ui = new UIContext(window.window);
 
     GLfloat voxel_verts[] = {
         -1.0,  1.0, 0.0, // TOP-LEFT
@@ -47,7 +47,9 @@ int main() {
 
     // glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-    
+
+    // Construct ImGui elements
+    Editor* editor = new Editor(1024, 200, 200);
 
     ERRLOG.printClear();
 
@@ -55,8 +57,11 @@ int main() {
     glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
     while (!window.shouldClose()) {
         glfwPollEvents();
+
+        ui->preRender();
+        ui->render(editor);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
         
         shader.use();
         shader.setUniform_float("zoom", zoomOut);
@@ -64,11 +69,14 @@ int main() {
 
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
 
-
+        ui->postRender();
 
         // End of loop events
         window.swapBuffers();
         ERRLOG.printClear();
     }
+
+    ui->destroy(editor);
 }
