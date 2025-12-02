@@ -2,18 +2,18 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "engine/Inspector.hpp"
 #include "engine/Window.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "engine/Errorlog.hpp"
 
 
 int main() {
-    
     Window window("Process", 400, 400);
 
     ShaderProgram shader("../shaders/default.vert", "../shaders/default.frag");
 
-    
+    Inspector inspector(window.window);
 
     GLfloat voxel_verts[] = {
         -1.0,  1.0, 0.0, // TOP-LEFT
@@ -65,10 +65,12 @@ int main() {
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-
+        inspector.drawInspector(400);
 
         // End of loop events
         window.swapBuffers();
         ERRLOG.printClear();
     }
+
+    inspector.terminateInspector();
 }

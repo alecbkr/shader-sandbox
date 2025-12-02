@@ -133,6 +133,15 @@ void ShaderProgram::setUniform_vec3float(const char *uniformName, glm::fvec3 val
     glUniform3f(loc, vals.x, vals.y, vals.z);
 }
 
+void ShaderProgram::setUniform_vec4float(const char *uniformName, glm::fvec4 vals) {
+    GLint loc = glGetUniformLocation(ID, uniformName);
+    if (loc == -1) {
+        ERRLOG.logEntry(warning, "SHADER UNIFORM: Vec3float", "Location not found for:", uniformName);
+        return;
+    }
+    glUniform3f(loc, vals.x, vals.y, vals.z);
+}
+
 
 void ShaderProgram::setUniform_mat4float(const char *uniformName, glm::mat4 M) const {
     GLint loc = glGetUniformLocation(ID, uniformName);

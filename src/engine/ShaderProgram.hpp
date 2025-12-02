@@ -19,6 +19,7 @@ class ShaderProgram {
         void setUniform_vec3float(const char *uniformName, float xVal, float yVal, float zVal);
         void setUniform_vec3float(const char *uniformName, glm::fvec3 vals);
         void setUniform_mat4float(const char *uniformName, glm::fmat4 vals) const;
+        void setUniform_vec4float(const char *uniformName, glm::fvec4 vals);
 };
 
 #endif
