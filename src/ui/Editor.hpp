@@ -1,9 +1,7 @@
 #ifndef EDITOR_HPP
 #define EDITOR_HPP
+#include <string>
 
-#include "imgui/imgui.h"
-#include "imgui/imgui_impl_glfw.h"
-#include "imgui/imgui_impl_opengl3.h"
 
 class Editor {
 public:
@@ -17,6 +15,7 @@ public:
     Editor(unsigned int bufferSize, unsigned int width, unsigned int height);
     void render();
     void destroy();
+    std::string getFileContents(const char *filename);
 };
 
 

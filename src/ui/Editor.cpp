@@ -1,10 +1,27 @@
 #include "Editor.hpp"
 
+#include <fstream>
 #include <string>
+
+#include "imgui.h"
+
+std::string Editor::getFileContents(const char *filename) {
+    std::ifstream in(filename, std::ios::binary);
+    if (in) {
+        std::string contents;
+        in.seekg(0, std::ios::end);
+        contents.resize(in.tellg());
+        in.seekg(0, std::ios::beg);
+        in.read(&contents[0], contents.size());
+        in.close();
+        return(contents);
+    }
+    return "";
+}
 
 Editor::Editor(unsigned int bufferSize, unsigned int width, unsigned int height) {
     this->inputTextBuffer = new char[bufferSize];
-    this->inputTextBuffer[0] = '\0';
+    strcpy(this->inputTextBuffer, getFileContents("../shaders/default.frag").c_str());
     this->bufferSize = bufferSize;
     this->width = width;
     this->height = height;
@@ -75,8 +92,6 @@ void Editor::render() {
 
     ImGui::End();
 }
-
-
 
 void Editor::destroy() {
     free(this->inputTextBuffer);
