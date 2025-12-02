@@ -5,7 +5,7 @@
 #include "engine/Window.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "engine/Errorlog.hpp"
-
+#include "ui/UIContext.hpp"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
@@ -18,13 +18,7 @@ int main() {
 
     ShaderProgram shader("../shaders/default.vert", "../shaders/default.frag");
 
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO &io = ImGui::GetIO(); (void)io;
-    ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(window.window, true);
-    ImGui_ImplOpenGL3_Init("#version 330");
-
+    UIContext* ui = new UIContext(window.window);
 
 
     GLfloat voxel_verts[] = {
@@ -59,7 +53,9 @@ int main() {
 
     // glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-    
+
+    // Construct ImGui elements
+    Editor* editor = new Editor(1024, 200, 200);
 
     ERRLOG.printClear();
 
@@ -68,28 +64,25 @@ int main() {
     glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
     while (!window.shouldClose()) {
         glfwPollEvents();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        
+        ui->preRender();
+        ui->render(editor);
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         shader.use();
         shader.setUniform_float("zoom", zoomOut);
-        shader.setUniform_vec3float("inColor", 1.0f, 0.7f, 0.4f);
 
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
 
-        ImGui::Begin("Congrats it works");
-        ImGui::End();
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        ui->postRender();
 
         // End of loop events
         window.swapBuffers();
         ERRLOG.printClear();
     }
+
+    ui->destroy(editor);
 }
