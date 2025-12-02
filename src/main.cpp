@@ -65,7 +65,12 @@ int main() {
         
         shader.use();
         shader.setUniform_float("zoom", zoomOut);
-        shader.setUniform_vec3float("inColor", 1.0f, 0.7f, 0.4f);
+        shader.setUniform_vec3float(
+            "inColor", 
+            editor->uniformColor[0], 
+            editor->uniformColor[1], 
+            editor->uniformColor[2]
+        );
 
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
