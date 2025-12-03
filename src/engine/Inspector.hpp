@@ -15,6 +15,7 @@
 #include <iostream>
 #include <math.h>
 // #include <stb_image.h>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <variant>
@@ -23,6 +24,12 @@ class Inspector {
   public:
     using UniformValue = std::variant<int, float, glm::vec3, glm::vec4>;
     enum class UniformType { NoType, Int, Float, Vec3, Vec4, UniformRef };
+    std::unordered_map<std::string, UniformType> typeMap = {
+        {"vec3", UniformType::Vec3},
+        {"vec4", UniformType::Vec4},
+        {"int", UniformType::Int},
+        {"float", UniformType::Float}
+    };
     struct WorldObject {
         std::string shaderUsed;
         std::string objectName;
@@ -63,10 +70,10 @@ class Inspector {
         std::cout
             << "Initializing Inspector... Make sure you terminate it later"
             << std::endl;
-        shaders.insert(std::make_pair(
+        shaders.insert_or_assign(
             "default",
-            new ShaderProgram(shaderPaths[0].c_str(), shaderPaths[1].c_str())));
-        
+            new ShaderProgram(shaderPaths[0].c_str(), shaderPaths[1].c_str()));
+        uniforms["default"];
         /*
         jsonPath = "src/uniforms/project.json";
 
@@ -242,13 +249,120 @@ class Inspector {
         return true;
     }
 
+    // this assigns a uniform's value is it was set somewhere not in the inspector.
+    void assignPreExistingValue(Uniform& uniform) {
+        switch (uniform.type) {
+        case UniformType::Int:
+            uniform.value = shaders.at(uniform.shaderName.c_str())->getUniform_int(uniform.name.c_str());
+            break;
+        case UniformType::Float:
+            uniform.value = shaders.at(uniform.shaderName.c_str())->getUniform_float(uniform.name.c_str());
+            break;
+        case UniformType::Vec3:
+            uniform.value = shaders.at(uniform.shaderName.c_str())->getUniform_vec3float(uniform.name.c_str());
+            break;
+        case UniformType::Vec4:
+            uniform.value = shaders.at(uniform.shaderName.c_str())->getUniform_vec4float(uniform.name.c_str());
+            break;
+        default:
+            std::cout << "invalid new uniform type, making it an int"
+                        << std::endl;
+            uniform.type = UniformType::Int;
+            uniform.value = 0;
+            break;
+        }
+        std::cout << "assigned preexisting value: " << uniformValueToString(uniform) << " to " << uniform.name << std::endl;
+    }
+
     void refreshUniforms(const std::string shaderName) {
         ShaderProgram *shader = shaders[shaderName];
         shader->use();
 
-        for (auto &[uniformName, uniform] : uniforms[shaderName]) {
+        std::unordered_map<std::string, Uniform> &shaderUniforms = uniforms.at(shaderName);
+        std::unordered_map<std::string, Uniform> fileUniforms = readUniformsFromShader(shaderName);
+        for (auto &[pairUniformName, pairUniform] : fileUniforms) {
+            std::string uName = pairUniformName;
+            Uniform u = pairUniform;
+            bool isNew = shaderUniforms.count(uName) < 1;
+            bool newType = false;
+            if (!isNew) {
+                newType = shaderUniforms.at(uName).type != u.type;
+            }
+            bool changeUniformMap = isNew || newType;
+
+            if (changeUniformMap) {
+                assignDefaultValue(u);
+                shaderUniforms.insert_or_assign(uName, u);
+            }
+        }
+
+        for (auto &[uniformName, uniform] : shaderUniforms) {
             initUniformValue(&uniform, shaderName);
         }
+    }
+
+    std::unordered_map<std::string, Uniform> readUniformsFromShader(std::string shaderName) {
+        ShaderProgram &shader = *shaders[shaderName];
+        std::stringstream vertCode(shader.vertShader_code);
+        std::stringstream fragCode(shader.fragShader_code);
+        std::unordered_map<std::string, Uniform> fileUniforms;
+
+        std::string line;
+        while (std::getline(vertCode, line)) {
+            std::istringstream liness(line);
+            std::string word;
+            liness >> word;
+
+            bool notUniformLine = word != "uniform";
+            if (notUniformLine) continue;
+
+            Uniform u;
+            liness >> word;
+            auto it = typeMap.find(word);
+            if (it != typeMap.end()) {
+                u.type = it->second;
+            } else {
+                std::cout << "Invalid Uniform Type! " << word << std::endl;
+                continue;
+            }
+            u.wasUniformRef = false;
+            liness >> u.name;
+            if (!u.name.empty() && u.name.back() == ';') {
+                u.name.pop_back();
+            }
+            u.shaderName = shaderName;
+            fileUniforms[u.name] = u;
+            std::cout << "read " << u.name << std::endl;
+        }
+
+        while (std::getline(fragCode, line)) {
+            std::istringstream liness(line);
+            std::string word;
+            liness >> word;
+
+            bool notUniformLine = word != "uniform";
+            if (notUniformLine) continue;
+
+            Uniform u;
+            liness >> word;
+            auto it = typeMap.find(word);
+            if (it != typeMap.end()) {
+                u.type = it->second;
+            } else {
+                std::cout << "Invalid Uniform Type! " << word << std::endl;
+                continue;
+            }
+            u.wasUniformRef = false;
+            liness >> u.name;
+            if (!u.name.empty() && u.name.back() == ';') {
+                u.name.pop_back();
+            }
+            u.shaderName = shaderName;
+            fileUniforms[u.name] = u;
+            std::cout << "read " << u.name << std::endl;
+        }
+        std::cout << "read " << fileUniforms.size() << " uniforms" << std::endl;
+        return fileUniforms;
     }
 
     /*
@@ -349,14 +463,11 @@ class Inspector {
     void refreshShaders() {
         std::cout << "Initializing Shaders..." << std::endl;
         shaders.clear();
-        shaders.insert(std::make_pair(
-            "litCube",
-            new ShaderProgram(shaderPaths[0].c_str(), shaderPaths[1].c_str())));
-        shaders.insert(std::make_pair(
-            "lightSource",
-            new ShaderProgram(shaderPaths[2].c_str(), shaderPaths[3].c_str())));
-        for (auto &[shaderName, shader] : shaders) {
-            shader->use();
+        shaders.insert_or_assign(
+            "default",
+            new ShaderProgram(shaderPaths[0].c_str(), shaderPaths[1].c_str()));
+        for (auto &[shaderName, shaderMap] : uniforms) {
+            shaders.at(shaderName)->use();
             refreshUniforms(shaderName);
         }
 
@@ -367,37 +478,42 @@ class Inspector {
                 std::cout << "  " << uniformName << " (type: ";
                 if (uniform.wasUniformRef)
                     std::cout << " Uniform Ref -> ";
-                switch (uniform.type) {
-                case UniformType::Int:
-                    std::cout << "Int) = " << std::get<int>(uniform.value);
-                    break;
-                case UniformType::Float:
-                    std::cout << "Float) = " << std::get<float>(uniform.value);
-                    break;
-                case UniformType::Vec3: {
-                    auto v = std::get<glm::vec3>(uniform.value);
-                    std::cout << "Vec3) = (" << v.x << ", " << v.y << ", "
-                              << v.z << ")";
-                    break;
-                }
-                case UniformType::Vec4: {
-                    auto v = std::get<glm::vec4>(uniform.value);
-                    std::cout << "Vec4) = (" << v.x << ", " << v.y << ", "
-                              << v.z << ", " << v.w << ")";
-                    break;
-                }
-                case UniformType::UniformRef:
-                    std::cout << "UniformRef)";
-                    break;
-                default:
-                    std::cout << "Unknown)";
-                    break;
-                }
-
-                std::cout << std::endl;
+                std::cout << uniformValueToString(uniform);
             }
             std::cout << std::endl;
         }
+    }
+
+    std::string uniformValueToString(Uniform uniform) {
+        std::stringstream ss;
+        switch (uniform.type) {
+        case UniformType::Int:
+            ss << "Int) = " << std::get<int>(uniform.value);
+            break;
+        case UniformType::Float:
+            ss << "Float) = " << std::get<float>(uniform.value);
+            break;
+        case UniformType::Vec3: {
+            auto v = std::get<glm::vec3>(uniform.value);
+            ss << "Vec3) = (" << v.x << ", " << v.y << ", "
+                        << v.z << ")";
+            break;
+        }
+        case UniformType::Vec4: {
+            auto v = std::get<glm::vec4>(uniform.value);
+            ss << "Vec4) = (" << v.x << ", " << v.y << ", "
+                        << v.z << ", " << v.w << ")";
+            break;
+        }
+        case UniformType::UniformRef:
+            ss << "UniformRef)";
+            break;
+        default:
+            ss << "Unknown)";
+            break;
+        }
+
+        return ss.str();
     }
 
     void drawInspector(float viewportHeight) {
@@ -552,26 +668,7 @@ class Inspector {
                 newUniform.name = newUniformName;
                 newUniform.type = newUniformType;
 
-                switch (newUniformType) {
-                case UniformType::Int:
-                    newUniform.value = 0;
-                    break;
-                case UniformType::Float:
-                    newUniform.value = 0.0f;
-                    break;
-                case UniformType::Vec3:
-                    newUniform.value = glm::vec3(0.0f);
-                    break;
-                case UniformType::Vec4:
-                    newUniform.value = glm::vec4(0.0f);
-                    break;
-                default:
-                    std::cout << "invalid new uniform type, making it an int"
-                              << std::endl;
-                    newUniform.type = UniformType::Int;
-                    newUniform.value = 0;
-                    break;
-                }
+                assignDefaultValue(newUniform);
 
                 uniforms[newObjectName][newUniformName] = newUniform;
                 newObjectName = "";
@@ -582,20 +679,44 @@ class Inspector {
         }
     }
 
+    void assignDefaultValue(Uniform& uniform) {
+        switch (uniform.type) {
+        case UniformType::Int:
+            uniform.value = 0;
+            break;
+        case UniformType::Float:
+            uniform.value = 0.0f;
+            break;
+        case UniformType::Vec3:
+            uniform.value = glm::vec3(0.0f);
+            break;
+        case UniformType::Vec4:
+            uniform.value = glm::vec4(0.0f);
+            break;
+        default:
+            std::cout << "invalid new uniform type, making it an int"
+                        << std::endl;
+            uniform.type = UniformType::Int;
+            uniform.value = 0;
+            break;
+        }
+    }
+
     std::vector<std::string> uniformNamesToDelete;
+
     void drawUniformEditors() {
         drawAddUniformMenu();
         int imGuiID = 0;
-        for (auto &[shaderName, shader] : shaders) {
+        for (auto &[shaderName, shaderMap] : uniforms) {
             ImGui::Text("%s", ("Shader:" + shaderName).c_str());
-            for (auto &[uniformName, uniform] : uniforms[shaderName]) {
+            for (auto &[uniformName, uniform] : uniforms.at(shaderName)) {
                 ImGui::PushID(imGuiID);
                 drawUniformInput(shaderName, uniformName);
                 ImGui::PopID();
                 imGuiID++;
             }
             for (std::string s : uniformNamesToDelete)
-                uniforms[shaderName].erase(s);
+                uniforms.at(shaderName).erase(s);
             uniformNamesToDelete.clear();
         }
     }
@@ -638,6 +759,10 @@ class Inspector {
             // uniform refs at the end of the file
             std::cout << "no refs yet supported" << std::endl;
         }
+        case UniformType::NoType: {
+            std::cout << "Uniform has no type. How did you do that???" << std::endl;
+        }
+        
         }
 
         if (ImGui::Button("Delete Uniform", ImVec2(100, 20))) {
