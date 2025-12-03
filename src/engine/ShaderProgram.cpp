@@ -5,8 +5,9 @@
 
 
 ShaderProgram::ShaderProgram(const char *vertShader_path, const char *fragShader_path) {
-    std::string vertShader_code = getFileContents(vertShader_path);
-    std::string fragShader_code = getFileContents(fragShader_path);
+    vertShader_code = getFileContents(vertShader_path);
+    fragShader_code = getFileContents(fragShader_path);
+
 
     if (vertShader_code == "" || fragShader_code == "") {
         if (vertShader_code == "") {
@@ -133,6 +134,15 @@ void ShaderProgram::setUniform_vec3float(const char *uniformName, glm::fvec3 val
     glUniform3f(loc, vals.x, vals.y, vals.z);
 }
 
+void ShaderProgram::setUniform_vec4float(const char *uniformName, glm::fvec4 vals) {
+    GLint loc = glGetUniformLocation(ID, uniformName);
+    if (loc == -1) {
+        ERRLOG.logEntry(warning, "SHADER UNIFORM: Vec3float", "Location not found for:", uniformName);
+        return;
+    }
+    glUniform3f(loc, vals.x, vals.y, vals.z);
+}
+
 
 void ShaderProgram::setUniform_mat4float(const char *uniformName, glm::fmat4 M) const {
     GLint loc = glGetUniformLocation(ID, uniformName);
@@ -141,4 +151,61 @@ void ShaderProgram::setUniform_mat4float(const char *uniformName, glm::fmat4 M) 
         return;
     }
     glUniformMatrix4fv(loc, 1, GL_FALSE, &M[0][0]);
+}
+
+glm::vec3 ShaderProgram::getUniform_vec3float(const char* uniformName) {
+    GLint loc = glGetUniformLocation(ID, uniformName);
+    if (loc == -1) {
+        ERRLOG.logEntry(warning, "SHADER UNIFORM: Vec3float", "Location not found for:", uniformName);
+        return glm::vec3(0);
+    }
+
+    GLfloat value[3];
+    glGetUniformfv(ID, loc, value);
+    return glm::vec3(value[0], value[1], value[2]);
+}
+
+glm::vec4 ShaderProgram::getUniform_vec4float(const char* uniformName) {
+    GLint loc = glGetUniformLocation(ID, uniformName);
+    if (loc == -1) {
+        ERRLOG.logEntry(warning, "SHADER UNIFORM: Vec4float", "Location not found for:", uniformName);
+        return glm::vec4(0);
+    }
+
+    GLfloat value[4];
+    glGetUniformfv(ID, loc, value); 
+    return glm::vec4(value[0], value[1], value[2], value[3]);
+}
+
+float ShaderProgram::getUniform_float(const char* uniformName) {
+    GLint loc = glGetUniformLocation(ID, uniformName);
+    if (loc == -1) {
+        ERRLOG.logEntry(warning, "SHADER UNIFORM: Vec4float", "Location not found for:", uniformName);
+        return 0;
+    }
+
+    GLfloat value[1];
+    glGetUniformfv(ID, loc, value); 
+    return value[0];
+}
+
+int ShaderProgram::getUniform_int(const char* uniformName) {
+    GLint loc = glGetUniformLocation(ID, uniformName);
+    if (loc == -1) {
+        ERRLOG.logEntry(warning, "SHADER UNIFORM: Vec4float", "Location not found for:", uniformName);
+        return 0;
+    }
+
+    GLint value[1];
+    glGetUniformiv(ID, loc, value); 
+    return value[0];
+}
+
+bool ShaderProgram::hasUniform(const char* uniformName) {
+    GLint loc = glGetUniformLocation(ID, uniformName);
+    if (loc == -1) {
+        return false;
+    }
+    else return true;
+
 }

@@ -13,13 +13,11 @@
 
 
 int main() {
-    
     Window window("Process", 400, 400);
 
-    ShaderProgram shader("../shaders/default.vert", "../shaders/default.frag");
-
+    Inspector inspector(window.window);
+    inspector.refreshShaders();
     UIContext* ui = new UIContext(window.window);
-
 
     GLfloat voxel_verts[] = {
         -1.0,  1.0, 0.0, // TOP-LEFT
@@ -58,20 +56,26 @@ int main() {
     Editor* editor = new Editor(1024, 200, 200);
 
     ERRLOG.printClear();
+    glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
 
     // RUN LOOP
     float zoomOut = 10.0f;
-    glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
+    ShaderProgram &shader = *inspector.shaders["default"];
+    shader.setUniform_float("zoom", zoomOut);
+    shader.setUniform_vec3float("inColor", 1.0f, 0.7f, 0.4f);
+    shader.use();
+
     while (!window.shouldClose()) {
+        if (glfwGetKey(window.window, GLFW_KEY_R)) inspector.refreshShaders();
         glfwPollEvents();
 
         ui->preRender();
         ui->render(editor);
+        ui->render(&inspector);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        shader = *inspector.shaders["default"];
         shader.use();
-        shader.setUniform_float("zoom", zoomOut);
 
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
