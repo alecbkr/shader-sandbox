@@ -2,7 +2,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "engine/Inspector.hpp"
 #include "engine/Window.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "engine/Errorlog.hpp"
@@ -72,6 +71,7 @@ int main() {
 
         ui->preRender();
         ui->render(editor);
+        ui->render(&inspector);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         shader = *inspector.shaders["default"];

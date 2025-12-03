@@ -1,4 +1,5 @@
 #include "UIContext.hpp"
+#include "Inspector.hpp"
 
 UIContext::UIContext(GLFWwindow* window) {
     IMGUI_CHECKVERSION();
@@ -30,4 +31,8 @@ void UIContext::destroy(Editor *editor) {
 
 void UIContext::render(Editor* editor) {
     editor->render();
+}
+
+void UIContext::render(Inspector* inspector) {
+    inspector->drawInspector();
 }

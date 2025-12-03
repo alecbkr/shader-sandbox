@@ -1,7 +1,7 @@
 #ifndef INSPECTOR_HPP
 #define INSPECTOR_HPP
 
-#include "ShaderProgram.hpp"
+#include "../engine/ShaderProgram.hpp"
 // #include "nlohmanjson.hpp"
 #include <GLFW/glfw3.h>
 #include <fstream>
@@ -100,26 +100,6 @@ class Inspector {
         }
         */
 
-        // 1. Setup Dear ImGui context
-        IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-        ImGuiIO &io = ImGui::GetIO();
-        (void)io;
-
-        // 2. Setup Dear ImGui style
-        ImGui::StyleColorsDark();
-
-        // 3. Initialize ImGui backends
-        ImGui_ImplGlfw_InitForOpenGL(window, true);
-        ImGui_ImplOpenGL3_Init("#version 330"); // matches your GL version
-    }
-
-    void terminateInspector() {
-        std::cout << "Terminating Inspector..." << std::endl;
-        ImGui_ImplOpenGL3_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
-        ImGui::DestroyContext();
-        // saveProjectJSON();
     }
 
     /*
@@ -516,28 +496,10 @@ class Inspector {
         return ss.str();
     }
 
-    void drawInspector(float viewportHeight) {
-        // Start new ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-        //
-        ImGui::SetNextWindowPos(ImVec2(10, 10),
-                                ImGuiCond_FirstUseEver); // top-left corner
-        ImGui::SetNextWindowSize(ImVec2(200, viewportHeight - 20),
-                                 ImGuiCond_FirstUseEver);
-
-        ImGui::Begin("Inspector", nullptr,
-                     ImGuiWindowFlags_NoCollapse |
-                         ImGuiWindowFlags_AlwaysVerticalScrollbar);
+    void drawInspector() {
         ImGui::Text("Object Properties");
 
         drawUniformEditors();
-        ImGui::End();
-        // Render ImGui
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
 
     void drawTextInput(std::string *value, const char *label) {
