@@ -144,7 +144,7 @@ void ShaderProgram::setUniform_vec4float(const char *uniformName, glm::fvec4 val
 }
 
 
-void ShaderProgram::setUniform_mat4float(const char *uniformName, glm::mat4 M) const {
+void ShaderProgram::setUniform_mat4float(const char *uniformName, glm::fmat4 M) const {
     GLint loc = glGetUniformLocation(ID, uniformName);
     if (loc == -1) {
         ERRLOG.logEntry(warning, "SHADER UNIFORM: mat4float", "Location not found for:", uniformName);

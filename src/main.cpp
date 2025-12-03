@@ -6,6 +6,11 @@
 #include "engine/Window.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "engine/Errorlog.hpp"
+#include "ui/UIContext.hpp"
+
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
 
 
 int main() {
@@ -13,6 +18,7 @@ int main() {
 
     Inspector inspector(window.window);
     inspector.refreshShaders();
+    UIContext* ui = new UIContext(window.window);
 
     GLfloat voxel_verts[] = {
         -1.0,  1.0, 0.0, // TOP-LEFT
@@ -46,11 +52,14 @@ int main() {
 
     // glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-    
+
+    // Construct ImGui elements
+    Editor* editor = new Editor(1024, 200, 200);
 
     ERRLOG.printClear();
     glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
 
+    // RUN LOOP
     float zoomOut = 10.0f;
     ShaderProgram &shader = *inspector.shaders["default"];
     shader.setUniform_float("zoom", zoomOut);
@@ -60,20 +69,24 @@ int main() {
     while (!window.shouldClose()) {
         if (glfwGetKey(window.window, GLFW_KEY_R)) inspector.refreshShaders();
         glfwPollEvents();
+
+        ui->preRender();
+        ui->render(editor);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
         shader = *inspector.shaders["default"];
         shader.use();
 
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
 
-        inspector.drawInspector(400);
+        ui->postRender();
 
         // End of loop events
         window.swapBuffers();
         ERRLOG.printClear();
     }
 
-    inspector.terminateInspector();
+    ui->destroy(editor);
 }

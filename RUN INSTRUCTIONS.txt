@@ -9,3 +9,6 @@ cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=./clang-toolchain.cmake
 run: 
 cmake --build build --config Release
 
+will produce:
+sandbox.exe
+

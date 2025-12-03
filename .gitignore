@@ -1,0 +1,8 @@
+/build
+/bin
+
+/bin/sandbox.exe
+/bin/sandbox.out
+/bin/sandbox
+
+.idea
