@@ -7,13 +7,25 @@
 #include "engine/Errorlog.hpp"
 
 
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
+
+
 int main() {
     
     Window window("Process", 400, 400);
 
     ShaderProgram shader("../shaders/default.vert", "../shaders/default.frag");
 
-    
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO(); (void)io;
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window.window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+
+
 
     GLfloat voxel_verts[] = {
         -1.0,  1.0, 0.0, // TOP-LEFT
@@ -51,12 +63,17 @@ int main() {
 
     ERRLOG.printClear();
 
+    // RUN LOOP
     float zoomOut = 10.0f;
     glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
     while (!window.shouldClose()) {
         glfwPollEvents();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
         
         shader.use();
         shader.setUniform_float("zoom", zoomOut);
@@ -65,7 +82,11 @@ int main() {
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
+        ImGui::Begin("Congrats it works");
+        ImGui::End();
 
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         // End of loop events
         window.swapBuffers();
