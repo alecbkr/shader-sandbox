@@ -10,6 +10,9 @@ set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall")
 # Output to ./bin/
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
+# Generate compile commands for clang LSP to use.
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # ---------------------------------------------------------
 # ADD GLFW (source version)
 # ---------------------------------------------------------
