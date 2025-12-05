@@ -72,7 +72,7 @@ class Inspector {
             << std::endl;
         shaders.insert_or_assign(
             "default",
-            new ShaderProgram(shaderPaths[0].c_str(), shaderPaths[1].c_str()));
+            new ShaderProgram(shaderPaths[0].c_str(), shaderPaths[1].c_str(), "default"));
         uniforms["default"];
         /*
         jsonPath = "src/uniforms/project.json";
@@ -445,7 +445,7 @@ class Inspector {
         shaders.clear();
         shaders.insert_or_assign(
             "default",
-            new ShaderProgram(shaderPaths[0].c_str(), shaderPaths[1].c_str()));
+            new ShaderProgram(shaderPaths[0].c_str(), shaderPaths[1].c_str(), "default"));
         for (auto &[shaderName, shaderMap] : uniforms) {
             shaders.at(shaderName)->use();
             refreshUniforms(shaderName);

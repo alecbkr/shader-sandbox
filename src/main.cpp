@@ -6,6 +6,9 @@
 #include "engine/ShaderProgram.hpp"
 #include "engine/Errorlog.hpp"
 #include "ui/UIContext.hpp"
+#include "core/InspectorEngine.hpp"
+#include "core/ui/InspectorUI.hpp"
+#include "core/ShaderHandler.hpp"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
@@ -15,9 +18,9 @@
 int main() {
     Window window("Process", 400, 400);
 
-    Inspector inspector(window.window);
-    inspector.refreshShaders();
-    UIContext* ui = new UIContext(window.window);
+    ShaderHandler shaderHandler;
+    InspectorUI inspectorUI;
+    UIContext ui(window.window);
 
     GLfloat voxel_verts[] = {
         -1.0,  1.0, 0.0, // TOP-LEFT
@@ -59,34 +62,29 @@ int main() {
     glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
 
     // RUN LOOP
-    float zoomOut = 10.0f;
-    ShaderProgram &shader = *inspector.shaders["default"];
-    shader.setUniform_float("zoom", zoomOut);
-    shader.setUniform_vec3float("inColor", 1.0f, 0.7f, 0.4f);
-    shader.use();
-
     while (!window.shouldClose()) {
-        if (glfwGetKey(window.window, GLFW_KEY_R)) inspector.refreshShaders();
+        // if (glfwGetKey(window.window, GLFW_KEY_R)) inspector.refreshShaders();
         glfwPollEvents();
 
-        ui->preRender();
-        ui->render(editor);
-        ui->render(&inspector);
+        ui.preRender();
+        ui.render(editor);
+        ui.render(inspectorUI);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        shader = *inspector.shaders["default"];
-        shader.use();
+        auto& programs = ShaderHandler::getPrograms();
+        for (auto& [programName, program] : programs) {
+            program.use();
+            glBindVertexArray(vao);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
+        }
 
-        glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
-
-        ui->postRender();
+        ui.postRender();
 
         // End of loop events
         window.swapBuffers();
         ERRLOG.printClear();
     }
 
-    ui->destroy(editor);
+    ui.destroy(editor);
 }

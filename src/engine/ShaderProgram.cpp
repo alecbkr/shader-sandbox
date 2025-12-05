@@ -4,7 +4,7 @@
 #include "Errorlog.hpp"
 
 
-ShaderProgram::ShaderProgram(const char *vertShader_path, const char *fragShader_path) {
+ShaderProgram::ShaderProgram(const char *vertShader_path, const char *fragShader_path, const char *name) : name(name) {
     vertShader_code = getFileContents(vertShader_path);
     fragShader_code = getFileContents(fragShader_path);
 

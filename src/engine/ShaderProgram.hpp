@@ -12,7 +12,8 @@ class ShaderProgram {
         GLuint ID;
         std::string vertShader_code;
         std::string fragShader_code;
-        ShaderProgram(const char *vertshader_path, const char *fragshader_path);
+        std::string name;
+        ShaderProgram(const char *vertshader_path, const char *fragshader_path, const char *name);
         void use();
         void kill();
         void setUniform_int(const char *uniformName, int val);

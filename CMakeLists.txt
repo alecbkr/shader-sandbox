@@ -30,6 +30,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/include/glad
     ${CMAKE_SOURCE_DIR}/include/imgui
     ${CMAKE_SOURCE_DIR}/include/stb
+    ${CMAKE_SOURCE_DIR}/src
 )
 
 # ---------------------------------------------------------
