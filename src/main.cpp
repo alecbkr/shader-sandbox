@@ -1,31 +1,48 @@
-#include <iostream>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
+// ENGINE
 #include "engine/Window.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "engine/Errorlog.hpp"
+#include "engine/InputHandler.hpp"
+#include "engine/AppTimer.hpp"
+#include "engine/Camera.hpp"
+#include "engine/DrawMetrics.hpp"
 
+#include "ui/UIContext.hpp"
+#include "core/InspectorEngine.hpp"
+#include "core/ui/InspectorUI.hpp"
+#include "core/ShaderHandler.hpp"
 
+#include <iostream>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include <glm/gtc/matrix_transform.hpp>
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
 
+void processInput(GLFWwindow *window);
+void cameraControls(GLFWwindow *window, Camera &camera);
+void editorControls(GLFWwindow *window);
+
+
+enum AppState {
+    AS_EDITOR,
+    AS_CAMERA
+};
+
+
+// GLOBAL VARIABLES
+Camera cam;
+AppState appstate = AS_EDITOR;
+bool showMetrics = true;
+
+
 int main() {
-    
-    Window window("Process", 400, 400);
-
-    ShaderProgram shader("../shaders/default.vert", "../shaders/default.frag");
-
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO &io = ImGui::GetIO(); (void)io;
-    ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(window.window, true);
-    ImGui_ImplOpenGL3_Init("#version 330");
-
-
+    Window win("Sandbox", 1000, 800);
+    ShaderHandler shaderHandler;
+    InspectorUI inspectorUI;
+    UIContext ui(win.window);
 
     GLfloat voxel_verts[] = {
         -1.0,  1.0, 0.0, // TOP-LEFT
@@ -59,37 +76,119 @@ int main() {
 
     // glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-    
+
+    // Construct ImGui elements
+    Editor* editor = new Editor(1024, 200, 200);
 
     ERRLOG.printClear();
+    glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
 
     // RUN LOOP
-    float zoomOut = 10.0f;
-    glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
-    while (!window.shouldClose()) {
+    while (!win.shouldClose()) {
         glfwPollEvents();
+        processInput(win.window);
+
+        ui.preRender();
+        ui.render(editor);
+        ui.render(inspectorUI);
+
+        // ---DRAWING---
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        
-        shader.use();
-        shader.setUniform_float("zoom", zoomOut);
-        shader.setUniform_vec3float("inColor", 1.0f, 0.7f, 0.4f);
+        glm::mat4 perspective = glm::perspective(glm::radians(45.0f), (float)win.width / (float)win.height, 0.1f, 100.0f);
+        glm::mat4 view = cam.GetViewMatrix();
 
-        glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        auto& programs = ShaderHandler::getPrograms();
+        for (auto& [programName, program] : programs) {
+            program.use();
+            
+            program.setUniform_mat4float("projection", perspective);
+            program.setUniform_mat4float("view", view);
 
-        ImGui::Begin("Congrats it works");
-        ImGui::End();
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(0.0f, 0.0f, -3.0f));
+            model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            program.setUniform_mat4float("model", model);
 
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            program.setUniform_vec3float("inColor", 1.0f, 0.0f, 0.4f);
 
-        // End of loop events
-        window.swapBuffers();
+            glBindVertexArray(vao);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
+        }
+
+        if (showMetrics) drawMetrics(appstate);
+
+        ui.postRender();
+
+
+        // ---END-OF-FRAME---
+        INPUT.resetStates();
+        APPTIME.update();
         ERRLOG.printClear();
+        win.swapBuffers();
+    }
+
+    ui.destroy(editor);
+}
+
+
+// =====CONTROLS=====
+
+void processInput(GLFWwindow *window) {
+    switch (appstate) {
+        case AS_EDITOR: editorControls(window);      break;
+        case AS_CAMERA: cameraControls(window, cam); break;
+        default:        editorControls(window);      break;
+    }
+}
+
+
+void cameraControls(GLFWwindow *window, Camera &camera) {
+    // [ESC] - exit app
+    if (KEYBOARD[GLFW_KEY_ESCAPE].isPressed) {
+        glfwSetWindowShouldClose(window, true);
+    }
+    // [F1] - show metrics
+    if (KEYBOARD[GLFW_KEY_F1].isPressed) {
+        showMetrics = !showMetrics;
+    }
+    // [TAB] - switch to editor controls
+    if (KEYBOARD[GLFW_KEY_F2].isPressed) {
+        appstate = AS_EDITOR;
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+    
+    //camera movements
+    if (KEYBOARD[GLFW_KEY_W].isDown) {
+        camera.ProcessKeyboard(CAM_FORWARD, APPTIME.getDt());
+    }
+    if (KEYBOARD[GLFW_KEY_A].isDown) {
+        camera.ProcessKeyboard(CAM_LEFT, APPTIME.getDt());
+    }
+    if (KEYBOARD[GLFW_KEY_S].isDown) {
+        camera.ProcessKeyboard(CAM_BACKWARD, APPTIME.getDt());
+    }
+    if (KEYBOARD[GLFW_KEY_D].isDown) {
+        camera.ProcessKeyboard(CAM_RIGHT, APPTIME.getDt());
+    }
+    cam.ProcessMouseMovement(CURSOR.offsetX, CURSOR.offsetY, true);
+}
+
+
+void editorControls(GLFWwindow *window) {
+    // [ESC] - exit app
+    if (KEYBOARD[GLFW_KEY_ESCAPE].isPressed) {
+        glfwSetWindowShouldClose(window, true);
+    }
+    // [F1] - show metrics
+    if (KEYBOARD[GLFW_KEY_F1].isPressed) {
+        showMetrics = !showMetrics;
+    }
+    // [TAB] - switch to camera controls
+    if (KEYBOARD[GLFW_KEY_F2].isPressed) {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        CURSOR.firstInput = true;
+        appstate = AS_CAMERA;
     }
 }
