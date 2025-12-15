@@ -16,6 +16,11 @@ void InspectorUI::drawUniformEditors() {
     for (auto &[shaderName, shaderMap] : shaderHandler.getPrograms()) {
         ImGui::Text("%s", ("Shader:" + shaderName).c_str());
         const std::unordered_map<std::string, Uniform>* uniformMap = uniformRegistry.tryReadUniforms(shaderName);
+
+        if (uniformMap == nullptr) {
+            std::cout << "shader not found in registry: " << shaderName << std::endl;
+        }
+
         for (auto &[uniformName, uniformRef] : *uniformMap) {
             ImGui::PushID(imGuiID);
             drawUniformInput(uniformRef);

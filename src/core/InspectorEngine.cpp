@@ -136,6 +136,10 @@ void InspectorEngine::applyAllUniformsForProgram(const std::string& programName)
     
     const std::unordered_map<std::string, Uniform>* programUniforms = uniformRegistry.tryReadUniforms(programName);
 
+    if (programUniforms == nullptr) {
+        ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForProgram", "Shader program not found in registry: ", programName.c_str());
+    }
+
     for (auto& [uniformName, uniform] : *programUniforms) {
         applyUniform(*program, uniform);
     }
