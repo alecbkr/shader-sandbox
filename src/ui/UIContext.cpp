@@ -35,3 +35,7 @@ void UIContext::render(Editor* editor) {
 void UIContext::render(InspectorUI& inspectorUI) {
     inspectorUI.render();
 }
+
+void UIContext::render(ConsoleUI& consoleUI) {
+    consoleUI.render(); 
+}

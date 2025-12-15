@@ -10,6 +10,7 @@
 #include "ui/UIContext.hpp"
 #include "core/InspectorEngine.hpp"
 #include "core/ui/InspectorUI.hpp"
+#include "core/ui/ConsoleUI.hpp"
 #include "core/ShaderHandler.hpp"
 
 #include <iostream>
@@ -42,6 +43,7 @@ int main() {
     Window win("Sandbox", 1000, 800);
     ShaderHandler shaderHandler;
     InspectorUI inspectorUI;
+    ConsoleUI consoleUI; 
     UIContext ui(win.window);
 
     GLfloat voxel_verts[] = {
@@ -91,6 +93,7 @@ int main() {
         ui.preRender();
         ui.render(editor);
         ui.render(inspectorUI);
+        ui.render(consoleUI); 
 
         // ---DRAWING---
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
