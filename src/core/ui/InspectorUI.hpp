@@ -4,16 +4,19 @@
 #include <imgui/imgui_impl_opengl3.h>
 
 #include "core/InspectorEngine.hpp"
+#include "core/ShaderHandler.hpp"
+#include "core/UniformRegistry.hpp"
 #include "core/UniformTypes.hpp"
 
 class InspectorUI {
-  public:
-  InspectorEngine engine;
+    public:
+    InspectorUI(InspectorEngine& eng, UniformRegistry& registry, ShaderHandler& handler);
+    void render();
   
-  InspectorUI();
-  void render();
-  
-  private:
+    private:
+    InspectorEngine& engine;
+    UniformRegistry& uniformRegistry;
+    ShaderHandler& shaderHandler;
     int height;
     int width;
     std::vector<std::string> uniformNamesToDelete;
@@ -28,5 +31,5 @@ class InspectorUI {
     bool drawUniformInputValue(float* value);
     bool drawUniformInputValue(glm::vec3* value);
     bool drawUniformInputValue(glm::vec4* value);
-    void drawUniformInput(Uniform& uniform);
+    void drawUniformInput(const Uniform& uniform);
 };

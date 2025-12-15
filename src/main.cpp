@@ -1,6 +1,6 @@
 // ENGINE
+#include "core/UniformRegistry.hpp"
 #include "engine/Window.hpp"
-#include "engine/ShaderProgram.hpp"
 #include "engine/Errorlog.hpp"
 #include "engine/InputHandler.hpp"
 #include "engine/AppTimer.hpp"
@@ -12,7 +12,6 @@
 #include "core/ui/InspectorUI.hpp"
 #include "core/ShaderHandler.hpp"
 
-#include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -41,7 +40,9 @@ bool showMetrics = true;
 int main() {
     Window win("Sandbox", 1000, 800);
     ShaderHandler shaderHandler;
-    InspectorUI inspectorUI;
+    UniformRegistry uniformRegistry;
+    InspectorEngine inspectorEngine(uniformRegistry);
+    InspectorUI inspectorUI(inspectorEngine, uniformRegistry, shaderHandler);
     UIContext ui(win.window);
 
     GLfloat voxel_verts[] = {
