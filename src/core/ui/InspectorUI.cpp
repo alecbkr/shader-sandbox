@@ -1,6 +1,9 @@
 #include "core/ui/InspectorUI.hpp"
+#include "core/ShaderHandler.hpp"
+#include "core/UniformRegistry.hpp"
+#include <unordered_map>
 
-InspectorUI::InspectorUI(){};
+InspectorUI::InspectorUI(InspectorEngine& eng, UniformRegistry& registry, ShaderHandler& handler): engine(eng), uniformRegistry(registry), shaderHandler(handler) {}
 
 void InspectorUI::render() {
     ImGui::Text("Object Properties");
@@ -10,16 +13,22 @@ void InspectorUI::render() {
 void InspectorUI::drawUniformEditors() {
     drawAddUniformMenu();
     int imGuiID = 0;
-    for (auto &[shaderName, shaderMap] : engine.uniforms) {
+    for (auto &[shaderName, shaderMap] : shaderHandler.getPrograms()) {
         ImGui::Text("%s", ("Shader:" + shaderName).c_str());
-        for (auto &[uniformName, uniform] : engine.uniforms.at(shaderName)) {
+        const std::unordered_map<std::string, Uniform>* uniformMap = uniformRegistry.tryReadUniforms(shaderName);
+
+        if (uniformMap == nullptr) {
+            std::cout << "shader not found in registry: " << shaderName << std::endl;
+        }
+
+        for (auto &[uniformName, uniformRef] : *uniformMap) {
             ImGui::PushID(imGuiID);
-            drawUniformInput(uniform);
+            drawUniformInput(uniformRef);
             ImGui::PopID();
             imGuiID++;
         }
-        for (std::string s : uniformNamesToDelete)
-            engine.uniforms.at(shaderName).erase(s);
+        for (std::string uniformName : uniformNamesToDelete)
+            uniformRegistry.eraseUniform(shaderName, uniformName);
         uniformNamesToDelete.clear();
     }
 }
@@ -61,7 +70,7 @@ void InspectorUI::drawAddUniformMenu() {
         bool validShaderName = shaders.count(newUniformShaderName) >= 1;
         if (validShaderName) {
             uniqueValidUniform =
-                engine.uniforms[newUniformShaderName].count(newUniformName) <= 0 &&
+                uniformRegistry.containsUniform(newUniformShaderName, newUniformName) &&
                 newUniformType != UniformType::NoType;
         }
 
@@ -92,7 +101,7 @@ void InspectorUI::drawAddUniformMenu() {
                 break;
             }
 
-            engine.uniforms[newUniformShaderName][newUniformName] = newUniform;
+            uniformRegistry.registerUniform(newUniformShaderName, newUniformName, newUniform);
             newUniformShaderName = "";
             newUniformName = "";
         } else {
@@ -134,11 +143,11 @@ bool InspectorUI::drawUniformInputValue(glm::vec4* value) {
     return changed;
 }
 
-void InspectorUI::drawUniformInput(Uniform& uniform) {
+void InspectorUI::drawUniformInput(const Uniform& uniform) {
     ImGui::Text("%s", uniform.name.c_str());
     
     bool changed = false;
-    std::visit([&](auto& val){
+    std::visit([&](auto val){
         changed = drawUniformInputValue(&val);
     }, uniform.value);
 

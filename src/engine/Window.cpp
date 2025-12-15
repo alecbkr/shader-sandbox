@@ -1,6 +1,7 @@
 #include "Window.hpp"
 
 #include "Errorlog.hpp"
+#include "GLFW/glfw3.h"
 #include "InputHandler.hpp"
 
 
@@ -43,6 +44,13 @@ Window::Window(const char *processName, int widthIn, int heightIn) {
     height = heightIn;
     glfwSetWindowUserPointer(window, this); // used to retrieve width/height w/out them being static
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+    /* 
+       Disable vsync. We do this because on some platforms (wayland) it freaks out if you don't do this while tab is minimized.
+       If you want to change this, go for it, I'm just setting it for now cause I keep having issues.
+    */
+    glfwSwapInterval(0);
+
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // ERRLOG.logEntry(EL_INFO, "WINDOW", "Success");
