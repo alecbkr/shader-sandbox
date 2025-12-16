@@ -3,6 +3,7 @@
 // #include <imgui/imgui_impl_glfw.h>
 // #include <imgui/imgui_impl_opengl3.h>
 #include <string>
+#include <vector>
 
 
 
@@ -19,7 +20,18 @@ class ConsoleUI {
      
     private: 
     char InputBuf[256]; 
+    // ImVector<char *> items; 
+    // ImVector<char *> history; 
+    // ImVector<const char*> Commands; 
+    std::vector<std::string> logItems; 
+    std::vector<std::string> history; 
+    std::vector<const std::string> commands; 
+
+    int historyPos; 
 
     void drawConsole(); 
+    void drawConsoleLogs(); 
     void drawTextInput(); 
+    void clearLogItems(); 
+    void addLogItem(const char*); 
 }; 
