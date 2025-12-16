@@ -1,16 +1,30 @@
 #include "Logger.hpp"
 
-shbx::Logger::Logger(){}
+namespace shbx {
+    std::vector<LogEntry> Logger::logs; 
+    LogLevel Logger::abortWhen = LogLevel::CRITICAL; // Might need to adjust this depending on how we want the program to crash
 
-void shbx::Logger::addLog(ErrLevel level, const char *src, const char *msg, int lineNum = -1) {
-    LogEntry newLog = {.level = level, .src = src, .msg = msg, .lineNum = lineNum};
-    logs.push_back(newLog); 
-}
+    void Logger::addLog(shbx::LogLevel level, const char *src, const char *msg, int lineNum) {
+        LogEntry newLog = {.level = level, .src = src, .msg = msg, .lineNum = lineNum};
+        logs.push_back(newLog); 
+    }
 
-void shbx::Logger::clearLogs() {
-    logs.clear(); 
-}
+    void Logger::addLog(shbx::LogLevel level, const char *src, const std::string msg, int lineNum) {
+        LogEntry newLog = {.level = level, .src = src, .msg = msg, .lineNum = lineNum}; 
+        logs.push_back(newLog); 
 
-std::vector<const LogEntry> shbx::Logger::getLogs() {
-    return logs; 
-}
+        // TODO: handle abort logic (throw exception or crash)
+    }
+
+    void Logger::clearLogs() {
+        logs.clear(); 
+    }
+
+    void Logger::setAbortWhen(LogLevel level) {
+        Logger::abortWhen = level; 
+    }
+
+    const std::vector<LogEntry>& Logger::getLogs() {
+        return Logger::logs; 
+    }
+}; 

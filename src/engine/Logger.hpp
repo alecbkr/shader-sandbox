@@ -1,11 +1,17 @@
 #pragma once 
 #include <vector>
 #include <string>
-#include "Errorlog.hpp"
 
 namespace shbx {
+    enum class LogLevel {
+        CRITICAL = 0, 
+        ERROR = 1,
+        WARNING = 2,
+        INFO = 3
+    }; 
+
     struct LogEntry {
-        ErrLevel level;
+        LogLevel level;
         std::string src;
         std::string msg;
         int lineNum;       
@@ -13,13 +19,16 @@ namespace shbx {
 
     class Logger {
         public: 
-        Logger(); 
+        Logger() = delete; 
 
-        void addLog(ErrLevel level, const char *src, const char *msg, int lineNum); 
-        void clearLogs(); 
-        std::vector<const LogEntry> getLogs(); 
+        static void addLog(LogLevel level, const char *src, const char *msg, int lineNum = -1); 
+        static void addLog(LogLevel level, const char *src, const std::string msg, int lineNum = -1); 
+        static void clearLogs(); 
+        static void setAbortWhen(LogLevel level); 
+        static const std::vector<LogEntry>& getLogs(); 
 
         private:
-        std::vector<const LogEntry> logs;     
+        static std::vector<LogEntry> logs;     
+        static LogLevel abortWhen;     // used to revert back to default shade 
     };
 }; 
