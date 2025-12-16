@@ -2,6 +2,45 @@
 
 ConsoleUI::ConsoleUI(){
     shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
     shbx::Logger::addLog(shbx::LogLevel::CRITICAL, "", "Example Critical Error"); 
     shbx::Logger::addLog(shbx::LogLevel::ERROR, "", "Example Error"); 
     shbx::Logger::addLog(shbx::LogLevel::WARNING, "", "Example Warning"); 
@@ -15,10 +54,15 @@ void ConsoleUI::render() {
 
 void ConsoleUI::drawConsole() {
     ImGui::SetNextWindowSize(ImVec2(520, 600), ImGuiCond_Once);
+    
     ImGui::Begin("Console");  
     ImGui::TextWrapped("Enter 'help' or '-h' for help");
     ImGui::Separator(); 
-    ConsoleUI::readLogs(); 
+    {
+        ImGui::BeginChild("ShowLogs", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.95f), true);
+        ConsoleUI::readLogs(); 
+        ImGui::EndChild(); 
+    }
     ImGui::Separator(); 
     drawTextInput(); 
     ImGui::End(); 
@@ -26,6 +70,9 @@ void ConsoleUI::drawConsole() {
 
 void ConsoleUI::readLogs() {
     const auto& logs = shbx::Logger::getLogs(); 
+
+    // Scroll to bottom when new log is read 
+
 
     for (const auto& log : logs) {
         int idx = std::min((int)log.level, 3); // clamp the index to avoid out-of-bounds
@@ -39,8 +86,6 @@ void ConsoleUI::readLogs() {
             default:                        alert = "ANOMALY: ";   break; 
         }
 
-        // std::string outputLog = alert + log.msg; 
-
         // Only color the log level 
         ImGui::PushStyleColor(ImGuiCol_Text, LOG_COLORS[idx]); 
         ImGui::TextUnformatted(alert.c_str()); 
@@ -49,14 +94,27 @@ void ConsoleUI::readLogs() {
         ImGui::TextUnformatted(log.msg.c_str()); 
 
         // TODO: add src if there is a src file 
-
-        // ImGui::PushStyleColor(ImGuiCol_Text, LOG_COLORS[idx]); 
-        // ImGui::TextUnformatted(outputLog.c_str()); 
-        // ImGui::PopStyleColor(); 
     }
+
+    if (logs.size() > lastLogSize) {
+        isAutoScroll = true; 
+        lastLogSize = logs.size(); 
+    }
+
+    if(isAutoScroll) {
+        ImGui::SetScrollHereY(1.0f); 
+        isAutoScroll = false; 
+    }
+
+
 }
 
 void ConsoleUI::drawTextInput() {
+    // used to render input to bottom of window 
+    // float windowHeight = ImGui::GetWindowHeight(); 
+    // float inputHeight = ImGui::GetFrameHeight(); 
+    // ImGui::SetCursorPosY(windowHeight - inputHeight); 
+
     static char str0[128] = "";
     ImGui::PushItemWidth(-FLT_MIN);       // expand input to size of window 
     ImGui::InputText("##", str0, IM_ARRAYSIZE(str0)); 

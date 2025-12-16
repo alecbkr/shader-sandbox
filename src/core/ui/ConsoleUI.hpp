@@ -30,8 +30,8 @@ class ConsoleUI {
     std::vector<std::string> history; 
     int historyPos; 
 
-    bool isAutoScroll; 
-    bool isScrollToBottom; 
+    bool isAutoScroll = false; 
+    size_t lastLogSize = 0; 
     
     void drawConsole(); 
     void readLogs(); 
