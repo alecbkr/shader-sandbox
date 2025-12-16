@@ -39,10 +39,19 @@ void ConsoleUI::readLogs() {
             default:                        alert = "ANOMALY: ";   break; 
         }
 
-        std::string outputLog = alert + log.msg; 
+        // std::string outputLog = alert + log.msg; 
+
+        // Only color the log level 
+        ImGui::PushStyleColor(ImGuiCol_Text, LOG_COLORS[idx]); 
+        ImGui::TextUnformatted(alert.c_str()); 
+        ImGui::SameLine(0.0f, 0.0f); 
+        ImGui::PopStyleColor(); 
+        ImGui::TextUnformatted(log.msg.c_str()); 
+
+        // TODO: add src if there is a src file 
 
         // ImGui::PushStyleColor(ImGuiCol_Text, LOG_COLORS[idx]); 
-        ImGui::TextUnformatted(outputLog.c_str()); 
+        // ImGui::TextUnformatted(outputLog.c_str()); 
         // ImGui::PopStyleColor(); 
     }
 }
