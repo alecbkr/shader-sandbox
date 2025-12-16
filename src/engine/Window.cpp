@@ -1,11 +1,13 @@
 #include "Window.hpp"
 
 #include "Errorlog.hpp"
+#include "GLFW/glfw3.h"
+#include "InputHandler.hpp"
 
 
-Window::Window(const char *processName, int width, int height) {
+Window::Window(const char *processName, int widthIn, int heightIn) {
     if (!glfwInit()) {
-        ERRLOG.logEntry(critical, "WINDOW", "glfwInit failure");
+        ERRLOG.logEntry(EL_CRITICAL, "WINDOW", "glfwInit failure");
     }
 
     glfwWindowHint(GLFW_SAMPLES, 4);
@@ -13,10 +15,10 @@ Window::Window(const char *processName, int width, int height) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); //oldest version of openGL allowed
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //CORE(modern) or COMPATIBILITY(leg acy & modern)
 
-    window = glfwCreateWindow(width, height, processName, NULL, NULL); 
+    window = glfwCreateWindow(widthIn, heightIn, processName, NULL, NULL); 
     if (window == NULL) {
         glfwTerminate();
-        ERRLOG.logEntry(critical, "WINDOW", "glfwCreateWindow failure");
+        ERRLOG.logEntry(EL_CRITICAL, "WINDOW", "glfwCreateWindow failure");
     }
 
     
@@ -26,12 +28,32 @@ Window::Window(const char *processName, int width, int height) {
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         glfwDestroyWindow(window);
         glfwTerminate();
-        ERRLOG.logEntry(critical, "WINDOW", "gladLoadGLLoader failure");
+        ERRLOG.logEntry(EL_CRITICAL, "WINDOW", "gladLoadGLLoader failure");
     }   
     
-    // Additional settings
-    // glViewport(0, 0, width, height);
+    glViewport(0, 0, widthIn, heightIn);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetKeyCallback(window, InputHandler::key_callback);
+    glfwSetMouseButtonCallback(window, InputHandler::mouse_callback);
+    glfwSetCursorPosCallback(window, InputHandler::cursor_callback);
+    glfwSetScrollCallback(window, InputHandler::scroll_callback);
+
+
+
+    width = widthIn;
+    height = heightIn;
+    glfwSetWindowUserPointer(window, this); // used to retrieve width/height w/out them being static
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+    /* 
+       Disable vsync. We do this because on some platforms (wayland) it freaks out if you don't do this while tab is minimized.
+       If you want to change this, go for it, I'm just setting it for now cause I keep having issues.
+    */
+    glfwSwapInterval(0);
+
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    // ERRLOG.logEntry(EL_INFO, "WINDOW", "Success");
 }
 
 
@@ -47,4 +69,13 @@ bool Window::shouldClose() {
 
 void Window::kill() {
     glfwDestroyWindow(window);
+}
+
+void Window::framebuffer_size_callback(GLFWwindow *window, int widthIn, int heightIn) {
+    glViewport(0, 0, widthIn, heightIn);
+
+    // Update window size variables
+    Window *self = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    self->width = widthIn;
+    self->height = heightIn;
 }

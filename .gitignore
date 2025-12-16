@@ -1,5 +1,6 @@
 /build
 /bin
+/.vscode
 
 /bin/sandbox.exe
 /bin/sandbox.out
