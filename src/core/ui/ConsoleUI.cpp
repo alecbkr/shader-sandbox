@@ -1,7 +1,17 @@
 #include "ConsoleUI.hpp"
 
 ConsoleUI::ConsoleUI(){
-    logItems.push_back("Welcome to Shader Sandbox!"); 
+    logItems.push_back("Welcome to Shader Sandbox"); 
+    logItems.push_back("Welcome to Shader Sandbox"); 
+    logItems.push_back("Welcome to Shader Sandbox"); 
+    logItems.push_back("Welcome to Shader Sandbox"); 
+    logItems.push_back("Welcome to Shader Sandbox"); 
+    logItems.push_back("Welcome to Shader Sandbox"); 
+    logItems.push_back("Welcome to Shader Sandbox"); 
+    logItems.push_back("Welcome to Shader Sandbox"); 
+    logItems.push_back("Welcome to Shader Sandbox"); 
+    logItems.push_back("Welcome to Shader Sandbox"); 
+    logItems.push_back("Welcome to Shader Sandbox"); 
 } 
 
 ConsoleUI::~ConsoleUI(){
@@ -30,8 +40,9 @@ void ConsoleUI::drawConsoleLogs() {
 }
 
 void ConsoleUI::drawTextInput() {
-    static char str0[128] = "Hello, world!";
-    ImGui::InputText("input text", str0, IM_ARRAYSIZE(str0)); 
+    static char str0[128] = "";
+    ImGui::PushItemWidth(-FLT_MIN);       // expand input to size of window 
+    ImGui::InputText("##", str0, IM_ARRAYSIZE(str0)); 
 }
 
 void ConsoleUI::addLogItem(const char* item) {
