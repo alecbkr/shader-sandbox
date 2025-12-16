@@ -29,10 +29,21 @@ void ConsoleUI::readLogs() {
 
     for (const auto& log : logs) {
         int idx = std::min((int)log.level, 3); // clamp the index to avoid out-of-bounds
+        std::string alert; 
 
-        ImGui::PushStyleColor(ImGuiCol_Text, LOG_COLORS[idx]); 
-        ImGui::TextUnformatted(log.msg.c_str()); 
-        ImGui::PopStyleColor(); 
+        switch (log.level) {
+            case shbx::LogLevel::CRITICAL:  alert = "CRITICAL: ";  break; 
+            case shbx::LogLevel::ERROR:     alert = "ERROR: ";     break; 
+            case shbx::LogLevel::WARNING:   alert = "WARNING: ";   break; 
+            case shbx::LogLevel::INFO:      alert = "INFO: ";      break; 
+            default:                        alert = "ANOMALY: ";   break; 
+        }
+
+        std::string outputLog = alert + log.msg; 
+
+        // ImGui::PushStyleColor(ImGuiCol_Text, LOG_COLORS[idx]); 
+        ImGui::TextUnformatted(outputLog.c_str()); 
+        // ImGui::PopStyleColor(); 
     }
 }
 

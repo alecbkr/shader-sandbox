@@ -10,7 +10,7 @@
 static const ImVec4 LOG_COLORS[] = {
     ImVec4(1.0f, 0.0f, 0.0f, 1.0f),         // Critical (Red) 
     ImVec4(1.0f, 0.4f, 0.4f, 1.0f),         // Error (lighter red)
-    ImVec4(1.0f, 1.0f, 0.0f, 1.0f),         // Warning (Yellow)
+    ImVec4(1.0f, 0.0f, 0.5f, 1.0f),         // Warning (Magenta)
     ImVec4(1.0f, 1.0f, 1.0f, 1.0f)          // Info (White)
 }; 
 
