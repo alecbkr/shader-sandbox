@@ -1,11 +1,18 @@
 #pragma once 
 #include <imgui/imgui.h>
-// #include <imgui/imgui_impl_glfw.h>
-// #include <imgui/imgui_impl_opengl3.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
 #include <string>
 #include <vector>
+#include "../../engine/Logger.hpp"
 
-
+// Lookup table for textcolors for each log 
+static const ImVec4 LOG_COLORS[] = {
+    ImVec4(1.0f, 0.0f, 0.0f, 1.0f),         // Critical (Red) 
+    ImVec4(1.0f, 0.4f, 0.4f, 1.0f),         // Error (lighter red)
+    ImVec4(1.0f, 1.0f, 0.0f, 1.0f),         // Warning (Yellow)
+    ImVec4(1.0f, 1.0f, 1.0f, 1.0f)          // Info (White)
+}; 
 
 // Adapted from imgui_demo.cpp
 class ConsoleUI {
@@ -20,18 +27,16 @@ class ConsoleUI {
      
     private: 
     char InputBuf[256]; 
-    // ImVector<char *> items; 
-    // ImVector<char *> history; 
-    // ImVector<const char*> Commands; 
-    std::vector<std::string> logItems; 
     std::vector<std::string> history; 
-    std::vector<const std::string> commands; 
-
     int historyPos; 
 
+    bool isAutoScroll; 
+    bool isScrollToBottom; 
+    
     void drawConsole(); 
-    void drawConsoleLogs(); 
+    void readLogs(); 
     void drawTextInput(); 
-    void clearLogItems(); 
-    void addLogItem(const char*); 
+
+    void handleInputHistory(); // User input to go through logs in console 
+    void executeCommand(); 
 }; 

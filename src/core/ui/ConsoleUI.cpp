@@ -1,22 +1,13 @@
 #include "ConsoleUI.hpp"
 
 ConsoleUI::ConsoleUI(){
-    logItems.push_back("Welcome to Shader Sandbox"); 
-    logItems.push_back("Welcome to Shader Sandbox"); 
-    logItems.push_back("Welcome to Shader Sandbox"); 
-    logItems.push_back("Welcome to Shader Sandbox"); 
-    logItems.push_back("Welcome to Shader Sandbox"); 
-    logItems.push_back("Welcome to Shader Sandbox"); 
-    logItems.push_back("Welcome to Shader Sandbox"); 
-    logItems.push_back("Welcome to Shader Sandbox"); 
-    logItems.push_back("Welcome to Shader Sandbox"); 
-    logItems.push_back("Welcome to Shader Sandbox"); 
-    logItems.push_back("Welcome to Shader Sandbox"); 
+    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    shbx::Logger::addLog(shbx::LogLevel::CRITICAL, "", "Example Critical Error"); 
+    shbx::Logger::addLog(shbx::LogLevel::ERROR, "", "Example Error"); 
+    shbx::Logger::addLog(shbx::LogLevel::WARNING, "", "Example Warning"); 
 } 
 
-ConsoleUI::~ConsoleUI(){
-    ConsoleUI::clearLogItems(); 
-}
+ConsoleUI::~ConsoleUI(){}
 
 void ConsoleUI::render() {
     drawConsole(); 
@@ -27,15 +18,21 @@ void ConsoleUI::drawConsole() {
     ImGui::Begin("Console");  
     ImGui::TextWrapped("Enter 'help' or '-h' for help");
     ImGui::Separator(); 
-    drawConsoleLogs(); 
+    ConsoleUI::readLogs(); 
     ImGui::Separator(); 
     drawTextInput(); 
     ImGui::End(); 
 }
 
-void ConsoleUI::drawConsoleLogs() {
-    for(const std::string item : logItems) {
-         ImGui::TextUnformatted(item.c_str()); 
+void ConsoleUI::readLogs() {
+    const auto& logs = shbx::Logger::getLogs(); 
+
+    for (const auto& log : logs) {
+        int idx = std::min((int)log.level, 3); // clamp the index to avoid out-of-bounds
+
+        ImGui::PushStyleColor(ImGuiCol_Text, LOG_COLORS[idx]); 
+        ImGui::TextUnformatted(log.msg.c_str()); 
+        ImGui::PopStyleColor(); 
     }
 }
 
@@ -44,12 +41,3 @@ void ConsoleUI::drawTextInput() {
     ImGui::PushItemWidth(-FLT_MIN);       // expand input to size of window 
     ImGui::InputText("##", str0, IM_ARRAYSIZE(str0)); 
 }
-
-void ConsoleUI::addLogItem(const char* item) {
-    logItems.push_back(item); 
-}
-
-void ConsoleUI::clearLogItems() {
-    logItems.clear(); 
-}
-
