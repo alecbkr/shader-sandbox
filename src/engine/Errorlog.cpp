@@ -92,7 +92,9 @@ void Errorlog::announce(const char *msg) {
 }
 
 
-
+void Errorlog::announce(const char *msg, int additional) {
+    std::cerr << "[ANNOUNCEMENT] " << msg << ": " << additional << std::endl;
+}
 
 
 void Errorlog::setAbortWhen(ErrLevel level) {
