@@ -49,6 +49,10 @@ set(IMGUI_SRC
     ${CMAKE_SOURCE_DIR}/lib/imgui/backends/imgui_impl_opengl3.cpp
 )
 
+set(STB_SRC
+    ${CMAKE_SOURCE_DIR}/lib/stb/stb_image.cpp
+)
+
 
 set(SRC_C 
     "${CMAKE_SOURCE_DIR}/lib/glad/glad.c"
@@ -61,6 +65,7 @@ add_executable(sandbox
     ${SRC_CPP}
     ${SRC_C}
     ${IMGUI_SRC}
+    ${STB_SRC}
 )
 
 # ---------------------------------------------------------

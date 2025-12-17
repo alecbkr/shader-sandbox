@@ -3,7 +3,7 @@
 std::unordered_map<std::string, ShaderProgram> ShaderHandler::programs{};
 
 ShaderHandler::ShaderHandler() {
-    registerProgram("../shaders/3d.vert", "../shaders/default.frag", "default");
+    registerProgram("../shaders/3d.vert", "../shaders/texture.frag", "default");
 }
 
 bool ShaderHandler::registerProgram(const std::string& vertex_file, const std::string& fragment_file, const std::string& programName) {

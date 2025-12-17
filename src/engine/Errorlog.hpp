@@ -38,6 +38,7 @@ class Errorlog {
         void logEntry(ErrLevel level, const char *src, const char *msg, int additional);
         void printClear();
         void announce(const char *msg);
+        void announce(const char *msg, int additional);
         void setAbortWhen(ErrLevel level);
 
     private:
