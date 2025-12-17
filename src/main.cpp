@@ -6,6 +6,7 @@
 #include "engine/AppTimer.hpp"
 #include "engine/Camera.hpp"
 #include "engine/DrawMetrics.hpp"
+#include "core/EventDispatcher.hpp"
 
 #include "ui/UIContext.hpp"
 #include "core/InspectorEngine.hpp"
@@ -36,8 +37,15 @@ Camera cam;
 AppState appstate = AS_EDITOR;
 bool showMetrics = true;
 
+bool testEvents(EventPayload payload) {
+    printf("Testing Event");
+    return false;
+}
 
 int main() {
+    // Works
+    EventDispatcher dispatcher = EventDispatcher();
+
     Window win("Sandbox", 1000, 800);
     ShaderHandler shaderHandler;
     UniformRegistry uniformRegistry;
@@ -88,6 +96,8 @@ int main() {
     while (!win.shouldClose()) {
         glfwPollEvents();
         processInput(win.window);
+
+        dispatcher.ProcessQueue();
 
         ui.preRender();
         ui.render(editor);

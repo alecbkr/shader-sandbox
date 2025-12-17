@@ -8,12 +8,6 @@
 
 #include "core/EventTypes.hpp"
 
-struct Event {
-    EventType type;
-    bool handled = false;
-    EventPayload payload;
-};
-
 using ListenerFn = std::function<bool(const EventPayload&)>;
 
 class EventDispatcher {
