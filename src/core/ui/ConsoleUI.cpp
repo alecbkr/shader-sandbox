@@ -71,9 +71,6 @@ void ConsoleUI::drawConsole() {
 void ConsoleUI::readLogs() {
     const auto& logs = shbx::Logger::getLogs(); 
 
-    // Scroll to bottom when new log is read 
-
-
     for (const auto& log : logs) {
         int idx = std::min((int)log.level, 3); // clamp the index to avoid out-of-bounds
         std::string alert; 
@@ -105,8 +102,6 @@ void ConsoleUI::readLogs() {
         ImGui::SetScrollHereY(1.0f); 
         isAutoScroll = false; 
     }
-
-
 }
 
 void ConsoleUI::drawTextInput() {
