@@ -12,6 +12,7 @@
 #include "core/InspectorEngine.hpp"
 #include "core/ui/InspectorUI.hpp"
 #include "core/ShaderHandler.hpp"
+#include "core/EditorEngine.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -37,7 +38,7 @@ enum AppState {
 Camera cam;
 AppState appstate = AS_EDITOR;
 bool showMetrics = true;
-
+std::vector<EditorUI*> EditorEngine::editors;
 
 int main() {
     Window win("Sandbox", 1000, 800);
@@ -45,6 +46,9 @@ int main() {
     UniformRegistry uniformRegistry;
     InspectorEngine inspectorEngine(uniformRegistry);
     InspectorUI inspectorUI(inspectorEngine, uniformRegistry, shaderHandler);
+
+    EditorEngine::spawnEditor(1024);
+
     UIContext ui(win.window);
 
 
@@ -131,9 +135,6 @@ int main() {
     
 
 
-    // Construct ImGui elements
-    Editor* editor = new Editor(1024, 200, 200);
-
     ERRLOG.printClear();
     glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
@@ -144,7 +145,7 @@ int main() {
         processInput(win.window);
 
         ui.preRender();
-        ui.render(editor);
+        ui.renderEditorWindow(500, 500);
         ui.render(inspectorUI);
 
 
@@ -187,7 +188,7 @@ int main() {
         win.swapBuffers();
     }
 
-    ui.destroy(editor);
+    ui.destroy();
 }
 
 
