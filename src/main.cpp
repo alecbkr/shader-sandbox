@@ -6,6 +6,7 @@
 #include "engine/AppTimer.hpp"
 #include "engine/Camera.hpp"
 #include "engine/DrawMetrics.hpp"
+#include "object/Object.hpp"
 
 #include "ui/UIContext.hpp"
 #include "core/InspectorEngine.hpp"
@@ -21,7 +22,6 @@
 #include <imgui/imgui_impl_opengl3.h>
 
 
-#include "object/Object.hpp"
 
 void processInput(GLFWwindow *window);
 void cameraControls(GLFWwindow *window, Camera &camera);
