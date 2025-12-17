@@ -1,7 +1,6 @@
 #ifndef UICONTEXT_HPP
 #define UICONTEXT_HPP
 
-#include "Editor.hpp"
 #include "core/ui/InspectorUI.hpp"
 //#include "Inspector.hpp"
 #include "core/ui/ConsoleUI.hpp"
@@ -14,11 +13,11 @@ class UIContext {
 public:
     UIContext(GLFWwindow* window);
     void preRender();
-    void render(Editor* editor);
+    void renderEditorWindow(float width, float height);
     void render(InspectorUI& inspectorUI);
     void render(ConsoleUI& consoleUI); 
     void postRender();
-    void destroy(Editor* editor);
+    void destroy();
 };
 
 

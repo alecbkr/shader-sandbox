@@ -43,7 +43,6 @@ Window::Window(const char *processName, int widthIn, int heightIn) {
     height = heightIn;
     glfwSetWindowUserPointer(window, this); // used to retrieve width/height w/out them being static
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // ERRLOG.logEntry(EL_INFO, "WINDOW", "Success");
 }
