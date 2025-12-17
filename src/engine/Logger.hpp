@@ -30,5 +30,7 @@ namespace shbx {
         private:
         static std::vector<LogEntry> logs;     
         static LogLevel abortWhen;     // used to revert back to default shade 
+        static bool isStdout; 
+        static bool isSaveFile;
     };
 }; 

@@ -6,12 +6,22 @@ namespace shbx {
 
     void Logger::addLog(shbx::LogLevel level, const char *src, const char *msg, int lineNum) {
         LogEntry newLog = {.level = level, .src = src, .msg = msg, .lineNum = lineNum};
-        logs.push_back(newLog); 
+        logs.push_back(newLog);
+        
+        // TODO: if we need to store the logs in a file 
+
+        // TODO: if we want to output to stdout aswell 
+
+        // TODO: handle abort logic (throw exception or crash)
     }
 
     void Logger::addLog(shbx::LogLevel level, const char *src, const std::string msg, int lineNum) {
         LogEntry newLog = {.level = level, .src = src, .msg = msg, .lineNum = lineNum}; 
         logs.push_back(newLog); 
+
+        // TODO: if we need to store the logs in a file 
+
+        // TODO: if we want to output to stdout aswell 
 
         // TODO: handle abort logic (throw exception or crash)
     }
