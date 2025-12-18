@@ -48,7 +48,7 @@ void Errorlog::logEntry(ErrLevel level, const char *srcIn, const char *msgIn, co
     //Emergency exit in case EL_CRITICAL EL_ERROR to avoid more errors
     if (currEntry.level >= abortWhen) {
         print(currEntry);
-        exit(1);
+       // exit(1);
     }
 }
 
@@ -99,29 +99,6 @@ void Errorlog::announce(const char *msg, int additional) {
 
 void Errorlog::setAbortWhen(ErrLevel level) {
     abortWhen = level;
-}
-
-
-void Errorlog::logEntry(ErrLevel level, const char *srcIn, const char *msgIn, const char *add) {
-    idx++;
-    if (idx > 255) {
-        std::cerr << "ERRLOG FULL, ENTRY LOST" << std::endl;
-        idx = 255;
-        return;
-    }
-    ErrEntry &currEntry = errlog[idx];
-    currEntry.level = level;
-    currEntry.src = std::string(srcIn);
-    currEntry.msg = msgIn;
-    currEntry.msg.append(" \"");
-    currEntry.msg.append(add);
-    currEntry.msg.append("\"");
-
-    //Emergency exit in case critical error to avoid more errors
-    if (currEntry.level >= abortWhen) {
-        print(currEntry);
-        //exit(1);
-    }
 }
 
 

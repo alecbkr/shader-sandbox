@@ -16,5 +16,5 @@ void main() {
     bool isBlack = outline.r < thresh && outline.b < thresh && outline.g < thresh;
 
     FragColor = texture(baseTex, TexCoord);
-    FragColor = isBlack ? base : outline;
+    FragColor = (isBlack ? base : outline) * vec4(, 1.0, 0.0, 1.0);
 }

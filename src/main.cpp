@@ -140,7 +140,7 @@ int main() {
 
 
     bool R_key_held = false;
-    const std::string FRAG_PATH = "../shaders/default.frag";
+    const std::string FRAG_PATH = "../shaders/texture.frag";
 
     ERRLOG.printClear();
     glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
@@ -175,6 +175,9 @@ int main() {
 
         auto& programs = ShaderHandler::getPrograms();
         for (auto& [programName, program] : programs) {
+            if (program == nullptr || !program->isCompiled()){
+                continue;
+            }
             program->use();
             
             program->setUniform_mat4float("projection", perspective);

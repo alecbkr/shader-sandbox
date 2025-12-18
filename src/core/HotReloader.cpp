@@ -1,12 +1,12 @@
 #include "engine/ShaderProgram.hpp"
 #include "ShaderHandler.hpp"
-#include "ui/Editor.hpp"
+#include "EditorEngine.hpp"
 #include "HotReloader.hpp"
 #include "InspectorEngine.hpp"
 #include "engine/Errorlog.hpp"
 #include <fstream>
 
-const std::string vertShaderPath = "../shaders/default.vert";
+const std::string vertShaderPath = "../shaders/3d.vert";
 const std::string programName = "default";
 
 HotReloader::HotReloader(ShaderHandler *handler, InspectorEngine *inspector) : m_handler(handler), m_inspector(inspector){}
