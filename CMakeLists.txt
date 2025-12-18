@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(MyProject C CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_STANDARD 17)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
@@ -49,6 +49,10 @@ set(IMGUI_SRC
     ${CMAKE_SOURCE_DIR}/lib/imgui/backends/imgui_impl_opengl3.cpp
 )
 
+set(STB_SRC
+    ${CMAKE_SOURCE_DIR}/lib/stb/stb_image.cpp
+)
+
 
 set(SRC_C 
     "${CMAKE_SOURCE_DIR}/lib/glad/glad.c"
@@ -61,6 +65,7 @@ add_executable(sandbox
     ${SRC_CPP}
     ${SRC_C}
     ${IMGUI_SRC}
+    ${STB_SRC}
 )
 
 # ---------------------------------------------------------
