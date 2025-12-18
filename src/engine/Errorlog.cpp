@@ -25,7 +25,7 @@ void Errorlog::logEntry(ErrLevel level, const char *src, const char *msg) {
     //Emergency exit in case critical error to avoid more errors
     if (currEntry.level >= abortWhen) {
         print(currEntry);
-        exit(1);
+        //exit(1);
     }
 }
 
@@ -65,7 +65,7 @@ void Errorlog::logEntry(ErrLevel level, const char *srcIn, const char *msgIn, co
     //Emergency exit in case critical error to avoid more errors
     if (currEntry.level >= abortWhen) {
         print(currEntry);
-        exit(1);
+        //exit(1);
     }
 }
 

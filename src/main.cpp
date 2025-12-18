@@ -9,6 +9,7 @@
 #include "core/InspectorEngine.hpp"
 #include "core/ui/InspectorUI.hpp"
 #include "core/ShaderHandler.hpp"
+#include "core/HotReloader.hpp"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
@@ -20,6 +21,8 @@ int main() {
 
     ShaderHandler shaderHandler;
     InspectorUI inspectorUI;
+    InspectorEngine inspectorEngine;
+    HotReloader reloader(&shaderHandler, &inspectorEngine);
     UIContext ui(window.window);
 
     GLfloat voxel_verts[] = {
@@ -58,6 +61,9 @@ int main() {
     // Construct ImGui elements
     Editor* editor = new Editor(1024, 200, 200);
 
+    bool R_key_held = false;
+    const std::string FRAG_PATH = "../shaders/default.frag";
+
     ERRLOG.printClear();
     glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
 
@@ -71,9 +77,18 @@ int main() {
         ui.render(inspectorUI);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        bool R_key_pressed = glfwGetKey(window.window, GLFW_KEY_R) == GLFW_PRESS;
+
+        if (R_key_pressed && !R_key_held){
+            editor->saveToFile(FRAG_PATH);
+            reloader.compile(FRAG_PATH);
+        }
+
+        R_key_held = R_key_pressed;
         auto& programs = ShaderHandler::getPrograms();
-        for (auto& [programName, program] : programs) {
-            program.use();
+        for (auto& [programName, programPointer] : programs) {
+            programPointer->use();
             glBindVertexArray(vao);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
             glBindVertexArray(0);

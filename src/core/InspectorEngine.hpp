@@ -20,9 +20,11 @@ class InspectorEngine {
     void setUniform(const std::string& programName, const std::string& uniformName, UniformValue value);
     void applyUniform(const std::string& programName, Uniform& uniform);
     void applyUniform(ShaderProgram& program, const Uniform& uniform);
+    void reloadUniforms(const std:: string &programName);
     
   private:
     static const std::unordered_map<std::string, UniformType> typeMap;
-    std::unordered_map<std::string, Uniform> parseUniforms(const ShaderProgram& program);
+    //std::unordered_map<std::string, Uniform> parseUniforms(const ShaderProgram& program);
+    std::unordered_map<std::string, Uniform> parseUniforms(const ShaderProgram *program);
     void assignDefaultValue(Uniform& uniform);
 };

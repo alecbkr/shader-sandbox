@@ -29,6 +29,9 @@ class ShaderProgram {
         float getUniform_float(const char* uniformName);
         int getUniform_int(const char* uniformName);
         bool hasUniform(const char* uniformName);
+        bool m_compiled = false;
+        bool isCompiled() const { return m_compiled; }
+        virtual ~ShaderProgram();
 };
 
 #endif

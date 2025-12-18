@@ -7,5 +7,5 @@ uniform ivec3 worldPos;
 void main() {
     float useZoom = zoom;
     if (zoom == 0) useZoom = 1.0;
-    gl_Position = vec4((aPos.x + worldPos.x)*(1/zoom), (aPos.y+worldPos.y)*(1/useZoom), 0.0f, 1.0f);
+    gl_Position = vec4((aPos.x + worldPos.x)*(1/useZoom), (aPos.y+worldPos.y)*(1/useZoom), 0.0f, 1.0f);
 }

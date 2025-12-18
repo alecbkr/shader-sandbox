@@ -12,6 +12,7 @@ public:
     Editor(unsigned int bufferSize, unsigned int width, unsigned int height);
     void render();
     void destroy();
+    void saveToFile(const std::string &filepath);
     std::string getFileContents(const char *filename);
 };
 

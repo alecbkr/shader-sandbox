@@ -12,21 +12,21 @@ const std::unordered_map<std::string, UniformType> InspectorEngine::typeMap = {
 InspectorEngine::InspectorEngine() {
     std::cout << "Initializing Inspector Engine" << std::endl;
     auto& programs = ShaderHandler::getPrograms();
-    for (auto& [programName, program] : programs) {
-        auto uniformMap = parseUniforms(program);
+    for (auto& [programName, programPointer] : programs) {
+        auto uniformMap = parseUniforms(programPointer);
         uniforms.insert({ programName, uniformMap });
         applyAllUniformsForProgram(programName);
     }
 };
-
-std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const ShaderProgram& program) {
+    
+    std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const ShaderProgram *program) {
     std::unordered_map<std::string, Uniform> programUniforms;
 
     std::string line;
     for (size_t i = 0; i < 2; i++) {
         std::stringstream sourceCode = i == 0 ?
-            std::stringstream(program.vertShader_code) :
-            std::stringstream(program.fragShader_code);
+            std::stringstream(program->vertShader_code) :
+            std::stringstream(program->fragShader_code);
         
         while (std::getline(sourceCode, line)) {
             // Figure out if line is a uniform line
@@ -56,14 +56,14 @@ std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const Sh
                 uniform.name.pop_back();
             }
 
-            uniform.programName = program.name;
+            uniform.programName = program->name;
             programUniforms[uniform.name] = uniform;
             std::cout << "Read " << uniform.name << std::endl;
         }
     }
 
     // Find old program uniforms
-    auto oldProgramPair = uniforms.find(program.name);
+    auto oldProgramPair = uniforms.find(program->name);
     if (oldProgramPair != uniforms.end()) {
         auto& oldProgramUniforms = oldProgramPair->second;
         
@@ -127,7 +127,7 @@ void InspectorEngine::setUniform(const std::string& programName, const std::stri
     applyUniform(programName, uniformPair->second);
 }
 
- void InspectorEngine::applyAllUniformsForProgram(const std::string& programName) {
+void InspectorEngine::applyAllUniformsForProgram(const std::string& programName) {
     auto programPair = uniforms.find(programName);
     if (programPair == uniforms.end()) {
         std::cout << "Apply All Uniforms: No program with that name found in Inspector Engine uniforms" << std::endl;
@@ -172,4 +172,14 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
         std::cout << "Apply Uniform: Uniform with unsupported type found" << std::endl;
         break;
     }
+}
+
+void InspectorEngine::reloadUniforms(const std:: string &programName){
+    ShaderProgram *newProgram = ShaderHandler::getProgram(programName);
+    if (!newProgram || !newProgram->isCompiled()){
+        return;
+    }
+    std::unordered_map<std::string, Uniform> newUniformMap = parseUniforms(newProgram);
+    uniforms[programName] = newUniformMap;
+    applyAllUniformsForProgram(programName);
 }

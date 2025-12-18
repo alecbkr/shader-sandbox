@@ -84,3 +84,11 @@ void Editor::render() {
 void Editor::destroy() {
     free(this->inputTextBuffer);
 }
+
+void Editor::saveToFile(const std::string &filepath){
+    std::ofstream file(filepath, std::ios::out | std::ios::binary);
+    if (file.is_open()){
+        file << this->inputTextBuffer;
+        file.close();
+    }
+}
