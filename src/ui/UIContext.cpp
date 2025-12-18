@@ -73,3 +73,7 @@ void UIContext::renderEditorWindow(float width, float height) {
 void UIContext::render(InspectorUI& inspectorUI) {
     inspectorUI.render();
 }
+
+void UIContext::render(MenuUI& menuUI) {
+    menuUI.render();
+}

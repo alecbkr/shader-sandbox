@@ -6,6 +6,7 @@
 #include "engine/AppTimer.hpp"
 #include "engine/Camera.hpp"
 #include "engine/DrawMetrics.hpp"
+#include "core/EventDispatcher.hpp"
 #include "object/Object.hpp"
 
 #include "ui/UIContext.hpp"
@@ -50,6 +51,7 @@ int main() {
     EditorEngine::spawnEditor(1024);
 
     UIContext ui(win.window);
+    MenuUI menuUI = MenuUI();
 
 
 
@@ -144,7 +146,10 @@ int main() {
         glfwPollEvents();
         processInput(win.window);
 
+        EventDispatcher::ProcessQueue();
+
         ui.preRender();
+        ui.render(menuUI);
         ui.renderEditorWindow(500, 500);
         ui.render(inspectorUI);
 
