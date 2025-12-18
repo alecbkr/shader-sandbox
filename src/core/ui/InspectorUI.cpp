@@ -65,7 +65,7 @@ void InspectorUI::drawAddUniformMenu() {
         newUniformType = static_cast<UniformType>(choice);
     }
 
-    if (ImGui::Button("Add Uniform", ImVec2(100, 20))) {
+    if (ImGui::Button("Add Uniform", ImVec2(100, 25))) {
         bool uniqueValidUniform = false;
         bool validShaderName = shaders.count(newUniformShaderName) >= 1;
         if (validShaderName) {
