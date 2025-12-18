@@ -1,6 +1,5 @@
 #include "InspectorEngine.hpp"
 #include "core/UniformRegistry.hpp"
-#include "../engine/Errorlog.hpp"
 #include <unordered_map>
 #include <sstream>
 #include <iostream>
@@ -38,11 +37,11 @@ void InspectorEngine::refreshUniforms() {
     }
 
     for (auto& [programName, program] : programs) {
-        auto uniformMap = parseUniforms(program);
+        auto uniformMap = parseUniforms(*program);
         std::cout << programName << std::endl;
         std::cout << programToObjectList[programName].size() << std::endl;
         for (std::string& objectName : programToObjectList[programName]) {
-            std::cout << objectName << " " << program.name << std::endl;
+            std::cout << objectName << " " << program->name << std::endl;
             UNIFORM_REGISTRY.insertUniformMap(objectName, uniformMap);
             applyAllUniformsForObject(objectName);
         }
@@ -86,6 +85,7 @@ std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const Sh
                 uniform.name.pop_back();
             }
 
+            uniform.ref.shaderName = program.name;
             programUniforms[uniform.name] = uniform;
             std::cout << "Read " << uniform.name << std::endl;
         }
@@ -94,7 +94,7 @@ std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const Sh
     // I'm really not sure this is necessary, it's a bit of a relic from the prototype where the uniform registry wasn't the source of truth...
     /*
     // Find old program uniforms
-    auto oldProgramPair = uniforms.find(program.name);
+    auto oldProgramPair = uniforms.find(program->name);
     if (oldProgramPair != uniforms.end()) {
         auto& oldProgramUniforms = oldProgramPair->second;
         
@@ -209,4 +209,17 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
 void InspectorEngine::applyInput(const std::string& objectName, const Uniform& uniform) {
     UNIFORM_REGISTRY.registerUniform(objectName, uniform);
     applyUniform(objectName, uniform);
+}
+void InspectorEngine::reloadUniforms(const std::string &programName){
+    ShaderProgram *newProgram = ShaderHandler::getProgram(programName);
+    if (!newProgram || !newProgram->isCompiled()){
+        return;
+    }
+    std::unordered_map<std::string, Uniform> newUniformMap = parseUniforms(*newProgram);
+    for (auto& [objectName, objectPtr] : ObjCache::objMap) {
+        if (objectPtr->getProgram()->name == programName) {
+            UNIFORM_REGISTRY.insertUniformMap(objectName, newUniformMap);
+            applyAllUniformsForObject(objectName);
+        }
+    }
 }

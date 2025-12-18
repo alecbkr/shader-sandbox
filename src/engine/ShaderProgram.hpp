@@ -13,6 +13,9 @@ class ShaderProgram {
         std::string vertShader_code;
         std::string fragShader_code;
         std::string name;
+        std::string vertPath;
+        std::string fragPath;
+
         ShaderProgram(const char *vertshader_path, const char *fragshader_path, const char *name);
         void use();
         void kill();
@@ -29,6 +32,9 @@ class ShaderProgram {
         float getUniform_float(const char* uniformName);
         int getUniform_int(const char* uniformName);
         bool hasUniform(const char* uniformName);
+        bool m_compiled = false;
+        bool isCompiled() const { return m_compiled; }
+        virtual ~ShaderProgram();
 };
 
 #endif
