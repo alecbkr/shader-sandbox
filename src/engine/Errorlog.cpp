@@ -25,7 +25,7 @@ void Errorlog::logEntry(ErrLevel level, const char *src, const char *msg) {
     //Emergency exit in case EL_CRITICAL EL_ERROR to avoid more errors
     if (currEntry.level >= abortWhen) {
         print(currEntry);
-        exit(1);
+        //exit(1);
     }
 }
 
