@@ -10,4 +10,5 @@ class FileSink : public LogSink {
 
     private: 
     std::ofstream file;  
+    size_t maxLogSize; 
 }; 
