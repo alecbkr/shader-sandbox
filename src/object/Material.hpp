@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "Texture.hpp"
+#include "../engine/ShaderProgram.hpp"
 #include "../engine/Errorlog.hpp"
 
 struct TextureBind {
@@ -16,11 +17,12 @@ struct TextureBind {
 class Material {
     public:
         int objectID;
-        std::string programName; //currently does nothing
+        ShaderProgram *program; //currently does nothing
         std::vector<TextureBind> textures;
-        void setTexture(Texture &tex, int unit, std::string uniformName);
-        void setProgram(std::string programNameIn);
         void bindTextures();
+        void setTexture(Texture &tex, int unit, std::string uniformName);
+        void setProgram(ShaderProgram &program);
+        GLuint getProgramID();
 };
 
 #endif

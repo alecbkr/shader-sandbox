@@ -33,35 +33,36 @@ resetStates() - call at the end of a frame to ensure no temporary
 #include <glfw/glfw3.h>
 #include <glm/vec2.hpp>
 
-#define INPUT InputHandler::getInstance()
-#define KEYBOARD InputHandler::getInstance().keys
+#define INPUT       InputHandler::getInstance()
+#define KEYBOARD    InputHandler::getInstance().keys
 #define MOUSEBUTTON InputHandler::getInstance().buttons
-#define CURSOR InputHandler::getInstance().cursor
+#define CURSOR      InputHandler::getInstance().cursor
 #define SCROLLWHEEL InputHandler::getInstance().scroll
 
 
-struct PushState {
-    bool isDown = false;
-    bool isPressed = false;
-    bool isReleased = false;
-};
-
-struct CursorState {
-    bool firstInput = true;
-    float currPosX = 0.0f;
-    float currPosY = 0.0f;
-    float lastPosX = 0.0f;
-    float lastPosY = 0.0f;
-    float offsetX = 0.0f;
-    float offsetY = 0.0f;
-};
-
-struct ScrollState {
-    float offsetX = 0.0f;
-    float offsetY = 0.0f;
-};
-
 class InputHandler {
+    private:
+        struct PushState {
+            bool isDown     = false;
+            bool isPressed  = false;
+            bool isReleased = false;
+        };
+
+        struct CursorState {
+            bool firstInput = true;
+            float currPosX  = 0.0f;
+            float currPosY  = 0.0f;
+            float lastPosX  = 0.0f;
+            float lastPosY  = 0.0f;
+            float offsetX   = 0.0f;
+            float offsetY   = 0.0f;
+        };
+
+        struct ScrollState {
+            float offsetX = 0.0f;
+            float offsetY = 0.0f;
+        };
+
     public:
         PushState keys[GLFW_KEY_LAST];
         PushState buttons[GLFW_MOUSE_BUTTON_LAST];

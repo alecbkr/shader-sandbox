@@ -8,7 +8,7 @@ getModelM().
 
 
 TRANSLATIONS:
-object translation calls will replace previous translation data. if a translation along the x-axis
+object translation calls will REPLACE previous translation data. if a translation along the x-axis
 is called and then another seperate call on only the y-axis, the x translation will be lost.
 This is true for all translation calls currently.
 
@@ -33,27 +33,33 @@ anything inside of this class.
 #include "Mesh.hpp"
 #include "Material.hpp"
 
-struct Renderling {
-    std::unique_ptr<Mesh> mesh;
-    Material mat;
-};
 
 class Object {
+    private:
+        struct Renderling {
+            std::unique_ptr<Mesh> mesh;
+            Material mat;
+        };
+
     public:
-        static int objectCount;
-        int objectID;
-        glm::vec3 position = glm::vec3(0.0f);
-        glm::vec3 scale = glm::vec3(1.0f);
-        glm::quat orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
         Renderling renderable;
 
         Object(std::vector<float> verts, std::vector<int> indicies, bool hasNorms, bool hasUVs);
-        void translateObj(glm::vec3 vector);
-        void scaleObj(glm::vec3 vector);
-        void rotateObj(float angle, glm::vec3 axis);
-        void setTexture(Texture &tex, int unit, std::string uniformName);
-        glm::mat4 getModelM();
         void render();
+        void translate(glm::vec3 vector);
+        void scale(glm::vec3 vector);
+        void rotate(float angle, glm::vec3 axis);
+        GLuint getProgramID();
+        ShaderProgram* getProgram();
+        glm::mat4 getModelM();
+        void setTexture(Texture &tex, int unit, std::string uniformName);
+        void setProgram(ShaderProgram &program);
+
+    private:
+        int objectID;
+        glm::vec3 objPosition = glm::vec3(0.0f);
+        glm::vec3 objScale = glm::vec3(1.0f);
+        glm::quat objOrientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f); 
 };
 
 #endif
