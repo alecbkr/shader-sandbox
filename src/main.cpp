@@ -7,11 +7,13 @@
 #include "engine/Camera.hpp"
 #include "engine/DrawMetrics.hpp"
 #include "core/EventDispatcher.hpp"
+#include "object/Object.hpp"
 
 #include "ui/UIContext.hpp"
 #include "core/InspectorEngine.hpp"
 #include "core/ui/InspectorUI.hpp"
 #include "core/ShaderHandler.hpp"
+#include "core/EditorEngine.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -19,6 +21,7 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
+
 
 
 void processInput(GLFWwindow *window);
@@ -36,6 +39,7 @@ enum AppState {
 Camera cam;
 AppState appstate = AS_EDITOR;
 bool showMetrics = true;
+std::vector<EditorUI*> EditorEngine::editors;
 
 int main() {
     Window win("Sandbox", 1000, 800);
@@ -43,47 +47,99 @@ int main() {
     UniformRegistry uniformRegistry;
     InspectorEngine inspectorEngine(uniformRegistry);
     InspectorUI inspectorUI(inspectorEngine, uniformRegistry, shaderHandler);
+
+    EditorEngine::spawnEditor(1024);
+
     UIContext ui(win.window);
     MenuUI menuUI = MenuUI();
 
-    GLfloat voxel_verts[] = {
-        -1.0,  1.0, 0.0, // TOP-LEFT
-         1.0,  1.0, 0.0, // TOP-RIGHT
-         1.0, -1.0, 0.0, // BOTTOM-RIGHT
-        -1.0, -1.0, 0.0  // BOTTOM-LEFT
+
+
+    // GRIDPLANE
+    std::vector<float> gridPlane_verts {
+        -1.0f, 0.0f, -1.0f,  0.0f, 0.0f,
+        -1.0f, 0.0f, 1.0f,  1.0f, 0.0f,
+        1.0f, 0.0f, 1.0f,  1.0f, 1.0f,
+        1.0f, 0.0f, -1.0f, 0.0f, 1.0f
     };
 
-    GLint voxel_indices[] = {
-        0, 1, 2,
+    std::vector<int> gridPlane_indices {
+        0, 1, 2, 
         0, 2, 3
     };
 
+    // PYRAMID
+    std::vector<float> pyramidVerts = {
+        // Base
+        -0.5f, 0.0f, -0.5f,  0.0f, 0.0f, // 0: bottom-left
+        0.5f, 0.0f, -0.5f,  1.0f, 0.0f, // 1: bottom-right
+        0.5f, 0.0f,  0.5f,  1.0f, 1.0f, // 2: top-right
+        -0.5f, 0.0f,  0.5f,  0.0f, 1.0f, // 3: top-left
 
-    GLuint vao, vbo, ebo;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+        // Apex
+        0.0f, 1.0f, 0.0f,   0.5f, 0.5f  // 4: tip
+    };
 
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(voxel_verts), voxel_verts, GL_STATIC_DRAW);
+    std::vector<int> pyramidIndices = {
+        0, 1, 2,  0, 2, 3, // base
+        0, 1, 4,            // side 1
+        1, 2, 4,            // side 2
+        2, 3, 4,            // side 3
+        3, 0, 4             // side 4
+    };
 
-    glGenBuffers(1, &ebo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(voxel_indices), voxel_indices, GL_STATIC_DRAW);
+    // CUBE
+    std::vector<float> cubeVerts = {
+        // positions       // UVs
+        -0.5f,-0.5f,-0.5f, 0.0f,0.0f,
+        0.5f,-0.5f,-0.5f, 1.0f,0.0f,
+        0.5f, 0.5f,-0.5f, 1.0f,1.0f,
+        -0.5f, 0.5f,-0.5f, 0.0f,1.0f,
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
-    glEnableVertexAttribArray(0);
+        -0.5f,-0.5f, 0.5f, 0.0f,0.0f,
+        0.5f,-0.5f, 0.5f, 1.0f,0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f,1.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f,1.0f
+    };
 
+    // Indices for cube (two triangles per face)
+    std::vector<int> cubeIndices = {
+        0,1,2, 0,2,3, // back
+        4,5,6, 4,6,7, // front
+        3,2,6, 3,6,7, // top
+        0,1,5, 0,5,4, // bottom
+        1,2,6, 1,6,5, // right
+        0,3,7, 0,7,4  // left
+    };
 
-    // glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    
+    // TEXTURES
+    Texture waterTex("../assets/textures/water.png");
+    Texture faceTex("../assets/textures/bigface.jpg");
+    Texture edgeTex("../assets/textures/rim.png");
+    Texture gridTex("../assets/textures/grid.png");
+    
 
-    // Construct ImGui elements
-    Editor* editor = new Editor(1024, 200, 200);
+    // OBJECTS
+    Object gridplane(gridPlane_verts, gridPlane_indices, false, true);
+    gridplane.setTexture(gridTex, 0, "grid");
+    gridplane.scaleObj(glm::vec3(5.0));
+
+    Object pyramid(pyramidVerts, pyramidIndices, false, true);
+    pyramid.translateObj(glm::vec3(1.0f, 0.0f, -3.0f));
+    pyramid.setTexture(waterTex, 0, "base");
+    pyramid.setTexture(edgeTex, 1, "edge");
+
+    Object cube(cubeVerts, cubeIndices, false, true);
+    cube.translateObj(glm::vec3(-4.0f, 3.0f, -5.0f));
+    cube.rotateObj(30.0f, glm::vec3(0.2f, 0.4f, 0.9f));
+    cube.setTexture(faceTex, 0, "base");
+    
+
 
     ERRLOG.printClear();
     glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
+    glEnable(GL_DEPTH_TEST);
 
     // RUN LOOP
     while (!win.shouldClose()) {
@@ -94,8 +150,9 @@ int main() {
 
         ui.preRender();
         ui.render(menuUI);
-        ui.render(editor);
+        ui.renderEditorWindow(500, 500);
         ui.render(inspectorUI);
+
 
         // ---DRAWING---
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -110,17 +167,19 @@ int main() {
             program.setUniform_mat4float("projection", perspective);
             program.setUniform_mat4float("view", view);
 
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(0.0f, 0.0f, -3.0f));
-            model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-            program.setUniform_mat4float("model", model);
+            program.setUniform_int("baseTex", 0);
+            program.setUniform_int("outlineTex", 1);
+            
+            program.setUniform_mat4float("model", gridplane.getModelM());
+            gridplane.render();
 
-            program.setUniform_vec3float("inColor", 1.0f, 0.0f, 0.4f);
+            program.setUniform_mat4float("model", pyramid.getModelM());
+            pyramid.render();
 
-            glBindVertexArray(vao);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-            glBindVertexArray(0);
+            program.setUniform_mat4float("model", cube.getModelM());
+            cube.render();
         }
+
 
         if (showMetrics) drawMetrics(appstate);
 
@@ -134,7 +193,7 @@ int main() {
         win.swapBuffers();
     }
 
-    ui.destroy(editor);
+    ui.destroy();
 }
 
 
@@ -158,7 +217,7 @@ void cameraControls(GLFWwindow *window, Camera &camera) {
     if (KEYBOARD[GLFW_KEY_F1].isPressed) {
         showMetrics = !showMetrics;
     }
-    // [TAB] - switch to editor controls
+    // [F2] - switch to editor controls
     if (KEYBOARD[GLFW_KEY_F2].isPressed) {
         appstate = AS_EDITOR;
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -190,7 +249,7 @@ void editorControls(GLFWwindow *window) {
     if (KEYBOARD[GLFW_KEY_F1].isPressed) {
         showMetrics = !showMetrics;
     }
-    // [TAB] - switch to camera controls
+    // [F2] - switch to camera controls
     if (KEYBOARD[GLFW_KEY_F2].isPressed) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         CURSOR.firstInput = true;

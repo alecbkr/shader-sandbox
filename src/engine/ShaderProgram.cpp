@@ -81,7 +81,7 @@ void ShaderProgram::setUniform_int(const char *uniformName, int val) {
         ERRLOG.logEntry(EL_WARNING, "SHADER UNIFORM: Int", "Location not found for:", uniformName);
         return;
     }
-    glUniform1f(loc, val);
+    glUniform1i(loc, val);
 }
 
 

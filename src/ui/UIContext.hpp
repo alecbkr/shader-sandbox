@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Editor.hpp"
 #include "core/ui/InspectorUI.hpp"
 #include "core/ui/MenuUI.hpp"
 //#include "Inspector.hpp"
@@ -13,9 +12,9 @@ class UIContext {
 public:
     UIContext(GLFWwindow* window);
     void preRender();
-    void render(Editor* editor);
+    void renderEditorWindow(float width, float height);
     void render(InspectorUI& inspectorUI);
     void render(MenuUI& menuUI);
     void postRender();
-    void destroy(Editor* editor);
+    void destroy();
 };
