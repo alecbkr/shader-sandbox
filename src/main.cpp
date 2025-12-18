@@ -37,21 +37,14 @@ Camera cam;
 AppState appstate = AS_EDITOR;
 bool showMetrics = true;
 
-bool testEvents(EventPayload payload) {
-    printf("Testing Event");
-    return false;
-}
-
 int main() {
-    // Works
-    EventDispatcher dispatcher = EventDispatcher();
-
     Window win("Sandbox", 1000, 800);
     ShaderHandler shaderHandler;
     UniformRegistry uniformRegistry;
     InspectorEngine inspectorEngine(uniformRegistry);
     InspectorUI inspectorUI(inspectorEngine, uniformRegistry, shaderHandler);
     UIContext ui(win.window);
+    MenuUI menuUI = MenuUI();
 
     GLfloat voxel_verts[] = {
         -1.0,  1.0, 0.0, // TOP-LEFT
@@ -97,9 +90,10 @@ int main() {
         glfwPollEvents();
         processInput(win.window);
 
-        dispatcher.ProcessQueue();
+        EventDispatcher::ProcessQueue();
 
         ui.preRender();
+        ui.render(menuUI);
         ui.render(editor);
         ui.render(inspectorUI);
 

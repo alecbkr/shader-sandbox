@@ -1,8 +1,8 @@
-#ifndef UICONTEXT_HPP
-#define UICONTEXT_HPP
+#pragma once
 
 #include "Editor.hpp"
 #include "core/ui/InspectorUI.hpp"
+#include "core/ui/MenuUI.hpp"
 //#include "Inspector.hpp"
 
 #include "imgui/imgui.h"
@@ -15,9 +15,7 @@ public:
     void preRender();
     void render(Editor* editor);
     void render(InspectorUI& inspectorUI);
+    void render(MenuUI& menuUI);
     void postRender();
     void destroy(Editor* editor);
 };
-
-
-#endif

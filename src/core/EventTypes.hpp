@@ -4,9 +4,11 @@
 
 enum EventType {
     // Fill out event types here
+    NoType,
     WindowResize,
     KeyPressed,
-    QuitApp,
+    SaveActiveShaderFile,
+    Quit,
 };
 
 struct WindowResizePayload { int w, h; };
@@ -33,5 +35,5 @@ inline Event MakeKeyPressedEvent(int key) {
 };
 
 inline Event MakeQuitAppEvent() {
-    return { QuitApp, false, std::monostate{} };
+    return { Quit, false, std::monostate{} };
 };
