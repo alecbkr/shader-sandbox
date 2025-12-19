@@ -9,13 +9,19 @@ void Material::setTexture(Texture &tex, int unit, std::string uniformName) {
 }
 
 
-void Material::bindTextures() {
-    for (auto& bind : textures) {
-        bind.texture->bind(bind.unit);
-    }
+void Material::setProgram(ShaderProgram &program) {
+    this->program = &program;
 }
 
 
-void Material::setProgram(std::string programName) {
-    this->programName = programName;
+GLuint Material::getProgramID() {
+    return program->ID;
+}
+
+
+void Material::bindTextures() {
+    for (auto& bind : textures) {
+        bind.texture->bind(bind.unit);
+        program->setUniform_int(bind.uniformName.c_str(), bind.unit); // TODO dynamic but redundant if all objects share a program
+    }
 }
