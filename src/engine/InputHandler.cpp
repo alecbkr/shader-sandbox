@@ -9,6 +9,14 @@ InputHandler& InputHandler::getInstance() {
 }
 
 
+void InputHandler::updateCursor() {
+    CURSOR.offsetX = CURSOR.currPosX - CURSOR.lastPosX;
+    CURSOR.offsetY = CURSOR.lastPosY - CURSOR.currPosY; //swapped on purpose
+    CURSOR.lastPosX = CURSOR.currPosX;
+    CURSOR.lastPosY = CURSOR.currPosY;
+}
+
+
 void InputHandler::resetStates() {
     for (int i=0; i<GLFW_MOUSE_BUTTON_LAST; i++) {
         buttons[i].isPressed = false;
@@ -81,16 +89,12 @@ void InputHandler::cursor_callback(GLFWwindow *window, double xpos, double ypos)
     }
     CURSOR.currPosX = static_cast<float>(xpos);
     CURSOR.currPosY = static_cast<float>(ypos);
-    CURSOR.offsetX = CURSOR.currPosX - CURSOR.lastPosX;
-    CURSOR.offsetY = CURSOR.lastPosY - CURSOR.currPosY; //swapped on purpose
-    CURSOR.lastPosX = CURSOR.currPosX;
-    CURSOR.lastPosY = CURSOR.currPosY;
 }
 
 
 void InputHandler::scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-    SCROLLWHEEL.offsetX = static_cast<float>(xoffset);
-    SCROLLWHEEL.offsetY = static_cast<float>(yoffset);
+    SCROLLWHEEL.offsetX += static_cast<float>(xoffset);
+    SCROLLWHEEL.offsetY += static_cast<float>(yoffset);
 }
 
 

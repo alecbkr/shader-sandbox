@@ -155,6 +155,7 @@ int main() {
     // RUN LOOP
     while (!win.shouldClose()) {
         glfwPollEvents();
+        INPUT.updateCursor();
         processInput(win.window);
 
         EventDispatcher::ProcessQueue();
