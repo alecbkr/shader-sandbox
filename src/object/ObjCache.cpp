@@ -95,6 +95,7 @@ void ObjCache::renderObj(std::string name, glm::mat4 perspective, glm::mat4 view
     }
 
     ShaderProgram* currProgram = obj->getProgram();
+    currProgram->use();
     currProgram->setUniform_mat4float("projection", perspective);
     currProgram->setUniform_mat4float("view", view);
     currProgram->setUniform_mat4float("model", obj->getModelM());
