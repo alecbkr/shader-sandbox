@@ -14,6 +14,9 @@
 #include "core/ui/ConsoleUI.hpp"
 #include "core/ShaderHandler.hpp"
 #include "core/EditorEngine.hpp"
+#include "core/logging/Logger.hpp"
+#include "core/logging/LogSink.hpp"
+#include "core/logging/StdoutSink.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -53,8 +56,11 @@ int main() {
     ConsoleUI consoleUI; 
     UIContext ui(win.window);
 
+    auto stdoutLogs = std::make_shared<StdoutSink>(); 
+    Logger::addSink(stdoutLogs); 
 
-
+    Logger::addLog(LogLevel::ERROR, "", "Hello, World!", -1);
+    
     // GRIDPLANE
     std::vector<float> gridPlane_verts {
         -1.0f, 0.0f, -1.0f,  0.0f, 0.0f,
