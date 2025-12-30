@@ -22,13 +22,12 @@ class ObjCache {
         static void renderObj(const std::string name, glm::mat4 projection, glm::mat4 view);
         static void renderAll(glm::mat4 projection, glm::mat4 view);
         static void printOrder();
-
-        static std::vector<std::unique_ptr<Object>> objCache;
+        static std::unordered_map<std::string, Object*> objMap;
 
     private:
         static Object* getObject(const std::string name);
         static void reorderByProgram();
-        static std::unordered_map<std::string, Object*> objMap;
+        static std::vector<std::unique_ptr<Object>> objCache;
         
 };
 

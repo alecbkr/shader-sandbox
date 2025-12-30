@@ -47,8 +47,6 @@ int main() {
     Window win("Sandbox", 1000, 800);
     ShaderHandler shaderHandler;
     UniformRegistry uniformRegistry;
-    InspectorEngine inspectorEngine(uniformRegistry);
-    InspectorUI inspectorUI(inspectorEngine, uniformRegistry, shaderHandler);
 
     EditorEngine::spawnEditor(1024);
 
@@ -146,6 +144,8 @@ int main() {
     ObjCache::createObj("pyramid1", pyramidVerts, pyramidIndices, false, true, untex);
     ObjCache::translateObj("pyramid1", glm::vec3(-1.3f, 0.0f, -1.0f));
 
+    InspectorEngine inspectorEngine(uniformRegistry);
+    InspectorUI inspectorUI(inspectorEngine, uniformRegistry, shaderHandler);
 
 
     ERRLOG.printClear();
