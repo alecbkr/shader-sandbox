@@ -5,6 +5,9 @@
 #include <sstream>
 #include <iostream>
 #include "core/ShaderHandler.hpp"
+#include "object/ObjCache.hpp"
+#include "object/Object.hpp"
+#include "engine/Errorlog.hpp"
 
 const std::unordered_map<std::string, UniformType> InspectorEngine::typeMap = {
     {"vec3", UniformType::Vec3},
@@ -16,10 +19,31 @@ const std::unordered_map<std::string, UniformType> InspectorEngine::typeMap = {
 InspectorEngine::InspectorEngine(UniformRegistry& registry): uniformRegistry(registry) {
     std::cout << "Initializing Inspector Engine" << std::endl;
     auto& programs = ShaderHandler::getPrograms();
+    
+    // NOTE: this will break if we do any multithreading with the program list.
+    // Please be careful.
+    std::unordered_map<std::string, std::vector<std::string>> programToObjectList;
+    for (auto& [programName, program] : programs) {
+        programToObjectList[programName] = std::vector<std::string>();
+    }
+
+    for (auto& pair : ObjCache::objMap) {
+        // separate them for dap
+        auto& objectName = pair.first;
+        auto& object = pair.second;
+        auto& programName = object->getProgram()->name;
+        programToObjectList[programName].push_back(objectName);
+    }
+
     for (auto& [programName, program] : programs) {
         auto uniformMap = parseUniforms(program);
-        uniformRegistry.insertUniformMap(programName, uniformMap);
-        applyAllUniformsForProgram(programName);
+        std::cout << programName << std::endl;
+        std::cout << programToObjectList[programName].size() << std::endl;
+        for (std::string& objectName : programToObjectList[programName]) {
+            std::cout << objectName << " " << program.name << std::endl;
+            uniformRegistry.insertUniformMap(objectName, uniformMap);
+            applyAllUniformsForObject(objectName);
+        }
     }
 };
 
@@ -113,35 +137,29 @@ void InspectorEngine::assignDefaultValue(Uniform& uniform) {
     }
 }
 
-void InspectorEngine::setUniform(const std::string& programName, const std::string& uniformName, UniformValue value) {
-    const Uniform* const oldUniform = uniformRegistry.tryReadUniform(programName, uniformName);
+void InspectorEngine::setUniform(const std::string& objectName, const std::string& uniformName, UniformValue value) {
+    const Uniform* const oldUniform = uniformRegistry.tryReadUniform(objectName, uniformName);
     if (oldUniform != nullptr) {
         Uniform newUniform = *oldUniform;
         newUniform.value = value;
-        uniformRegistry.registerUniform(programName, uniformName, newUniform);
+        uniformRegistry.registerUniform(objectName, uniformName, newUniform);
 
-        applyUniform(programName, newUniform);
+        applyUniform(objectName, newUniform);
     }
     else {
         ERRLOG.logEntry(EL_WARNING, "setUniform", "failed to set: ", uniformName.c_str());
     }
 }
 
-void InspectorEngine::applyAllUniformsForProgram(const std::string& programName) {
-    ShaderProgram* program = ShaderHandler::getProgram(programName);
-    if (program == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForProgram", "Shader program does not exist: ", programName.c_str());
-        return;
-    }
-    
-    const std::unordered_map<std::string, Uniform>* programUniforms = uniformRegistry.tryReadUniforms(programName);
+void InspectorEngine::applyAllUniformsForObject(const std::string& objectName) {
+    const std::unordered_map<std::string, Uniform>* objectUniforms = uniformRegistry.tryReadUniforms(objectName);
 
-    if (programUniforms == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForProgram", "Shader program not found in registry: ", programName.c_str());
+    if (objectUniforms == nullptr) {
+        ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForProgram", "object not found in uniform registry: ", objectName.c_str());
     }
 
-    for (auto& [uniformName, uniform] : *programUniforms) {
-        applyUniform(*program, uniform);
+    for (auto& [uniformName, uniform] : *objectUniforms) {
+        applyUniform(objectName, uniform);
     }
 }
 

@@ -1,6 +1,8 @@
 #include "core/ui/InspectorUI.hpp"
 #include "core/ShaderHandler.hpp"
 #include "core/UniformRegistry.hpp"
+#include "engine/Errorlog.hpp"
+#include "object/ObjCache.hpp"
 #include <unordered_map>
 
 InspectorUI::InspectorUI(InspectorEngine& eng, UniformRegistry& registry, ShaderHandler& handler): engine(eng), uniformRegistry(registry), shaderHandler(handler) {}
@@ -13,12 +15,13 @@ void InspectorUI::render() {
 void InspectorUI::drawUniformEditors() {
     drawAddUniformMenu();
     int imGuiID = 0;
-    for (auto &[shaderName, shaderMap] : shaderHandler.getPrograms()) {
-        ImGui::Text("%s", ("Shader:" + shaderName).c_str());
-        const std::unordered_map<std::string, Uniform>* uniformMap = uniformRegistry.tryReadUniforms(shaderName);
+    for (auto &[objectName, object] : ObjCache::objMap) {
+        ImGui::Text("%s", ("Object:" + objectName).c_str());
+        const std::unordered_map<std::string, Uniform>* uniformMap = uniformRegistry.tryReadUniforms(objectName);
 
         if (uniformMap == nullptr) {
-            std::cout << "shader not found in registry: " << shaderName << std::endl;
+            Errorlog::getInstance().logEntry(EL_WARNING, "drawUniformEditors", ("Object not found in registry: " + objectName).c_str());
+            continue;
         }
 
         for (auto &[uniformName, uniformRef] : *uniformMap) {
@@ -28,7 +31,7 @@ void InspectorUI::drawUniformEditors() {
             imGuiID++;
         }
         for (std::string uniformName : uniformNamesToDelete)
-            uniformRegistry.eraseUniform(shaderName, uniformName);
+            uniformRegistry.eraseUniform(objectName, uniformName);
         uniformNamesToDelete.clear();
     }
 }
