@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iostream>
 #include "core/ShaderHandler.hpp"
+#include "engine/ShaderProgram.hpp"
 #include "object/ObjCache.hpp"
 #include "object/Object.hpp"
 #include "engine/Errorlog.hpp"
@@ -16,8 +17,12 @@ const std::unordered_map<std::string, UniformType> InspectorEngine::typeMap = {
     {"float", UniformType::Float}
 };
 
-InspectorEngine::InspectorEngine(UniformRegistry& registry): uniformRegistry(registry) {
+InspectorEngine::InspectorEngine(): uniformRegistry(UniformRegistry::instance()) {
     std::cout << "Initializing Inspector Engine" << std::endl;
+    refreshUniforms();
+}
+
+void InspectorEngine::refreshUniforms() {
     auto& programs = ShaderHandler::getPrograms();
     
     // NOTE: this will break if we do any multithreading with the program list.
@@ -28,7 +33,7 @@ InspectorEngine::InspectorEngine(UniformRegistry& registry): uniformRegistry(reg
     }
 
     for (auto& pair : ObjCache::objMap) {
-        // separate them for dap
+        // separate them so that debugger works.
         auto& objectName = pair.first;
         auto& object = pair.second;
         auto& programName = object->getProgram()->name;
@@ -45,7 +50,7 @@ InspectorEngine::InspectorEngine(UniformRegistry& registry): uniformRegistry(reg
             applyAllUniformsForObject(objectName);
         }
     }
-};
+}
 
 std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const ShaderProgram& program) {
     std::unordered_map<std::string, Uniform> programUniforms;
@@ -141,7 +146,7 @@ void InspectorEngine::setUniform(const std::string& objectName, const std::strin
     if (oldUniform != nullptr) {
         Uniform newUniform = *oldUniform;
         newUniform.value = value;
-        uniformRegistry.registerUniform(objectName, uniformName, newUniform);
+        uniformRegistry.registerUniform(objectName, newUniform);
 
         applyUniform(objectName, newUniform);
     }
@@ -196,4 +201,10 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
         ERRLOG.logEntry(EL_WARNING, "applyUniform", "Invalid Uniform Type: ");
         break;
     }
+}
+
+// Include this along with setUniform because setUniform is used for other stuff.
+void InspectorEngine::applyInput(const std::string& objectName, const Uniform& uniform) {
+    uniformRegistry.registerUniform(objectName, uniform);
+    applyUniform(objectName, uniform);
 }

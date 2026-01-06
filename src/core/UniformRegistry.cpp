@@ -5,6 +5,11 @@
 
 UniformRegistry::UniformRegistry() {}
 
+UniformRegistry& UniformRegistry::instance() {
+    static UniformRegistry inst;
+    return inst;
+}
+
 /*
 Uniform UniformRegistry::getUniform(std::string shaderProgramName, std::string uniformName) {
     if (uniforms.count(shaderProgramName) > 0 && uniforms.at(shaderProgramName).count(uniformName) > 0) {
@@ -77,8 +82,8 @@ const std::unordered_map<std::string, Uniform>* UniformRegistry::tryReadUniforms
     return programUniforms;
 }
 
-void UniformRegistry::registerUniform(const std::string& objectName, const std::string& uniformName, Uniform uniformValue) {
-    uniforms[objectName][uniformName] = uniformValue;
+void UniformRegistry::registerUniform(const std::string& objectName, Uniform uniform) {
+    uniforms[objectName][uniform.name] = uniform;
 }
 
 void UniformRegistry::insertUniformMap(const std::string& objectName, const std::unordered_map<std::string, Uniform>& map) {
@@ -97,4 +102,6 @@ void UniformRegistry::eraseUniform(const std::string& objectName, const std::str
     }
     uniforms.at(objectName).erase(uniformName);
 }
+
+
 

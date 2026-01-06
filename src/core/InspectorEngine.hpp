@@ -10,15 +10,17 @@
 class InspectorEngine {
   public:
     // Organize uniforms by shader programs (outer map string is shader program name)
-    InspectorEngine(UniformRegistry& registry);
-    void applyAllUniformsForObject(const std::string& programName);
-    void setUniform(const std::string& objectName, const std::string& uniformName, UniformValue value);
-    void applyUniform(const std::string& objectName, const Uniform& uniform);
-    void applyUniform(ShaderProgram& program, const Uniform& uniform);
+    InspectorEngine();
+    void refreshUniforms();
+    void applyInput(const std::string& objectName, const Uniform& uniform);
     
   private:
     UniformRegistry& uniformRegistry;
 
+    void applyUniform(ShaderProgram& program, const Uniform& uniform);
+    void applyAllUniformsForObject(const std::string& programName);
+    void setUniform(const std::string& objectName, const std::string& uniformName, UniformValue value);
+    void applyUniform(const std::string& objectName, const Uniform& uniform);
     static const std::unordered_map<std::string, UniformType> typeMap;
     std::unordered_map<std::string, Uniform> parseUniforms(const ShaderProgram& program);
     void assignDefaultValue(Uniform& uniform);

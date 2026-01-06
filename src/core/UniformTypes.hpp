@@ -16,9 +16,17 @@ enum class UniformType {
 
 using UniformValue = std::variant<int, float, glm::vec3, glm::vec4>;
 
+struct UniformRef {
+    std::string shaderName;
+    std::string uniformName;
+    std::string uniformType;
+};
 
 struct Uniform {
     std::string name;
     UniformType type;
     UniformValue value;
+    bool wasUniformRef = false;
+    UniformRef ref;
 };
+

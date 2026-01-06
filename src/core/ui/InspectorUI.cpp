@@ -5,7 +5,7 @@
 #include "object/ObjCache.hpp"
 #include <unordered_map>
 
-InspectorUI::InspectorUI(InspectorEngine& eng, UniformRegistry& registry, ShaderHandler& handler): engine(eng), uniformRegistry(registry), shaderHandler(handler) {}
+InspectorUI::InspectorUI(InspectorEngine& eng): engine(eng), uniformRegistry(UniformRegistry::instance()) {}
 
 void InspectorUI::render() {
     ImGui::Text("Object Properties");
@@ -26,7 +26,8 @@ void InspectorUI::drawUniformEditors() {
 
         for (auto &[uniformName, uniformRef] : *uniformMap) {
             ImGui::PushID(imGuiID);
-            drawUniformInput(uniformRef, objectName);
+            Uniform uniformCopy = uniformRef;
+            drawUniformInput(uniformCopy, objectName);
             ImGui::PopID();
             imGuiID++;
         }
@@ -103,7 +104,7 @@ void InspectorUI::drawAddUniformMenu() {
                 break;
             }
 
-            uniformRegistry.registerUniform(newUniformShaderName, newUniformName, newUniform);
+            uniformRegistry.registerUniform(newUniformShaderName, newUniform);
             newUniformShaderName = "";
             newUniformName = "";
         } else {
@@ -145,15 +146,17 @@ bool InspectorUI::drawUniformInputValue(glm::vec4* value) {
     return changed;
 }
 
-void InspectorUI::drawUniformInput(const Uniform& uniform, const std::string& objectName) {
+void InspectorUI::drawUniformInput(Uniform& uniform, const std::string& objectName) {
     ImGui::Text("%s", uniform.name.c_str());
     
     bool changed = false;
-    std::visit([&](auto val){
+    std::visit([&](auto& val){
         changed = drawUniformInputValue(&val);
     }, uniform.value);
 
-    if (changed) engine.applyUniform(objectName, uniform);
+    if (changed) {
+        engine.applyInput(objectName, uniform);
+    }
 
     if (ImGui::Button("Delete Uniform", ImVec2(100, 20))) {
         uniformNamesToDelete.push_back(uniform.name);

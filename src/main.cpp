@@ -154,8 +154,8 @@ int main() {
     ObjCache::translateObj("pyramid1", glm::vec3(-1.3f, 0.0f, -1.0f));
 
     // until later, we need to initialize the inspector stuff after objects & shaders are created. we don't any kind of reload event yet to check for new ones.
-    InspectorEngine inspectorEngine(uniformRegistry);
-    InspectorUI inspectorUI(inspectorEngine, uniformRegistry, shaderHandler);
+    InspectorEngine inspectorEngine;
+    InspectorUI inspectorUI(inspectorEngine);
 
 
     ERRLOG.printClear();
