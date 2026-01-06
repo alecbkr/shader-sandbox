@@ -5,23 +5,19 @@
 #include <unordered_map>
 #include "engine/ShaderProgram.hpp"
 #include "core/UniformTypes.hpp"
-#include "UniformRegistry.hpp"
 
 class InspectorEngine {
   public:
     // Organize uniforms by shader programs (outer map string is shader program name)
-    InspectorEngine();
-    void refreshUniforms();
-    void applyInput(const std::string& objectName, const Uniform& uniform);
+    static void refreshUniforms();
+    static void applyInput(const std::string& objectName, const Uniform& uniform);
+    static void applyAllUniformsForObject(const std::string& objectName);
     
   private:
-    UniformRegistry& uniformRegistry;
-
-    void applyUniform(ShaderProgram& program, const Uniform& uniform);
-    void applyAllUniformsForObject(const std::string& programName);
-    void setUniform(const std::string& objectName, const std::string& uniformName, UniformValue value);
-    void applyUniform(const std::string& objectName, const Uniform& uniform);
+    static void applyUniform(ShaderProgram& program, const Uniform& uniform);
+    static void setUniform(const std::string& objectName, const std::string& uniformName, UniformValue value);
+    static void applyUniform(const std::string& objectName, const Uniform& uniform);
     static const std::unordered_map<std::string, UniformType> typeMap;
-    std::unordered_map<std::string, Uniform> parseUniforms(const ShaderProgram& program);
-    void assignDefaultValue(Uniform& uniform);
+    static std::unordered_map<std::string, Uniform> parseUniforms(const ShaderProgram& program);
+    static void assignDefaultValue(Uniform& uniform);
 };

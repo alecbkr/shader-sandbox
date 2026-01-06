@@ -54,6 +54,7 @@ class Object {
         glm::mat4 getModelM();
         void setTexture(Texture &tex, int unit, std::string uniformName);
         void setProgram(ShaderProgram &program);
+        std::string name;
 
     private:
         int objectID;

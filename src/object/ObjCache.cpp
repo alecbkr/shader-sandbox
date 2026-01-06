@@ -1,4 +1,5 @@
 #include "ObjCache.hpp"
+#include "core/InspectorEngine.hpp"
 #include <algorithm>
 #include <iostream>
 
@@ -28,6 +29,7 @@ void ObjCache::createObj(const std::string& name, std::vector<float> verts, std:
     auto obj = std::make_unique<Object>(Object(verts, indices, hasNorms, hasUVs));
     objMap[name] = &(Object&)(*obj);
     obj.get()->setProgram(program);
+    obj.get()->name = name;
 
     objCache.push_back(std::move(obj));
     reorderByProgram();
@@ -118,6 +120,7 @@ void ObjCache::renderAll(glm::mat4 perspective, glm::mat4 view) {
             currProgram->setUniform_mat4float("view", view);
         }
 
+        InspectorEngine::applyAllUniformsForObject(currObj.get()->name);
         currProgram->setUniform_mat4float("model", currObj.get()->getModelM());
         currObj.get()->render();
     }

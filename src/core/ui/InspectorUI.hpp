@@ -10,12 +10,10 @@
 
 class InspectorUI {
     public:
-    InspectorUI(InspectorEngine& eng);
+    InspectorUI();
     void render();
   
     private:
-    InspectorEngine& engine;
-    UniformRegistry& uniformRegistry;
     int height;
     int width;
     std::vector<std::string> uniformNamesToDelete;

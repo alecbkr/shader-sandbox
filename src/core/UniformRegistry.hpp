@@ -3,9 +3,10 @@
 #include <unordered_map>
 #include <string>
 
+#define UNIFORM_REGISTRY UniformRegistry::instance()
+
 class UniformRegistry {
     public:
-    UniformRegistry();
     static UniformRegistry& instance();
     const Uniform* tryReadUniform(const std::string& objectName, const std::string& uniformName) const; // return false if we didn't find it.
     bool containsUniform(const std::string& objectName, const std::string& uniformName);
@@ -15,5 +16,6 @@ class UniformRegistry {
     void eraseUniform(const std::string& objectName, const std::string& uniformName);
 
     private:
+    UniformRegistry();
     std::unordered_map<std::string, std::unordered_map<std::string, Uniform>> uniforms;
 };

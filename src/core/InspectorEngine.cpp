@@ -17,11 +17,6 @@ const std::unordered_map<std::string, UniformType> InspectorEngine::typeMap = {
     {"float", UniformType::Float}
 };
 
-InspectorEngine::InspectorEngine(): uniformRegistry(UniformRegistry::instance()) {
-    std::cout << "Initializing Inspector Engine" << std::endl;
-    refreshUniforms();
-}
-
 void InspectorEngine::refreshUniforms() {
     auto& programs = ShaderHandler::getPrograms();
     
@@ -46,7 +41,7 @@ void InspectorEngine::refreshUniforms() {
         std::cout << programToObjectList[programName].size() << std::endl;
         for (std::string& objectName : programToObjectList[programName]) {
             std::cout << objectName << " " << program.name << std::endl;
-            uniformRegistry.insertUniformMap(objectName, uniformMap);
+            UNIFORM_REGISTRY.insertUniformMap(objectName, uniformMap);
             applyAllUniformsForObject(objectName);
         }
     }
@@ -142,11 +137,11 @@ void InspectorEngine::assignDefaultValue(Uniform& uniform) {
 }
 
 void InspectorEngine::setUniform(const std::string& objectName, const std::string& uniformName, UniformValue value) {
-    const Uniform* const oldUniform = uniformRegistry.tryReadUniform(objectName, uniformName);
+    const Uniform* const oldUniform = UNIFORM_REGISTRY.tryReadUniform(objectName, uniformName);
     if (oldUniform != nullptr) {
         Uniform newUniform = *oldUniform;
         newUniform.value = value;
-        uniformRegistry.registerUniform(objectName, newUniform);
+        UNIFORM_REGISTRY.registerUniform(objectName, newUniform);
 
         applyUniform(objectName, newUniform);
     }
@@ -156,10 +151,10 @@ void InspectorEngine::setUniform(const std::string& objectName, const std::strin
 }
 
 void InspectorEngine::applyAllUniformsForObject(const std::string& objectName) {
-    const std::unordered_map<std::string, Uniform>* objectUniforms = uniformRegistry.tryReadUniforms(objectName);
+    const std::unordered_map<std::string, Uniform>* objectUniforms = UNIFORM_REGISTRY.tryReadUniforms(objectName);
 
     if (objectUniforms == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForProgram", "object not found in uniform registry: ", objectName.c_str());
+        ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", objectName.c_str());
     }
 
     for (auto& [uniformName, uniform] : *objectUniforms) {
@@ -205,6 +200,6 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
 
 // Include this along with setUniform because setUniform is used for other stuff.
 void InspectorEngine::applyInput(const std::string& objectName, const Uniform& uniform) {
-    uniformRegistry.registerUniform(objectName, uniform);
+    UNIFORM_REGISTRY.registerUniform(objectName, uniform);
     applyUniform(objectName, uniform);
 }

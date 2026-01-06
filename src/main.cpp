@@ -1,5 +1,5 @@
 // ENGINE
-#include "core/UniformRegistry.hpp"
+#include "core/InspectorEngine.hpp"
 #include "engine/Window.hpp"
 #include "engine/Errorlog.hpp"
 #include "engine/InputHandler.hpp"
@@ -11,7 +11,6 @@
 #include "engine/ShaderProgram.hpp"
 
 #include "ui/UIContext.hpp"
-#include "core/InspectorEngine.hpp"
 #include "core/ui/InspectorUI.hpp"
 #include "core/ShaderHandler.hpp"
 #include "core/EditorEngine.hpp"
@@ -46,11 +45,12 @@ std::vector<EditorUI*> EditorEngine::editors;
 int main() {
     Window win("Sandbox", 1000, 800);
     ShaderHandler shaderHandler;
-    UniformRegistry uniformRegistry;
 
     EditorEngine::spawnEditor(1024);
 
     UIContext ui(win.window);
+    InspectorUI inspectorUI;
+
     MenuUI menuUI = MenuUI();
 
 
@@ -153,14 +153,12 @@ int main() {
     ObjCache::createObj("pyramid1", pyramidVerts, pyramidIndices, false, true, untex);
     ObjCache::translateObj("pyramid1", glm::vec3(-1.3f, 0.0f, -1.0f));
 
-    // until later, we need to initialize the inspector stuff after objects & shaders are created. we don't any kind of reload event yet to check for new ones.
-    InspectorEngine inspectorEngine;
-    InspectorUI inspectorUI(inspectorEngine);
-
 
     ERRLOG.printClear();
     glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
+    
+    InspectorEngine::refreshUniforms();
 
     // RUN LOOP
     while (!win.shouldClose()) {

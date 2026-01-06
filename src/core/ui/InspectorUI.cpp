@@ -1,11 +1,12 @@
 #include "core/ui/InspectorUI.hpp"
+#include "core/InspectorEngine.hpp"
 #include "core/ShaderHandler.hpp"
 #include "core/UniformRegistry.hpp"
 #include "engine/Errorlog.hpp"
 #include "object/ObjCache.hpp"
 #include <unordered_map>
 
-InspectorUI::InspectorUI(InspectorEngine& eng): engine(eng), uniformRegistry(UniformRegistry::instance()) {}
+InspectorUI::InspectorUI() {}
 
 void InspectorUI::render() {
     ImGui::Text("Object Properties");
@@ -17,7 +18,7 @@ void InspectorUI::drawUniformEditors() {
     int imGuiID = 0;
     for (auto &[objectName, object] : ObjCache::objMap) {
         ImGui::Text("%s", ("Object:" + objectName).c_str());
-        const std::unordered_map<std::string, Uniform>* uniformMap = uniformRegistry.tryReadUniforms(objectName);
+        const std::unordered_map<std::string, Uniform>* uniformMap = UNIFORM_REGISTRY.tryReadUniforms(objectName);
 
         if (uniformMap == nullptr) {
             Errorlog::getInstance().logEntry(EL_WARNING, "drawUniformEditors", ("Object not found in registry: " + objectName).c_str());
@@ -32,7 +33,7 @@ void InspectorUI::drawUniformEditors() {
             imGuiID++;
         }
         for (std::string uniformName : uniformNamesToDelete)
-            uniformRegistry.eraseUniform(objectName, uniformName);
+            UNIFORM_REGISTRY.eraseUniform(objectName, uniformName);
         uniformNamesToDelete.clear();
     }
 }
@@ -74,7 +75,7 @@ void InspectorUI::drawAddUniformMenu() {
         bool validShaderName = shaders.count(newUniformShaderName) >= 1;
         if (validShaderName) {
             uniqueValidUniform =
-                uniformRegistry.containsUniform(newUniformShaderName, newUniformName) &&
+                UNIFORM_REGISTRY.containsUniform(newUniformShaderName, newUniformName) &&
                 newUniformType != UniformType::NoType;
         }
 
@@ -104,7 +105,7 @@ void InspectorUI::drawAddUniformMenu() {
                 break;
             }
 
-            uniformRegistry.registerUniform(newUniformShaderName, newUniform);
+            UNIFORM_REGISTRY.registerUniform(newUniformShaderName, newUniform);
             newUniformShaderName = "";
             newUniformName = "";
         } else {
@@ -155,7 +156,7 @@ void InspectorUI::drawUniformInput(Uniform& uniform, const std::string& objectNa
     }, uniform.value);
 
     if (changed) {
-        engine.applyInput(objectName, uniform);
+        InspectorEngine::applyInput(objectName, uniform);
     }
 
     if (ImGui::Button("Delete Uniform", ImVec2(100, 20))) {
