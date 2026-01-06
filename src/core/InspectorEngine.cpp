@@ -5,7 +5,9 @@
 #include <sstream>
 #include <iostream>
 #include "core/ShaderHandler.hpp"
+#include "core/UniformTypes.hpp"
 #include "engine/ShaderProgram.hpp"
+#include "fwd.hpp"
 #include "object/ObjCache.hpp"
 #include "object/Object.hpp"
 #include "engine/Errorlog.hpp"
@@ -14,7 +16,8 @@ const std::unordered_map<std::string, UniformType> InspectorEngine::typeMap = {
     {"vec3", UniformType::Vec3},
     {"vec4", UniformType::Vec4},
     {"int", UniformType::Int},
-    {"float", UniformType::Float}
+    {"float", UniformType::Float},
+    {"mat4", UniformType::Mat4 }
 };
 
 void InspectorEngine::refreshUniforms() {
@@ -128,6 +131,9 @@ void InspectorEngine::assignDefaultValue(Uniform& uniform) {
     case UniformType::Vec4:
         uniform.value = glm::vec4(0.0f);
         break;
+    case UniformType::Mat4:
+        uniform.value = glm::mat4(0.0f);
+        break;
     default:
         ERRLOG.logEntry(EL_WARNING, "assignDefaultValue", "Invalid Uniform Type, making it an int");
         uniform.type = UniformType::Int;
@@ -191,7 +197,9 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
     case UniformType::Vec4:
         program.setUniform_vec4float(uniform.name.c_str(), std::get<glm::vec4>(uniform.value));
         break;
-    
+    case UniformType::Mat4:
+        program.setUniform_mat4float(uniform.name.c_str(), std::get<glm::mat4>(uniform.value));
+        break;
     default:
         ERRLOG.logEntry(EL_WARNING, "applyUniform", "Invalid Uniform Type: ");
         break;

@@ -97,6 +97,9 @@ void InspectorUI::drawAddUniformMenu() {
             case UniformType::Vec4:
                 newUniform.value = glm::vec4(0.0f);
                 break;
+            case UniformType::Mat4:
+                newUniform.value = glm::mat4(0.0f);
+                break;
             default:
                 std::cout << "invalid new uniform type, making it an int"
                             << std::endl;
@@ -144,6 +147,28 @@ bool InspectorUI::drawUniformInputValue(glm::vec4* value) {
     changed |= ImGui::InputFloat("y", &value->y);
     changed |= ImGui::InputFloat("z", &value->z);
     changed |= ImGui::InputFloat("w", &value->w);
+    return changed;
+}
+
+bool InspectorUI::drawUniformInputValue(glm::mat4* value) {
+    static int tableID = 0;
+    const int columns = 4;
+    tableID++;
+    bool changed = false;
+    if (ImGui::BeginTable(("Matrix4x4" + std::to_string(tableID)).c_str(), columns, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+        for (int row = 0; row < 4; ++row) {
+            ImGui::TableNextRow();
+            for (int col = 0; col < 4; ++col) {
+                ImGui::TableSetColumnIndex(col);
+                ImGui::PushID(row * 4 + col); // unique ID
+                ImGui::PushItemWidth(60);
+                ImGui::InputFloat("", &(*value)[col][row]); // column-major
+                ImGui::PopItemWidth();
+                ImGui::PopID();
+            }
+        }
+        ImGui::EndTable();
+    }    
     return changed;
 }
 
