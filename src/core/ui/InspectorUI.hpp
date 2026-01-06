@@ -28,5 +28,6 @@ class InspectorUI {
     bool drawUniformInputValue(float* value);
     bool drawUniformInputValue(glm::vec3* value);
     bool drawUniformInputValue(glm::vec4* value);
+    bool drawUniformInputValue(glm::mat4* value);
     void drawUniformInput(Uniform& uniform, const std::string& objectName);
 };

@@ -1,5 +1,7 @@
 #include "ObjCache.hpp"
 #include "core/InspectorEngine.hpp"
+#include "core/UniformRegistry.hpp"
+#include "core/UniformTypes.hpp"
 #include <algorithm>
 #include <iostream>
 
@@ -106,22 +108,32 @@ void ObjCache::renderObj(std::string name, glm::mat4 perspective, glm::mat4 view
 
 
 void ObjCache::renderAll(glm::mat4 perspective, glm::mat4 view) {
-    ShaderProgram *currProgram = objCache[0].get()->getProgram();
-    currProgram->use();
-    currProgram->setUniform_mat4float("projection", perspective);
-    currProgram->setUniform_mat4float("view", view);
-
+    ShaderProgram *currProgram = nullptr;
     for (auto& currObj : objCache) {
-        if (currProgram->ID != currObj.get()->getProgramID()) {
+        if (currProgram == nullptr || currProgram->ID != currObj.get()->getProgramID()) {
             currProgram = currObj.get()->getProgram();
-
             currProgram->use();
-            currProgram->setUniform_mat4float("projection", perspective);
-            currProgram->setUniform_mat4float("view", view);
         }
 
+        Uniform uPerspective{
+            .name = "projection",
+            .type = UniformType::Mat4,
+            .value = perspective
+        };
+        Uniform uView{
+            .name = "view",
+            .type = UniformType::Mat4,
+            .value = view
+        };
+        Uniform uModel{
+            .name = "model",
+            .type = UniformType::Mat4,
+            .value = currObj.get()->getModelM()
+        };
+        UNIFORM_REGISTRY.registerUniform(currObj.get()->name, uPerspective);
+        UNIFORM_REGISTRY.registerUniform(currObj.get()->name, uView);
+        UNIFORM_REGISTRY.registerUniform(currObj.get()->name, uModel);
         InspectorEngine::applyAllUniformsForObject(currObj.get()->name);
-        currProgram->setUniform_mat4float("model", currObj.get()->getModelM());
         currObj.get()->render();
     }
 }
