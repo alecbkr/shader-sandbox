@@ -84,7 +84,6 @@ std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const Sh
                 uniform.name.pop_back();
             }
 
-            uniform.programName = program.name;
             programUniforms[uniform.name] = uniform;
             std::cout << "Read " << uniform.name << std::endl;
         }
@@ -163,8 +162,13 @@ void InspectorEngine::applyAllUniformsForObject(const std::string& objectName) {
     }
 }
 
-void InspectorEngine::applyUniform(const std::string& programName, const Uniform& uniform) {
-    ShaderProgram* program = ShaderHandler::getProgram(programName);
+void InspectorEngine::applyUniform(const std::string& objectName, const Uniform& uniform) {
+    if (!ObjCache::objMap.contains(objectName)) {
+        ERRLOG.logEntry(EL_WARNING, "applyUniform", (objectName + " not found in registry").c_str());
+        return;
+    }
+    Object& object = *ObjCache::objMap.at(objectName);
+    ShaderProgram* program = ShaderHandler::getProgram(object.getProgram()->name);
     applyUniform(*program, uniform);
 }
 

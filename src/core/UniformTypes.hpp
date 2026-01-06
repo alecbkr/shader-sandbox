@@ -19,7 +19,6 @@ using UniformValue = std::variant<int, float, glm::vec3, glm::vec4>;
 
 struct Uniform {
     std::string name;
-    std::string programName;
     UniformType type;
     UniformValue value;
 };

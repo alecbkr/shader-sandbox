@@ -121,8 +121,17 @@ int main() {
 
 
     // PROGRAMS
-    ShaderProgram program("../shaders/3d.vert", "../shaders/texture.frag", "program");
-    ShaderProgram untex("../shaders/default.vert", "../shaders/default.frag", "untex");
+    ShaderHandler::registerProgram("../shaders/3d.vert", "../shaders/texture.frag", "program");
+    ShaderHandler::registerProgram("../shaders/default.vert", "../shaders/default.frag", "untex");
+
+
+    ShaderProgram* programPtr = ShaderHandler::getProgram("program");
+    ShaderProgram* untexPtr = ShaderHandler::getProgram("untex");
+    if (programPtr == nullptr || untexPtr == nullptr) {
+        ERRLOG.logEntry(EL_CRITICAL, "main", "pointer not registered properly?");
+    }
+    ShaderProgram& program = *programPtr;
+    ShaderProgram& untex = *untexPtr;
 
     
     // OBJECTS
@@ -144,6 +153,7 @@ int main() {
     ObjCache::createObj("pyramid1", pyramidVerts, pyramidIndices, false, true, untex);
     ObjCache::translateObj("pyramid1", glm::vec3(-1.3f, 0.0f, -1.0f));
 
+    // until later, we need to initialize the inspector stuff after objects & shaders are created. we don't any kind of reload event yet to check for new ones.
     InspectorEngine inspectorEngine(uniformRegistry);
     InspectorUI inspectorUI(inspectorEngine, uniformRegistry, shaderHandler);
 

@@ -26,7 +26,7 @@ void InspectorUI::drawUniformEditors() {
 
         for (auto &[uniformName, uniformRef] : *uniformMap) {
             ImGui::PushID(imGuiID);
-            drawUniformInput(uniformRef);
+            drawUniformInput(uniformRef, objectName);
             ImGui::PopID();
             imGuiID++;
         }
@@ -79,7 +79,6 @@ void InspectorUI::drawAddUniformMenu() {
 
         if (uniqueValidUniform) {
             Uniform newUniform;
-            newUniform.programName = newUniformShaderName;
             newUniform.name = newUniformName;
             newUniform.type = newUniformType;
 
@@ -146,7 +145,7 @@ bool InspectorUI::drawUniformInputValue(glm::vec4* value) {
     return changed;
 }
 
-void InspectorUI::drawUniformInput(const Uniform& uniform) {
+void InspectorUI::drawUniformInput(const Uniform& uniform, const std::string& objectName) {
     ImGui::Text("%s", uniform.name.c_str());
     
     bool changed = false;
@@ -154,7 +153,7 @@ void InspectorUI::drawUniformInput(const Uniform& uniform) {
         changed = drawUniformInputValue(&val);
     }, uniform.value);
 
-    if (changed) engine.applyUniform(uniform.programName, uniform);
+    if (changed) engine.applyUniform(objectName, uniform);
 
     if (ImGui::Button("Delete Uniform", ImVec2(100, 20))) {
         uniformNamesToDelete.push_back(uniform.name);
