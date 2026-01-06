@@ -1,5 +1,5 @@
 // ENGINE
-#include "core/UniformRegistry.hpp"
+#include "core/InspectorEngine.hpp"
 #include "engine/Window.hpp"
 #include "engine/Errorlog.hpp"
 #include "engine/InputHandler.hpp"
@@ -11,7 +11,6 @@
 #include "engine/ShaderProgram.hpp"
 
 #include "ui/UIContext.hpp"
-#include "core/InspectorEngine.hpp"
 #include "core/ui/InspectorUI.hpp"
 #include "core/ShaderHandler.hpp"
 #include "core/EditorEngine.hpp"
@@ -46,13 +45,12 @@ std::vector<EditorUI*> EditorEngine::editors;
 int main() {
     Window win("Sandbox", 1000, 800);
     ShaderHandler shaderHandler;
-    UniformRegistry uniformRegistry;
-    InspectorEngine inspectorEngine(uniformRegistry);
-    InspectorUI inspectorUI(inspectorEngine, uniformRegistry, shaderHandler);
 
     EditorEngine::spawnEditor(1024);
 
     UIContext ui(win.window);
+    InspectorUI inspectorUI;
+
     MenuUI menuUI = MenuUI();
 
 
@@ -123,8 +121,17 @@ int main() {
 
 
     // PROGRAMS
-    ShaderProgram program("../shaders/3d.vert", "../shaders/texture.frag", "program");
-    ShaderProgram untex("../shaders/default.vert", "../shaders/default.frag", "untex");
+    ShaderHandler::registerProgram("../shaders/3d.vert", "../shaders/texture.frag", "program");
+    ShaderHandler::registerProgram("../shaders/default.vert", "../shaders/default.frag", "untex");
+
+
+    ShaderProgram* programPtr = ShaderHandler::getProgram("program");
+    ShaderProgram* untexPtr = ShaderHandler::getProgram("untex");
+    if (programPtr == nullptr || untexPtr == nullptr) {
+        ERRLOG.logEntry(EL_CRITICAL, "main", "pointer not registered properly?");
+    }
+    ShaderProgram& program = *programPtr;
+    ShaderProgram& untex = *untexPtr;
 
     
     // OBJECTS
@@ -147,10 +154,11 @@ int main() {
     ObjCache::translateObj("pyramid1", glm::vec3(-1.3f, 0.0f, -1.0f));
 
 
-
     ERRLOG.printClear();
     glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
+    
+    InspectorEngine::refreshUniforms();
 
     // RUN LOOP
     while (!win.shouldClose()) {
