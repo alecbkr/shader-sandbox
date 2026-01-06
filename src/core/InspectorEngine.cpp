@@ -7,7 +7,6 @@
 #include "core/ShaderHandler.hpp"
 #include "core/UniformTypes.hpp"
 #include "engine/ShaderProgram.hpp"
-#include "fwd.hpp"
 #include "object/ObjCache.hpp"
 #include "object/Object.hpp"
 #include "engine/Errorlog.hpp"
