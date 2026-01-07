@@ -13,8 +13,6 @@ class HelpCommand: public Command {
     public: 
     explicit HelpCommand(std::string payLoad); 
     void Execute() const override; 
-        // TODO: add command to console logger 
-
     private: 
     std::string payLoad; 
 }; 
@@ -24,7 +22,6 @@ class ClearCommand: public Command {
     public: 
     explicit ClearCommand(std::string payLoad); 
     void Execute() const override; 
-        // TODO: use clear method after implementing the console logger 
     private: 
     std::string payLoad; 
 }; 
