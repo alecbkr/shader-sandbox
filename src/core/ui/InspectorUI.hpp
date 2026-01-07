@@ -21,7 +21,8 @@ class InspectorUI {
     std::string newUniformShaderName;
     UniformType newUniformType = UniformType::NoType;
 
-    void drawUniformEditors();
+    void drawUniformInspector();
+    void drawWorldDataInspector();
     void drawAddUniformMenu();
     void drawTextInput(std::string *value, const char *label);
     bool drawUniformInputValue(int* value);

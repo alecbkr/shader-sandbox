@@ -15,18 +15,33 @@ void InspectorUI::render() {
     if (ImGui::BeginTabBar("Inspector tabs")) {
 
         if (ImGui::BeginTabItem("Uniforms")) {
-            drawUniformEditors();
+            drawUniformInspector();
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("World Data")) {
-            ImGui::Text("hi");
+            drawWorldDataInspector();
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
     }
 }
 
-void InspectorUI::drawUniformEditors() {
+void InspectorUI::drawWorldDataInspector() {
+    // TODO: an arbitrary high number, just somewhere above the uniform inspector's ids.
+    int imGuiID = 100000;
+    for (auto &[objectName, object] : ObjCache::objMap) {
+        if (ImGui::TreeNode(objectName.c_str())) {
+            if (ImGui::TreeNode("model")) {
+                glm::mat4 model = object->getModelM();
+                drawUniformInputValue(&model);
+                ImGui::TreePop();
+            }
+            ImGui::TreePop();
+        }
+    }
+}
+
+void InspectorUI::drawUniformInspector() {
     drawAddUniformMenu();
     int imGuiID = 0;
     for (auto &[objectName, object] : ObjCache::objMap) {
@@ -34,7 +49,7 @@ void InspectorUI::drawUniformEditors() {
             const std::unordered_map<std::string, Uniform>* uniformMap = UNIFORM_REGISTRY.tryReadUniforms(objectName);
 
             if (uniformMap == nullptr) {
-                Errorlog::getInstance().logEntry(EL_WARNING, "drawUniformEditors", ("Object not found in registry: " + objectName).c_str());
+                Errorlog::getInstance().logEntry(EL_WARNING, "drawUniformInspector", ("Object not found in registry: " + objectName).c_str());
                 continue;
             }
 

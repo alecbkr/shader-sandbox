@@ -13,7 +13,7 @@ class InspectorEngine {
     static void applyInput(const std::string& objectName, const Uniform& uniform);
     static void applyAllUniformsForObject(const std::string& objectName);
     static const std::unordered_map<std::string, UniformType> typeMap;
-    
+
   private:
     static void applyUniform(ShaderProgram& program, const Uniform& uniform);
     static void setUniform(const std::string& objectName, const std::string& uniformName, UniformValue value);
