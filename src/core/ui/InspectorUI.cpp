@@ -31,9 +31,16 @@ void InspectorUI::drawWorldDataInspector() {
     int imGuiID = 100000;
     for (auto &[objectName, object] : ObjCache::objMap) {
         if (ImGui::TreeNode(objectName.c_str())) {
-            if (ImGui::TreeNode("model")) {
-                glm::mat4 model = object->getModelM();
-                drawUniformInputValue(&model);
+            if (ImGui::TreeNode("position")) {
+                drawUniformInputValue(&object->objPosition);
+                ImGui::TreePop();
+            }
+            if (ImGui::TreeNode("scale")) {
+                drawUniformInputValue(&object->objScale);
+                ImGui::TreePop();
+            }
+            if (ImGui::TreeNode("orientation")) {
+                drawUniformInputValue(&object->objOrientation);
                 ImGui::TreePop();
             }
             ImGui::TreePop();
@@ -173,6 +180,15 @@ bool InspectorUI::drawUniformInputValue(glm::vec3* value) {
 }
 
 bool InspectorUI::drawUniformInputValue(glm::vec4* value) {
+    bool changed = false;
+    changed |= ImGui::InputFloat("x", &value->x);
+    changed |= ImGui::InputFloat("y", &value->y);
+    changed |= ImGui::InputFloat("z", &value->z);
+    changed |= ImGui::InputFloat("w", &value->w);
+    return changed;
+}
+
+bool InspectorUI::drawUniformInputValue(glm::quat* value) {
     bool changed = false;
     changed |= ImGui::InputFloat("x", &value->x);
     changed |= ImGui::InputFloat("y", &value->y);
