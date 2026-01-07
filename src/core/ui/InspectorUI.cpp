@@ -22,8 +22,16 @@ void InspectorUI::render() {
             drawWorldDataInspector();
             ImGui::EndTabItem();
         }
+        if (ImGui::BeginTabItem("Files")) {
+            drawFileInspector();
+            ImGui::EndTabItem();
+        }
         ImGui::EndTabBar();
     }
+}
+
+void InspectorUI::drawFileInspector() {
+    // empty
 }
 
 void InspectorUI::drawWorldDataInspector() {

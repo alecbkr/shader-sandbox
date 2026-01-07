@@ -23,6 +23,7 @@ class InspectorUI {
 
     void drawUniformInspector();
     void drawWorldDataInspector();
+    void drawFileInspector();
     void drawAddUniformMenu();
     void drawTextInput(std::string *value, const char *label);
     bool drawUniformInputValue(int* value);
