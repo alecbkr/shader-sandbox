@@ -1,49 +1,49 @@
 #include "ConsoleUI.hpp"
 
 ConsoleUI::ConsoleUI(){
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
-    shbx::Logger::addLog(shbx::LogLevel::CRITICAL, "", "Example Critical Error"); 
-    shbx::Logger::addLog(shbx::LogLevel::ERROR, "", "Example Error"); 
-    shbx::Logger::addLog(shbx::LogLevel::WARNING, "", "Example Warning"); 
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::INFO, "", "Welcome to Shader Sandbox");
+    // shbx::Logger::addLog(shbx::LogLevel::CRITICAL, "", "Example Critical Error"); 
+    // shbx::Logger::addLog(shbx::LogLevel::ERROR, "", "Example Error"); 
+    // shbx::Logger::addLog(shbx::LogLevel::WARNING, "", "Example Warning"); 
 } 
 
 ConsoleUI::~ConsoleUI(){}
@@ -69,39 +69,39 @@ void ConsoleUI::drawConsole() {
 }
 
 void ConsoleUI::readLogs() {
-    const auto& logs = shbx::Logger::getLogs(); 
+    // const auto& logs = shbx::Logger::getLogs(); 
 
-    for (const auto& log : logs) {
-        int idx = std::min((int)log.level, 3); // clamp the index to avoid out-of-bounds
-        std::string alert; 
+    // for (const auto& log : logs) {
+    //     int idx = std::min((int)log.level, 3); // clamp the index to avoid out-of-bounds
+    //     std::string alert; 
 
-        switch (log.level) {
-            case shbx::LogLevel::CRITICAL:  alert = "CRITICAL: ";  break; 
-            case shbx::LogLevel::ERROR:     alert = "ERROR: ";     break; 
-            case shbx::LogLevel::WARNING:   alert = "WARNING: ";   break; 
-            case shbx::LogLevel::INFO:      alert = "INFO: ";      break; 
-            default:                        alert = "ANOMALY: ";   break; 
-        }
+    //     switch (log.level) {
+    //         case shbx::LogLevel::CRITICAL:  alert = "CRITICAL: ";  break; 
+    //         case shbx::LogLevel::ERROR:     alert = "ERROR: ";     break; 
+    //         case shbx::LogLevel::WARNING:   alert = "WARNING: ";   break; 
+    //         case shbx::LogLevel::INFO:      alert = "INFO: ";      break; 
+    //         default:                        alert = "ANOMALY: ";   break; 
+    //     }
 
-        // Only color the log level 
-        ImGui::PushStyleColor(ImGuiCol_Text, LOG_COLORS[idx]); 
-        ImGui::TextUnformatted(alert.c_str()); 
-        ImGui::SameLine(0.0f, 0.0f); 
-        ImGui::PopStyleColor(); 
-        ImGui::TextUnformatted(log.msg.c_str()); 
+    //     // Only color the log level 
+    //     ImGui::PushStyleColor(ImGuiCol_Text, LOG_COLORS[idx]); 
+    //     ImGui::TextUnformatted(alert.c_str()); 
+    //     ImGui::SameLine(0.0f, 0.0f); 
+    //     ImGui::PopStyleColor(); 
+    //     ImGui::TextUnformatted(log.msg.c_str()); 
 
-        // TODO: add src if there is a src file 
-    }
+    //     // TODO: add src if there is a src file 
+    // }
 
-    if (logs.size() > lastLogSize) {
-        isAutoScroll = true; 
-        lastLogSize = logs.size(); 
-    }
+    // if (logs.size() > lastLogSize) {
+    //     isAutoScroll = true; 
+    //     lastLogSize = logs.size(); 
+    // }
 
-    if(isAutoScroll) {
-        ImGui::SetScrollHereY(1.0f); 
-        isAutoScroll = false; 
-    }
+    // if(isAutoScroll) {
+    //     ImGui::SetScrollHereY(1.0f); 
+    //     isAutoScroll = false; 
+    // }
 }
 
 void ConsoleUI::drawTextInput() {
