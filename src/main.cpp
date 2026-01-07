@@ -1,15 +1,16 @@
 // ENGINE
-#include "core/UniformRegistry.hpp"
+#include "core/InspectorEngine.hpp"
 #include "engine/Window.hpp"
 #include "engine/Errorlog.hpp"
 #include "engine/InputHandler.hpp"
 #include "engine/AppTimer.hpp"
 #include "engine/Camera.hpp"
 #include "engine/DrawMetrics.hpp"
+#include "core/EventDispatcher.hpp"
 #include "object/Object.hpp"
+#include "engine/ShaderProgram.hpp"
 
 #include "ui/UIContext.hpp"
-#include "core/InspectorEngine.hpp"
 #include "core/ui/InspectorUI.hpp"
 #include "core/ui/ConsoleUI.hpp"
 #include "core/ShaderHandler.hpp"
@@ -25,6 +26,7 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
+#include "object/ObjCache.hpp"
 
 
 void processInput(GLFWwindow *window);
@@ -47,14 +49,14 @@ std::vector<EditorUI*> EditorEngine::editors;
 int main() {
     Window win("Sandbox", 1000, 800);
     ShaderHandler shaderHandler;
-    UniformRegistry uniformRegistry;
-    InspectorEngine inspectorEngine(uniformRegistry);
-    InspectorUI inspectorUI(inspectorEngine, uniformRegistry, shaderHandler);
 
     EditorEngine::spawnEditor(1024);
 
     ConsoleUI consoleUI; 
     UIContext ui(win.window);
+    InspectorUI inspectorUI;
+
+    MenuUI menuUI = MenuUI();
 
     auto stdoutLogs = std::make_shared<StdoutSink>(); 
     Logger::addSink(stdoutLogs); 
@@ -124,35 +126,58 @@ int main() {
     Texture faceTex("../assets/textures/bigface.jpg");
     Texture edgeTex("../assets/textures/rim.png");
     Texture gridTex("../assets/textures/grid.png");
-    
 
+
+    // PROGRAMS
+    ShaderHandler::registerProgram("../shaders/3d.vert", "../shaders/texture.frag", "program");
+    ShaderHandler::registerProgram("../shaders/default.vert", "../shaders/default.frag", "untex");
+
+
+    ShaderProgram* programPtr = ShaderHandler::getProgram("program");
+    ShaderProgram* untexPtr = ShaderHandler::getProgram("untex");
+    if (programPtr == nullptr || untexPtr == nullptr) {
+        ERRLOG.logEntry(EL_CRITICAL, "main", "pointer not registered properly?");
+    }
+    ShaderProgram& program = *programPtr;
+    ShaderProgram& untex = *untexPtr;
+
+    
     // OBJECTS
-    Object gridplane(gridPlane_verts, gridPlane_indices, false, true);
-    gridplane.setTexture(gridTex, 0, "grid");
-    gridplane.scaleObj(glm::vec3(5.0));
+    ObjCache::createObj("grid", gridPlane_verts, gridPlane_indices, false, true, program);
+    ObjCache::setTexture("grid", gridTex, 0, "baseTex");
+    ObjCache::scaleObj("grid", glm::vec3(5.0f));
 
-    Object pyramid(pyramidVerts, pyramidIndices, false, true);
-    pyramid.translateObj(glm::vec3(1.0f, 0.0f, -3.0f));
-    pyramid.setTexture(waterTex, 0, "base");
-    pyramid.setTexture(edgeTex, 1, "edge");
+    ObjCache::createObj("pyramid0", pyramidVerts, pyramidIndices, false, true, untex);
+    ObjCache::translateObj("pyramid0", glm::vec3(3.3f, 0.0f, -1.0f));
+    ObjCache::scaleObj("pyramid0", glm::vec3(2.0f));
+    ObjCache::rotateObj("pyramid0", 23.2f, glm::vec3(0.0f, 1.0f, 0.0f));
 
-    Object cube(cubeVerts, cubeIndices, false, true);
-    cube.translateObj(glm::vec3(-4.0f, 3.0f, -5.0f));
-    cube.rotateObj(30.0f, glm::vec3(0.2f, 0.4f, 0.9f));
-    cube.setTexture(faceTex, 0, "base");
-    
+    ObjCache::createObj("cube", cubeVerts, cubeIndices, false, true, program);
+    ObjCache::setTexture("cube", faceTex, 0, "baseTex");
+    ObjCache::translateObj("cube", glm::vec3(4.0f, 3.0f, -5.0f));
+    ObjCache::scaleObj("cube", glm::vec3(1.0, 0.5f, 1.0f));
+    ObjCache::rotateObj("cube", 45.0f, glm::vec3(0.5f, 0.5f, 0.5f));
+
+    ObjCache::createObj("pyramid1", pyramidVerts, pyramidIndices, false, true, untex);
+    ObjCache::translateObj("pyramid1", glm::vec3(-1.3f, 0.0f, -1.0f));
 
 
     ERRLOG.printClear();
     glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
+    
+    InspectorEngine::refreshUniforms();
 
     // RUN LOOP
     while (!win.shouldClose()) {
         glfwPollEvents();
+        INPUT.updateCursor();
         processInput(win.window);
 
+        EventDispatcher::ProcessQueue();
+
         ui.preRender();
+        ui.render(menuUI);
         ui.renderEditorWindow(500, 500);
         ui.render(inspectorUI);
         ui.render(consoleUI); 
@@ -163,30 +188,10 @@ int main() {
 
         glm::mat4 perspective = glm::perspective(glm::radians(45.0f), (float)win.width / (float)win.height, 0.1f, 100.0f);
         glm::mat4 view = cam.GetViewMatrix();
+        ObjCache::renderAll(perspective, view);
 
-        auto& programs = ShaderHandler::getPrograms();
-        for (auto& [programName, program] : programs) {
-            program.use();
-            
-            program.setUniform_mat4float("projection", perspective);
-            program.setUniform_mat4float("view", view);
-
-            program.setUniform_int("baseTex", 0);
-            program.setUniform_int("outlineTex", 1);
-            
-            program.setUniform_mat4float("model", gridplane.getModelM());
-            gridplane.render();
-
-            program.setUniform_mat4float("model", pyramid.getModelM());
-            pyramid.render();
-
-            program.setUniform_mat4float("model", cube.getModelM());
-            cube.render();
-        }
-
-
+        
         if (showMetrics) drawMetrics(appstate);
-
         ui.postRender();
 
 

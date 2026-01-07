@@ -29,6 +29,7 @@ int EditorEngine::EditorInputCallback(ImGuiInputTextCallbackData* data) {
         updatePropertiesDueToMassDelete(data, ui);
         matchBrace(data, ui);
         updateLineCount(data, ui);
+        updatePropertiesDueToMassInsert(data, ui);
     }
 
     ui->previousTextLen = data->BufTextLen;
@@ -38,6 +39,19 @@ int EditorEngine::EditorInputCallback(ImGuiInputTextCallbackData* data) {
 
 void EditorEngine::updatePropertiesDueToMassDelete(ImGuiInputTextCallbackData* data, EditorUI* ui) {
     if (data->BufTextLen < ui->previousTextLen - 1) {
+        int newLineCount = 1;
+        int i = 0;
+        while (data->Buf[i] != '\0') {
+            if (data->Buf[i] == '\n') newLineCount++;
+            i++;
+        }
+
+        ui->lineCount = newLineCount;
+    }
+}
+
+void EditorEngine::updatePropertiesDueToMassInsert(ImGuiInputTextCallbackData* data, EditorUI* ui) {
+    if (data->BufTextLen > ui->previousTextLen + 1) {
         int newLineCount = 1;
         int i = 0;
         while (data->Buf[i] != '\0') {

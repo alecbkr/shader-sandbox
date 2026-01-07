@@ -15,4 +15,5 @@ private:
     static void matchBrace(ImGuiInputTextCallbackData* data, EditorUI* ui);
     static void updateLineCount(ImGuiInputTextCallbackData* data, EditorUI* ui);
     static void updatePropertiesDueToMassDelete(ImGuiInputTextCallbackData* data, EditorUI* ui);
+    static void updatePropertiesDueToMassInsert(ImGuiInputTextCallbackData* data, EditorUI* ui);
 };
