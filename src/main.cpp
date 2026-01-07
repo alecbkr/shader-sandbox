@@ -17,6 +17,7 @@
 #include "core/EditorEngine.hpp"
 #include "core/logging/Logger.hpp"
 #include "core/logging/LogSink.hpp"
+#include "core/logging/FileSink.hpp"
 #include "core/logging/StdoutSink.hpp"
 
 #include <glad/glad.h>
@@ -58,10 +59,12 @@ int main() {
 
     MenuUI menuUI = MenuUI();
 
-    auto stdoutLogs = std::make_shared<StdoutSink>(); 
-    Logger::addSink(stdoutLogs); 
+    // auto stdoutLogs = std::make_shared<StdoutSink>(); 
+    // auto fileLogs = std::make_shared<FileSink>(); 
 
-    Logger::addLog(LogLevel::ERROR, "", "Hello, World!", -1);
+    // Logger::addSink(stdoutLogs); 
+    // Logger::addSink(fileLogs);
+    // Logger::addLog(LogLevel::ERROR, "", "Hello, World!", -1);
     
     // GRIDPLANE
     std::vector<float> gridPlane_verts {
