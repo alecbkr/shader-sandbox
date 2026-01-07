@@ -34,7 +34,7 @@ void EditorUI::render() {
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
 
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 2.0f);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 8.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, 0.0f));
         for (int i = 1; i <= this->lineCount; i++) {
             ImGui::Text(std::to_string(i).c_str());
