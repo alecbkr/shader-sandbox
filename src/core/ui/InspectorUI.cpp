@@ -2,39 +2,77 @@
 #include "core/InspectorEngine.hpp"
 #include "core/ShaderHandler.hpp"
 #include "core/UniformRegistry.hpp"
+#include "core/UniformTypes.hpp"
 #include "engine/Errorlog.hpp"
 #include "object/ObjCache.hpp"
+#include <string>
 #include <unordered_map>
 
 InspectorUI::InspectorUI() {}
 
 void InspectorUI::render() {
-    ImGui::Text("Object Properties");
-    drawUniformEditors();
+    ImGui::Text("Inspector");
+    if (ImGui::BeginTabBar("Inspector tabs")) {
+
+        if (ImGui::BeginTabItem("Uniforms")) {
+            drawUniformInspector();
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("World Data")) {
+            drawWorldDataInspector();
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+    }
 }
 
-void InspectorUI::drawUniformEditors() {
+void InspectorUI::drawWorldDataInspector() {
+    // TODO: an arbitrary high number, just somewhere above the uniform inspector's ids.
+    int imGuiID = 100000;
+    for (auto &[objectName, object] : ObjCache::objMap) {
+        if (ImGui::TreeNode(objectName.c_str())) {
+            if (ImGui::TreeNode("position")) {
+                drawUniformInputValue(&object->objPosition);
+                ImGui::TreePop();
+            }
+            if (ImGui::TreeNode("scale")) {
+                drawUniformInputValue(&object->objScale);
+                ImGui::TreePop();
+            }
+            if (ImGui::TreeNode("orientation")) {
+                drawUniformInputValue(&object->objOrientation);
+                ImGui::TreePop();
+            }
+            ImGui::TreePop();
+        }
+    }
+}
+
+void InspectorUI::drawUniformInspector() {
     drawAddUniformMenu();
     int imGuiID = 0;
     for (auto &[objectName, object] : ObjCache::objMap) {
-        ImGui::Text("%s", ("Object:" + objectName).c_str());
-        const std::unordered_map<std::string, Uniform>* uniformMap = UNIFORM_REGISTRY.tryReadUniforms(objectName);
+        if (ImGui::TreeNode(objectName.c_str())) {
+            const std::unordered_map<std::string, Uniform>* uniformMap = UNIFORM_REGISTRY.tryReadUniforms(objectName);
 
-        if (uniformMap == nullptr) {
-            Errorlog::getInstance().logEntry(EL_WARNING, "drawUniformEditors", ("Object not found in registry: " + objectName).c_str());
-            continue;
-        }
+            if (uniformMap == nullptr) {
+                Errorlog::getInstance().logEntry(EL_WARNING, "drawUniformInspector", ("Object not found in registry: " + objectName).c_str());
+                continue;
+            }
 
-        for (auto &[uniformName, uniformRef] : *uniformMap) {
-            ImGui::PushID(imGuiID);
-            Uniform uniformCopy = uniformRef;
-            drawUniformInput(uniformCopy, objectName);
-            ImGui::PopID();
-            imGuiID++;
+            for (auto &[uniformName, uniformRef] : *uniformMap) {
+                ImGui::PushID(imGuiID);
+                Uniform uniformCopy = uniformRef;
+                drawUniformInput(uniformCopy, objectName);
+                ImGui::PopID();
+                imGuiID++;
+            }
+            for (std::string uniformName : uniformNamesToDelete)
+                UNIFORM_REGISTRY.eraseUniform(objectName, uniformName);
+            uniformNamesToDelete.clear();
+
+            ImGui::TreePop();
         }
-        for (std::string uniformName : uniformNamesToDelete)
-            UNIFORM_REGISTRY.eraseUniform(objectName, uniformName);
-        uniformNamesToDelete.clear();
     }
 }
 
@@ -150,6 +188,15 @@ bool InspectorUI::drawUniformInputValue(glm::vec4* value) {
     return changed;
 }
 
+bool InspectorUI::drawUniformInputValue(glm::quat* value) {
+    bool changed = false;
+    changed |= ImGui::InputFloat("x", &value->x);
+    changed |= ImGui::InputFloat("y", &value->y);
+    changed |= ImGui::InputFloat("z", &value->z);
+    changed |= ImGui::InputFloat("w", &value->w);
+    return changed;
+}
+
 bool InspectorUI::drawUniformInputValue(glm::mat4* value) {
     static int tableID = 0;
     const int columns = 4;
@@ -173,18 +220,19 @@ bool InspectorUI::drawUniformInputValue(glm::mat4* value) {
 }
 
 void InspectorUI::drawUniformInput(Uniform& uniform, const std::string& objectName) {
-    ImGui::Text("%s", uniform.name.c_str());
-    
-    bool changed = false;
-    std::visit([&](auto& val){
-        changed = drawUniformInputValue(&val);
-    }, uniform.value);
+    if (ImGui::TreeNode(uniform.name.c_str())) {
+        bool changed = false;
+        std::visit([&](auto& val){
+            changed = drawUniformInputValue(&val);
+        }, uniform.value);
 
-    if (changed) {
-        InspectorEngine::applyInput(objectName, uniform);
-    }
+        if (changed) {
+            InspectorEngine::applyInput(objectName, uniform);
+        }
 
-    if (ImGui::Button("Delete Uniform", ImVec2(100, 20))) {
-        uniformNamesToDelete.push_back(uniform.name);
+        if (ImGui::Button("Delete Uniform", ImVec2(100, 20))) {
+            uniformNamesToDelete.push_back(uniform.name);
+        }
+        ImGui::TreePop();
     }
 }

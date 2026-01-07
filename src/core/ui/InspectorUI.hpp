@@ -21,7 +21,8 @@ class InspectorUI {
     std::string newUniformShaderName;
     UniformType newUniformType = UniformType::NoType;
 
-    void drawUniformEditors();
+    void drawUniformInspector();
+    void drawWorldDataInspector();
     void drawAddUniformMenu();
     void drawTextInput(std::string *value, const char *label);
     bool drawUniformInputValue(int* value);
@@ -29,5 +30,6 @@ class InspectorUI {
     bool drawUniformInputValue(glm::vec3* value);
     bool drawUniformInputValue(glm::vec4* value);
     bool drawUniformInputValue(glm::mat4* value);
+    bool drawUniformInputValue(glm::quat* value);
     void drawUniformInput(Uniform& uniform, const std::string& objectName);
 };
