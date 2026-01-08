@@ -7,7 +7,7 @@ void Logger::addSink(std::shared_ptr<LogSink> sink) {
 }
 
 void Logger::removeSink(std::shared_ptr<LogSink> sink) {
-    
+    std::erase(sinks, sink);    
 }
 
 void Logger::addLog(LogLevel level, std::string src, std::string msg, int lineNum = -1) {
