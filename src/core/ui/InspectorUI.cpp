@@ -18,35 +18,22 @@ void InspectorUI::render() {
             drawUniformInspector();
             ImGui::EndTabItem();
         }
-        if (ImGui::BeginTabItem("World Data")) {
-            drawWorldDataInspector();
+        if (ImGui::BeginTabItem("Objects")) {
+            drawObjectsInspector();
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Assets")) {
+            drawAssetsInspector();
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Shader Files")) {
+            drawShaderFileInspector(); // <- for lukas
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
     }
 }
 
-void InspectorUI::drawWorldDataInspector() {
-    // TODO: an arbitrary high number, just somewhere above the uniform inspector's ids.
-    int imGuiID = 100000;
-    for (auto &[objectName, object] : ObjCache::objMap) {
-        if (ImGui::TreeNode(objectName.c_str())) {
-            if (ImGui::TreeNode("position")) {
-                drawUniformInputValue(&object->objPosition);
-                ImGui::TreePop();
-            }
-            if (ImGui::TreeNode("scale")) {
-                drawUniformInputValue(&object->objScale);
-                ImGui::TreePop();
-            }
-            if (ImGui::TreeNode("orientation")) {
-                drawUniformInputValue(&object->objOrientation);
-                ImGui::TreePop();
-            }
-            ImGui::TreePop();
-        }
-    }
-}
 
 void InspectorUI::drawUniformInspector() {
     drawAddUniformMenu();
@@ -74,6 +61,65 @@ void InspectorUI::drawUniformInspector() {
             ImGui::TreePop();
         }
     }
+}
+
+void InspectorUI::drawObjectsInspector() {
+    // TODO: an arbitrary high number, just somewhere above the uniform inspector's ids.
+    int imGuiID = 100000;
+    for (auto &[objectName, object] : ObjCache::objMap) {
+        if (ImGui::TreeNode(objectName.c_str())) {
+            if (ImGui::TreeNode("position")) {
+                drawUniformInputValue(&object->objPosition);
+                ImGui::TreePop();
+            }
+            if (ImGui::TreeNode("scale")) {
+                drawUniformInputValue(&object->objScale);
+                ImGui::TreePop();
+            }
+            if (ImGui::TreeNode("orientation")) {
+                drawUniformInputValue(&object->objOrientation);
+                ImGui::TreePop();
+            }
+            if (ImGui::TreeNode("mesh")) {
+                drawMeshSelector(); // create meshes in the assets tab
+                ImGui::TreePop();
+            }
+            if (ImGui::TreeNode("textures")) {
+                drawTextureSelector(); // select a list of textures. decided by shader program text. create textures in assets
+                ImGui::TreePop();
+            }
+            if (ImGui::TreeNode("shader program")) {
+                drawProgramSelector();
+                ImGui::TreePop();
+            }
+            ImGui::TreePop();
+        }
+    }
+}
+
+void InspectorUI::drawAddObjectMenu() {
+
+}
+
+void InspectorUI::drawTextureSelector() {
+    
+}
+
+void InspectorUI::drawMeshSelector() {
+
+}
+
+void InspectorUI::drawProgramSelector() {
+
+}
+
+void InspectorUI::drawAssetsInspector() {
+    
+}
+
+
+void InspectorUI::drawShaderFileInspector() {
+    // Lucas can fill this in
 }
 
 void InspectorUI::drawAddUniformMenu() {
