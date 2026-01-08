@@ -19,6 +19,7 @@
 #include "core/logging/LogSink.hpp"
 #include "core/logging/FileSink.hpp"
 #include "core/logging/StdoutSink.hpp"
+#include "core/logging/ConsoleSink.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -59,12 +60,19 @@ int main() {
 
     MenuUI menuUI = MenuUI();
 
-    // auto stdoutLogs = std::make_shared<StdoutSink>(); 
-    // auto fileLogs = std::make_shared<FileSink>(); 
+    auto consoleLogs = std::make_shared<ConsoleSink>(); 
+    auto stdoutLogs = std::make_shared<StdoutSink>(); 
+    auto fileLogs = std::make_shared<FileSink>(); 
 
-    // Logger::addSink(stdoutLogs); 
-    // Logger::addSink(fileLogs);
-    // Logger::addLog(LogLevel::ERROR, "", "Hello, World!", -1);
+    consoleUI.setLogSource(consoleLogs); 
+
+    Logger::addSink(stdoutLogs); 
+    Logger::addSink(fileLogs);
+    Logger::addSink(consoleLogs);
+
+    // Transmit message to all sinks
+    Logger::addLog(LogLevel::ERROR, "", "Example Error", -1); 
+    Logger::addLog(LogLevel::INFO, "", "Hello, World!", -1);
     
     // GRIDPLANE
     std::vector<float> gridPlane_verts {

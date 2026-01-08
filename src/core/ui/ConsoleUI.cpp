@@ -69,46 +69,49 @@ void ConsoleUI::drawConsole() {
 }
 
 void ConsoleUI::readLogs() {
-    // const auto& logs = shbx::Logger::getLogs(); 
+    if (!logSrc) return; 
 
-    // for (const auto& log : logs) {
-    //     int idx = std::min((int)log.level, 3); // clamp the index to avoid out-of-bounds
-    //     std::string alert; 
+    const auto& logs = logSrc->getLogs(); 
 
-    //     switch (log.level) {
-    //         case shbx::LogLevel::CRITICAL:  alert = "CRITICAL: ";  break; 
-    //         case shbx::LogLevel::ERROR:     alert = "ERROR: ";     break; 
-    //         case shbx::LogLevel::WARNING:   alert = "WARNING: ";   break; 
-    //         case shbx::LogLevel::INFO:      alert = "INFO: ";      break; 
-    //         default:                        alert = "ANOMALY: ";   break; 
-    //     }
+    for(const auto& log:logs) {
+        int idx = std::min((int)log.level, 3); // clamp the index to avoid out-of-bounds
+        std::string alert; 
 
-    //     // Only color the log level 
-    //     ImGui::PushStyleColor(ImGuiCol_Text, LOG_COLORS[idx]); 
-    //     ImGui::TextUnformatted(alert.c_str()); 
-    //     ImGui::SameLine(0.0f, 0.0f); 
-    //     ImGui::PopStyleColor(); 
-    //     ImGui::TextUnformatted(log.msg.c_str()); 
+        switch (log.level) {
+            case LogLevel::CRITICAL:  alert = "CRITICAL: ";  break; 
+            case LogLevel::ERROR:     alert = "ERROR: ";     break; 
+            case LogLevel::WARNING:   alert = "WARNING: ";   break; 
+            case LogLevel::INFO:      alert = "INFO: ";      break; 
+            default:                  alert = "ANOMALY: ";   break; 
+        }
+
+        ImGui::PushStyleColor(ImGuiCol_Text, LOG_COLORS[idx]); 
+        ImGui::TextUnformatted(alert.c_str()); 
+        ImGui::SameLine(0.0f, 0.0f); 
+        ImGui::PopStyleColor(); 
+        ImGui::TextUnformatted(log.msg.c_str()); 
+        
+    }
 
     //     // TODO: add src if there is a src file 
     // }
 
-    // if (logs.size() > lastLogSize) {
-    //     isAutoScroll = true; 
-    //     lastLogSize = logs.size(); 
-    // }
+    if (logs.size() > lastLogSize) {
+        isAutoScroll = true; 
+        lastLogSize = logs.size(); 
+    }
 
-    // if(isAutoScroll) {
-    //     ImGui::SetScrollHereY(1.0f); 
-    //     isAutoScroll = false; 
-    // }
+    if(isAutoScroll) {
+        ImGui::SetScrollHereY(1.0f); 
+        isAutoScroll = false; 
+    }
 }
 
 void ConsoleUI::drawTextInput() {
     // used to render input to bottom of window 
-    // float windowHeight = ImGui::GetWindowHeight(); 
-    // float inputHeight = ImGui::GetFrameHeight(); 
-    // ImGui::SetCursorPosY(windowHeight - inputHeight); 
+    float windowHeight = ImGui::GetWindowHeight(); 
+    float inputHeight = ImGui::GetFrameHeight(); 
+    ImGui::SetCursorPosY(windowHeight - inputHeight); 
 
     static char str0[128] = "";
     ImGui::PushItemWidth(-FLT_MIN);       // expand input to size of window 

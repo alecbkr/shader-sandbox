@@ -4,7 +4,9 @@
 #include <imgui/imgui_impl_opengl3.h>
 #include <string>
 #include <vector>
-#include "../../engine/Logger.hpp"
+#include <memory>
+#include <algorithm>
+#include "../logging/ConsoleSink.hpp"
 
 // Lookup table for textcolors for each log 
 static const ImVec4 LOG_COLORS[] = {
@@ -20,12 +22,18 @@ class ConsoleUI {
     ConsoleUI();    
     ~ConsoleUI();  
 
+    void setLogSource(std::shared_ptr<ConsoleSink> sink) {
+        logSrc = sink; 
+    }
+
     ConsoleUI(const ConsoleUI&)  = delete; 
     ConsoleUI& operator = (const ConsoleUI&) = delete; 
 
     void render();
      
     private: 
+    std::shared_ptr<ConsoleSink> logSrc; 
+
     char InputBuf[256]; 
     std::vector<std::string> history; 
     int historyPos; 
