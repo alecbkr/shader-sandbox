@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include "engine/ShaderProgram.hpp"
 #include "core/UniformTypes.hpp"
+#include "core/logging/Logger.hpp"
 
 class InspectorEngine {
   public:
