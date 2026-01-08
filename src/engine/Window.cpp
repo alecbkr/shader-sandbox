@@ -22,7 +22,6 @@ Window::Window(const char *processName, int widthIn, int heightIn) {
 
     
     glfwMakeContextCurrent(window);
-    // glfwSetKeyCallback(window, keyCallBackDefault); //TODO make control class
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         glfwDestroyWindow(window);
@@ -30,18 +29,17 @@ Window::Window(const char *processName, int widthIn, int heightIn) {
         ERRLOG.logEntry(EL_CRITICAL, "WINDOW", "gladLoadGLLoader failure");
     }   
     
-    glViewport(0, 0, widthIn, heightIn);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    WINDOWSIZE.width = widthIn;
+    WINDOWSIZE.height = heightIn;
+    
     glfwSetKeyCallback(window, InputHandler::key_callback);
     glfwSetMouseButtonCallback(window, InputHandler::mouse_callback);
     glfwSetCursorPosCallback(window, InputHandler::cursor_callback);
     glfwSetScrollCallback(window, InputHandler::scroll_callback);
+    glfwSetFramebufferSizeCallback(window, InputHandler::windowSize_callback);
 
 
-
-    width = widthIn;
-    height = heightIn;
-    glfwSetWindowUserPointer(window, this); // used to retrieve width/height w/out them being static
+    glViewport(0, 0, WINDOWSIZE.width, WINDOWSIZE.height);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     // ERRLOG.logEntry(EL_INFO, "WINDOW", "Success");
@@ -58,15 +56,6 @@ bool Window::shouldClose() {
 }
 
 
-void Window::kill() {
+void Window::destroy() {
     glfwDestroyWindow(window);
-}
-
-void Window::framebuffer_size_callback(GLFWwindow *window, int widthIn, int heightIn) {
-    glViewport(0, 0, widthIn, heightIn);
-
-    // Update window size variables
-    Window *self = static_cast<Window*>(glfwGetWindowUserPointer(window));
-    self->width = widthIn;
-    self->height = heightIn;
 }

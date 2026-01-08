@@ -15,6 +15,7 @@
 #include "core/ui/InspectorUI.hpp"
 #include "core/ShaderHandler.hpp"
 #include "core/EditorEngine.hpp"
+#include "core/ui/ViewportUI.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -49,6 +50,8 @@ int main() {
     UniformRegistry uniformRegistry;
     InspectorEngine inspectorEngine(uniformRegistry);
     InspectorUI inspectorUI(inspectorEngine, uniformRegistry, shaderHandler);
+    ViewportUI viewport;
+    
 
     EditorEngine::spawnEditor(1024);
 
@@ -147,9 +150,9 @@ int main() {
     ObjCache::translateObj("pyramid1", glm::vec3(-1.3f, 0.0f, -1.0f));
 
 
-
+    
     ERRLOG.printClear();
-    glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
+    
     glEnable(GL_DEPTH_TEST);
 
     // RUN LOOP
@@ -167,12 +170,20 @@ int main() {
 
 
         // ---DRAWING---
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //directly to screen
+
+        viewport.bind();
+        glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glm::mat4 perspective = glm::perspective(glm::radians(45.0f), (float)win.width / (float)win.height, 0.1f, 100.0f);
+        glm::mat4 perspective = glm::perspective(glm::radians(45.0f), viewport.getAspect(), 0.1f, 100.0f);
         glm::mat4 view = cam.GetViewMatrix();
         ObjCache::renderAll(perspective, view);
 
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        viewport.draw();
+        
         
         if (showMetrics) drawMetrics(appstate);
         ui.postRender();
@@ -211,8 +222,11 @@ void cameraControls(GLFWwindow *window, Camera &camera) {
     }
     // [F2] - switch to editor controls
     if (KEYBOARD[GLFW_KEY_F2].isPressed) {
-        appstate = AS_EDITOR;
+        ImGuiIO& io = ImGui::GetIO();
+        io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        appstate = AS_EDITOR;
+        
     }
     
     //camera movements
@@ -244,6 +258,8 @@ void editorControls(GLFWwindow *window) {
     // [F2] - switch to camera controls
     if (KEYBOARD[GLFW_KEY_F2].isPressed) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        ImGuiIO& io = ImGui::GetIO();
+        io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
         CURSOR.firstInput = true;
         appstate = AS_CAMERA;
     }

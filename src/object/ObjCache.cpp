@@ -87,6 +87,22 @@ void ObjCache::setProgram(const std::string name, ShaderProgram &program) {
 }
 
 
+void ObjCache::setName(const std::string name, const std::string newName) {
+    Object* obj = getObject(name);
+    if (obj == nullptr) {
+        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Object not found:", name.c_str());
+        return;
+    }
+    if (getObject(newName) != nullptr) {
+        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Name already in use:", name.c_str());
+        return;
+    }
+
+    objMap.erase(name);
+    objMap[newName] = obj;
+}
+
+
 void ObjCache::renderObj(std::string name, glm::mat4 perspective, glm::mat4 view) {
     Object* obj = getObject(name);
     if (obj == nullptr) {
@@ -139,6 +155,6 @@ Object* ObjCache::getObject(const std::string name) {
 void ObjCache::reorderByProgram() {
     std::sort(objCache.begin(), objCache.end(),
               [](const std::unique_ptr<Object>& a, const std::unique_ptr<Object>& b) {
-                  return a.get()->getProgramID() < b.get()->getProgramID(); // dereference the unique_ptr
+                  return a.get()->getProgramID() < b.get()->getProgramID();
               });
 }
