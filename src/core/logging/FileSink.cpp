@@ -12,9 +12,11 @@ void FileSink::addLog(const LogEntry& entry) {
         default:                     alert << "ANOMALY: ";   break; 
     }    
 
-    std::string newLog = alert.str() + entry.msg;   
-    
-    std::ofstream file("logs.txt"); 
+    auto now = std::chrono::system_clock::now(); 
+    std::string timestamp = std::format("{:%Y-%m-%d %H:%M:%SZ}", now); 
+
+    std::string newLog = '[' +  timestamp + "] " + alert.str() + entry.msg + '\n';   
+    std::ofstream file("../src/core/logging/logs.txt", std::ios::app); 
 
     if(file.is_open()) {
         file << newLog; 
