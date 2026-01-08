@@ -7,6 +7,7 @@
 #include <memory>
 #include <algorithm>
 #include "../logging/ConsoleSink.hpp"
+#include "../ConsoleEngine.hpp"
 
 // Lookup table for textcolors for each log 
 static const ImVec4 LOG_COLORS[] = {
@@ -22,23 +23,25 @@ class ConsoleUI {
     ConsoleUI();    
     ~ConsoleUI();  
 
+    ConsoleUI(const ConsoleUI&)  = delete; 
+    ConsoleUI& operator = (const ConsoleUI&) = delete; 
+
     void setLogSource(std::shared_ptr<ConsoleSink> sink) {
         logSrc = sink; 
     }
 
-    ConsoleUI(const ConsoleUI&)  = delete; 
-    ConsoleUI& operator = (const ConsoleUI&) = delete; 
-
     void render();
      
     private: 
+    std::shared_ptr<ConsoleEngine> engine; 
     std::shared_ptr<ConsoleSink> logSrc; 
 
-    char InputBuf[256]; 
+    char inputBuf[256]; 
     std::vector<std::string> history; 
     int historyPos; 
 
     bool isAutoScroll = false; 
+    bool isFocused = true;      // only take in input when the user is using the widget 
     size_t lastLogSize = 0; 
     
     void drawConsole(); 

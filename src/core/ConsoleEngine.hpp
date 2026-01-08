@@ -2,18 +2,22 @@
 #include "ConsoleRegister.hpp"
 #include <sstream>
 #include <string> 
-#include <deque>
+#include <unordered_map>
+#include <memory>
 
 class ConsoleEngine {
     public:
 
-    ~ConsoleEngine(); 
+    ConsoleEngine(); 
+    ~ConsoleEngine() = default; 
     // handle copying 
     ConsoleEngine(ConsoleEngine &other) = delete; 
     void operator=(const ConsoleEngine &) = delete; 
 
-    void tokenize(); 
+    void registerCommand(const std::string& name, std::shared_ptr<Command> command); 
+    void processInput(const std::string& input); 
 
     private:
-    std::deque<std::string> tokens; 
+    std::unordered_map<std::string, std::shared_ptr<Command>> commandRegistry; 
+    std::vector<std::string> tokenize(const std::string& input); 
 }; 
