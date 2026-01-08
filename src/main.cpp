@@ -49,6 +49,14 @@ bool showMetrics = true;
 std::vector<EditorUI*> EditorEngine::editors;
 
 int main() {
+    auto consoleLogs = std::make_shared<ConsoleSink>(); 
+    auto stdoutLogs = std::make_shared<StdoutSink>(); 
+    auto fileLogs = std::make_shared<FileSink>(); 
+
+    Logger::addSink(stdoutLogs); 
+    Logger::addSink(fileLogs);
+    Logger::addSink(consoleLogs);
+
     Window win("Sandbox", 1000, 800);
     ShaderHandler shaderHandler;
 
@@ -60,15 +68,7 @@ int main() {
 
     MenuUI menuUI = MenuUI();
 
-    auto consoleLogs = std::make_shared<ConsoleSink>(); 
-    auto stdoutLogs = std::make_shared<StdoutSink>(); 
-    auto fileLogs = std::make_shared<FileSink>(); 
-
     consoleUI.setLogSource(consoleLogs); 
-
-    Logger::addSink(stdoutLogs); 
-    Logger::addSink(fileLogs);
-    Logger::addSink(consoleLogs);
 
     // Transmit message to all sinks
     Logger::addLog(LogLevel::ERROR, "", "Example Error", -1); 
