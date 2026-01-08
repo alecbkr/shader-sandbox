@@ -54,12 +54,13 @@ class Object {
         glm::mat4 getModelM();
         void setTexture(Texture &tex, int unit, std::string uniformName);
         void setProgram(ShaderProgram &program);
-
-    private:
-        int objectID;
+        std::string name;
         glm::vec3 objPosition = glm::vec3(0.0f);
         glm::vec3 objScale = glm::vec3(1.0f);
         glm::quat objOrientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f); 
+
+    private:
+        int objectID;
 };
 
 #endif

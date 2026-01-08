@@ -10,13 +10,10 @@
 
 class InspectorUI {
     public:
-    InspectorUI(InspectorEngine& eng, UniformRegistry& registry, ShaderHandler& handler);
+    InspectorUI();
     void render();
   
     private:
-    InspectorEngine& engine;
-    UniformRegistry& uniformRegistry;
-    ShaderHandler& shaderHandler;
     int height;
     int width;
     std::vector<std::string> uniformNamesToDelete;
@@ -24,12 +21,21 @@ class InspectorUI {
     std::string newUniformShaderName;
     UniformType newUniformType = UniformType::NoType;
 
-    void drawUniformEditors();
+    void drawUniformInspector();
+    void drawObjectsInspector();
+    void drawAssetsInspector();
+    void drawShaderFileInspector();
+    void drawAddObjectMenu();
     void drawAddUniformMenu();
+    void drawMeshSelector();
+    void drawTextureSelector();
+    void drawProgramSelector();
     void drawTextInput(std::string *value, const char *label);
     bool drawUniformInputValue(int* value);
     bool drawUniformInputValue(float* value);
     bool drawUniformInputValue(glm::vec3* value);
     bool drawUniformInputValue(glm::vec4* value);
-    void drawUniformInput(const Uniform& uniform);
+    bool drawUniformInputValue(glm::mat4* value);
+    bool drawUniformInputValue(glm::quat* value);
+    void drawUniformInput(Uniform& uniform, const std::string& objectName);
 };

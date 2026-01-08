@@ -19,7 +19,7 @@ bool ShaderHandler::registerProgram(const std::string& vertex_file, const std::s
 ShaderProgram* ShaderHandler::getProgram(const std::string& programName) {
     auto programPair = programs.find(programName);
     if (programPair == programs.end()) {
-        std::cout << "Get Program: No program with that name found in the Shader Handler programs" << std::endl;
+        std::cout << "Get Program: No program with name " << programName <<" found in the Shader Handler programs" << std::endl;
         return nullptr;
     }
 

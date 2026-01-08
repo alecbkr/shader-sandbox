@@ -1,7 +1,14 @@
 #include "UniformRegistry.hpp"
+#include "engine/Errorlog.hpp"
 #include <iostream>
 
+
 UniformRegistry::UniformRegistry() {}
+
+UniformRegistry& UniformRegistry::instance() {
+    static UniformRegistry inst;
+    return inst;
+}
 
 /*
 Uniform UniformRegistry::getUniform(std::string shaderProgramName, std::string uniformName) {
@@ -28,10 +35,10 @@ Uniform UniformRegistry::getUniform(std::string shaderProgramName, std::string u
 */
 
 // returns nullptr if uniform doesn't exist
-const Uniform* UniformRegistry::tryReadUniform(const std::string& shaderProgramName, const std::string& uniformName) const {
-    const auto& programPair = uniforms.find(shaderProgramName);
+const Uniform* UniformRegistry::tryReadUniform(const std::string& objectName, const std::string& uniformName) const {
+    const auto& programPair = uniforms.find(objectName);
     if (programPair == uniforms.end()) {
-        std::cout << "tryReadUniform: No program with that name found in Uniform Registry" << std::endl;
+        Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniform", ("No object with name " + objectName + " found in Uniform Registry").c_str());
         return nullptr;
     }
 
@@ -39,15 +46,15 @@ const Uniform* UniformRegistry::tryReadUniform(const std::string& shaderProgramN
     
     const auto uniformPair = programUniforms.find(uniformName);
     if (uniformPair == programUniforms.end()) {
-        std::cout << "tryReadUniform: No uniform with that name found in Uniform Registry" << std::endl;
+        Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniform", ("No object with name " + objectName + " found in Uniform Registry").c_str());
         return nullptr;
     }
 
     return &uniformPair->second;
 }
 
-bool UniformRegistry::containsUniform(const std::string& shaderProgramName, const std::string& uniformName) {
-    const auto& programPair = uniforms.find(shaderProgramName);
+bool UniformRegistry::containsUniform(const std::string& objectName, const std::string& uniformName) {
+    const auto& programPair = uniforms.find(objectName);
     if (programPair == uniforms.end()) {
         return false;
     }
@@ -63,35 +70,38 @@ bool UniformRegistry::containsUniform(const std::string& shaderProgramName, cons
 }
 
 // returns nullptr if uniform doesn't exist
-const std::unordered_map<std::string, Uniform>* UniformRegistry::tryReadUniforms(const std::string& shaderProgramName) const {
-    if (uniforms.count(shaderProgramName) <= 0) {
-        std::cout << "tryReadUniform: No program with that name found in Uniform Registry" << std::endl; return nullptr;
+const std::unordered_map<std::string, Uniform>* UniformRegistry::tryReadUniforms(const std::string& objectName) const {
+    if (uniforms.count(objectName) <= 0) {
+        Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniforms", ("No object with name " + objectName + " found in Uniform Registry").c_str());
+        return nullptr;
     }
 
-    //std::unordered_map<std::string, Uniform>* programUniforms = &uniforms[shaderProgramName];
-    const std::unordered_map<std::string, Uniform> *programUniforms = &(uniforms.at(shaderProgramName));
+    //std::unordered_map<std::string, Uniform>* programUniforms = &uniforms[objectName];
+    const std::unordered_map<std::string, Uniform> *programUniforms = &(uniforms.at(objectName));
 
     return programUniforms;
 }
 
-void UniformRegistry::registerUniform(const std::string& shaderProgramName, const std::string& uniformName, Uniform uniformValue) {
-    uniforms[shaderProgramName][uniformName] = uniformValue;
+void UniformRegistry::registerUniform(const std::string& objectName, Uniform uniform) {
+    uniforms[objectName][uniform.name] = uniform;
 }
 
-void UniformRegistry::insertUniformMap(const std::string& shaderProgramName, const std::unordered_map<std::string, Uniform>& map) {
-    uniforms[shaderProgramName] = map;
+void UniformRegistry::insertUniformMap(const std::string& objectName, const std::unordered_map<std::string, Uniform>& map) {
+    uniforms[objectName] = map;
 }
 
-void UniformRegistry::eraseUniform(const std::string& shaderProgramName, const std::string& uniformName) {
-    if (uniforms.count(shaderProgramName) <= 0) {
-        std::cout << "eraseUniform: No program with that name found in Uniform Registry" << std::endl;
+void UniformRegistry::eraseUniform(const std::string& objectName, const std::string& uniformName) {
+    if (uniforms.count(objectName) <= 0) {
+        Errorlog::getInstance().logEntry(EL_WARNING, "eraseUniform", ("No object with name " + objectName + " found in Uniform Registry").c_str());
         return;
     }
     
-    if (uniforms.at(shaderProgramName).count(uniformName) <= 0) {
-        std::cout << "eraseUniform: No uniform with that name found in Uniform Registry, no need to erase" << std::endl;
+    if (uniforms.at(objectName).count(uniformName) <= 0) {
+        Errorlog::getInstance().logEntry(EL_WARNING, "eraseUniform", ("No uniform with name " + uniformName + " found in Uniform Registry").c_str());
         return;
     }
-    uniforms.at(shaderProgramName).erase(uniformName);
+    uniforms.at(objectName).erase(uniformName);
 }
+
+
 

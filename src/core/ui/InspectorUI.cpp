@@ -1,36 +1,125 @@
 #include "core/ui/InspectorUI.hpp"
+#include "core/InspectorEngine.hpp"
 #include "core/ShaderHandler.hpp"
 #include "core/UniformRegistry.hpp"
+#include "core/UniformTypes.hpp"
+#include "engine/Errorlog.hpp"
+#include "object/ObjCache.hpp"
+#include <string>
 #include <unordered_map>
 
-InspectorUI::InspectorUI(InspectorEngine& eng, UniformRegistry& registry, ShaderHandler& handler): engine(eng), uniformRegistry(registry), shaderHandler(handler) {}
+InspectorUI::InspectorUI() {}
 
 void InspectorUI::render() {
-    ImGui::Text("Object Properties");
-    drawUniformEditors();
+    ImGui::Text("Inspector");
+    if (ImGui::BeginTabBar("Inspector tabs")) {
+
+        if (ImGui::BeginTabItem("Uniforms")) {
+            drawUniformInspector();
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Objects")) {
+            drawObjectsInspector();
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Assets")) {
+            drawAssetsInspector();
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Shader Files")) {
+            drawShaderFileInspector(); // <- for lukas
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+    }
 }
 
-void InspectorUI::drawUniformEditors() {
+
+void InspectorUI::drawUniformInspector() {
     drawAddUniformMenu();
     int imGuiID = 0;
-    for (auto &[shaderName, shaderMap] : shaderHandler.getPrograms()) {
-        ImGui::Text("%s", ("Shader:" + shaderName).c_str());
-        const std::unordered_map<std::string, Uniform>* uniformMap = uniformRegistry.tryReadUniforms(shaderName);
+    for (auto &[objectName, object] : ObjCache::objMap) {
+        if (ImGui::TreeNode(objectName.c_str())) {
+            const std::unordered_map<std::string, Uniform>* uniformMap = UNIFORM_REGISTRY.tryReadUniforms(objectName);
 
-        if (uniformMap == nullptr) {
-            std::cout << "shader not found in registry: " << shaderName << std::endl;
-        }
+            if (uniformMap == nullptr) {
+                Errorlog::getInstance().logEntry(EL_WARNING, "drawUniformInspector", ("Object not found in registry: " + objectName).c_str());
+                continue;
+            }
 
-        for (auto &[uniformName, uniformRef] : *uniformMap) {
-            ImGui::PushID(imGuiID);
-            drawUniformInput(uniformRef);
-            ImGui::PopID();
-            imGuiID++;
+            for (auto &[uniformName, uniformRef] : *uniformMap) {
+                ImGui::PushID(imGuiID);
+                Uniform uniformCopy = uniformRef;
+                drawUniformInput(uniformCopy, objectName);
+                ImGui::PopID();
+                imGuiID++;
+            }
+            for (std::string uniformName : uniformNamesToDelete)
+                UNIFORM_REGISTRY.eraseUniform(objectName, uniformName);
+            uniformNamesToDelete.clear();
+
+            ImGui::TreePop();
         }
-        for (std::string uniformName : uniformNamesToDelete)
-            uniformRegistry.eraseUniform(shaderName, uniformName);
-        uniformNamesToDelete.clear();
     }
+}
+
+void InspectorUI::drawObjectsInspector() {
+    // TODO: an arbitrary high number, just somewhere above the uniform inspector's ids.
+    int imGuiID = 100000;
+    for (auto &[objectName, object] : ObjCache::objMap) {
+        if (ImGui::TreeNode(objectName.c_str())) {
+            if (ImGui::TreeNode("position")) {
+                drawUniformInputValue(&object->objPosition);
+                ImGui::TreePop();
+            }
+            if (ImGui::TreeNode("scale")) {
+                drawUniformInputValue(&object->objScale);
+                ImGui::TreePop();
+            }
+            if (ImGui::TreeNode("orientation")) {
+                drawUniformInputValue(&object->objOrientation);
+                ImGui::TreePop();
+            }
+            if (ImGui::TreeNode("mesh")) {
+                drawMeshSelector(); // create meshes in the assets tab
+                ImGui::TreePop();
+            }
+            if (ImGui::TreeNode("textures")) {
+                drawTextureSelector(); // select a list of textures. decided by shader program text. create textures in assets
+                ImGui::TreePop();
+            }
+            if (ImGui::TreeNode("shader program")) {
+                drawProgramSelector();
+                ImGui::TreePop();
+            }
+            ImGui::TreePop();
+        }
+    }
+}
+
+void InspectorUI::drawAddObjectMenu() {
+
+}
+
+void InspectorUI::drawTextureSelector() {
+    
+}
+
+void InspectorUI::drawMeshSelector() {
+
+}
+
+void InspectorUI::drawProgramSelector() {
+
+}
+
+void InspectorUI::drawAssetsInspector() {
+    
+}
+
+
+void InspectorUI::drawShaderFileInspector() {
+    // Lucas can fill this in
 }
 
 void InspectorUI::drawAddUniformMenu() {
@@ -70,13 +159,12 @@ void InspectorUI::drawAddUniformMenu() {
         bool validShaderName = shaders.count(newUniformShaderName) >= 1;
         if (validShaderName) {
             uniqueValidUniform =
-                uniformRegistry.containsUniform(newUniformShaderName, newUniformName) &&
+                UNIFORM_REGISTRY.containsUniform(newUniformShaderName, newUniformName) &&
                 newUniformType != UniformType::NoType;
         }
 
         if (uniqueValidUniform) {
             Uniform newUniform;
-            newUniform.programName = newUniformShaderName;
             newUniform.name = newUniformName;
             newUniform.type = newUniformType;
 
@@ -93,6 +181,9 @@ void InspectorUI::drawAddUniformMenu() {
             case UniformType::Vec4:
                 newUniform.value = glm::vec4(0.0f);
                 break;
+            case UniformType::Mat4:
+                newUniform.value = glm::mat4(0.0f);
+                break;
             default:
                 std::cout << "invalid new uniform type, making it an int"
                             << std::endl;
@@ -101,7 +192,7 @@ void InspectorUI::drawAddUniformMenu() {
                 break;
             }
 
-            uniformRegistry.registerUniform(newUniformShaderName, newUniformName, newUniform);
+            UNIFORM_REGISTRY.registerUniform(newUniformShaderName, newUniform);
             newUniformShaderName = "";
             newUniformName = "";
         } else {
@@ -143,17 +234,51 @@ bool InspectorUI::drawUniformInputValue(glm::vec4* value) {
     return changed;
 }
 
-void InspectorUI::drawUniformInput(const Uniform& uniform) {
-    ImGui::Text("%s", uniform.name.c_str());
-    
+bool InspectorUI::drawUniformInputValue(glm::quat* value) {
     bool changed = false;
-    std::visit([&](auto val){
-        changed = drawUniformInputValue(&val);
-    }, uniform.value);
+    changed |= ImGui::InputFloat("x", &value->x);
+    changed |= ImGui::InputFloat("y", &value->y);
+    changed |= ImGui::InputFloat("z", &value->z);
+    changed |= ImGui::InputFloat("w", &value->w);
+    return changed;
+}
 
-    if (changed) engine.applyUniform(uniform.programName, uniform);
+bool InspectorUI::drawUniformInputValue(glm::mat4* value) {
+    static int tableID = 0;
+    const int columns = 4;
+    tableID++;
+    bool changed = false;
+    if (ImGui::BeginTable(("Matrix4x4" + std::to_string(tableID)).c_str(), columns, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+        for (int row = 0; row < 4; ++row) {
+            ImGui::TableNextRow();
+            for (int col = 0; col < 4; ++col) {
+                ImGui::TableSetColumnIndex(col);
+                ImGui::PushID(row * 4 + col); // unique ID
+                ImGui::PushItemWidth(60);
+                ImGui::InputFloat("", &(*value)[col][row]); // column-major
+                ImGui::PopItemWidth();
+                ImGui::PopID();
+            }
+        }
+        ImGui::EndTable();
+    }    
+    return changed;
+}
 
-    if (ImGui::Button("Delete Uniform", ImVec2(100, 20))) {
-        uniformNamesToDelete.push_back(uniform.name);
+void InspectorUI::drawUniformInput(Uniform& uniform, const std::string& objectName) {
+    if (ImGui::TreeNode(uniform.name.c_str())) {
+        bool changed = false;
+        std::visit([&](auto& val){
+            changed = drawUniformInputValue(&val);
+        }, uniform.value);
+
+        if (changed) {
+            InspectorEngine::applyInput(objectName, uniform);
+        }
+
+        if (ImGui::Button("Delete Uniform", ImVec2(100, 20))) {
+            uniformNamesToDelete.push_back(uniform.name);
+        }
+        ImGui::TreePop();
     }
 }
