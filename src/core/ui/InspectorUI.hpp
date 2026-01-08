@@ -6,7 +6,20 @@
 #include "core/InspectorEngine.hpp"
 #include "core/ShaderHandler.hpp"
 #include "core/UniformRegistry.hpp"
+#include "object/Object.hpp"
 #include "core/UniformTypes.hpp"
+
+struct ObjectShaderSelector {
+    std::string objectName;
+    int selection;
+};
+
+struct ObjectTextureSelector {
+    std::string objectName;
+    std::string uniformName;
+    int textureSelection;
+    int unitSelection;
+};
 
 class InspectorUI {
     public:
@@ -20,17 +33,17 @@ class InspectorUI {
     std::string newUniformName;
     std::string newUniformShaderName;
     UniformType newUniformType = UniformType::NoType;
+    std::unordered_map<std::string, ObjectShaderSelector> objectShaderSelectors;
+    std::unordered_map<std::string, ObjectTextureSelector> objectTextureSelectors;
 
     void drawUniformInspector();
     void drawObjectsInspector();
     void drawAssetsInspector();
     void drawShaderFileInspector();
     void drawAddObjectMenu();
-    void drawAddUniformMenu();
-    void drawMeshSelector();
-    void drawTextureSelector();
-    void drawProgramSelector();
-    void drawTextInput(std::string *value, const char *label);
+    bool drawShaderProgramSelector(ObjectShaderSelector& selector);
+    bool drawTextureSelector(ObjectTextureSelector& selector);
+    bool drawTextInput(std::string *value, const char *label);
     bool drawUniformInputValue(int* value);
     bool drawUniformInputValue(float* value);
     bool drawUniformInputValue(glm::vec3* value);

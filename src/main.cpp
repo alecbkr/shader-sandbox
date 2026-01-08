@@ -8,6 +8,7 @@
 #include "engine/DrawMetrics.hpp"
 #include "core/EventDispatcher.hpp"
 #include "object/Object.hpp"
+#include "core/TextureRegistry.hpp"
 #include "engine/ShaderProgram.hpp"
 
 #include "ui/UIContext.hpp"
@@ -118,7 +119,10 @@ int main() {
     Texture faceTex("../assets/textures/bigface.jpg");
     Texture edgeTex("../assets/textures/rim.png");
     Texture gridTex("../assets/textures/grid.png");
-
+    TEXTURE_REGISTRY.registerTexture(&waterTex);
+    TEXTURE_REGISTRY.registerTexture(&faceTex);
+    TEXTURE_REGISTRY.registerTexture(&edgeTex);
+    TEXTURE_REGISTRY.registerTexture(&gridTex);
 
     // PROGRAMS
     ShaderHandler::registerProgram("../shaders/3d.vert", "../shaders/texture.frag", "program");
