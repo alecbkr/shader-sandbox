@@ -22,6 +22,7 @@ void drawMetrics(int appstate) {
     ImGui::Text("AppState: %s | Toggle with [F2]", appstate == 0 ? "EDITOR" : "CAMERA");
     ImGui::Text("Cursor | Pos: %.2f %.2f| Offset: %.2f %.2f", INPUT.cursor.currPosX, INPUT.cursor.currPosY, INPUT.cursor.offsetX, INPUT.cursor.offsetY);
     ImGui::Text("Scroll | Offset: %.2f %.2f", INPUT.scroll.offsetX, INPUT.scroll.offsetY);
+    ImGui::Text("Viewport | Width: %d Height: %d", WINDOWSIZE.width, WINDOWSIZE.height);
     ImGui::End();
 
     // ImGui::Render();

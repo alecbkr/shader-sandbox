@@ -15,6 +15,7 @@ class ObjCache {
         
         static void setTexture(const std::string name, Texture& tex, int unit, std::string uniformName);
         static void setProgram(const std::string name, ShaderProgram& program);
+        static void setName(const std::string name, const std::string newName);
         static void translateObj(const std::string name, glm::vec3 pos);
         static void scaleObj(const std::string name, glm::vec3 scale);
         static void rotateObj(const std::string name, float angle, glm::vec3 axis);

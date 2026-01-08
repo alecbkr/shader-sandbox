@@ -31,13 +31,13 @@ resetStates() - call at the end of a frame to ensure no temporary
 #define INPUTHANDLER_HPP
 
 #include <glfw/glfw3.h>
-#include <glm/vec2.hpp>
 
 #define INPUT       InputHandler::getInstance()
 #define KEYBOARD    InputHandler::getInstance().keys
 #define MOUSEBUTTON InputHandler::getInstance().buttons
 #define CURSOR      InputHandler::getInstance().cursor
 #define SCROLLWHEEL InputHandler::getInstance().scroll
+#define WINDOWSIZE  InputHandler::getInstance().windowSize
 
 
 class InputHandler {
@@ -63,11 +63,17 @@ class InputHandler {
             float offsetY = 0.0f;
         };
 
+        struct WindowState {
+            int width = 1000;
+            int height = 800;
+        };
+
     public:
         PushState keys[GLFW_KEY_LAST];
         PushState buttons[GLFW_MOUSE_BUTTON_LAST];
         CursorState cursor;
         ScrollState scroll;
+        WindowState windowSize;
 
         static InputHandler &getInstance();
         void updateCursor();
@@ -76,6 +82,7 @@ class InputHandler {
         static void mouse_callback(GLFWwindow *window, int button, int action, int mods);
         static void cursor_callback(GLFWwindow *window, double xpos, double ypos); 
         static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+        static void windowSize_callback(GLFWwindow *window, int widht, int height);
         
         private:
             InputHandler();
