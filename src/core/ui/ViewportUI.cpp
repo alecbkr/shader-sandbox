@@ -3,7 +3,7 @@
 #include "../../engine/InputHandler.hpp"
 #include "../../engine/Errorlog.hpp"
 #include "../../engine/AppTimer.hpp"
-#include <String>
+#include <string>
 
 
 ViewportUI::ViewportUI() {
