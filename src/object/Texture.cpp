@@ -4,7 +4,7 @@
 
 
 Texture::Texture(const char *texture_path) {
-    
+    this->path = texture_path; 
     stbi_set_flip_vertically_on_load(true);
 
     int channelCnt;

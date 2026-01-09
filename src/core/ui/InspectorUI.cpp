@@ -1,12 +1,17 @@
 #include "core/ui/InspectorUI.hpp"
 #include "core/InspectorEngine.hpp"
 #include "core/ShaderHandler.hpp"
+#include "core/TextureRegistry.hpp"
 #include "core/UniformRegistry.hpp"
 #include "core/UniformTypes.hpp"
 #include "engine/Errorlog.hpp"
+#include "engine/ShaderProgram.hpp"
 #include "object/ObjCache.hpp"
+#include "object/Texture.hpp"
+#include <ostream>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 InspectorUI::InspectorUI() {}
 
@@ -34,9 +39,7 @@ void InspectorUI::render() {
     }
 }
 
-
 void InspectorUI::drawUniformInspector() {
-    drawAddUniformMenu();
     int imGuiID = 0;
     for (auto &[objectName, object] : ObjCache::objMap) {
         if (ImGui::TreeNode(objectName.c_str())) {
@@ -66,7 +69,24 @@ void InspectorUI::drawUniformInspector() {
 void InspectorUI::drawObjectsInspector() {
     // TODO: an arbitrary high number, just somewhere above the uniform inspector's ids.
     int imGuiID = 100000;
+    drawAddObjectMenu();
     for (auto &[objectName, object] : ObjCache::objMap) {
+        if (!objectShaderSelectors.contains(objectName)) {
+            objectShaderSelectors[objectName] = ObjectShaderSelector{ 
+                .objectName = objectName,
+                .selection = 0,
+            };    
+        }
+        if (!objectTextureSelectors.contains(objectName)) {
+            objectTextureSelectors[objectName] = ObjectTextureSelector{ 
+                .objectName = objectName,
+                .uniformName = "baseTex",
+                .textureSelection = 0,
+            };    
+        }
+        ObjectShaderSelector& shaderSelector = objectShaderSelectors[objectName];
+        ObjectTextureSelector& textureSelector = objectTextureSelectors[objectName];
+
         if (ImGui::TreeNode(objectName.c_str())) {
             if (ImGui::TreeNode("position")) {
                 drawUniformInputValue(&object->objPosition);
@@ -81,15 +101,15 @@ void InspectorUI::drawObjectsInspector() {
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("mesh")) {
-                drawMeshSelector(); // create meshes in the assets tab
+
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("textures")) {
-                drawTextureSelector(); // select a list of textures. decided by shader program text. create textures in assets
+                drawTextureSelector(textureSelector);
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("shader program")) {
-                drawProgramSelector();
+                drawShaderProgramSelector(shaderSelector);
                 ImGui::TreePop();
             }
             ImGui::TreePop();
@@ -98,23 +118,12 @@ void InspectorUI::drawObjectsInspector() {
 }
 
 void InspectorUI::drawAddObjectMenu() {
-
-}
-
-void InspectorUI::drawTextureSelector() {
-    
-}
-
-void InspectorUI::drawMeshSelector() {
-
-}
-
-void InspectorUI::drawProgramSelector() {
-
 }
 
 void InspectorUI::drawAssetsInspector() {
-    
+    for (const Texture* texPtr : TEXTURE_REGISTRY.readTextures()) {
+        ImGui::Text("%s\n", texPtr->path.c_str());
+    }
 }
 
 
@@ -122,6 +131,9 @@ void InspectorUI::drawShaderFileInspector() {
     // Lucas can fill this in
 }
 
+/*
+// this is from an old version
+// keeping the code cause it's a nice template. get rid of it once we finish the inspector MVP or if we have the code elsewhere.
 void InspectorUI::drawAddUniformMenu() {
     ImGui::Text("Add Uniform");
     drawTextInput(&newUniformName, "Uniform Name");
@@ -200,13 +212,71 @@ void InspectorUI::drawAddUniformMenu() {
         }
     }
 }
+*/
 
-void InspectorUI::drawTextInput(std::string *value, const char *label) {
+bool InspectorUI::drawTextInput(std::string *value, const char *label) {
+    bool changed = false;
     char buffer[256];
     std::snprintf(buffer, sizeof(buffer), "%s", value->c_str());
     if (ImGui::InputText(label, buffer, sizeof(buffer))) {
         *value = buffer;
+        changed = true;
     }
+    return changed;
+}
+
+bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
+    bool changed = false;
+    std::vector<const char *> shaderChoices;
+    shaderChoices.reserve(ShaderHandler::getNumberOfPrograms());
+
+    auto& shaders = ShaderHandler::getPrograms();
+    for (auto &[name, shader] : shaders) {
+        shaderChoices.push_back(name.c_str());
+    }
+    // display combo box
+    if (ImGui::Combo("Shader", &selector.selection, shaderChoices.data(),
+                        (int)shaderChoices.size())) {
+        changed = true;
+    }
+
+    if (!changed) return false;
+    
+    // add check in case we get more types
+    ShaderProgram& selectedShader = *ShaderHandler::getProgram(shaderChoices[selector.selection]);
+    ObjCache::setProgram(selector.objectName, selectedShader); 
+    return true;
+}
+
+bool InspectorUI::drawTextureSelector(ObjectTextureSelector& selector) {
+    bool changed = false;
+    std::vector<const char *> textureChoices;
+    std::vector<Texture*> textures = TEXTURE_REGISTRY.readTextures();
+    textureChoices.reserve(textures.size());
+    for (Texture* tex : textures) {
+        textureChoices.push_back(tex->path.c_str());
+    }
+    if (ImGui::Combo("Texture", &selector.textureSelection, textureChoices.data(),
+                        (int)textureChoices.size())) {
+        changed = true;
+        std::cout << "changed texture" << std::endl;
+    }
+    if (ImGui::InputInt("Unit", &selector.unitSelection)) {
+        changed = true;
+        std::cout << "changed unit" << std::endl;
+    }
+    if (drawTextInput(&selector.uniformName, "Uniform Name")) {
+        changed = true;
+        std::cout << "changed uniform name" << std::endl;
+    }
+
+    if (!changed) return false;
+    
+    // add check in case we get more types
+    Texture* selectedTexture = textures.at(selector.textureSelection);
+    ObjCache::setTexture(selector.objectName, *selectedTexture, selector.unitSelection, selector.uniformName); 
+
+    return true;
 }
 
 bool InspectorUI::drawUniformInputValue(int* value) {

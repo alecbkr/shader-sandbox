@@ -14,12 +14,14 @@ is for now.
 #define TEXTURE_HPP
 
 #include <glad/glad.h>
+#include <string>
 
 class Texture {
     
         
     public:
         GLuint ID;
+        std::string path;
         unsigned char* pixels;
         int width;
         int height;
