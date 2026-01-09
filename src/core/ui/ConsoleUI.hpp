@@ -20,17 +20,13 @@ static const ImVec4 LOG_COLORS[] = {
 // Adapted from imgui_demo.cpp
 class ConsoleUI {
     public: 
-    ConsoleUI();    
+    ConsoleUI(std::shared_ptr<ConsoleSink> consoleSink);    
     ~ConsoleUI();  
 
     ConsoleUI(const ConsoleUI&)  = delete; 
     ConsoleUI& operator = (const ConsoleUI&) = delete; 
 
-    void setLogSource(std::shared_ptr<ConsoleSink> sink) {
-        logSrc = sink; 
-    }
-
-    void render();
+    const void render();
      
     private: 
     std::shared_ptr<ConsoleEngine> engine; 
@@ -44,10 +40,11 @@ class ConsoleUI {
     bool isFocused = true;      // only take in input when the user is using the widget 
     size_t lastLogSize = 0; 
     
-    void drawConsole(); 
+    const void drawConsole(); 
     void readLogs(); 
-    void drawTextInput(); 
+    // void drawTextInput(); 
+    const void drawMenuBar(); 
 
-    void handleInputHistory(); // User input to go through logs in console 
-    void executeCommand(); 
+    // const void handleInputHistory(); // User input to go through logs in console 
+    const void executeCommand(); 
 }; 
