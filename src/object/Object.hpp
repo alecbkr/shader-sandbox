@@ -55,12 +55,12 @@ class Object {
         void setTexture(Texture &tex, int unit, std::string uniformName);
         void setProgram(ShaderProgram &program);
         std::string name;
-
-    private:
-        int objectID;
         glm::vec3 objPosition = glm::vec3(0.0f);
         glm::vec3 objScale = glm::vec3(1.0f);
         glm::quat objOrientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f); 
+
+    private:
+        int objectID;
 };
 
 #endif

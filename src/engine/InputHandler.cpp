@@ -98,6 +98,12 @@ void InputHandler::scroll_callback(GLFWwindow *window, double xoffset, double yo
 }
 
 
+void InputHandler::windowSize_callback(GLFWwindow *window, int width, int height) {
+    WINDOWSIZE.width = width;
+    WINDOWSIZE.height = height;
+}
+
+
 InputHandler::InputHandler() {
 
 }

@@ -8,6 +8,7 @@
 #include "engine/DrawMetrics.hpp"
 #include "core/EventDispatcher.hpp"
 #include "object/Object.hpp"
+#include "core/TextureRegistry.hpp"
 #include "engine/ShaderProgram.hpp"
 
 #include "ui/UIContext.hpp"
@@ -15,6 +16,7 @@
 #include "core/ui/ConsoleUI.hpp"
 #include "core/ShaderHandler.hpp"
 #include "core/EditorEngine.hpp"
+#include "core/ui/ViewportUI.hpp"
 #include "core/logging/LogSetup.hpp"
 
 #include <glad/glad.h>
@@ -46,7 +48,7 @@ int main() {
 
     Window win("Sandbox", 1000, 800);
     ShaderHandler shaderHandler;
-
+    ViewportUI viewport;
     EditorEngine::spawnEditor(1024);
 
     ConsoleUI consoleUI(logCtx.consoleSink); 
@@ -120,7 +122,10 @@ int main() {
     Texture faceTex("../assets/textures/bigface.jpg");
     Texture edgeTex("../assets/textures/rim.png");
     Texture gridTex("../assets/textures/grid.png");
-
+    TEXTURE_REGISTRY.registerTexture(&waterTex);
+    TEXTURE_REGISTRY.registerTexture(&faceTex);
+    TEXTURE_REGISTRY.registerTexture(&edgeTex);
+    TEXTURE_REGISTRY.registerTexture(&gridTex);
 
     // PROGRAMS
     ShaderHandler::registerProgram("../shaders/3d.vert", "../shaders/texture.frag", "program");
@@ -157,7 +162,7 @@ int main() {
 
 
     ERRLOG.printClear();
-    glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
+    
     glEnable(GL_DEPTH_TEST);
     
     InspectorEngine::refreshUniforms();
@@ -178,12 +183,20 @@ int main() {
 
 
         // ---DRAWING---
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //directly to screen
+
+        viewport.bind();
+        glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glm::mat4 perspective = glm::perspective(glm::radians(45.0f), (float)win.width / (float)win.height, 0.1f, 100.0f);
+        glm::mat4 perspective = glm::perspective(glm::radians(45.0f), viewport.getAspect(), 0.1f, 100.0f);
         glm::mat4 view = cam.GetViewMatrix();
         ObjCache::renderAll(perspective, view);
 
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        viewport.draw();
+        
         
         if (showMetrics) drawMetrics(appstate);
         ui.postRender();
@@ -222,8 +235,11 @@ void cameraControls(GLFWwindow *window, Camera &camera) {
     }
     // [F2] - switch to editor controls
     if (KEYBOARD[GLFW_KEY_F2].isPressed) {
-        appstate = AS_EDITOR;
+        ImGuiIO& io = ImGui::GetIO();
+        io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        appstate = AS_EDITOR;
+        
     }
     
     //camera movements
@@ -255,6 +271,8 @@ void editorControls(GLFWwindow *window) {
     // [F2] - switch to camera controls
     if (KEYBOARD[GLFW_KEY_F2].isPressed) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        ImGuiIO& io = ImGui::GetIO();
+        io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
         CURSOR.firstInput = true;
         appstate = AS_CAMERA;
     }

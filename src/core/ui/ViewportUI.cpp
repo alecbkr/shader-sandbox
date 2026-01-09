@@ -1,0 +1,137 @@
+#include "ViewportUI.hpp"
+
+#include "../../engine/InputHandler.hpp"
+#include "../../engine/Errorlog.hpp"
+#include "../../engine/AppTimer.hpp"
+#include <string>
+
+
+ViewportUI::ViewportUI() {
+    dimensions = ImVec2(WINDOWSIZE.width / 2, WINDOWSIZE.height / 2);
+    pos = ImVec2(WINDOWSIZE.width / 2 - WINDOWSIZE.width * 0.25f, WINDOWSIZE.height / 2 - WINDOWSIZE.height * 0.25f);
+
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    glGenTextures(1, &viewportTex);
+    glBindTexture(GL_TEXTURE_2D, viewportTex);
+    glTexImage2D(
+        GL_TEXTURE_2D, 
+        0,
+        GL_RGBA,
+        dimensions.x,
+        dimensions.y,
+        0,
+        GL_RGBA,
+        GL_UNSIGNED_BYTE,
+        nullptr
+    );
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER, 
+        GL_COLOR_ATTACHMENT0,
+        GL_TEXTURE_2D,
+        viewportTex,
+        0
+    );
+
+    glGenRenderbuffers(1, &rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glRenderbufferStorage(
+        GL_RENDERBUFFER,
+        GL_DEPTH24_STENCIL8,
+        dimensions.x,
+        dimensions.y
+    );
+
+    glFramebufferRenderbuffer(
+        GL_FRAMEBUFFER,
+        GL_DEPTH_STENCIL_ATTACHMENT,
+        GL_RENDERBUFFER,
+        rbo
+    );
+
+    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void ViewportUI::bind() {
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glViewport(0, 0, dimensions.x, dimensions.y);
+}
+
+
+void ViewportUI::draw() {
+    if (initPos) {
+        ImGui::SetNextWindowSize(dimensions, ImGuiCond_Always);
+        ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
+        prevDimensions = dimensions;
+        initPos = false;
+    }
+    
+    // ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f); //removes border
+    // ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar);
+
+    ImGui::Begin("Viewport");
+
+    dimensions = ImGui::GetWindowSize();
+    pos = ImGui::GetWindowPos();
+    reformat(); // relative to the imgui window, not the application
+
+    ImVec2 vpSize = ImGui::GetContentRegionAvail();
+    ImGui::Image(
+        (void*)(intptr_t)viewportTex,
+        vpSize,
+        ImVec2(0, 1),
+        ImVec2(1, 0)
+    );
+
+    // FPS overlay
+    std::string fps = "FPS: " + std::to_string(APPTIME.getFPS());
+    ImGui::GetWindowDrawList()->AddText(
+        ImVec2(pos.x + 20, pos.y + 40),
+        IM_COL32(255, 255, 255, 255),
+        fps.c_str()
+    );
+
+    ImGui::End();
+    // ImGui::PopStyleVar();
+}
+
+
+void ViewportUI::reformat() {
+    if (dimensions.x == prevDimensions.x && dimensions.y == prevDimensions.y) return;
+    if (MOUSEBUTTON[GLFW_MOUSE_BUTTON_1].isDown) return; //wait until window is resized 
+
+    glBindTexture(GL_TEXTURE_2D, viewportTex);
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGBA8,
+        dimensions.x,
+        dimensions.y,
+        0,
+        GL_RGBA,
+        GL_UNSIGNED_BYTE,
+        nullptr
+    );
+
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glRenderbufferStorage(
+        GL_RENDERBUFFER, 
+        GL_DEPTH24_STENCIL8,
+        dimensions.x,
+        dimensions.y
+    );
+
+    prevDimensions = dimensions;
+}
+
+
+float ViewportUI::getAspect() {
+    return (float)dimensions.x / (float)dimensions.y;
+}
