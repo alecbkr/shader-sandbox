@@ -13,8 +13,6 @@ class Logger {
 
     static void removeSink(std::shared_ptr<LogSink> sink);
     
-    static void getLogs(); 
-
     private:
     static std::vector<std::shared_ptr<LogSink>> sinks; 
 }; 

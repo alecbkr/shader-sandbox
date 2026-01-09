@@ -15,11 +15,7 @@
 #include "core/ui/ConsoleUI.hpp"
 #include "core/ShaderHandler.hpp"
 #include "core/EditorEngine.hpp"
-#include "core/logging/Logger.hpp"
-#include "core/logging/LogSink.hpp"
-#include "core/logging/FileSink.hpp"
-#include "core/logging/StdoutSink.hpp"
-#include "core/logging/ConsoleSink.hpp"
+#include "core/logging/LogSetup.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -30,17 +26,14 @@
 
 #include "object/ObjCache.hpp"
 
-
 void processInput(GLFWwindow *window);
 void cameraControls(GLFWwindow *window, Camera &camera);
 void editorControls(GLFWwindow *window);
-
 
 enum AppState {
     AS_EDITOR,
     AS_CAMERA
 };
-
 
 // GLOBAL VARIABLES
 Camera cam;
@@ -49,30 +42,20 @@ bool showMetrics = true;
 std::vector<EditorUI*> EditorEngine::editors;
 
 int main() {
-    auto consoleLogs = std::make_shared<ConsoleSink>(); 
-    auto stdoutLogs = std::make_shared<StdoutSink>(); 
-    auto fileLogs = std::make_shared<FileSink>(); 
-
-    Logger::addSink(stdoutLogs); 
-    Logger::addSink(fileLogs);
-    Logger::addSink(consoleLogs);
+    auto logCtx = initLogging(); 
 
     Window win("Sandbox", 1000, 800);
     ShaderHandler shaderHandler;
 
     EditorEngine::spawnEditor(1024);
 
-    ConsoleUI consoleUI; 
+    ConsoleUI consoleUI(logCtx.consoleSink); 
     UIContext ui(win.window);
     InspectorUI inspectorUI;
 
     MenuUI menuUI = MenuUI();
 
-    consoleUI.setLogSource(consoleLogs); 
-
-    // Transmit message to all sinks
-    Logger::addLog(LogLevel::ERROR, "", "Example Error", -1); 
-    Logger::addLog(LogLevel::INFO, "", "Hello, World!", -1);
+    // consoleUI.setLogSource(logCtx.consoleSink); 
     
     // GRIDPLANE
     std::vector<float> gridPlane_verts {
