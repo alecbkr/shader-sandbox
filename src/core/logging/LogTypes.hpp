@@ -1,6 +1,6 @@
 #include <string>
 #include <string_view>
-#include <sstream>      // could use format for C++20
+#include <sstream>    
 
 enum class LogLevel {
     CRITICAL = 0, 

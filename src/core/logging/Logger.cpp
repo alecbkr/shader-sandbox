@@ -11,11 +11,6 @@ void Logger::removeSink(std::shared_ptr<LogSink> sink) {
 }
 
 void Logger::addLog(LogLevel level, std::string src, std::string msg, std::string additional, int lineNum) {
-    // TODO: handle abort logic 
-    // if(level == LogLevel::CRITICAL) {
-    //     abort(); 
-    // }
-
     LogEntry entry; 
     entry.level = level; 
     entry.src = src; 
@@ -28,4 +23,7 @@ void Logger::addLog(LogLevel level, std::string src, std::string msg, std::strin
         sink->addLog(entry); 
     }
 
+    if(level == LogLevel::CRITICAL) {
+        exit(1); 
+    }
 }

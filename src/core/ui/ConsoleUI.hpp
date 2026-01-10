@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <algorithm>
 #include "../logging/ConsoleSink.hpp"
 #include "../ConsoleEngine.hpp"
 

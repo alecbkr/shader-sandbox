@@ -1,7 +1,24 @@
 #include "FileSink.hpp"
+#include <iostream>
+#include <chrono>
+#include <format>
+
+FileSink::FileSink() : LogSink() {
+    logFile.open(logPath, std::ios::out | std::ios::app); 
+}
+
+FileSink::~FileSink() {
+    if(logFile.is_open()) {
+        logFile.close(); 
+    }
+}
 
 void FileSink::addLog(const LogEntry& entry) {
-    int idx = std::min((int)entry.level, 4); // clamp the index to avoid out-of-bounds
+    if(!logFile.is_open()) {
+        std::cerr << "Failed to open file" << std::endl; 
+        return; 
+    }
+
     std::stringstream alert; 
 
     switch (entry.level) {
@@ -15,14 +32,14 @@ void FileSink::addLog(const LogEntry& entry) {
     auto now = std::chrono::system_clock::now(); 
     std::string timestamp = std::format("{:%Y-%m-%d %H:%M:%SZ}", now); 
 
-    std::string newLog = '[' +  timestamp + "] " + "[" + alert.str() + entry.src + "] " + entry.msg + entry.additional + '\n';   
-    std::ofstream file("../src/core/logging/logs.txt", std::ios::app); 
+    // std::string newLog = '[' +  timestamp + "] " + "[" + alert.str() + entry.src + "] " + entry.msg + entry.additional + '\n';   
+   std::string newLog = std::format("[{}] [{}{}] {}{}\n", 
+        timestamp, 
+        alert.str(), 
+        entry.src, 
+        entry.msg, 
+        entry.additional
+    );
 
-    if(file.is_open()) {
-        file << newLog; 
-        file.close(); 
-    } else {
-        // TODO: try to output error msg somewhere else 
-        std::cerr << "Failed to open file" << std::endl; 
-    }
+    logFile << newLog << std::flush; 
 }

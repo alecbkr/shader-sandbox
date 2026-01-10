@@ -1,4 +1,5 @@
 #include "ConsoleUI.hpp"
+#include <algorithm>
 
 ConsoleUI::ConsoleUI(std::shared_ptr<ConsoleSink> consoleSink){
     engine = std::make_shared<ConsoleEngine>(); 
