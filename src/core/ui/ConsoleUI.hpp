@@ -32,17 +32,16 @@ class ConsoleUI {
     std::shared_ptr<ConsoleEngine> engine; 
     std::shared_ptr<ConsoleSink> logSrc; 
 
-    char inputBuf[256]; 
+    // char inputBuf[256]; 
     std::vector<std::string> history; 
-    int historyPos; 
+    // int historyPos; 
 
     bool isAutoScroll = false; 
-    bool isFocused = true;      // only take in input when the user is using the widget 
+    // bool isFocused = true;      // only take in input when the user is using the widget 
     size_t lastLogSize = 0; 
     
     const void drawConsole(); 
     void readLogs(); 
-    // void drawTextInput(); 
     const void drawMenuBar(); 
 
     // const void handleInputHistory(); // User input to go through logs in console 

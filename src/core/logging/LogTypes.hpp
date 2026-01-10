@@ -13,6 +13,7 @@ struct LogEntry {
     LogLevel level;
     std::string src;
     std::string msg;
+    std::string additional; 
     int lineNum;       
 };
 

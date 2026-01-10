@@ -7,7 +7,7 @@ class Logger {
     public: 
     Logger() = delete; 
     
-    static void addLog(LogLevel level, std::string src, std::string msg, int lineNum = -1); 
+    static void addLog(LogLevel level, std::string src, std::string msg, std::string additional = "", int lineNum = -1); 
 
     static void addSink(std::shared_ptr<LogSink> sink); 
 

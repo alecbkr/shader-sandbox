@@ -76,7 +76,7 @@ std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const Sh
                 uniform.type = typePair->second;
             } else {
                 // ERRLOG.logEntry(EL_WARNING, "parseUniforms", "Invalid Uniform Type: ", word.c_str());
-                Logger::addLog(LogLevel::WARNING, "parseUnifroms", "Invalid Uniform Type: " + word, -1); 
+                Logger::addLog(LogLevel::WARNING, "parseUnifroms", "Invalid Uniform Type: ", word); 
                 continue;
             }
             assignDefaultValue(uniform);

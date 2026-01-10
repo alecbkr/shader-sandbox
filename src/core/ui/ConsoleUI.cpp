@@ -30,11 +30,10 @@ void ConsoleUI::readLogs(){
     if (!logSrc) return; 
 
     const auto& logs = logSrc->getLogs(); 
-    int lineNum = 0; 
+
     for(const auto& log:logs) {
         int idx = std::min((int)log.level, 3); // clamp the index to avoid out-of-bounds
         std::string alert = ""; 
-
         switch (log.level) {
             case LogLevel::CRITICAL:  alert = "[CRITICAL: " + log.src + "] ";   break; 
             case LogLevel::ERROR:     alert += "[ERROR: " + log.src + "] "  ;   break; 
@@ -48,9 +47,12 @@ void ConsoleUI::readLogs(){
         ImGui::TextUnformatted(alert.c_str()); 
         ImGui::SameLine(0.0f, 0.0f); 
         ImGui::PopStyleColor(); 
-        ImGui::TextUnformatted(log.msg.c_str()); 
-        
-        lineNum++;
+        ImGui::TextUnformatted(log.msg.c_str());
+
+        if (!log.additional.empty()) {
+            std::string additional = "  " + log.additional; 
+            ImGui::TextUnformatted(additional.c_str());  
+        }
     }
 
     if (logs.size() > lastLogSize) {
@@ -127,7 +129,7 @@ const void ConsoleUI::executeCommand() {
         return; 
     }
 
-    std::string command(inputBuf); 
-    Logger::addLog(LogLevel::INFO, ">", command, -1); 
-    engine->processInput(command); 
+    // std::string command(inputBuf); 
+    // Logger::addLog(LogLevel::INFO, ">", command, ); 
+    // engine->processInput(command); 
 }

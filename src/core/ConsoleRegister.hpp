@@ -10,13 +10,6 @@ class Command {
     virtual void Execute(const std::vector<std::string>& args) const = 0; 
 }; 
 
-
-class HelpCommand: public Command {
-    public: 
-    void Execute(const std::vector<std::string>& args) const override; 
-    private: 
-}; 
-
 // Clear the console log 
 class ClearCommand: public Command {
     public: 

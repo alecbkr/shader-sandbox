@@ -15,7 +15,7 @@ void FileSink::addLog(const LogEntry& entry) {
     auto now = std::chrono::system_clock::now(); 
     std::string timestamp = std::format("{:%Y-%m-%d %H:%M:%SZ}", now); 
 
-    std::string newLog = '[' +  timestamp + "] " + "[" + alert.str() + entry.src + "] " + entry.msg + '\n';   
+    std::string newLog = '[' +  timestamp + "] " + "[" + alert.str() + entry.src + "] " + entry.msg + entry.additional + '\n';   
     std::ofstream file("../src/core/logging/logs.txt", std::ios::app); 
 
     if(file.is_open()) {

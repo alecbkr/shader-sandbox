@@ -11,7 +11,7 @@ void StdoutSink::addLog(const LogEntry& entry) {
         default:                     alert << "ANOMALY: ";                                            break; 
     }    
 
-    std::cout << '[' << alert.str() << entry.src << "] " << entry.msg << std::endl; 
+    std::cout << '[' << alert.str() << entry.src << "] " << entry.msg << entry.additional << std::endl; 
 }
 
 

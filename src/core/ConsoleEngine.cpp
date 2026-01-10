@@ -1,7 +1,6 @@
 #include "ConsoleEngine.hpp"
 
 ConsoleEngine::ConsoleEngine() {
-    ConsoleEngine::registerCommand("help", std::make_shared<HelpCommand>()); 
     ConsoleEngine::registerCommand("clear", std::make_shared<ClearCommand>()); 
 }
 
@@ -26,7 +25,7 @@ void ConsoleEngine::processInput(const std::string& input) {
         std::shared_ptr<Command> cmd = iter->second; 
         cmd->Execute(args); 
     } else {
-        Logger::addLog(LogLevel::ERROR, "command not found", "Could not find command '" + args[0] + "'", -1);
+        Logger::addLog(LogLevel::ERROR, "command not found", "Could not find command '" + args[0] + "'");
     }
 }
 

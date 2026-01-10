@@ -3,6 +3,7 @@
 // fetch logs from the static logger to be read by the consoleUI
 void ConsoleSink::addLog(const LogEntry& entry) {
     items.push_back(entry); 
+
     if(items.size() > MAX_HISTORY) {
         items.pop_front(); 
     }
