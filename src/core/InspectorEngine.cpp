@@ -135,7 +135,8 @@ void InspectorEngine::assignDefaultValue(Uniform& uniform) {
         uniform.value = glm::mat4(0.0f);
         break;
     default:
-        ERRLOG.logEntry(EL_WARNING, "assignDefaultValue", "Invalid Uniform Type, making it an int");
+        // ERRLOG.logEntry(EL_WARNING, "assignDefaultValue", "Invalid Uniform Type, making it an int");
+        Logger::addLog(LogLevel::WARNING, "assignDefaultValue", "Invalid Uniform Type, making it an int"); 
         uniform.type = UniformType::Int;
         uniform.value = 0;
         break;
@@ -152,7 +153,8 @@ void InspectorEngine::setUniform(const std::string& objectName, const std::strin
         applyUniform(objectName, newUniform);
     }
     else {
-        ERRLOG.logEntry(EL_WARNING, "setUniform", "failed to set: ", uniformName.c_str());
+        // ERRLOG.logEntry(EL_WARNING, "setUniform", "failed to set: ", uniformName.c_str());
+        Logger::addLog(LogLevel::WARNING, "setUniform", "failed to set:", uniformName.c_str()); 
     }
 }
 
@@ -160,7 +162,8 @@ void InspectorEngine::applyAllUniformsForObject(const std::string& objectName) {
     const std::unordered_map<std::string, Uniform>* objectUniforms = UNIFORM_REGISTRY.tryReadUniforms(objectName);
 
     if (objectUniforms == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", objectName.c_str());
+        // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", objectName.c_str());
+        Logger::addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", objectName); 
     }
 
     for (auto& [uniformName, uniform] : *objectUniforms) {
@@ -170,7 +173,8 @@ void InspectorEngine::applyAllUniformsForObject(const std::string& objectName) {
 
 void InspectorEngine::applyUniform(const std::string& objectName, const Uniform& uniform) {
     if (!ObjCache::objMap.contains(objectName)) {
-        ERRLOG.logEntry(EL_WARNING, "applyUniform", (objectName + " not found in registry").c_str());
+        // ERRLOG.logEntry(EL_WARNING, "applyUniform", (objectName + " not found in registry").c_str());
+        Logger::addLog(LogLevel::WARNING, "applyUniform", (objectName + " not found in registry")); 
         return;
     }
     Object& object = *ObjCache::objMap.at(objectName);
@@ -201,7 +205,8 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
         program.setUniform_mat4float(uniform.name.c_str(), std::get<glm::mat4>(uniform.value));
         break;
     default:
-        ERRLOG.logEntry(EL_WARNING, "applyUniform", "Invalid Uniform Type: ");
+        // ERRLOG.logEntry(EL_WARNING, "applyUniform", "Invalid Uniform Type: ");
+        Logger::addLog(LogLevel::WARNING, "applyUniform", "Invalid Uniform Type: "); 
         break;
     }
 }

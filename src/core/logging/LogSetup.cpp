@@ -11,10 +11,10 @@ LogCtx initLogging() {
     Logger::addSink(ctx.fileSink); 
     Logger::addSink(ctx.stdoutSink); 
 
-    Logger::addLog(LogLevel::ERROR, "Test Message", "This is a Normal Error"); 
-    Logger::addLog(LogLevel::WARNING, "Test Message", "This is a Warning Message"); 
-    Logger::addLog(LogLevel::INFO, "Test Message", "This is an Info Message"); 
-    Logger::addLog(LogLevel::CRITICAL, "Test Message", "This is a Critical Error: ", "Test Critical Error"); 
+    // Logger::addLog(LogLevel::ERROR, "Test Message", "This is a Normal Error"); 
+    // Logger::addLog(LogLevel::WARNING, "Test Message", "This is a Warning Message"); 
+    // Logger::addLog(LogLevel::INFO, "Test Message", "This is an Info Message"); 
+    // Logger::addLog(LogLevel::CRITICAL, "Test Message", "This is a Critical Error: ", "Test Critical Error"); 
 
     return ctx; 
 }
