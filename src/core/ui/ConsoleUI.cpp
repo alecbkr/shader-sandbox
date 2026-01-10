@@ -33,14 +33,14 @@ void ConsoleUI::readLogs(){
     int lineNum = 0; 
     for(const auto& log:logs) {
         int idx = std::min((int)log.level, 3); // clamp the index to avoid out-of-bounds
-        std::string alert; 
+        std::string alert = ""; 
 
         switch (log.level) {
-            case LogLevel::CRITICAL:  alert = "CRITICAL: ";  break; 
-            case LogLevel::ERROR:     alert = "ERROR: ";     break; 
-            case LogLevel::WARNING:   alert = "WARNING: ";   break; 
-            case LogLevel::INFO:      alert = "INFO: ";      break; 
-            default:                  alert = "ANOMALY: ";   break; 
+            case LogLevel::CRITICAL:  alert = "[CRITICAL: " + log.src + "] ";   break; 
+            case LogLevel::ERROR:     alert += "[ERROR: " + log.src + "] "  ;   break; 
+            case LogLevel::WARNING:   alert += "[WARNING: " + log.src + "] ";   break; 
+            case LogLevel::INFO:      alert += "[INFO: " + log.src + "] ";      break; 
+            default:                  alert += "[ANOMALY: " + log.src + "] ";   break; 
         }
 
         // TODO: Find some way of making the text copyable 
@@ -52,9 +52,6 @@ void ConsoleUI::readLogs(){
         
         lineNum++;
     }
-
-    //     // TODO: add src if there is a src file 
-    // }
 
     if (logs.size() > lastLogSize) {
         isAutoScroll = true; 
