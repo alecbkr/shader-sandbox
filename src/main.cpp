@@ -47,7 +47,7 @@ bool showMetrics = true;
 std::vector<EditorUI*> EditorEngine::editors;
 
 int main() {
-    auto logCtx = initLogging(); 
+    LogCtx logCtx = initLogging(); 
 
     Window win("Sandbox", 1000, 800);
     ShaderHandler shaderHandler;
@@ -60,8 +60,6 @@ int main() {
     UIContext ui(win.window);
 
     MenuUI menuUI = MenuUI();
-
-    // consoleUI.setLogSource(logCtx.consoleSink); 
     
     // GRIDPLANE
     std::vector<float> gridPlane_verts {
@@ -187,6 +185,7 @@ int main() {
         ui.render(menuUI);
         ui.renderEditorWindow(500, 500);
         ui.render(inspectorUI);
+        ui.render(consoleUI); 
         bool R_key_pressed = (glfwGetKey(win.window, GLFW_KEY_R) == GLFW_PRESS);
         if (R_key_pressed && !R_key_held) {
             if (!EditorEngine::editors.empty()) {
