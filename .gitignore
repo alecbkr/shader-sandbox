@@ -7,3 +7,5 @@
 /bin/sandbox
 
 .idea
+
+src/core/logging/logs.txt

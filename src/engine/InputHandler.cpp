@@ -37,7 +37,8 @@ void InputHandler::resetStates() {
 
 void InputHandler::key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (key < 0) {
-        ERRLOG.logEntry(EL_WARNING, "INPUT", "Key is undefined (-1)");
+        // ERRLOG.logEntry(EL_WARNING, "INPUT", "Key is undefined (-1)");
+        
         return;
     }
 

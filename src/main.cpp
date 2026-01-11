@@ -13,9 +13,13 @@
 
 #include "ui/UIContext.hpp"
 #include "core/ui/InspectorUI.hpp"
+#include "core/ui/ConsoleUI.hpp"
 #include "core/ShaderHandler.hpp"
 #include "core/EditorEngine.hpp"
 #include "core/ui/ViewportUI.hpp"
+#include "core/HotReloader.hpp"
+#include "core/UniformRegistry.hpp"
+#include "core/logging/LogSetup.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -25,18 +29,16 @@
 #include <imgui/imgui_impl_opengl3.h>
 
 #include "object/ObjCache.hpp"
-
+#include <fstream>
 
 void processInput(GLFWwindow *window);
 void cameraControls(GLFWwindow *window, Camera &camera);
 void editorControls(GLFWwindow *window);
 
-
 enum AppState {
     AS_EDITOR,
     AS_CAMERA
 };
-
 
 // GLOBAL VARIABLES
 Camera cam;
@@ -45,18 +47,20 @@ bool showMetrics = true;
 std::vector<EditorUI*> EditorEngine::editors;
 
 int main() {
+    LogCtx logCtx = initLogging(); 
+
     Window win("Sandbox", 1000, 800);
     ShaderHandler shaderHandler;
     ViewportUI viewport;
+    InspectorUI inspectorUI;
+    HotReloader reloader(&shaderHandler, (InspectorEngine*)&inspectorUI);    
     EditorEngine::spawnEditor(1024);
 
+    ConsoleUI consoleUI(logCtx.consoleSink); 
     UIContext ui(win.window);
-    InspectorUI inspectorUI;
 
     MenuUI menuUI = MenuUI();
-
-
-
+    
     // GRIDPLANE
     std::vector<float> gridPlane_verts {
         -1.0f, 0.0f, -1.0f,  0.0f, 0.0f,
@@ -133,7 +137,8 @@ int main() {
     ShaderProgram* programPtr = ShaderHandler::getProgram("program");
     ShaderProgram* untexPtr = ShaderHandler::getProgram("untex");
     if (programPtr == nullptr || untexPtr == nullptr) {
-        ERRLOG.logEntry(EL_CRITICAL, "main", "pointer not registered properly?");
+        // ERRLOG.logEntry(EL_CRITICAL, "main", "pointer not registered properly?");
+        Logger::addLog(LogLevel::CRITICAL, "main", "pointer not registered properly?"); 
     }
     ShaderProgram& program = *programPtr;
     ShaderProgram& untex = *untexPtr;
@@ -159,6 +164,9 @@ int main() {
     ObjCache::translateObj("pyramid1", glm::vec3(-1.3f, 0.0f, -1.0f));
 
 
+    bool R_key_held = false;
+    const std::string FRAG_PATH = "../shaders/texture.frag";
+
     ERRLOG.printClear();
     
     glEnable(GL_DEPTH_TEST);
@@ -177,11 +185,30 @@ int main() {
         ui.render(menuUI);
         ui.renderEditorWindow(500, 500);
         ui.render(inspectorUI);
-
-
+        ui.render(consoleUI); 
+        bool R_key_pressed = (glfwGetKey(win.window, GLFW_KEY_R) == GLFW_PRESS);
+        if (R_key_pressed && !R_key_held) {
+            if (!EditorEngine::editors.empty()) {
+                std::ofstream outProg(FRAG_PATH, std::ios::binary); 
+                if (outProg.is_open()) {
+                    outProg << EditorEngine::editors[0]->inputTextBuffer;
+                    outProg.close();
+                }
+            }
+            reloader.compile(FRAG_PATH, "program");
+            ShaderProgram* newProg = shaderHandler.getProgram("program");
+            if (newProg) {
+                for (auto& [name, object] : ObjCache::objMap) {
+                    if (object->getProgram()->name == "program") {
+                        object->setProgram(*newProg);
+                    }
+                }
+            }
+        }
+        R_key_held = R_key_pressed;
         // ---DRAWING---
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //directly to screen
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         viewport.bind();
         glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
@@ -189,6 +216,7 @@ int main() {
 
         glm::mat4 perspective = glm::perspective(glm::radians(45.0f), viewport.getAspect(), 0.1f, 100.0f);
         glm::mat4 view = cam.GetViewMatrix();
+        
         ObjCache::renderAll(perspective, view);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

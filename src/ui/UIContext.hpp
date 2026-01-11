@@ -3,6 +3,7 @@
 #include "core/ui/InspectorUI.hpp"
 #include "core/ui/MenuUI.hpp"
 //#include "Inspector.hpp"
+#include "core/ui/ConsoleUI.hpp"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
@@ -15,6 +16,7 @@ public:
     void renderEditorWindow(float width, float height);
     void render(InspectorUI& inspectorUI);
     void render(MenuUI& menuUI);
+    void render(ConsoleUI& consoleUI); 
     void postRender();
     void destroy();
 };

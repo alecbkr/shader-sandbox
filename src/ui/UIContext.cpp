@@ -232,3 +232,6 @@ void styleImGui(ImGuiIO& io) {
     colors[ImGuiCol_TabHovered] = ImVec4(0.28f, 0.28f, 0.29f, 1.00f);
     colors[ImGuiCol_TabActive] = ImVec4(0.23f, 0.23f, 0.24f, 1.00f);
 }
+void UIContext::render(ConsoleUI& consoleUI) {
+    consoleUI.render(); 
+}
