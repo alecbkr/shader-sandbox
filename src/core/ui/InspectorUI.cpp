@@ -184,12 +184,15 @@ void InspectorUI::drawAddObjectMenu() {
 
     if (ImGui::Button("Add Plane")) {
         ObjCache::createObj(("Plane_" + std::to_string(objectCount)).c_str(), gridPlane_verts, gridPlane_indices, false, true, defaultProgram);
+        InspectorEngine::refreshUniforms();
     }
     if (ImGui::Button("Add Pyramid")) {
         ObjCache::createObj(("Pyramid_" + std::to_string(objectCount)).c_str(), pyramidVerts, pyramidIndices, false, true, defaultProgram);
+        InspectorEngine::refreshUniforms();
     }
     if (ImGui::Button("Add Cube")) {
         ObjCache::createObj(("Cube_" + std::to_string(objectCount)).c_str(), cubeVerts, cubeIndices, false, true, defaultProgram);
+        InspectorEngine::refreshUniforms();
     }
 }
 
@@ -318,6 +321,7 @@ bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
     // add check in case we get more types
     ShaderProgram& selectedShader = *ShaderHandler::getProgram(shaderChoices[selector.selection]);
     ObjCache::setProgram(selector.objectName, selectedShader); 
+    InspectorEngine::refreshUniforms();
     return true;
 }
 
