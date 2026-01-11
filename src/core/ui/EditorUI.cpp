@@ -9,7 +9,7 @@
 
 EditorUI::EditorUI(unsigned int bufferSize) {
     this->inputTextBuffer = new char[bufferSize];
-    strcpy(this->inputTextBuffer, EditorEngine::getFileContents("../shaders/default.frag").c_str());
+    strcpy(this->inputTextBuffer, EditorEngine::getFileContents("../shaders/texture.frag").c_str());
     this->bufferSize = bufferSize;
 
     this->lineCount = 1;
