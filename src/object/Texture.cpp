@@ -1,7 +1,6 @@
 #include "Texture.hpp"
 #include <stb/stb_image.h>
-#include "engine/Errorlog.hpp"
-
+#include "core/logging/Logger.hpp"
 
 Texture::Texture(const char *texture_path) {
     this->path = texture_path; 
@@ -16,14 +15,14 @@ Texture::Texture(const char *texture_path) {
             case 3: format = GL_RGB;  break;
             case 4: format = GL_RGBA; break;
             default: 
-                ERRLOG.logEntry(EL_ERROR, "TEXTURE", "Format could not be determined");
+                Logger::addLog(LogLevel::ERROR, "TEXTURE", "Format could not be determined"); 
                 return;
         }
 
         initialized = true;
     }
     else {
-        ERRLOG.logEntry(EL_ERROR, "TEXTURE", "Could not find texture from path:", texture_path);
+        Logger::addLog(LogLevel::ERROR, "TEXTURE", "Could not find texture from path:", texture_path); 
     }
 }
 
@@ -54,7 +53,7 @@ bool Texture::isValid() const {
 
 void Texture::sendToGPU() {
     if (!initialized) {
-        ERRLOG.logEntry(EL_WARNING, "TEXTURE", "Can't send uninitialized texture to GPU");
+        Logger::addLog(LogLevel::WARNING, "TEXTURE", "Can't send uninitialized texture to GPU"); 
         return;
     } 
 

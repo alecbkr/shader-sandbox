@@ -137,7 +137,6 @@ int main() {
     ShaderProgram* programPtr = ShaderHandler::getProgram("program");
     ShaderProgram* untexPtr = ShaderHandler::getProgram("untex");
     if (programPtr == nullptr || untexPtr == nullptr) {
-        // ERRLOG.logEntry(EL_CRITICAL, "main", "pointer not registered properly?");
         Logger::addLog(LogLevel::CRITICAL, "main", "pointer not registered properly?"); 
     }
     ShaderProgram& program = *programPtr;

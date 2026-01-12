@@ -1,6 +1,7 @@
 #include "InputHandler.hpp"
 
 #include "Errorlog.hpp"
+#include "core/logging/Logger.hpp"
 
 
 InputHandler& InputHandler::getInstance() {
@@ -38,7 +39,7 @@ void InputHandler::resetStates() {
 void InputHandler::key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (key < 0) {
         // ERRLOG.logEntry(EL_WARNING, "INPUT", "Key is undefined (-1)");
-        
+        // Logger::addLog(LogLevel::WARNING, "INPUT", "Key is undefined (-1)");
         return;
     }
 
@@ -47,21 +48,24 @@ void InputHandler::key_callback(GLFWwindow *window, int key, int scancode, int a
         if (k.isDown == false) {
             k.isPressed = true;
             // ERRLOG.logEntry(EL_INFO, "Input", "Key is PRESSED: ", key);
+            // Logger::addLog(LogLevel::INFO, "Input", "Key is PRESSED: ", std::to_string(key)); 
         }
         k.isDown = true;
         // ERRLOG.logEntry(EL_INFO, "Input", "Key is DOWN: ", key);
+        // Logger::addLog(LogLevel::INFO, "Input", "Key is DOWN: ", std::to_string(key)); 
     }
     else if (action == GLFW_RELEASE) {
         k.isDown = false;
         k.isReleased = true;
         // ERRLOG.logEntry(EL_INFO, "Input", "Key is RELEASED: ", key);
+        // Logger::addLog(LogLevel::INFO, "Input", "Key is RELEASED: ", std::to_string(key)); 
     }
 }
 
 
 void InputHandler::mouse_callback(GLFWwindow *window, int button, int action, int mods) {
     if (button < 0) {
-        ERRLOG.logEntry(EL_WARNING, "INPUT", "Button is undefined (-1)");
+        Logger::addLog(LogLevel::WARNING, "INPUT", "Button is undefined (-1)"); 
         return;
     }
 
@@ -70,14 +74,17 @@ void InputHandler::mouse_callback(GLFWwindow *window, int button, int action, in
         if (b.isDown == false) {
             b.isPressed = true;
             // ERRLOG.logEntry(EL_INFO, "Input", "Key is PRESSED: ", button);
+            // Logger::addLog(LogLevel::INFO, "Input", "Key is PRESSED: ", std::to_string(button)); 
         }
         b.isDown = true;
         // ERRLOG.logEntry(EL_INFO, "Input", "Key is DOWN: ", button);
+        // Logger::addLog(LogLevel::INFO, "Input", "Key is DOWN: ", std::to_string(button));
     }
     else if (action == GLFW_RELEASE) {
         b.isDown = false;
         b.isReleased = true;
         // ERRLOG.logEntry(EL_INFO, "Input", "Key is RELEASED: ", button);
+        // Logger::addLog(LogLevel::INFO, "Input", "Key is RELEASED: ", std::to_string(button)); 
     }
 }
 

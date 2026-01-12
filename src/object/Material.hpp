@@ -6,8 +6,7 @@
 #include <vector>
 #include "Texture.hpp"
 #include "../engine/ShaderProgram.hpp"
-#include "../engine/Errorlog.hpp"
-
+#include "../core/logging/Logger.hpp"
 struct TextureBind {
     Texture *texture;
     GLint unit;

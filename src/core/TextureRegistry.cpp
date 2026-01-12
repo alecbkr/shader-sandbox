@@ -1,5 +1,5 @@
 #include "TextureRegistry.hpp"
-#include "../engine/Errorlog.hpp"
+#include "logging/Logger.hpp"
 
 TextureRegistry::TextureRegistry() {
 }
@@ -10,7 +10,7 @@ TextureRegistry& TextureRegistry::instance() {
 }
 const Texture* TextureRegistry::tryReadTexture(int index) const {
     if (index < textures.size() && index > -1) {
-        ERRLOG.logEntry(EL_WARNING, "eraseTexture", "invalid index!");
+        Logger::addLog(LogLevel::WARNING, "eraseTexture", "invalid index!"); 
         return textures.at(index);
     }
     else return nullptr;
@@ -26,7 +26,7 @@ void TextureRegistry::registerTexture(Texture* texture) {
 
 void TextureRegistry::eraseTexture(int index) {
     if (index < textures.size() && index > -1) {
-        ERRLOG.logEntry(EL_WARNING, "eraseTexture", "invalid index!");
+        Logger::addLog(LogLevel::WARNING, "eraseTexture", "invalid index!"); 
     }
     textures.erase(textures.begin() + index);
 }

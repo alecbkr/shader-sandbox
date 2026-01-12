@@ -24,7 +24,7 @@ void ObjCache::createObj(const std::string& name, std::vector<float> verts, std:
                             bool hasNorms, bool hasUVs, ShaderProgram &program) {
 
     if (getObject(name) != nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Object creation failed. Name already in use:", name.c_str());
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Object creation failed. Name already in use:", name); 
         return;
     }
     
@@ -41,7 +41,7 @@ void ObjCache::createObj(const std::string& name, std::vector<float> verts, std:
 void ObjCache::translateObj(const std::string name, glm::vec3 pos) {
     Object* obj = getObject(name);
     if (obj == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Object not found:", name.c_str());
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Object not found:", name); 
         return;
     }
     obj->translate(pos);
@@ -51,7 +51,7 @@ void ObjCache::translateObj(const std::string name, glm::vec3 pos) {
 void ObjCache::scaleObj(const std::string name, glm::vec3 scale) {
     Object* obj = getObject(name);
     if (obj == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Object not found:", name.c_str());
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Object not found:", name); 
         return;
     }
     obj->scale(scale);
@@ -61,7 +61,7 @@ void ObjCache::scaleObj(const std::string name, glm::vec3 scale) {
 void ObjCache::rotateObj(const std::string name, float angle, glm::vec3 axis) {
     Object* obj = getObject(name);
     if (obj == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Object not found:", name.c_str());
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Object not found:", name); 
         return;
     }
     obj->rotate(angle, axis);
@@ -71,7 +71,7 @@ void ObjCache::rotateObj(const std::string name, float angle, glm::vec3 axis) {
 void ObjCache::setTexture(const std::string name, Texture& tex, int unit, std::string uniformName) {
     Object* obj = getObject(name);
     if (obj == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Object not found:", name.c_str());
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Object not found:", name); 
         return;
     }
 
@@ -82,7 +82,7 @@ void ObjCache::setTexture(const std::string name, Texture& tex, int unit, std::s
 void ObjCache::setProgram(const std::string name, ShaderProgram &program) {
     Object* obj = getObject(name);
     if (obj == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Object not found:", name.c_str());
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Object not found:", name); 
         return;
     }
 
@@ -94,11 +94,11 @@ void ObjCache::setProgram(const std::string name, ShaderProgram &program) {
 void ObjCache::setName(const std::string name, const std::string newName) {
     Object* obj = getObject(name);
     if (obj == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Object not found:", name.c_str());
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Object not found:", name); 
         return;
     }
     if (getObject(newName) != nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Name already in use:", name.c_str());
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Name already in use:", name); 
         return;
     }
 
@@ -110,7 +110,7 @@ void ObjCache::setName(const std::string name, const std::string newName) {
 void ObjCache::renderObj(std::string name, glm::mat4 perspective, glm::mat4 view) {
     Object* obj = getObject(name);
     if (obj == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Object not found:", name.c_str());
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Object not found:", name); 
         return;
     }
 
