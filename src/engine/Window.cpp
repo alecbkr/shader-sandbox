@@ -4,7 +4,7 @@
 #include "InputHandler.hpp"
 
 
-Window::Window(const char *processName, int widthIn, int heightIn) {
+OldWindow::OldWindow(const char *processName, int widthIn, int heightIn) {
     if (!glfwInit()) {
         ERRLOG.logEntry(EL_CRITICAL, "WINDOW", "glfwInit failure");
     }
@@ -46,16 +46,16 @@ Window::Window(const char *processName, int widthIn, int heightIn) {
 }
 
 
-void Window::swapBuffers() {
+void OldWindow::swapBuffers() {
     glfwSwapBuffers(window);
 }
 
 
-bool Window::shouldClose() {
+bool OldWindow::shouldClose() {
     return glfwWindowShouldClose(window);
 }
 
 
-void Window::destroy() {
+void OldWindow::destroy() {
     glfwDestroyWindow(window);
 }

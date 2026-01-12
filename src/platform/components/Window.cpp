@@ -1,0 +1,52 @@
+#include "platform/components/Window.hpp"
+#include <iostream>
+
+Window Window::createWindow(u32 width, u32 height, std::string title, bool& outIsValid) {
+    Window window = Window(width, height, title);
+    outIsValid = window.checkValidity();
+    return window;
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
+}
+
+Window::Window(u32 _width, u32 _height, std::string _title) : width(_width), height(_height), title(_title) {
+    window = glfwCreateWindow(_width, _height, _title.c_str(), NULL, NULL);
+    if (window == NULL) {
+        // TODO: use logger
+        std::cout << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        isValid = false;
+        return;
+    }
+
+    glfwMakeContextCurrent(window);
+    glViewport(0, 0, _width, _height);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+    isValid = true;
+}
+
+Window::Window() {};
+
+bool Window::checkValidity() {
+    return isValid;
+}
+
+bool Window::shouldClose() {
+    return glfwWindowShouldClose(window);
+}
+
+void Window::swapBuffers() {
+    glfwSwapBuffers(window);
+}
+
+void Window::setContextCurrent() {
+    glfwMakeContextCurrent(window);
+}
+
+GLFWwindow* Window::getGLFWWindow() {
+    if (!window) return nullptr;
+    return window;
+}

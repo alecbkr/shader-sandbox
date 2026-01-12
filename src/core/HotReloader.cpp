@@ -1,13 +1,12 @@
 #include "core/HotReloader.hpp"
 #include "engine/ShaderProgram.hpp"
-#include "core/ShaderHandler.hpp"
 #include "core/EditorEngine.hpp"
 #include "core/InspectorEngine.hpp"
 #include "engine/Errorlog.hpp"
 #include <fstream>
 #include <iostream>
 
-HotReloader::HotReloader(ShaderHandler *handler, InspectorEngine *inspector) 
+HotReloader::HotReloader(ShaderRegistry *handler, InspectorEngine *inspector) 
     : m_handler(handler), m_inspector(inspector) {}
 
 bool HotReloader::compile(const std::string &filepath, const std::string &programName) {
@@ -63,7 +62,7 @@ bool HotReloader::attemptCompile(const std::string &fragShaderPath, const std::s
         return false;
     }
 
-    ShaderHandler::replaceProgram(programName, newProgram);
+    ShaderRegistry::replaceProgram(programName, newProgram);
     
     if (oldProgram) {
         oldProgram->kill();

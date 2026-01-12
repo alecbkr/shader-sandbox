@@ -14,7 +14,7 @@
 #include "ui/UIContext.hpp"
 #include "core/ui/InspectorUI.hpp"
 #include "core/ui/ConsoleUI.hpp"
-#include "core/ShaderHandler.hpp"
+#include "core/ShaderRegistry.hpp"
 #include "core/EditorEngine.hpp"
 #include "core/ui/ViewportUI.hpp"
 #include "core/HotReloader.hpp"
@@ -30,6 +30,8 @@
 
 #include "object/ObjCache.hpp"
 #include <fstream>
+
+#include "application/Application.hpp"
 
 void processInput(GLFWwindow *window);
 void cameraControls(GLFWwindow *window, Camera &camera);
@@ -47,10 +49,13 @@ bool showMetrics = true;
 std::vector<EditorUI*> EditorEngine::editors;
 
 int main() {
+    Application::initialize({1280, 720, "Shader Sandbox", LoggerInitialization::CONSOLE_FILE_STDOUT});
+    return 0;
+
     LogCtx logCtx = initLogging(); 
 
-    Window win("Sandbox", 1000, 800);
-    ShaderHandler shaderHandler;
+    OldWindow win("Sandbox", 1000, 800);
+    ShaderRegistry shaderHandler;
     ViewportUI viewport;
     InspectorUI inspectorUI;
     HotReloader reloader(&shaderHandler, (InspectorEngine*)&inspectorUI);    
@@ -130,12 +135,12 @@ int main() {
     TEXTURE_REGISTRY.registerTexture(&gridTex);
 
     // PROGRAMS
-    ShaderHandler::registerProgram("../shaders/3d.vert", "../shaders/texture.frag", "program");
-    ShaderHandler::registerProgram("../shaders/default.vert", "../shaders/default.frag", "untex");
+    ShaderRegistry::registerProgram("../shaders/3d.vert", "../shaders/texture.frag", "program");
+    ShaderRegistry::registerProgram("../shaders/default.vert", "../shaders/default.frag", "untex");
 
 
-    ShaderProgram* programPtr = ShaderHandler::getProgram("program");
-    ShaderProgram* untexPtr = ShaderHandler::getProgram("untex");
+    ShaderProgram* programPtr = ShaderRegistry::getProgram("program");
+    ShaderProgram* untexPtr = ShaderRegistry::getProgram("untex");
     if (programPtr == nullptr || untexPtr == nullptr) {
         // ERRLOG.logEntry(EL_CRITICAL, "main", "pointer not registered properly?");
         Logger::addLog(LogLevel::CRITICAL, "main", "pointer not registered properly?"); 

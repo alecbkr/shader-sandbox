@@ -1,6 +1,5 @@
 #include "core/ui/InspectorUI.hpp"
 #include "core/InspectorEngine.hpp"
-#include "core/ShaderHandler.hpp"
 #include "core/TextureRegistry.hpp"
 #include "core/UniformRegistry.hpp"
 #include "core/UniformTypes.hpp"
@@ -140,10 +139,10 @@ void InspectorUI::drawAddUniformMenu() {
 
     // Build a list of shader names
     std::vector<const char *> shaderChoices;
-    shaderChoices.reserve(ShaderHandler::getNumberOfPrograms() + 1);
+    shaderChoices.reserve(ShaderRegistry::getNumberOfPrograms() + 1);
     shaderChoices.push_back("");
 
-    auto& shaders = ShaderHandler::getPrograms();
+    auto& shaders = ShaderRegistry::getPrograms();
     for (auto &[name, shader] : shaders) {
         shaderChoices.push_back(name.c_str());
     }
@@ -228,9 +227,9 @@ bool InspectorUI::drawTextInput(std::string *value, const char *label) {
 bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
     bool changed = false;
     std::vector<const char *> shaderChoices;
-    shaderChoices.reserve(ShaderHandler::getNumberOfPrograms());
+    shaderChoices.reserve(ShaderRegistry::getNumberOfPrograms());
 
-    auto& shaders = ShaderHandler::getPrograms();
+    auto& shaders = ShaderRegistry::getPrograms();
     for (auto &[name, shader] : shaders) {
         shaderChoices.push_back(name.c_str());
     }
@@ -243,7 +242,7 @@ bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
     if (!changed) return false;
     
     // add check in case we get more types
-    ShaderProgram& selectedShader = *ShaderHandler::getProgram(shaderChoices[selector.selection]);
+    ShaderProgram& selectedShader = *ShaderRegistry::getProgram(shaderChoices[selector.selection]);
     ObjCache::setProgram(selector.objectName, selectedShader); 
     return true;
 }

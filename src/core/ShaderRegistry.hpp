@@ -5,9 +5,9 @@
 #include <iostream>
 #include "engine/ShaderProgram.hpp"
 
-class ShaderHandler {
+class ShaderRegistry {
   public:
-    ShaderHandler();
+    ShaderRegistry();
     static bool registerProgram(const std::string& vertex_file, const std::string& fragment_file, const std::string& programName);
     static ShaderProgram* getProgram(const std::string& programName);
     //static std::unordered_map<std::string, ShaderProgram>& getPrograms();

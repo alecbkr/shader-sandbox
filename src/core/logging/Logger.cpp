@@ -1,6 +1,54 @@
-#include "Logger.hpp"
+#include "core/logging/Logger.hpp"
+#include "core/logging/ConsoleSink.hpp"
+#include "core/logging/FileSink.hpp"
+#include "core/logging/StdoutSink.hpp"
 
-std::vector<std::shared_ptr<LogSink>> Logger::sinks; 
+std::vector<std::shared_ptr<LogSink>> Logger::sinks;
+bool Logger::initialized = false;
+
+bool Logger::initialize(LoggerInitialization initSetting){
+    switch (initSetting) {
+    case LoggerInitialization::CONSOLE_FILE_STDOUT:
+        Logger::addSink(std::make_shared<ConsoleSink>());
+        Logger::addSink(std::make_shared<FileSink>());
+        Logger::addSink(std::make_shared<StdoutSink>());
+        break;
+    
+    case LoggerInitialization::CONSOLE_ONLY:
+        Logger::addSink(std::make_shared<ConsoleSink>());
+        break;
+    
+    case LoggerInitialization::FILE_ONLY:
+        Logger::addSink(std::make_shared<FileSink>());
+        break;
+
+    case LoggerInitialization::STDOUT_ONLY:
+        Logger::addSink(std::make_shared<StdoutSink>());
+        break;
+    
+    case LoggerInitialization::CONSOLE_FILE:
+        Logger::addSink(std::make_shared<ConsoleSink>());
+        Logger::addSink(std::make_shared<FileSink>());
+        break;
+
+    case LoggerInitialization::CONSOLE_STDOUT:
+        Logger::addSink(std::make_shared<ConsoleSink>());
+        Logger::addSink(std::make_shared<StdoutSink>());
+        break;
+
+    case LoggerInitialization::FILE_STDOUT:
+        Logger::addSink(std::make_shared<StdoutSink>());
+        Logger::addSink(std::make_shared<FileSink>());
+        break;
+
+    default:
+        std::cout << "Invalid Logger initialization setting!" << std::endl;
+        return false;
+    }
+
+    Logger::initialized = true;
+    return true;
+}
 
 void Logger::addSink(std::shared_ptr<LogSink> sink) {
     sinks.push_back(sink); 
@@ -11,6 +59,11 @@ void Logger::removeSink(std::shared_ptr<LogSink> sink) {
 }
 
 void Logger::addLog(LogLevel level, std::string src, std::string msg, std::string additional, int lineNum) {
+    if (!initialized) {
+        std::cout << "Attempting to add log without initializing the logger!" << std::endl;
+        return;
+    };
+    
     LogEntry entry; 
     entry.level = level; 
     entry.src = src; 

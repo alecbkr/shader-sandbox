@@ -4,7 +4,7 @@
 #include <imgui/imgui_impl_opengl3.h>
 
 #include "core/InspectorEngine.hpp"
-#include "core/ShaderHandler.hpp"
+#include "core/ShaderRegistry.hpp"
 #include "core/UniformRegistry.hpp"
 #include "object/Object.hpp"
 #include "core/UniformTypes.hpp"
