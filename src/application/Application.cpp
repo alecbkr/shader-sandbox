@@ -1,5 +1,6 @@
 #include "application/Application.hpp"
 #include "platform/Platform.hpp"
+#include "core/ShaderRegistry.hpp"
 #include <iostream>
 
 bool Application::initialized = false;
@@ -10,7 +11,6 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
         return false;
     }
 
-    // Initialize the logger
     if (!Logger::initialize(initStruct.loggerSetting)) {
         std::cout << "Logger was not initialized successfully." << std::endl;
         return false;
@@ -18,6 +18,11 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
 
     if (!Platform::initialize({initStruct.width, initStruct.height, initStruct.title})) {
         std::cout << "Platform layer was not initialized successfully." << std::endl;
+        return false;
+    }
+
+    if (!ShaderRegistry::initialize()) {
+        std::cout << "Shader Registry was not initialized succesfully." << std::endl;
         return false;
     }
     

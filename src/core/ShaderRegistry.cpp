@@ -1,10 +1,15 @@
 #include "core/ShaderRegistry.hpp"
 
-//std::unordered_map<std::string, ShaderProgram> ShaderHandler::programs{};
 std::unordered_map<std::string, ShaderProgram *> ShaderRegistry::programs;
+bool ShaderRegistry::initialized = false;
 
-ShaderRegistry::ShaderRegistry() {
-    registerProgram("../shaders/3d.vert", "../shaders/texture.frag", "default");
+bool ShaderRegistry::initialize() {
+    if (!registerProgram("../shaders/3d.vert", "../shaders/texture.frag", "default")) {
+        return false;
+    };
+
+    ShaderRegistry::initialized = true;
+    return true;
 }
 
 bool ShaderRegistry::registerProgram(const std::string& vertex_file, const std::string& fragment_file, const std::string& programName) {
@@ -21,6 +26,7 @@ bool ShaderRegistry::registerProgram(const std::string& vertex_file, const std::
 }
 
 ShaderProgram* ShaderRegistry::getProgram(const std::string& programName) {
+    if (!ShaderRegistry::initialized) return nullptr;
     auto programPair = programs.find(programName);
     if (programPair == programs.end()) {
         std::cout << "Get Program: No program with name " << programName <<" found in the Shader Handler programs" << std::endl;
@@ -32,6 +38,7 @@ ShaderProgram* ShaderRegistry::getProgram(const std::string& programName) {
 }
 
 void ShaderRegistry::replaceProgram(const std::string &programName, ShaderProgram *newProgram){
+    if (!ShaderRegistry::initialized) return;
     auto it = programs.find(programName);
     if (it == programs.end()){
         delete newProgram;
