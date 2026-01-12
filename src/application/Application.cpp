@@ -1,6 +1,7 @@
 #include "application/Application.hpp"
 #include "platform/Platform.hpp"
 #include "core/ShaderRegistry.hpp"
+#include "core/ui/ViewportUI.hpp"
 #include <iostream>
 
 bool Application::initialized = false;
@@ -22,7 +23,12 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
     }
 
     if (!ShaderRegistry::initialize()) {
-        std::cout << "Shader Registry was not initialized succesfully." << std::endl;
+        std::cout << "Shader Registry was not initialized successfully." << std::endl;
+        return false;
+    }
+
+    if (!ViewportUI::initialize()) {
+        std::cout << "Viewport was not initialized successfully." << std::endl;
         return false;
     }
     

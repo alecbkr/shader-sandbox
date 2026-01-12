@@ -52,11 +52,11 @@ int main() {
     Application::initialize({1280, 720, "Shader Sandbox", LoggerInitialization::CONSOLE_FILE_STDOUT});
     return 0;
 
-    LogCtx logCtx = initLogging(); 
+    //LogCtx logCtx = initLogging(); 
 
-    OldWindow win("Sandbox", 1000, 800);
-    ShaderRegistry shaderHandler;
-    ViewportUI viewport;
+    //OldWindow win("Sandbox", 1000, 800);
+    //ShaderRegistry shaderHandler;
+    //ViewportUI viewport;
     InspectorUI inspectorUI;
     HotReloader reloader(&shaderHandler, (InspectorEngine*)&inspectorUI);    
     EditorEngine::spawnEditor(1024);

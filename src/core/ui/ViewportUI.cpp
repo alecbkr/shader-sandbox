@@ -5,8 +5,19 @@
 #include "../../engine/AppTimer.hpp"
 #include <string>
 
+bool ViewportUI::initialized = false;
+bool ViewportUI::initPos = true;
+GLuint ViewportUI::fbo = 0;
+GLuint ViewportUI::rbo = 0;
+GLuint ViewportUI::viewportTex = 0;
+ImVec2 ViewportUI::dimensions = ImVec2(0, 0);
+ImVec2 ViewportUI::prevDimensions = ImVec2(0, 0);
+ImVec2 ViewportUI::pos = ImVec2(0, 0);
 
-ViewportUI::ViewportUI() {
+bool ViewportUI::initialize() {
+    if (ViewportUI::initialized) {
+        return false;
+    }
     dimensions = ImVec2(WINDOWSIZE.width / 2, WINDOWSIZE.height / 2);
     pos = ImVec2(WINDOWSIZE.width / 2 - WINDOWSIZE.width * 0.25f, WINDOWSIZE.height / 2 - WINDOWSIZE.height * 0.25f);
 
@@ -56,6 +67,9 @@ ViewportUI::ViewportUI() {
 
     assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    ViewportUI::initialized = true;
+    return true;
 }
 
 
