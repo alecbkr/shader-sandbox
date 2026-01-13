@@ -35,7 +35,11 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
         return false;
     }
 
-    // setup UI handles
+    // setup UI
+    if (!ConsoleUI::initialize(Logger::getConsoleSinkPtr())) {
+        std::cout << "ConsoleUI was not initialized successfully." << std::endl;
+        return false;
+    }
 
     if (!ViewportUI::initialize()) {
         std::cout << "Viewport was not initialized successfully." << std::endl;

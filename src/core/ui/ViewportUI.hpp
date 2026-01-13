@@ -7,19 +7,21 @@
 class ViewportUI {
 public:
     static bool initialize();
-    void bind();
-    void draw();
-    void reformat();
-    float getAspect();
-
-
-private:
+    static void render();
+    
+    private:
     static bool initialized;
     static bool initPos;
     static GLuint fbo, rbo, viewportTex;
     static ImVec2 dimensions;
     static ImVec2 prevDimensions;
     static ImVec2 pos;
+    static Camera cam;
+
+    static void bind();
+    static void draw();
+    static void reformat();
+    static float getAspect();
 };
 
 #endif

@@ -72,6 +72,16 @@ bool ViewportUI::initialize() {
     return true;
 }
 
+void ViewportUI::render() {
+    // TODO: Finish this from main render loop
+    // TODO: Also separate camera from input. input can drive camera externally, whereas now it is driving it internally
+    ViewportUI::bind();
+    glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glm::mat4 perspective = glm::perspective(glm::radians(45.0f), viewport.getAspect(), 0.1f, 100.0f);
+    glm::mat4 view = cam.GetViewMatrix();
+}
+
 
 void ViewportUI::bind() {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
