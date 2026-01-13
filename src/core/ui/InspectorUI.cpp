@@ -174,11 +174,11 @@ void InspectorUI::drawAddObjectMenu() {
         1,2,6, 1,6,5, // right
         0,3,7, 0,7,4  // left
     };
-    std::unordered_map<std::string, ShaderProgram>& programs = ShaderHandler::getPrograms();
+    std::unordered_map<std::string, ShaderProgram*>& programs = ShaderHandler::getPrograms();
     if (programs.empty()) return;
 
     // just grab a random shader program it really does not matter
-    ShaderProgram& defaultProgram = programs.begin()->second;
+    ShaderProgram& defaultProgram = *programs.begin()->second;
 
     int objectCount = ObjCache::getNumberOfObjects();
 

@@ -38,11 +38,11 @@ void InspectorEngine::refreshUniforms() {
 
     // sry for the nesting
     for (const auto& [programName, program] : programs) {
-        const auto& parsedUniforms = parseUniforms(program);
+        const auto& parsedUniforms = parseUniforms(*program);
         std::cout << programName << std::endl;
         std::cout << programToObjectList[programName].size() << std::endl;
         for (std::string& objectName : programToObjectList[programName]) {
-            std::cout << objectName << " " << program.name << std::endl;
+            std::cout << objectName << " " << program->name << std::endl;
             const bool newObject = !UNIFORM_REGISTRY.containsObject(objectName);
             if (newObject) {
                 UNIFORM_REGISTRY.insertUniformMap(objectName, parsedUniforms);
