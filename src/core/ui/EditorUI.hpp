@@ -1,4 +1,5 @@
 #pragma once
+#include <filesystem>
 
 class EditorUI {
 public:
@@ -6,7 +7,9 @@ public:
     unsigned int bufferSize;
     int previousTextLen;
     int lineCount;
-    EditorUI(unsigned int bufferSize);
+    std::string filePath;
+    std::string fileName;
+    EditorUI(unsigned int bufferSize, std::string filePath, std::string fileName);
     void render();
     void destroy();
 };

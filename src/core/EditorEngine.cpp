@@ -1,14 +1,26 @@
 #include "EditorEngine.hpp"
 
 #include <fstream>
-#include <iostream>
 
-void EditorEngine::spawnEditor(unsigned int bufferSize) {
-    EditorUI *editor = new EditorUI(bufferSize);
-    editors.push_back(editor);
+#include "logging/Logger.hpp"
+
+bool EditorEngine::spawnEditor(const EventPayload& payload) {
+    if (const auto* data = std::get_if<OpenFilePayload>(&payload)) {
+        if (!data->filePath.empty()) {
+            EditorUI *editor = new EditorUI(1024, data->filePath, data->fileName);
+            editors.push_back(editor);
+        } else {
+            EditorUI *editor = new EditorUI(1024, "../shaders/texture.frag", "texture.frag");
+            editors.push_back(editor);
+        }
+    } else {
+        Logger::addLog(LogLevel::ERROR, "spawnEditor", "Invalid Payload Type");
+    }
+
+    return true;
 }
 
-std::string EditorEngine::getFileContents(const char *filename) {
+std::string EditorEngine::getFileContents(std::string filename) {
     std::ifstream in(filename, std::ios::binary);
     if (in) {
         std::string contents;

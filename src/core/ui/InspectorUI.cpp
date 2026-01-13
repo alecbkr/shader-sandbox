@@ -1,4 +1,7 @@
 #include "core/ui/InspectorUI.hpp"
+
+#include <filesystem>
+
 #include "core/InspectorEngine.hpp"
 #include "core/ShaderHandler.hpp"
 #include "core/TextureRegistry.hpp"
@@ -12,6 +15,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "core/EventDispatcher.hpp"
 
 InspectorUI::InspectorUI() {}
 
@@ -32,7 +37,7 @@ void InspectorUI::render() {
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Shader Files")) {
-            drawShaderFileInspector(); // <- for lukas
+            drawShaderFileInspector();
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
@@ -128,7 +133,25 @@ void InspectorUI::drawAssetsInspector() {
 
 
 void InspectorUI::drawShaderFileInspector() {
-    // Lucas can fill this in
+    std::string path = "../shaders/";
+
+    ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
+
+    for (const auto & dirEntry : std::filesystem::directory_iterator(path)) {
+        if (ImGui::Selectable(dirEntry.path().filename().string().c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
+            if (ImGui::IsMouseDoubleClicked(0)) {
+                EventDispatcher::TriggerEvent(
+                    Event{
+                        OpenFile,
+                        false,
+                        OpenFilePayload{ dirEntry.path().string(), dirEntry.path().filename().string() }
+                    }
+                );
+            }
+        }
+    }
+
+    ImGui::PopStyleVar();
 }
 
 /*

@@ -53,10 +53,10 @@ int main() {
     ShaderHandler shaderHandler;
     ViewportUI viewport;
     InspectorUI inspectorUI;
-    HotReloader reloader(&shaderHandler, (InspectorEngine*)&inspectorUI);    
-    EditorEngine::spawnEditor(1024);
+    HotReloader reloader(&shaderHandler, (InspectorEngine*)&inspectorUI);
+    EventDispatcher::Subscribe(OpenFile, EditorEngine::spawnEditor);
 
-    ConsoleUI consoleUI(logCtx.consoleSink); 
+    ConsoleUI consoleUI(logCtx.consoleSink);
     UIContext ui(win.window);
 
     MenuUI menuUI = MenuUI();
