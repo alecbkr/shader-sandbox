@@ -1,5 +1,7 @@
 #include "EditorUI.hpp"
 
+#include <iostream>
+
 #include "core/EditorEngine.hpp"
 #include <string>
 
@@ -7,9 +9,12 @@
 #include "imgui.h"
 
 
-EditorUI::EditorUI(unsigned int bufferSize) {
+EditorUI::EditorUI(unsigned int bufferSize, std::string filePath, std::string fileName) {
     this->inputTextBuffer = new char[bufferSize];
-    strcpy(this->inputTextBuffer, EditorEngine::getFileContents("../shaders/texture.frag").c_str());
+    std::cout << fileName << std::endl;
+    this->filePath = filePath;
+    this->fileName = fileName;
+    strcpy(this->inputTextBuffer, EditorEngine::getFileContents(filePath).c_str());
     this->bufferSize = bufferSize;
 
     this->lineCount = 1;
