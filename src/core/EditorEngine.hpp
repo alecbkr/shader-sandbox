@@ -5,9 +5,18 @@
 #include "imgui.h"
 #include "ui/EditorUI.hpp"
 
+struct Editor {
+    Editor(unsigned int _bufferSize);
+    char* inputTextBuffer;
+    unsigned int bufferSize;
+    int previousTextLen;
+    int lineCount;
+    void destroy();
+};
+
 class EditorEngine {
 public:
-    static std::vector<EditorUI*> editors;
+    static std::vector<Editor*> editors;
     static void spawnEditor(unsigned int bufferSize);
     static std::string getFileContents(const char *filename);
     static int EditorInputCallback(ImGuiInputTextCallbackData* data);

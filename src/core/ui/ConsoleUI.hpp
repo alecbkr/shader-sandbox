@@ -18,7 +18,7 @@ static const ImVec4 LOG_COLORS[] = {
 
 // Adapted from imgui_demo.cpp
 class ConsoleUI {
-    public: 
+public: 
     ConsoleUI(std::shared_ptr<ConsoleSink> consoleSink);    
     ~ConsoleUI();  
 
@@ -27,7 +27,7 @@ class ConsoleUI {
 
     const void render();
      
-    private: 
+private: 
     std::shared_ptr<ConsoleEngine> engine; 
     std::shared_ptr<ConsoleSink> logSrc; 
 

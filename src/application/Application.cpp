@@ -1,8 +1,16 @@
 #include "application/Application.hpp"
 #include "platform/Platform.hpp"
 #include "core/ShaderRegistry.hpp"
-#include "core/ui/ViewportUI.hpp"
 #include <iostream>
+#include "core/ui/InspectorUI.hpp"
+#include "core/ui/EditorUI.hpp"
+#include "core/ui/ConsoleUI.hpp"
+#include "core/ui/ViewportUI.hpp"
+#include "core/ui/MenuUI.hpp"
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
+#include "core/EditorEngine.hpp"
 
 bool Application::initialized = false;
 
@@ -27,6 +35,8 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
         return false;
     }
 
+    // setup UI handles
+
     if (!ViewportUI::initialize()) {
         std::cout << "Viewport was not initialized successfully." << std::endl;
         return false;
@@ -42,4 +52,29 @@ void Application::runLoop() {
         std::cout << "Attempting to run render loop without initializing application layer." << std::endl;
         return;
     }
+}
+
+void Application::renderUI() {
+    // Pre Render
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    // Render
+    InspectorUI::render();
+    EditorUI::render();
+    ConsoleUI::render();
+
+    // Post Render
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void Application::shutdown() {
+    // UI Shutdown
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    for (Editor* editor: EditorEngine::editors) editor->destroy();
 }

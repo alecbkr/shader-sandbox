@@ -3,8 +3,28 @@
 #include <fstream>
 #include <iostream>
 
+Editor::Editor(unsigned int _bufferSize) {
+    inputTextBuffer = new char[_bufferSize];
+    strcpy(inputTextBuffer, EditorEngine::getFileContents("../shaders/texture.frag").c_str());
+    bufferSize = _bufferSize;
+    lineCount = 1;
+
+    int i = 0;
+    while (inputTextBuffer[i] != '\0') {
+        if (inputTextBuffer[i] == '\n') lineCount++;
+        i++;
+    }
+
+    previousTextLen = i;
+}
+
+void Editor::destroy() {
+    free(inputTextBuffer);
+    delete this;
+}
+
 void EditorEngine::spawnEditor(unsigned int bufferSize) {
-    EditorUI *editor = new EditorUI(bufferSize);
+    Editor *editor = new Editor(bufferSize);
     editors.push_back(editor);
 }
 

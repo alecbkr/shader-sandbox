@@ -15,6 +15,8 @@ class Application {
 public:
     static bool initialize(const ApplicationInitStruct& initStruct);
     static void runLoop();
+    static void renderUI();
+    static void shutdown();
 
 private:
     static bool initialized;

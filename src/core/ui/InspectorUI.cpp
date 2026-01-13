@@ -12,7 +12,9 @@
 #include <unordered_map>
 #include <vector>
 
-InspectorUI::InspectorUI() {}
+int InspectorUI::height = 400;
+int InspectorUI::width = 400;
+UniformType InspectorUI::newUniformType = UniformType::NoType;
 
 void InspectorUI::render() {
     ImGui::Text("Inspector");

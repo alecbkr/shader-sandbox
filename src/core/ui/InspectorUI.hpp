@@ -23,32 +23,31 @@ struct ObjectTextureSelector {
 
 class InspectorUI {
     public:
-    InspectorUI();
-    void render();
+    static void render();
   
     private:
-    int height;
-    int width;
-    std::vector<std::string> uniformNamesToDelete;
-    std::string newUniformName;
-    std::string newUniformShaderName;
-    UniformType newUniformType = UniformType::NoType;
-    std::unordered_map<std::string, ObjectShaderSelector> objectShaderSelectors;
-    std::unordered_map<std::string, ObjectTextureSelector> objectTextureSelectors;
+    static int height;
+    static int width;
+    static std::vector<std::string> uniformNamesToDelete;
+    static std::string newUniformName;
+    static std::string newUniformShaderName;
+    static UniformType newUniformType;
+    static std::unordered_map<std::string, ObjectShaderSelector> objectShaderSelectors;
+    static std::unordered_map<std::string, ObjectTextureSelector> objectTextureSelectors;
 
-    void drawUniformInspector();
-    void drawObjectsInspector();
-    void drawAssetsInspector();
-    void drawShaderFileInspector();
-    void drawAddObjectMenu();
-    bool drawShaderProgramSelector(ObjectShaderSelector& selector);
-    bool drawTextureSelector(ObjectTextureSelector& selector);
-    bool drawTextInput(std::string *value, const char *label);
-    bool drawUniformInputValue(int* value);
-    bool drawUniformInputValue(float* value);
-    bool drawUniformInputValue(glm::vec3* value);
-    bool drawUniformInputValue(glm::vec4* value);
-    bool drawUniformInputValue(glm::mat4* value);
-    bool drawUniformInputValue(glm::quat* value);
-    void drawUniformInput(Uniform& uniform, const std::string& objectName);
+    static void drawUniformInspector();
+    static void drawObjectsInspector();
+    static void drawAssetsInspector();
+    static void drawShaderFileInspector();
+    static void drawAddObjectMenu();
+    static bool drawShaderProgramSelector(ObjectShaderSelector& selector);
+    static bool drawTextureSelector(ObjectTextureSelector& selector);
+    static bool drawTextInput(std::string *value, const char *label);
+    static bool drawUniformInputValue(int* value);
+    static bool drawUniformInputValue(float* value);
+    static bool drawUniformInputValue(glm::vec3* value);
+    static bool drawUniformInputValue(glm::vec4* value);
+    static bool drawUniformInputValue(glm::mat4* value);
+    static bool drawUniformInputValue(glm::quat* value);
+    static void drawUniformInput(Uniform& uniform, const std::string& objectName);
 };
