@@ -23,6 +23,7 @@ class ObjCache {
         static void renderObj(const std::string name, glm::mat4 projection, glm::mat4 view);
         static void renderAll(glm::mat4 projection, glm::mat4 view);
         static void printOrder();
+        static int getNumberOfObjects();
         static std::unordered_map<std::string, Object*> objMap;
 
     private:

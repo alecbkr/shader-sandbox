@@ -19,31 +19,60 @@ const std::unordered_map<std::string, UniformType> InspectorEngine::typeMap = {
 };
 
 void InspectorEngine::refreshUniforms() {
-    auto& programs = ShaderHandler::getPrograms();
+    const auto& programs = ShaderHandler::getPrograms();
     
     // NOTE: this will break if we do any multithreading with the program list.
     // Please be careful.
     std::unordered_map<std::string, std::vector<std::string>> programToObjectList;
-    for (auto& [programName, program] : programs) {
+    for (const auto& [programName, program] : programs) {
         programToObjectList[programName] = std::vector<std::string>();
     }
 
-    for (auto& pair : ObjCache::objMap) {
+    for (const auto& pair : ObjCache::objMap) {
         // separate them so that debugger works.
-        auto& objectName = pair.first;
-        auto& object = pair.second;
-        auto& programName = object->getProgram()->name;
+        const auto& objectName = pair.first;
+        const auto& object = pair.second;
+        const auto& programName = object->getProgram()->name;
         programToObjectList[programName].push_back(objectName);
     }
 
-    for (auto& [programName, program] : programs) {
-        auto uniformMap = parseUniforms(*program);
+    // sry for the nesting
+    for (const auto& [programName, program] : programs) {
+        const auto& parsedUniforms = parseUniforms(*program);
         std::cout << programName << std::endl;
         std::cout << programToObjectList[programName].size() << std::endl;
         for (std::string& objectName : programToObjectList[programName]) {
             std::cout << objectName << " " << program->name << std::endl;
-            UNIFORM_REGISTRY.insertUniformMap(objectName, uniformMap);
-            applyAllUniformsForObject(objectName);
+            const bool newObject = !UNIFORM_REGISTRY.containsObject(objectName);
+            if (newObject) {
+                UNIFORM_REGISTRY.insertUniformMap(objectName, parsedUniforms);
+                applyAllUniformsForObject(objectName);
+                continue;
+            }
+
+            // if not a new object
+            const auto& objectUniforms = UNIFORM_REGISTRY.tryReadUniforms(objectName);
+            if (objectUniforms == nullptr) {
+                ERRLOG.logEntry(EL_WARNING, "refreshUniforms", "object does not exist in registry??? code should be unreachable");
+                continue;
+            }
+
+            for (const auto& [uniformName, parsedUniform] : parsedUniforms) {
+                const Uniform* existingUniform = UNIFORM_REGISTRY.tryReadUniform(objectName, uniformName);
+                const bool mustRegister = existingUniform == nullptr || existingUniform->type != parsedUniform.type;
+                
+                if (mustRegister) UNIFORM_REGISTRY.registerUniform(objectName, parsedUniform); 
+            }
+
+            std::vector<std::string> uniformsToErase;
+            for (const auto& [uniformName, uniform] : *objectUniforms) {
+                if (!parsedUniforms.contains(uniformName))       
+                    uniformsToErase.push_back(uniformName);
+            }
+
+            for (const std::string& uniformName : uniformsToErase) {
+                UNIFORM_REGISTRY.eraseUniform(objectName, uniformName);
+            }
         }
     }
 }
