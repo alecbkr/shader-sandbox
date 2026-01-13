@@ -1,10 +1,10 @@
 #include "platform/components/Window.hpp"
 #include <iostream>
 
-Window Window::createWindow(u32 width, u32 height, std::string title, bool& outIsValid) {
-    Window window = Window(width, height, title);
-    outIsValid = window.checkValidity();
-    return window;
+std::unique_ptr<Window> Window::createWindow(u32 width, u32 height, std::string title, bool& outIsValid) {
+    std::unique_ptr<Window> windowPtr = make_unique<Window>(width, height, title);
+    outIsValid = windowPtr->checkValidity();
+    return windowPtr;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {

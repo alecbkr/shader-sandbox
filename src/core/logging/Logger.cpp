@@ -1,7 +1,8 @@
 #include "core/logging/Logger.hpp"
-#include "core/logging/ConsoleSink.hpp"
 #include "core/logging/FileSink.hpp"
 #include "core/logging/StdoutSink.hpp"
+
+std::shared_ptr<ConsoleSink> Logger::consoleSinkPtr = nullptr;
 
 std::vector<std::shared_ptr<LogSink>> Logger::sinks;
 bool Logger::initialized = false;

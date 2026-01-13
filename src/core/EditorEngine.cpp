@@ -3,6 +3,8 @@
 #include <fstream>
 #include <iostream>
 
+std::vector<Editor*> EditorEngine::editors{};
+
 Editor::Editor(unsigned int _bufferSize) {
     inputTextBuffer = new char[_bufferSize];
     strcpy(inputTextBuffer, EditorEngine::getFileContents("../shaders/texture.frag").c_str());
@@ -21,6 +23,11 @@ Editor::Editor(unsigned int _bufferSize) {
 void Editor::destroy() {
     free(inputTextBuffer);
     delete this;
+}
+
+bool EditorEngine::initialize() {
+    spawnEditor(1024);
+    return true;
 }
 
 void EditorEngine::spawnEditor(unsigned int bufferSize) {
@@ -43,22 +50,22 @@ std::string EditorEngine::getFileContents(const char *filename) {
 }
 
 int EditorEngine::EditorInputCallback(ImGuiInputTextCallbackData* data) {
-    EditorUI* ui = static_cast<EditorUI*>(data->UserData);
+    Editor* editor = static_cast<Editor*>(data->UserData);
 
     if (data->EventFlag == ImGuiInputTextFlags_CallbackEdit) {
-        updatePropertiesDueToMassDelete(data, ui);
-        matchBrace(data, ui);
-        updateLineCount(data, ui);
-        updatePropertiesDueToMassInsert(data, ui);
+        updatePropertiesDueToMassDelete(data, editor);
+        matchBrace(data, editor);
+        updateLineCount(data, editor);
+        updatePropertiesDueToMassInsert(data, editor);
     }
 
-    ui->previousTextLen = data->BufTextLen;
+    editor->previousTextLen = data->BufTextLen;
 
     return 0;
 }
 
-void EditorEngine::updatePropertiesDueToMassDelete(ImGuiInputTextCallbackData* data, EditorUI* ui) {
-    if (data->BufTextLen < ui->previousTextLen - 1) {
+void EditorEngine::updatePropertiesDueToMassDelete(ImGuiInputTextCallbackData* data, Editor* editor) {
+    if (data->BufTextLen < editor->previousTextLen - 1) {
         int newLineCount = 1;
         int i = 0;
         while (data->Buf[i] != '\0') {
@@ -66,12 +73,12 @@ void EditorEngine::updatePropertiesDueToMassDelete(ImGuiInputTextCallbackData* d
             i++;
         }
 
-        ui->lineCount = newLineCount;
+        editor->lineCount = newLineCount;
     }
 }
 
-void EditorEngine::updatePropertiesDueToMassInsert(ImGuiInputTextCallbackData* data, EditorUI* ui) {
-    if (data->BufTextLen > ui->previousTextLen + 1) {
+void EditorEngine::updatePropertiesDueToMassInsert(ImGuiInputTextCallbackData* data, Editor* editor) {
+    if (data->BufTextLen > editor->previousTextLen + 1) {
         int newLineCount = 1;
         int i = 0;
         while (data->Buf[i] != '\0') {
@@ -79,14 +86,14 @@ void EditorEngine::updatePropertiesDueToMassInsert(ImGuiInputTextCallbackData* d
             i++;
         }
 
-        ui->lineCount = newLineCount;
+        editor->lineCount = newLineCount;
     }
 }
 
-void EditorEngine::matchBrace(ImGuiInputTextCallbackData* data, EditorUI* ui) {
+void EditorEngine::matchBrace(ImGuiInputTextCallbackData* data, Editor* editor) {
     if (data->CursorPos < 2) return;
 
-    bool newLineInserted = data->BufTextLen == ui->previousTextLen + 1 && data->Buf[data->CursorPos - 1] == '\n';
+    bool newLineInserted = data->BufTextLen == editor->previousTextLen + 1 && data->Buf[data->CursorPos - 1] == '\n';
     bool openBraceExists = data->Buf[data->CursorPos - 2] == '{';
 
     if (newLineInserted && openBraceExists) {
@@ -104,20 +111,20 @@ void EditorEngine::matchBrace(ImGuiInputTextCallbackData* data, EditorUI* ui) {
         data->InsertChars(data->CursorPos, closeBrace.c_str());
 
         data->CursorPos -= 2 + tabString.length();
-        ui->lineCount+=2;
+        editor->lineCount+=2;
     }
 }
 
-void EditorEngine::updateLineCount(ImGuiInputTextCallbackData* data, EditorUI* ui) {
-    char* previousBuffer = ui->inputTextBuffer;
+void EditorEngine::updateLineCount(ImGuiInputTextCallbackData* data, Editor* editor) {
+    char* previousBuffer = editor->inputTextBuffer;
 
-    if (data->BufTextLen == ui->previousTextLen - 1 && previousBuffer[data->CursorPos] == '\n') {
-        ui->lineCount--;
+    if (data->BufTextLen == editor->previousTextLen - 1 && previousBuffer[data->CursorPos] == '\n') {
+        editor->lineCount--;
     }
 
     if (data->CursorPos < 1) return;
 
-    if (data->BufTextLen == ui->previousTextLen + 1 && data->Buf[data->CursorPos - 1] == '\n') {
+    if (data->BufTextLen == editor->previousTextLen + 1 && data->Buf[data->CursorPos - 1] == '\n') {
         int backIndex = data->CursorPos - 2;
         std::string tabString;
         while (backIndex >= 0 && data->Buf[backIndex] != '\n') {
@@ -129,7 +136,7 @@ void EditorEngine::updateLineCount(ImGuiInputTextCallbackData* data, EditorUI* u
 
         data->InsertChars(data->CursorPos, tabString.c_str());
 
-        ui->lineCount++;
+        editor->lineCount++;
     }
 
 }

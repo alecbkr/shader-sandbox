@@ -14,7 +14,12 @@
 
 int InspectorUI::height = 400;
 int InspectorUI::width = 400;
+std::vector<std::string> InspectorUI::uniformNamesToDelete{};
+std::string InspectorUI::newUniformName{};
+std::string InspectorUI::newUniformShaderName{};
 UniformType InspectorUI::newUniformType = UniformType::NoType;
+std::unordered_map<std::string, ObjectShaderSelector> InspectorUI::objectShaderSelectors{};
+std::unordered_map<std::string, ObjectTextureSelector> InspectorUI::objectTextureSelectors{};
 
 void InspectorUI::render() {
     ImGui::Text("Inspector");

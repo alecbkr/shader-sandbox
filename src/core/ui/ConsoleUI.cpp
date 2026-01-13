@@ -5,6 +5,10 @@ bool ConsoleUI::initialized = false;
 bool ConsoleUI::isAutoScroll = false;
 size_t ConsoleUI::lastLogSize = 0;
 
+std::shared_ptr<ConsoleEngine> ConsoleUI::engine = nullptr;
+std::shared_ptr<ConsoleSink> ConsoleUI::logSrc = nullptr;
+std::vector<std::string> ConsoleUI::history{};
+
 bool ConsoleUI::initialize(std::shared_ptr<ConsoleSink> consoleSink) {
     engine = std::make_shared<ConsoleEngine>();
     logSrc = consoleSink;

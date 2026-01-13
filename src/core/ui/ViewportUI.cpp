@@ -1,9 +1,12 @@
 #include "ViewportUI.hpp"
 
-#include "../../engine/InputHandler.hpp"
-#include "../../engine/Errorlog.hpp"
-#include "../../engine/AppTimer.hpp"
+#include "engine/InputHandler.hpp"
+#include "engine/Errorlog.hpp"
+#include "engine/AppTimer.hpp"
+#include "object/ObjCache.hpp"
 #include <string>
+#include <glm/gtc/matrix_transform.hpp>
+
 
 bool ViewportUI::initialized = false;
 bool ViewportUI::initPos = true;
@@ -13,6 +16,7 @@ GLuint ViewportUI::viewportTex = 0;
 ImVec2 ViewportUI::dimensions = ImVec2(0, 0);
 ImVec2 ViewportUI::prevDimensions = ImVec2(0, 0);
 ImVec2 ViewportUI::pos = ImVec2(0, 0);
+std::unique_ptr<Camera> ViewportUI::camPtr = nullptr;
 
 bool ViewportUI::initialize() {
     if (ViewportUI::initialized) {
@@ -68,18 +72,28 @@ bool ViewportUI::initialize() {
     assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    ViewportUI::camPtr = std::make_unique<Camera>();
+
     ViewportUI::initialized = true;
     return true;
 }
 
 void ViewportUI::render() {
-    // TODO: Finish this from main render loop
-    // TODO: Also separate camera from input. input can drive camera externally, whereas now it is driving it internally
+    if (!initialized) {
+        return;
+    }
     ViewportUI::bind();
+
     glClearColor(0.4f, 0.1f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glm::mat4 perspective = glm::perspective(glm::radians(45.0f), viewport.getAspect(), 0.1f, 100.0f);
-    glm::mat4 view = cam.GetViewMatrix();
+
+    glm::mat4 perspective = glm::perspective(glm::radians(45.0f), ViewportUI::getAspect(), 0.1f, 100.0f);
+    glm::mat4 view = camPtr->GetViewMatrix();
+
+    ObjCache::renderAll(perspective, view);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    
+    ViewportUI::draw();
 }
 
 

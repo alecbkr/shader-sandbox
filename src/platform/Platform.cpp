@@ -1,9 +1,10 @@
 #include "platform/Platform.hpp"
 #include <iostream>
 #include <GLFW/glfw3.h>
+#include <imgui/imgui_impl_glfw.h>
 
 bool Platform::initialized = false;
-Window Platform::window;
+std::unique_ptr<Window> Platform::windowPtr = nullptr;
 
 void setContextCurrent(Window& window) {
     window.setContextCurrent();
@@ -22,9 +23,9 @@ bool Platform::initialize(const PlatformInitStruct& initStruct) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
     bool windowIsValid;
-    window = Window::createWindow(initStruct.width, initStruct.height, initStruct.title, windowIsValid);
+    Platform::windowPtr = Window::createWindow(initStruct.width, initStruct.height, initStruct.title, windowIsValid);
     if (!windowIsValid) return false;
-    setContextCurrent(window);
+    setContextCurrent(*Platform::windowPtr);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
@@ -36,11 +37,11 @@ bool Platform::initialize(const PlatformInitStruct& initStruct) {
 }
 
 bool Platform::shouldClose() {
-    return window.shouldClose();
+    return windowPtr->shouldClose();
 }
 
 void Platform::swapBuffers() {
-    window.swapBuffers();
+    windowPtr->swapBuffers();
 }
 
 void Platform::pollEvents() {
@@ -48,7 +49,11 @@ void Platform::pollEvents() {
 }
 
 void Platform::processInput() {
-    if (glfwGetKey(window.getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window.getGLFWWindow(), true);
+    if (glfwGetKey(windowPtr->getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(windowPtr->getGLFWWindow(), true);
     }
+}
+
+void Platform::initializeImGui() {
+    ImGui_ImplGlfw_InitForOpenGL(windowPtr->getGLFWWindow(), true);
 }

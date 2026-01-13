@@ -20,4 +20,5 @@ public:
 
 private:
     static bool initialized;
+    static bool shouldClose();
 };

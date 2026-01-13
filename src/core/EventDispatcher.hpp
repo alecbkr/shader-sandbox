@@ -11,12 +11,15 @@
 using ListenerFn = std::function<bool(const EventPayload&)>;
 
 class EventDispatcher {
-  public:
+public:
+    static bool initialize();
+    static void shutdown();
     static void TriggerEvent(Event e);
     static void Subscribe(EventType type, ListenerFn fn);
     static void ProcessQueue();
 
-  private:
-    inline static std::unordered_map<EventType, std::vector<ListenerFn>> listeners;
-    inline static std::deque<Event> queue;
+private:
+    static bool initialized;
+    static std::unordered_map<EventType, std::vector<ListenerFn>> listeners;
+    static std::deque<Event> queue;
 };

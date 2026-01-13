@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glad/glad.h>
+#include <memory>
 #include "platform/components/Window.hpp"
 
 struct PlatformInitStruct {
@@ -16,8 +17,9 @@ public:
     static void swapBuffers();
     static void pollEvents();
     static void processInput();
+    static void initializeImGui();
 
 private:
     static bool initialized;
-    static Window window;
+    static std::unique_ptr<Window> windowPtr;
 };
