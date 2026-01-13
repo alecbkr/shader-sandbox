@@ -1,5 +1,5 @@
 #pragma once
-#include "FileSink.hpp"
+#include "LogSink.hpp"
 #include <deque> 
 
 class ConsoleSink : public LogSink {
