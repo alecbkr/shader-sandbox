@@ -45,6 +45,7 @@ Camera cam;
 AppState appstate = AS_EDITOR;
 bool showMetrics = true;
 std::vector<EditorUI*> EditorEngine::editors;
+int EditorEngine::activeEditor = -1;
 
 int main() {
     LogCtx logCtx = initLogging(); 
@@ -53,7 +54,6 @@ int main() {
     ShaderHandler shaderHandler;
     ViewportUI viewport;
     InspectorUI inspectorUI;
-    HotReloader reloader(&shaderHandler, (InspectorEngine*)&inspectorUI);
     EventDispatcher::Subscribe(OpenFile, EditorEngine::spawnEditor);
 
     ConsoleUI consoleUI(logCtx.consoleSink);
@@ -165,7 +165,6 @@ int main() {
 
 
     bool R_key_held = false;
-    const std::string FRAG_PATH = "../shaders/texture.frag";
 
     ERRLOG.printClear();
     
@@ -185,18 +184,19 @@ int main() {
         ui.render(menuUI);
         ui.renderEditorWindow(500, 500);
         ui.render(inspectorUI);
-        ui.render(consoleUI); 
+        ui.render(consoleUI);
+
         bool R_key_pressed = (glfwGetKey(win.window, GLFW_KEY_R) == GLFW_PRESS);
         if (R_key_pressed && !R_key_held) {
             if (!EditorEngine::editors.empty()) {
-                std::ofstream outProg(FRAG_PATH, std::ios::binary); 
+                std::ofstream outProg(EditorEngine::editors[EditorEngine::activeEditor]->filePath, std::ios::binary);
                 if (outProg.is_open()) {
-                    outProg << EditorEngine::editors[0]->inputTextBuffer;
+                    outProg << EditorEngine::editors[EditorEngine::activeEditor]->inputTextBuffer;
                     outProg.close();
                 }
             }
-            reloader.compile(FRAG_PATH, "program");
-            ShaderProgram* newProg = shaderHandler.getProgram("program");
+            HotReloader::compile(EditorEngine::editors[EditorEngine::activeEditor]->filePath, "program");
+            ShaderProgram* newProg = ShaderHandler::getProgram("program");
             if (newProg) {
                 for (auto& [name, object] : ObjCache::objMap) {
                     if (object->getProgram()->name == "program") {
@@ -206,6 +206,7 @@ int main() {
             }
         }
         R_key_held = R_key_pressed;
+
         // ---DRAWING---
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

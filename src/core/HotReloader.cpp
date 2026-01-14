@@ -7,9 +7,6 @@
 #include <fstream>
 #include <iostream>
 
-HotReloader::HotReloader(ShaderHandler *handler, InspectorEngine *inspector) 
-    : m_handler(handler), m_inspector(inspector) {}
-
 bool HotReloader::compile(const std::string &filepath, const std::string &programName) {
     std::string newSourceCode = readSourceFile(filepath);
     if (newSourceCode.empty()) {
@@ -20,9 +17,7 @@ bool HotReloader::compile(const std::string &filepath, const std::string &progra
     bool success = attemptCompile(filepath, programName);
     
     if (success) {
-        if (m_inspector) {
-            m_inspector->reloadUniforms(programName);
-        }
+        InspectorEngine::reloadUniforms(programName);
         return true;
     }
     return false;
@@ -43,12 +38,12 @@ std::string HotReloader::readSourceFile(const std::string &filepath) {
 }
 
 bool HotReloader::attemptCompile(const std::string &fragShaderPath, const std::string &programName) {
-    ShaderProgram *oldProgram = m_handler->getProgram(programName);
+    ShaderProgram *oldProgram = ShaderHandler::getProgram(programName);
     
     std::string vPath = (oldProgram) ? oldProgram->vertPath : "../shaders/default.vert";
 
     ShaderProgram *newProgram = new ShaderProgram(
-        vPath.c_str(), 
+        vPath.c_str(),
         fragShaderPath.c_str(),
         programName.c_str()
     );

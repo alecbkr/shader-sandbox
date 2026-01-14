@@ -9,6 +9,7 @@
 class EditorEngine {
 public:
     static std::vector<EditorUI*> editors;
+    static int activeEditor;
     static bool spawnEditor(const EventPayload& payload);
     static std::string getFileContents(std::string filename);
     static int EditorInputCallback(ImGuiInputTextCallbackData* data);
