@@ -186,8 +186,9 @@ int main() {
         ui.render(inspectorUI);
         ui.render(consoleUI);
 
+        // next step is to modify it on a shader basis
         bool R_key_pressed = (glfwGetKey(win.window, GLFW_KEY_R) == GLFW_PRESS);
-        if (R_key_pressed && !R_key_held) {
+        if (R_key_pressed && !R_key_held && EditorEngine::activeEditor != -1) {
             if (!EditorEngine::editors.empty()) {
                 std::ofstream outProg(EditorEngine::editors[EditorEngine::activeEditor]->filePath, std::ios::binary);
                 if (outProg.is_open()) {
@@ -196,14 +197,6 @@ int main() {
                 }
             }
             HotReloader::compile(EditorEngine::editors[EditorEngine::activeEditor]->filePath, "program");
-            ShaderProgram* newProg = ShaderHandler::getProgram("program");
-            if (newProg) {
-                for (auto& [name, object] : ObjCache::objMap) {
-                    if (object->getProgram()->name == "program") {
-                        object->setProgram(*newProg);
-                    }
-                }
-            }
         }
         R_key_held = R_key_pressed;
 

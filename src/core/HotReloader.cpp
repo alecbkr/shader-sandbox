@@ -7,6 +7,8 @@
 #include <fstream>
 #include <iostream>
 
+#include "object/ObjCache.hpp"
+
 bool HotReloader::compile(const std::string &filepath, const std::string &programName) {
     std::string newSourceCode = readSourceFile(filepath);
     if (newSourceCode.empty()) {
@@ -56,6 +58,12 @@ bool HotReloader::attemptCompile(const std::string &fragShaderPath, const std::s
         }
         delete newProgram;
         return false;
+    }
+
+    for (auto& [name, object] : ObjCache::objMap) {
+        if (object->getProgram()->name == "program") {
+            object->setProgram(*newProgram);
+        }
     }
 
     ShaderHandler::replaceProgram(programName, newProgram);
