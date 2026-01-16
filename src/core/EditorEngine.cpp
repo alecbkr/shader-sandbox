@@ -1,22 +1,28 @@
 #include "EditorEngine.hpp"
 
 #include <fstream>
+#include "logging/Logger.hpp"
+#include "core/EventDispatcher.hpp"
+
 
 std::vector<Editor*> EditorEngine::editors{};
 
-Editor::Editor(unsigned int _bufferSize) {
-    inputTextBuffer = new char[_bufferSize];
-    strcpy(inputTextBuffer, EditorEngine::getFileContents("../shaders/texture.frag").c_str());
-    bufferSize = _bufferSize;
-    lineCount = 1;
+Editor::Editor(unsigned int _bufferSize, std::string filePath, std::string fileName) {
+    this->inputTextBuffer = new char[bufferSize];
+    this->filePath = filePath;
+    this->fileName = fileName;
+    strcpy(this->inputTextBuffer, EditorEngine::getFileContents(filePath).c_str());
+    this->bufferSize = bufferSize;
+
+    this->lineCount = 1;
 
     int i = 0;
-    while (inputTextBuffer[i] != '\0') {
-        if (inputTextBuffer[i] == '\n') lineCount++;
+    while (this->inputTextBuffer[i] != '\0') {
+        if (this->inputTextBuffer[i] == '\n') this->lineCount++;
         i++;
     }
 
-    previousTextLen = i;
+    this->previousTextLen = i;
 }
 
 void Editor::destroy() {
@@ -25,16 +31,27 @@ void Editor::destroy() {
 }
 
 bool EditorEngine::initialize() {
-    spawnEditor(1024);
+    EventDispatcher::Subscribe(EventType::OpenFile, spawnEditor);
     return true;
 }
 
-void EditorEngine::spawnEditor(unsigned int bufferSize) {
-    Editor *editor = new Editor(bufferSize);
-    editors.push_back(editor);
+bool EditorEngine::spawnEditor(const EventPayload& payload) {
+    if (const auto* data = std::get_if<OpenFilePayload>(&payload)) {
+        if (!data->filePath.empty()) {
+            Editor *editor = new Editor(1024, data->filePath, data->fileName);
+            editors.push_back(editor);
+        } else {
+            Editor *editor = new Editor(1024, "../shaders/texture.frag", "texture.frag");
+            editors.push_back(editor);
+        }
+    } else {
+        Logger::addLog(LogLevel::ERROR, "spawnEditor", "Invalid Payload Type");
+    }
+
+    return false;
 }
 
-std::string EditorEngine::getFileContents(const char* filename) {
+std::string EditorEngine::getFileContents(std::string filename) {
     std::ifstream in(filename, std::ios::binary);
     if (in) {
         std::string contents;

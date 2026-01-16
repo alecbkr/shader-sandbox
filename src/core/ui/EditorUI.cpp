@@ -7,6 +7,7 @@
 
 #include "exponential.hpp"
 #include "imgui.h"
+#include "core/EventDispatcher.hpp"
 
 void renderEditor(Editor* editor) {
     ImGuiTableFlags lineNumberFlags = ImGuiTableFlags_BordersInnerV;
@@ -48,7 +49,7 @@ void EditorUI::render() {
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::MenuItem("New")) {
-                    EditorEngine::spawnEditor(1024);
+                    EventDispatcher::TriggerEvent(Event{ OpenFile, false, OpenFilePayload{"", ""} });
                 }
 
                 ImGui::EndMenu();

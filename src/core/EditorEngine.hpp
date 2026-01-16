@@ -7,11 +7,13 @@
 #include "ui/EditorUI.hpp"
 
 struct Editor {
-    Editor(unsigned int _bufferSize);
+    Editor(unsigned int _bufferSize, std::string filePath, std::string fileName);
     char* inputTextBuffer;
     unsigned int bufferSize;
     int previousTextLen;
     int lineCount;
+    std::string filePath;
+    std::string fileName;
     void destroy();
 };
 
@@ -19,8 +21,8 @@ class EditorEngine {
 public:
     static std::vector<Editor*> editors;
     static bool initialize();
-    static void spawnEditor(unsigned int bufferSize);
-    static std::string getFileContents(const char *filename);
+    static bool spawnEditor(const EventPayload& payload);
+    static std::string getFileContents(std::string filename);
     static int EditorInputCallback(ImGuiInputTextCallbackData* data);
 private:
     static void matchBrace(ImGuiInputTextCallbackData* data, Editor* editor);
