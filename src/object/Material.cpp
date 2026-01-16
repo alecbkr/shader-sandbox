@@ -1,8 +1,10 @@
 #include "Material.hpp"
+#include "core/logging/LogSink.hpp"
+#include "core/logging/Logger.hpp"
 
 void Material::setTexture(const Texture &tex, int unit, std::string uniformName) {
     if (tex.isValid() == false) {
-        ERRLOG.logEntry(EL_WARNING, "MATERIAL", "Cannot set uninitialized texture");
+        Logger::addLog(LogLevel::ERROR, "MATERIAL", "Cannot set uninitialized texture");
         return;
     }
     textures.push_back(TextureBind{&tex, unit, uniformName});
