@@ -4,9 +4,12 @@ std::unordered_map<std::string, ShaderProgram *> ShaderRegistry::programs;
 bool ShaderRegistry::initialized = false;
 
 bool ShaderRegistry::initialize() {
-    if (!registerProgram("../shaders/3d.vert", "../shaders/texture.frag", "default")) {
+    if (!registerProgram("../shaders/3d.vert", "../shaders/texture.frag", "program")) {
         return false;
     };
+    if (!registerProgram("../shaders/default.vert", "../shaders/default.frag", "untex")) {
+        return false;
+    }
 
     ShaderRegistry::initialized = true;
     return true;

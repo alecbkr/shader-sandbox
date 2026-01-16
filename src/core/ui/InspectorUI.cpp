@@ -127,7 +127,7 @@ void InspectorUI::drawAddObjectMenu() {
 }
 
 void InspectorUI::drawAssetsInspector() {
-    for (const Texture* texPtr : TEXTURE_REGISTRY.readTextures()) {
+    for (const Texture* texPtr : TextureRegistry::readTextures()) {
         ImGui::Text("%s\n", texPtr->path.c_str());
     }
 }
@@ -257,9 +257,9 @@ bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
 bool InspectorUI::drawTextureSelector(ObjectTextureSelector& selector) {
     bool changed = false;
     std::vector<const char *> textureChoices;
-    std::vector<Texture*> textures = TEXTURE_REGISTRY.readTextures();
+    std::vector<const Texture*> textures = TextureRegistry::readTextures();
     textureChoices.reserve(textures.size());
-    for (Texture* tex : textures) {
+    for (const Texture* tex : textures) {
         textureChoices.push_back(tex->path.c_str());
     }
     if (ImGui::Combo("Texture", &selector.textureSelection, textureChoices.data(),
@@ -279,7 +279,7 @@ bool InspectorUI::drawTextureSelector(ObjectTextureSelector& selector) {
     if (!changed) return false;
     
     // add check in case we get more types
-    Texture* selectedTexture = textures.at(selector.textureSelection);
+    const Texture* selectedTexture = textures.at(selector.textureSelection);
     ObjCache::setTexture(selector.objectName, *selectedTexture, selector.unitSelection, selector.uniformName); 
 
     return true;

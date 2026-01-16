@@ -18,6 +18,11 @@ const std::unordered_map<std::string, UniformType> InspectorEngine::typeMap = {
     {"mat4", UniformType::Mat4 }
 };
 
+bool InspectorEngine::initialize() {
+    refreshUniforms();
+    return true;
+}
+
 void InspectorEngine::refreshUniforms() {
     auto& programs = ShaderRegistry::getPrograms();
     

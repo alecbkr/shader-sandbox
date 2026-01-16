@@ -13,8 +13,17 @@
 #include "core/EditorEngine.hpp"
 #include "core/EventDispatcher.hpp"
 #include "core/HotReloader.hpp"
+#include "presets/PresetAssets.hpp"
+#include "core/TextureRegistry.hpp"
+#include "object/ObjCache.hpp"
+#include "core/input/InputState.hpp"
+#include "core/input/ActionRegistry.hpp"
+#include "core/input/ContextManager.hpp"
+#include "core/input/Keybinds.hpp"
+#include "engine/AppTimer.hpp"
 
 bool Application::initialized = false;
+AppStateControls Application::appControls = AppStateControls::NO_STATE;
 
 void initializeUI() {
     IMGUI_CHECKVERSION();
@@ -25,6 +34,38 @@ void initializeUI() {
     Platform::initializeImGui();
 
     ImGui_ImplOpenGL3_Init();
+}
+
+void loadPresetAssets() {
+    TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::WATER));
+    TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::FACE));
+    TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::METAL));
+    TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::GRID));
+
+    ShaderProgram* programPtr = ShaderRegistry::getProgram("program");
+    ShaderProgram* untexPtr = ShaderRegistry::getProgram("untex");
+
+    MeshData& plane = PresetAssets::getPresetMesh(MeshPreset::PLANE);
+    MeshData& cube = PresetAssets::getPresetMesh(MeshPreset::CUBE);
+    MeshData& pyramid = PresetAssets::getPresetMesh(MeshPreset::PYRAMID);
+
+    ObjCache::createObj("grid", plane.verts, plane.indices, false, true, *programPtr);
+    ObjCache::setTexture("grid", PresetAssets::getPresetTexture(TexturePreset::GRID), 0, "baseTex");
+    ObjCache::scaleObj("grid", glm::vec3(5.0f));
+
+    ObjCache::createObj("pyramid0", pyramid.verts, pyramid.indices, false, true, *untexPtr);
+    ObjCache::translateObj("pyramid0", glm::vec3(3.3f, 0.0f, -1.0f));
+    ObjCache::scaleObj("pyramid0", glm::vec3(2.0f));
+    ObjCache::rotateObj("pyramid0", 23.2f, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    ObjCache::createObj("cube", cube.verts, cube.indices, false, true, *programPtr);
+    ObjCache::setTexture("cube", PresetAssets::getPresetTexture(TexturePreset::FACE), 0, "baseTex");
+    ObjCache::translateObj("cube", glm::vec3(4.0f, 3.0f, -5.0f));
+    ObjCache::scaleObj("cube", glm::vec3(1.0, 0.5f, 1.0f));
+    ObjCache::rotateObj("cube", 45.0f, glm::vec3(0.5f, 0.5f, 0.5f));
+
+    ObjCache::createObj("pyramid1", pyramid.verts, pyramid.indices, false, true, *untexPtr);
+    ObjCache::translateObj("pyramid1", glm::vec3(-1.3f, 0.0f, -1.0f));
 }
 
 bool Application::initialize(const ApplicationInitStruct& initStruct) {
@@ -40,6 +81,10 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
         std::cout << "Platform layer was not initialized successfully." << std::endl;
         return false;
     }
+    if (!AppTimer::initialize()) {
+        std::cout << "App Timer was not initialized successfully." << std::endl;
+        return false;
+    }
     if (!EventDispatcher::initialize()) {
         std::cout << "Event Dispatcher was not initialized successfully." << std::endl;
         return false;
@@ -52,7 +97,31 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
         std::cout << "Editor Engine was not initialized successfully." << std::endl;
         return false;
     }
-    
+    if (!PresetAssets::initialize()) {
+        std::cout << "Preset Assets were not initialized successfully." << std::endl;
+        return false;
+    }
+    loadPresetAssets();
+    if (!InspectorEngine::initialize()) {
+        std::cout << "Inspector Engine was not initialized successfully." << std::endl;
+        return false;
+    }
+    if (!InputState::initialize()) {
+        std::cout << "Input State was not initialized successfully." << std::endl;
+        return false;
+    }
+    if (!ActionRegistry::initialize()) {
+        std::cout << "Action Registry was not initialized successfully." << std::endl;
+        return false;
+    }
+    if (!ContextManager::initialize()) {
+        std::cout << "Context Manager was not initialized successfully." << std::endl;
+        return false;
+    }
+    if (!Keybinds::initialize()) {
+        std::cout << "Keybinds were not initialized successfully." << std::endl;
+        return false;
+    }
     // setup UI
     initializeUI();
     if (!ConsoleUI::initialize(Logger::getConsoleSinkPtr())) {
@@ -60,7 +129,7 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
         return false;
     }
     if (!ViewportUI::initialize()) {
-        std::cout << "Viewport was not initialized successfully." << std::endl;
+        std::cout << "Viewport UI was not initialized successfully." << std::endl;
         return false;
     }
     if (!MenuUI::initialize()) {
@@ -80,6 +149,8 @@ void Application::runLoop() {
     }
 
     while (!Application::shouldClose()) {
+        AppTimer::update();
+        InputState::beginFrame();
         Platform::pollEvents();
         Platform::processInput();
         EventDispatcher::ProcessQueue();
@@ -120,4 +191,14 @@ void Application::shutdown() {
 bool Application::shouldClose() {
     if (!initialized) return false;
     return Platform::shouldClose();
+}
+
+void Application::setAppStateControls(AppStateControls state) {
+    if (!initialized) return;
+    Application::appControls = state;
+}
+
+AppStateControls Application::checkAppStateControls() {
+    if (!initialized) return AppStateControls::NO_STATE;
+    return appControls;
 }

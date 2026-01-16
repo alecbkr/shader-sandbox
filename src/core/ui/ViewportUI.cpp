@@ -6,6 +6,7 @@
 #include "object/ObjCache.hpp"
 #include <string>
 #include <glm/gtc/matrix_transform.hpp>
+#include "platform/Platform.hpp"
 
 
 bool ViewportUI::initialized = false;
@@ -22,8 +23,8 @@ bool ViewportUI::initialize() {
     if (ViewportUI::initialized) {
         return false;
     }
-    dimensions = ImVec2(WINDOWSIZE.width / 2, WINDOWSIZE.height / 2);
-    pos = ImVec2(WINDOWSIZE.width / 2 - WINDOWSIZE.width * 0.25f, WINDOWSIZE.height / 2 - WINDOWSIZE.height * 0.25f);
+    dimensions = ImVec2(Platform::getWindow().width / 2, Platform::getWindow().height / 2);
+    pos = ImVec2(Platform::getWindow().width / 2 - Platform::getWindow().width * 0.25f, Platform::getWindow().height / 2 - Platform::getWindow().height * 0.25f);
 
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -72,6 +73,8 @@ bool ViewportUI::initialize() {
     assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    glEnable(GL_DEPTH_TEST);
+
     ViewportUI::camPtr = std::make_unique<Camera>();
 
     ViewportUI::initialized = true;
@@ -94,6 +97,11 @@ void ViewportUI::render() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     ViewportUI::draw();
+}
+
+Camera* ViewportUI::getCamera() {
+    if (!initialized) return nullptr;
+    return camPtr.get();
 }
 
 
@@ -129,7 +137,7 @@ void ViewportUI::draw() {
     );
 
     // FPS overlay
-    std::string fps = "FPS: " + std::to_string(APPTIME.getFPS());
+    std::string fps = "FPS: " + std::to_string(AppTimer::getFPS());
     ImGui::GetWindowDrawList()->AddText(
         ImVec2(pos.x + 20, pos.y + 40),
         IM_COL32(255, 255, 255, 255),
@@ -143,7 +151,7 @@ void ViewportUI::draw() {
 
 void ViewportUI::reformat() {
     if (dimensions.x == prevDimensions.x && dimensions.y == prevDimensions.y) return;
-    if (MOUSEBUTTON[GLFW_MOUSE_BUTTON_1].isDown) return; //wait until window is resized 
+    //if (MOUSEBUTTON[GLFW_MOUSE_BUTTON_1].isDown) return; //wait until window is resized 
 
     glBindTexture(GL_TEXTURE_2D, viewportTex);
     glTexImage2D(

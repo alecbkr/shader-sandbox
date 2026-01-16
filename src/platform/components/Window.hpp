@@ -8,6 +8,8 @@
 class Window {
 public:
     static std::unique_ptr<Window> createWindow(u32 width, u32 height, std::string title, bool& outIsValid);
+    u32 width;
+    u32 height;
 
     Window(u32 _width, u32 _height, std::string _title);
     Window();
@@ -18,8 +20,6 @@ public:
     GLFWwindow* getGLFWWindow();
 
 private:
-    u32 width;
-    u32 height;
     std::string title;
 
     GLFWwindow* window;

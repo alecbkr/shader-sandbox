@@ -1,5 +1,6 @@
 #include "core/EventDispatcher.hpp"
 #include <utility>
+#include "core/logging/Logger.hpp"
 
 bool EventDispatcher::initialized = false;
 std::unordered_map<EventType, std::vector<ListenerFn>> EventDispatcher::listeners{};
@@ -20,6 +21,7 @@ void EventDispatcher::shutdown() {
 
 void EventDispatcher::TriggerEvent(Event e) {
     if (!initialized) return;
+    Logger::addLog(LogLevel::INFO, "EventDispatcher::TriggerEvent", "An event was triggered.");
     EventDispatcher::queue.push_back(std::move(e));
 };
 

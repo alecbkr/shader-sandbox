@@ -2,18 +2,14 @@
 #include "../object/Texture.hpp"
 #include <vector>
 
-#define TEXTURE_REGISTRY TextureRegistry::instance()
-
 class TextureRegistry {
-    public:
-    static TextureRegistry& instance();
-    const Texture* tryReadTexture(int index) const; // return false if we didn't find it.
-    void registerTexture(Texture* texture);
-    void eraseTexture(int index);
-    const std::vector<Texture*>& readTextures() const;
+public:
+    static const Texture* tryReadTexture(int index); // return false if we didn't find it.
+    static void registerTexture(Texture* texture);
+    static void eraseTexture(int index);
+    static const std::vector<const Texture*>& readTextures();
 
-    private:
-    TextureRegistry();
-    std::vector<Texture*> textures;
+private:
+    static std::vector<const Texture*> textures;
 };
 

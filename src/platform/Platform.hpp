@@ -18,6 +18,8 @@ public:
     static void pollEvents();
     static void processInput();
     static void initializeImGui();
+    static Window& getWindow();
+    static void initializeInputCallbacks();
 
 private:
     static bool initialized;

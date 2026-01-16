@@ -10,6 +10,7 @@ class ViewportUI {
 public:
     static bool initialize();
     static void render();
+    static Camera* getCamera();
     
     private:
     static bool initialized;

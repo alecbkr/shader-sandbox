@@ -1,22 +1,17 @@
 #include "TextureRegistry.hpp"
 #include "../engine/Errorlog.hpp"
 
-TextureRegistry::TextureRegistry() {
-}
+std::vector<const Texture*> TextureRegistry::textures;
 
-TextureRegistry& TextureRegistry::instance() {
-    static TextureRegistry inst;
-    return inst;
-}
-const Texture* TextureRegistry::tryReadTexture(int index) const {
-    if (index < textures.size() && index > -1) {
+const Texture* TextureRegistry::tryReadTexture(int index) {
+    if ((long long unsigned int)index < textures.size() && index > -1) {
         ERRLOG.logEntry(EL_WARNING, "eraseTexture", "invalid index!");
         return textures.at(index);
     }
     else return nullptr;
 }
 
-const std::vector<Texture*>& TextureRegistry::readTextures() const {
+const std::vector<const Texture*>& TextureRegistry::readTextures() {
     return textures;
 }
 
@@ -25,7 +20,7 @@ void TextureRegistry::registerTexture(Texture* texture) {
 }
 
 void TextureRegistry::eraseTexture(int index) {
-    if (index < textures.size() && index > -1) {
+    if ((long long unsigned int)index < textures.size() && index > -1) {
         ERRLOG.logEntry(EL_WARNING, "eraseTexture", "invalid index!");
     }
     textures.erase(textures.begin() + index);

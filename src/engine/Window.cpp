@@ -29,17 +29,17 @@ OldWindow::OldWindow(const char *processName, int widthIn, int heightIn) {
         ERRLOG.logEntry(EL_CRITICAL, "WINDOW", "gladLoadGLLoader failure");
     }   
     
-    WINDOWSIZE.width = widthIn;
-    WINDOWSIZE.height = heightIn;
+    // WINDOWSIZE.width = widthIn;
+    // WINDOWSIZE.height = heightIn;
     
-    glfwSetKeyCallback(window, InputHandler::key_callback);
-    glfwSetMouseButtonCallback(window, InputHandler::mouse_callback);
-    glfwSetCursorPosCallback(window, InputHandler::cursor_callback);
-    glfwSetScrollCallback(window, InputHandler::scroll_callback);
-    glfwSetFramebufferSizeCallback(window, InputHandler::windowSize_callback);
+    // glfwSetKeyCallback(window, InputHandler::key_callback);
+    // glfwSetMouseButtonCallback(window, InputHandler::mouse_callback);
+    // glfwSetCursorPosCallback(window, InputHandler::cursor_callback);
+    // glfwSetScrollCallback(window, InputHandler::scroll_callback);
+    // glfwSetFramebufferSizeCallback(window, InputHandler::windowSize_callback);
 
 
-    glViewport(0, 0, WINDOWSIZE.width, WINDOWSIZE.height);
+    // glViewport(0, 0, WINDOWSIZE.width, WINDOWSIZE.height);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     // ERRLOG.logEntry(EL_INFO, "WINDOW", "Success");

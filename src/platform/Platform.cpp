@@ -2,6 +2,10 @@
 #include <iostream>
 #include <GLFW/glfw3.h>
 #include <imgui/imgui_impl_glfw.h>
+//#include "core/input/InputState.hpp"
+#include "core/input/Keybinds.hpp"
+#include "core/input/ContextManager.hpp"
+#include "core/logging/Logger.hpp"
 
 bool Platform::initialized = false;
 std::unique_ptr<Window> Platform::windowPtr = nullptr;
@@ -49,11 +53,26 @@ void Platform::pollEvents() {
 }
 
 void Platform::processInput() {
-    if (glfwGetKey(windowPtr->getGLFWWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(windowPtr->getGLFWWindow(), true);
-    }
+    Keybinds::gatherActionsForFrame(ContextManager::current());
+    ActionRegistry::processActionsForFrame();
 }
 
 void Platform::initializeImGui() {
     ImGui_ImplGlfw_InitForOpenGL(windowPtr->getGLFWWindow(), true);
+}
+
+Window& Platform::getWindow() {
+    if (!initialized) Logger::addLog(LogLevel::WARNING, "Platform::getWindow()", "Attempting to return the application's window before initialization.");
+    return *Platform::windowPtr;
+}
+
+void keyCallback(GLFWwindow*, int key, int, int action, int) { InputState::onKey(key, action); }
+void mouseCallback(GLFWwindow*, int button, int action, int) { InputState::onMouseButton(button, action); }
+void cursorCallback(GLFWwindow*, double x, double y) { InputState::onCursorPos(x, y); }
+void scrollCallback(GLFWwindow*, double x, double y) { InputState::onScroll(x, y); }
+void Platform::initializeInputCallbacks() {
+    glfwSetKeyCallback(windowPtr->getGLFWWindow(), keyCallback);
+    glfwSetMouseButtonCallback(windowPtr->getGLFWWindow(), mouseCallback);
+    glfwSetCursorPosCallback(windowPtr->getGLFWWindow(), cursorCallback);
+    glfwSetScrollCallback(windowPtr->getGLFWWindow(), scrollCallback);
 }
