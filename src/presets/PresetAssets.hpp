@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 #include "object/Texture.hpp"
 
@@ -31,8 +32,8 @@ private:
     static MeshData pyramidMesh;
     static MeshData cubeMesh;
 
-    static Texture waterTex;
-    static Texture faceTex;
-    static Texture metalTex;
-    static Texture gridTex;
+    static std::unique_ptr<Texture> waterTex;
+    static std::unique_ptr<Texture> faceTex;
+    static std::unique_ptr<Texture> metalTex;
+    static std::unique_ptr<Texture> gridTex;
 };
