@@ -29,6 +29,12 @@ std::string InspectorUI::newUniformShaderName{};
 UniformType InspectorUI::newUniformType = UniformType::NoType;
 std::unordered_map<std::string, ObjectShaderSelector> InspectorUI::objectShaderSelectors{};
 std::unordered_map<std::string, ObjectTextureSelector> InspectorUI::objectTextureSelectors{};
+ShaderLinkMenu InspectorUI::shaderLinkMenu = ShaderLinkMenu{
+    .shaderName = "",
+    .vertSelection = 0,
+    .geometrySelection = 0,
+    .fragSelection = 0,
+};
 
 void InspectorUI::render() {
     ImGui::Text("Inspector");
@@ -224,10 +230,12 @@ void InspectorUI::drawAssetsInspector() {
 
 
 void InspectorUI::drawShaderFileInspector() {
+
     std::string path = "../shaders/";
 
     ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
 
+    drawShaderLinkMenu(shaderLinkMenu);
     for (const auto & dirEntry : std::filesystem::directory_iterator(path)) {
         if (ImGui::Selectable(dirEntry.path().filename().string().c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
             if (ImGui::IsMouseDoubleClicked(0)) {
@@ -245,88 +253,61 @@ void InspectorUI::drawShaderFileInspector() {
     ImGui::PopStyleVar();
 }
 
-/*
-// this is from an old version
-// keeping the code cause it's a nice template. get rid of it once we finish the inspector MVP or if we have the code elsewhere.
-void InspectorUI::drawAddUniformMenu() {
-    ImGui::Text("Add Uniform");
-    drawTextInput(&newUniformName, "Uniform Name");
+void InspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu) {
+    bool changed = false;
 
-    // Build a list of shader names
-    std::vector<const char *> shaderChoices;
-    shaderChoices.reserve(ShaderRegistry::getNumberOfPrograms() + 1);
-    shaderChoices.push_back("");
+    std::string path = "../shaders/";
+    std::vector<std::string> files;
+    std::vector<std::string> extensions;
+    for (const auto & dirEntry : std::filesystem::directory_iterator(path)) {
+        files.push_back(dirEntry.path());
+        extensions.push_back(dirEntry.path().extension());
+    }
+    std::vector<const char*> vertChoices{""};
+    std::vector<const char*> fragChoices{""};
+    std::vector<const char*> geoChoices{""}; // not doing this right now
 
-    auto& shaders = ShaderRegistry::getPrograms();
-    for (auto &[name, shader] : shaders) {
-        shaderChoices.push_back(name.c_str());
+    if (files.size() != extensions.size()) {
+        Logger::addLog(LogLevel::ERROR, "drawShaderLinkMenu", "files & extensions vectors have different sizes. this should never happen");
+        return;
     }
-    // Keep track of the selected shader index
-    static int shaderChoice = 0;
-    if (newUniformShaderName == "")
-        shaderChoice = 0;
-    // Display combo box
-    if (ImGui::Combo("Shader", &shaderChoice, shaderChoices.data(),
-                        (int)shaderChoices.size())) {
-        // When selection changes, update newUniformShaderName
-        newUniformShaderName = shaderChoices[shaderChoice];
-    }
-    // Dropdown menu from enum
-    const char *typeNames[6] = {"None", "Int",  "Float",
-                                "Vec3", "Vec4", "Reference"};
-    int choice = static_cast<int>(newUniformType);
-    if (ImGui::Combo("Uniform Type", &choice, typeNames,
-                        IM_ARRAYSIZE(typeNames))) {
-        newUniformType = static_cast<UniformType>(choice);
-    }
-
-    if (ImGui::Button("Add Uniform", ImVec2(100, 25))) {
-        bool uniqueValidUniform = false;
-        bool validShaderName = shaders.count(newUniformShaderName) >= 1;
-        if (validShaderName) {
-            uniqueValidUniform =
-                UNIFORM_REGISTRY.containsUniform(newUniformShaderName, newUniformName) &&
-                newUniformType != UniformType::NoType;
+    for (int i = 0; i < files.size() && i < extensions.size(); i++) {
+        std::string& extension = extensions[i];
+        if (extension == ".vert") {
+            vertChoices.push_back(files[i].c_str());
         }
-
-        if (uniqueValidUniform) {
-            Uniform newUniform;
-            newUniform.name = newUniformName;
-            newUniform.type = newUniformType;
-
-            switch (newUniformType) {
-            case UniformType::Int:
-                newUniform.value = 0;
-                break;
-            case UniformType::Float:
-                newUniform.value = 0.0f;
-                break;
-            case UniformType::Vec3:
-                newUniform.value = glm::vec3(0.0f);
-                break;
-            case UniformType::Vec4:
-                newUniform.value = glm::vec4(0.0f);
-                break;
-            case UniformType::Mat4:
-                newUniform.value = glm::mat4(0.0f);
-                break;
-            default:
-                std::cout << "invalid new uniform type, making it an int"
-                            << std::endl;
-                newUniform.type = UniformType::Int;
-                newUniform.value = 0;
-                break;
-            }
-
-            UNIFORM_REGISTRY.registerUniform(newUniformShaderName, newUniform);
-            newUniformShaderName = "";
-            newUniformName = "";
-        } else {
-            std::cout << "bad new uniform input" << std::endl;
+        else if (extension == ".frag") {
+            fragChoices.push_back(files[i].c_str());
         }
+        else {
+            Logger::addLog(LogLevel::WARNING, "drawShaderLinkMenu", "Shader file type " + extension + " not supported, only .vert and .frag");
+        }
+    }
+
+    if (ImGui::Combo("Vertex Shader", &menu.vertSelection, vertChoices.data(), (int)vertChoices.size())) { 
+        changed = true; 
+    }
+    if (ImGui::Combo("Geometry Shader", &menu.geometrySelection, geoChoices.data(), (int)geoChoices.size())) {
+        changed = true; 
+    }
+    if (ImGui::Combo("Fragment Shader", &menu.fragSelection, fragChoices.data(), (int)fragChoices.size())) {
+        changed = true; 
+    }
+
+    char buffer[256];
+    if (ImGui::InputText("New Program Name", buffer, sizeof(buffer))) {
+        menu.shaderName = buffer;
+    }
+
+
+    bool validSelection = menu.fragSelection != 0 && menu.vertSelection != 0 && menu.shaderName != "";
+    if (validSelection && ImGui::Button("Link Shader Program")) {
+        const std::string vert = vertChoices[menu.vertSelection];
+        const std::string frag = fragChoices[menu.fragSelection];
+        const std::string& name = menu.shaderName;
+        ShaderRegistry::registerProgram(vert, frag, name);
     }
 }
-*/
 
 bool InspectorUI::drawTextInput(std::string *value, const char *label) {
     bool changed = false;
@@ -373,7 +354,7 @@ bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
 
 bool InspectorUI::drawTextureSelector(ObjectTextureSelector& selector) {
     bool changed = false;
-    std::vector<const char *> textureChoices;
+    std::vector<const char *> textureChoices{""};
     const std::vector<const Texture*>& registryTextures = TextureRegistry::readTextures();
     textureChoices.reserve(registryTextures.size());
     for (const Texture* tex : registryTextures) {

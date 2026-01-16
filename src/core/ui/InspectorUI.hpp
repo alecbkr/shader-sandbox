@@ -23,6 +23,13 @@ struct ObjectTextureSelector {
     bool newSelector;
 };
 
+struct ShaderLinkMenu {
+    std::string shaderName;
+    int vertSelection;
+    int geometrySelection;
+    int fragSelection;
+};
+
 class InspectorUI {
     public:
     static void render();
@@ -36,12 +43,14 @@ class InspectorUI {
     static UniformType newUniformType;
     static std::unordered_map<std::string, ObjectShaderSelector> objectShaderSelectors;
     static std::unordered_map<std::string, ObjectTextureSelector> objectTextureSelectors;
+    static ShaderLinkMenu shaderLinkMenu;
 
     static void drawUniformInspector();
     static void drawObjectsInspector();
     static void drawAssetsInspector();
     static void drawShaderFileInspector();
     static void drawAddObjectMenu();
+    static void drawShaderLinkMenu(ShaderLinkMenu& menu);
     static bool drawShaderProgramSelector(ObjectShaderSelector& selector);
     static bool drawTextureSelector(ObjectTextureSelector& selector);
     static bool drawTextInput(std::string *value, const char *label);
