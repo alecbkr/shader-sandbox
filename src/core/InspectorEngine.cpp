@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <sstream>
 #include <iostream>
-#include "core/ShaderHandler.hpp"
+#include "core/ShaderRegistry.hpp"
 #include "core/UniformTypes.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "object/ObjCache.hpp"
@@ -18,8 +18,13 @@ const std::unordered_map<std::string, UniformType> InspectorEngine::typeMap = {
     {"mat4", UniformType::Mat4 }
 };
 
+bool InspectorEngine::initialize() {
+    refreshUniforms();
+    return true;
+}
+
 void InspectorEngine::refreshUniforms() {
-    const auto& programs = ShaderHandler::getPrograms();
+    auto& programs = ShaderRegistry::getPrograms();
     
     // NOTE: this will break if we do any multithreading with the program list.
     // Please be careful.
@@ -207,7 +212,7 @@ void InspectorEngine::applyUniform(const std::string& objectName, const Uniform&
         return;
     }
     Object& object = *ObjCache::objMap.at(objectName);
-    ShaderProgram* program = ShaderHandler::getProgram(object.getProgram()->name);
+    ShaderProgram* program = ShaderRegistry::getProgram(object.getProgram()->name);
     applyUniform(*program, uniform);
 }
 
@@ -246,7 +251,7 @@ void InspectorEngine::applyInput(const std::string& objectName, const Uniform& u
     applyUniform(objectName, uniform);
 }
 void InspectorEngine::reloadUniforms(const std::string &programName){
-    ShaderProgram *newProgram = ShaderHandler::getProgram(programName);
+    ShaderProgram *newProgram = ShaderRegistry::getProgram(programName);
     if (!newProgram || !newProgram->isCompiled()){
         return;
     }

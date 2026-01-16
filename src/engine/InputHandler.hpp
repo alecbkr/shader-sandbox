@@ -30,62 +30,59 @@ resetStates() - call at the end of a frame to ensure no temporary
 #ifndef INPUTHANDLER_HPP
 #define INPUTHANDLER_HPP
 
-#include <glfw/glfw3.h>
+// #include <glfw/glfw3.h>
 
-#define INPUT       InputHandler::getInstance()
-#define KEYBOARD    InputHandler::getInstance().keys
-#define MOUSEBUTTON InputHandler::getInstance().buttons
-#define CURSOR      InputHandler::getInstance().cursor
-#define SCROLLWHEEL InputHandler::getInstance().scroll
-#define WINDOWSIZE  InputHandler::getInstance().windowSize
+// #define KEYBOARD    InputHandler::keys
+// #define MOUSEBUTTON InputHandler::buttons
+// #define CURSOR      InputHandler::cursor
+// #define SCROLLWHEEL InputHandler::scroll
+// #define WINDOWSIZE  InputHandler::windowSize
 
 
-class InputHandler {
-    private:
-        struct PushState {
-            bool isDown     = false;
-            bool isPressed  = false;
-            bool isReleased = false;
-        };
+// class InputHandler {
+// private:
+//     static bool initialized;
+//     struct PushState {
+//         bool isDown     = false;
+//         bool isPressed  = false;
+//         bool isReleased = false;
+//     };
 
-        struct CursorState {
-            bool firstInput = true;
-            float currPosX  = 0.0f;
-            float currPosY  = 0.0f;
-            float lastPosX  = 0.0f;
-            float lastPosY  = 0.0f;
-            float offsetX   = 0.0f;
-            float offsetY   = 0.0f;
-        };
+//     struct CursorState {
+//         bool firstInput = true;
+//         float currPosX  = 0.0f;
+//         float currPosY  = 0.0f;
+//         float lastPosX  = 0.0f;
+//         float lastPosY  = 0.0f;
+//         float offsetX   = 0.0f;
+//         float offsetY   = 0.0f;
+//     };
 
-        struct ScrollState {
-            float offsetX = 0.0f;
-            float offsetY = 0.0f;
-        };
+//     struct ScrollState {
+//         float offsetX = 0.0f;
+//         float offsetY = 0.0f;
+//     };
 
-        struct WindowState {
-            int width = 1000;
-            int height = 800;
-        };
+//     struct WindowState {
+//         int width = 1000;
+//         int height = 800;
+//     };
 
-    public:
-        PushState keys[GLFW_KEY_LAST];
-        PushState buttons[GLFW_MOUSE_BUTTON_LAST];
-        CursorState cursor;
-        ScrollState scroll;
-        WindowState windowSize;
+// public:
+//     static PushState keys[GLFW_KEY_LAST];
+//     static PushState buttons[GLFW_MOUSE_BUTTON_LAST];
+//     static CursorState cursor;
+//     static ScrollState scroll;
+//     static WindowState windowSize;
 
-        static InputHandler &getInstance();
-        void updateCursor();
-        void resetStates();
-        static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
-        static void mouse_callback(GLFWwindow *window, int button, int action, int mods);
-        static void cursor_callback(GLFWwindow *window, double xpos, double ypos); 
-        static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
-        static void windowSize_callback(GLFWwindow *window, int widht, int height);
-        
-        private:
-            InputHandler();
-};
+//     static bool initialize();
+//     static void updateCursor();
+//     static void resetStates();
+//     static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
+//     static void mouse_callback(GLFWwindow *window, int button, int action, int mods);
+//     static void cursor_callback(GLFWwindow *window, double xpos, double ypos); 
+//     static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+//     static void windowSize_callback(GLFWwindow *window, int widht, int height);
+// };
 
 #endif

@@ -3,9 +3,9 @@
 #include <filesystem>
 
 #include "core/InspectorEngine.hpp"
-#include "core/ShaderHandler.hpp"
 #include "core/TextureRegistry.hpp"
 #include "core/UniformRegistry.hpp"
+#include "core/EventDispatcher.hpp"
 #include "core/UniformTypes.hpp"
 #include "engine/Errorlog.hpp"
 #include "engine/ShaderProgram.hpp"
@@ -16,9 +16,14 @@
 #include <unordered_map>
 #include <vector>
 
-#include "core/EventDispatcher.hpp"
-
-InspectorUI::InspectorUI() {}
+int InspectorUI::height = 400;
+int InspectorUI::width = 400;
+std::vector<std::string> InspectorUI::uniformNamesToDelete{};
+std::string InspectorUI::newUniformName{};
+std::string InspectorUI::newUniformShaderName{};
+UniformType InspectorUI::newUniformType = UniformType::NoType;
+std::unordered_map<std::string, ObjectShaderSelector> InspectorUI::objectShaderSelectors{};
+std::unordered_map<std::string, ObjectTextureSelector> InspectorUI::objectTextureSelectors{};
 
 void InspectorUI::render() {
     ImGui::Text("Inspector");
@@ -179,7 +184,7 @@ void InspectorUI::drawAddObjectMenu() {
         1,2,6, 1,6,5, // right
         0,3,7, 0,7,4  // left
     };
-    std::unordered_map<std::string, ShaderProgram*>& programs = ShaderHandler::getPrograms();
+    std::unordered_map<std::string, ShaderProgram*>& programs = ShaderRegistry::getPrograms();
     if (programs.empty()) return;
 
     // just grab a random shader program it really does not matter
@@ -202,7 +207,7 @@ void InspectorUI::drawAddObjectMenu() {
 }
 
 void InspectorUI::drawAssetsInspector() {
-    for (const Texture* texPtr : TEXTURE_REGISTRY.readTextures()) {
+    for (const Texture* texPtr : TextureRegistry::readTextures()) {
         ImGui::Text("%s\n", texPtr->path.c_str());
     }
 }
@@ -239,10 +244,10 @@ void InspectorUI::drawAddUniformMenu() {
 
     // Build a list of shader names
     std::vector<const char *> shaderChoices;
-    shaderChoices.reserve(ShaderHandler::getNumberOfPrograms() + 1);
+    shaderChoices.reserve(ShaderRegistry::getNumberOfPrograms() + 1);
     shaderChoices.push_back("");
 
-    auto& shaders = ShaderHandler::getPrograms();
+    auto& shaders = ShaderRegistry::getPrograms();
     for (auto &[name, shader] : shaders) {
         shaderChoices.push_back(name.c_str());
     }
@@ -327,9 +332,9 @@ bool InspectorUI::drawTextInput(std::string *value, const char *label) {
 bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
     bool changed = false;
     std::vector<const char *> shaderChoices;
-    shaderChoices.reserve(ShaderHandler::getNumberOfPrograms());
+    shaderChoices.reserve(ShaderRegistry::getNumberOfPrograms());
 
-    auto& shaders = ShaderHandler::getPrograms();
+    auto& shaders = ShaderRegistry::getPrograms();
     for (auto &[name, shader] : shaders) {
         shaderChoices.push_back(name.c_str());
     }
@@ -342,7 +347,7 @@ bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
     if (!changed) return false;
     
     // add check in case we get more types
-    ShaderProgram& selectedShader = *ShaderHandler::getProgram(shaderChoices[selector.selection]);
+    ShaderProgram& selectedShader = *ShaderRegistry::getProgram(shaderChoices[selector.selection]);
     ObjCache::setProgram(selector.objectName, selectedShader); 
     InspectorEngine::refreshUniforms();
     return true;
@@ -351,9 +356,9 @@ bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
 bool InspectorUI::drawTextureSelector(ObjectTextureSelector& selector) {
     bool changed = false;
     std::vector<const char *> textureChoices;
-    std::vector<Texture*> textures = TEXTURE_REGISTRY.readTextures();
+    std::vector<const Texture*> textures = TextureRegistry::readTextures();
     textureChoices.reserve(textures.size());
-    for (Texture* tex : textures) {
+    for (const Texture* tex : textures) {
         textureChoices.push_back(tex->path.c_str());
     }
     if (ImGui::Combo("Texture", &selector.textureSelection, textureChoices.data(),
@@ -373,7 +378,7 @@ bool InspectorUI::drawTextureSelector(ObjectTextureSelector& selector) {
     if (!changed) return false;
     
     // add check in case we get more types
-    Texture* selectedTexture = textures.at(selector.textureSelection);
+    const Texture* selectedTexture = textures.at(selector.textureSelection);
     ObjCache::setTexture(selector.objectName, *selectedTexture, selector.unitSelection, selector.uniformName); 
 
     return true;

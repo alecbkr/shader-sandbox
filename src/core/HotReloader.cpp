@@ -1,14 +1,11 @@
 #include "core/HotReloader.hpp"
 #include "engine/ShaderProgram.hpp"
-#include "core/ShaderHandler.hpp"
 #include "core/EditorEngine.hpp"
 #include "core/InspectorEngine.hpp"
+#include "core/ShaderRegistry.hpp"
 #include "engine/Errorlog.hpp"
 #include <fstream>
 #include <iostream>
-
-HotReloader::HotReloader(ShaderHandler *handler, InspectorEngine *inspector) 
-    : m_handler(handler), m_inspector(inspector) {}
 
 bool HotReloader::compile(const std::string &filepath, const std::string &programName) {
     std::string newSourceCode = readSourceFile(filepath);
@@ -20,9 +17,7 @@ bool HotReloader::compile(const std::string &filepath, const std::string &progra
     bool success = attemptCompile(filepath, programName);
     
     if (success) {
-        if (m_inspector) {
-            m_inspector->reloadUniforms(programName);
-        }
+        InspectorEngine::reloadUniforms(programName);
         return true;
     }
     return false;
@@ -43,7 +38,7 @@ std::string HotReloader::readSourceFile(const std::string &filepath) {
 }
 
 bool HotReloader::attemptCompile(const std::string &fragShaderPath, const std::string &programName) {
-    ShaderProgram *oldProgram = m_handler->getProgram(programName);
+    ShaderProgram *oldProgram = ShaderRegistry::getProgram(programName);
     
     std::string vPath = (oldProgram) ? oldProgram->vertPath : "../shaders/default.vert";
 
@@ -63,7 +58,7 @@ bool HotReloader::attemptCompile(const std::string &fragShaderPath, const std::s
         return false;
     }
 
-    ShaderHandler::replaceProgram(programName, newProgram);
+    ShaderRegistry::replaceProgram(programName, newProgram);
     
     if (oldProgram) {
         oldProgram->kill();

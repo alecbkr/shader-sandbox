@@ -9,6 +9,7 @@ enum EventType {
     WindowResize,
     KeyPressed,
     SaveActiveShaderFile,
+    SaveProject,
     Quit,
     OpenFile,
 };

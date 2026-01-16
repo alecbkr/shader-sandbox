@@ -13,7 +13,7 @@ class ObjCache {
                                  bool hasNorms, bool hasUVs, ShaderProgram& program);
         // static void OC_deleteObj();
         
-        static void setTexture(const std::string name, Texture& tex, int unit, std::string uniformName);
+        static void setTexture(const std::string name, const Texture& tex, int unit, std::string uniformName);
         static void setProgram(const std::string name, ShaderProgram& program);
         static void setName(const std::string name, const std::string newName);
         static void translateObj(const std::string name, glm::vec3 pos);

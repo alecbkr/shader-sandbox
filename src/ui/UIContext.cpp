@@ -33,7 +33,7 @@ void UIContext::destroy() {
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    for (EditorUI* editor: EditorEngine::editors) editor->destroy();
+    for (Editor* editor: EditorEngine::editors) editor->destroy();
 }
 
 void UIContext::renderEditorWindow(float width, float height) {
@@ -57,7 +57,7 @@ void UIContext::renderEditorWindow(float width, float height) {
                 bool openTab = true;
                 if (ImGui::BeginTabItem(tabTitle.c_str(), &openTab)) {
 
-                    EditorEngine::editors[i]->render();
+                    //EditorEngine::editors[i]->render();
 
                     ImGui::EndTabItem();
                 }

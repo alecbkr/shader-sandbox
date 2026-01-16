@@ -4,10 +4,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-class Window {
+class OldWindow {
     public:
         GLFWwindow *window;
-        Window(const char *processName, int widthIn, int heightIn);
+        OldWindow(const char *processName, int widthIn, int heightIn);
         void swapBuffers();
         bool shouldClose();
         void destroy();

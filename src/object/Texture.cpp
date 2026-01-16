@@ -4,6 +4,7 @@
 
 
 Texture::Texture(const char *texture_path) {
+    if (!texture_path  || texture_path[0] == '\0') return;
     this->path = texture_path; 
     stbi_set_flip_vertically_on_load(true);
 
@@ -34,7 +35,7 @@ Texture::~Texture() {
 }
 
 
-void Texture::bind(int texNum) {
+void Texture::bind(int texNum) const {
     sendToGPU();
     glActiveTexture(GL_TEXTURE0 + texNum);
     glBindTexture(GL_TEXTURE_2D, ID);
@@ -52,7 +53,7 @@ bool Texture::isValid() const {
 }
 
 
-void Texture::sendToGPU() {
+void Texture::sendToGPU() const {
     if (!initialized) {
         ERRLOG.logEntry(EL_WARNING, "TEXTURE", "Can't send uninitialized texture to GPU");
         return;

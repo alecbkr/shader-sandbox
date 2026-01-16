@@ -1,0 +1,72 @@
+#pragma once
+
+#include <cstdint>
+
+enum class Key : uint16_t {
+    Unknown = 0,
+
+    A, B, C, D, E, F, G,
+    H, I, J, K, L, M,
+    N, O, P, Q, R, S, T,
+    U, V, W, X, Y, Z,
+
+    Num0, Num1, Num2, Num3, Num4,
+    Num5, Num6, Num7, Num8, Num9,
+
+    Escape,
+    Enter,
+    Tab,
+    Backspace,
+    Space,
+    CapsLock,
+
+    LeftShift, RightShift,
+    LeftCtrl,  RightCtrl,
+    LeftAlt,   RightAlt,
+    LeftSuper, RightSuper,
+
+    Comma, Period,
+    Forwardslash, Backslash,
+    SemiColon, Apostrophe,
+    LeftBracket, RightBracket,
+    Minus, Equals,
+
+    Insert, Delete, Home, End,
+    PageUp, PageDown,
+
+    ArrowUp, ArrowDown, ArrowLeft, ArrowRight,
+
+    F1, F2, F3, F4, F5, F6,
+    F7, F8, F9, F10, F11, F12,
+
+    KeyPad0, KeyPad1, KeyPad2, KeyPad3,
+    KeyPad4, KeyPad5, KeyPad6, KeyPad7,
+    KeyPad8, KeyPad9,
+
+    KeyPadAdd, KeyPadSub,
+    KeyPadMult, KeyPadDivide,
+
+    Count // keep last
+};
+
+enum class MouseButton : uint16_t {
+    Unknown = 0,
+
+    Left,
+    Right,
+    Middle,
+    B4, B5, B6, B7, B8,
+    
+    Count
+};
+
+Key translateGlfwKey(int glfwKey);
+MouseButton translateGlfwMouseButton(int glfwButton);
+
+constexpr size_t keyIndex(Key key) {
+    return static_cast<size_t>(key);
+}
+
+constexpr size_t buttonIndex(MouseButton button) {
+    return static_cast<size_t>(button);
+}

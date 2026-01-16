@@ -20,7 +20,7 @@ class Texture {
     
         
     public:
-        GLuint ID;
+        mutable GLuint ID;
         std::string path;
         unsigned char* pixels;
         int width;
@@ -28,14 +28,14 @@ class Texture {
         GLenum format;
         Texture(const char *texture_path);
         ~Texture();
-        void bind(int texNum);
+        void bind(int texNum) const;
         void unbind(int texNum);
         bool isValid() const;
     
     private:
         bool initialized = false;
-        bool loadedInGPU = false;
-        void sendToGPU();
+        mutable  bool loadedInGPU = false;
+        void sendToGPU() const;
         void deleteFromGPU();
 };
 
