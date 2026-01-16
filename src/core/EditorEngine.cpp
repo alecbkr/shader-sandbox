@@ -6,8 +6,9 @@
 
 
 std::vector<Editor*> EditorEngine::editors{};
+int EditorEngine::activeEditor = -1;
 
-Editor::Editor(unsigned int _bufferSize, std::string filePath, std::string fileName) {
+Editor::Editor(unsigned int bufferSize, std::string filePath, std::string fileName) {
     this->inputTextBuffer = new char[bufferSize];
     this->filePath = filePath;
     this->fileName = fileName;

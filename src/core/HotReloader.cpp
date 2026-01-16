@@ -13,11 +13,8 @@ bool HotReloader::compile(const std::string &filepath, const std::string &progra
         std::cerr << "[HotReloader] Failed to read source file: " << filepath << std::endl;
         return false;
     }
-
-    bool success = attemptCompile(filepath, programName);
     
-    if (success) {
-        InspectorEngine::reloadUniforms(programName);
+    if (attemptCompile(filepath, programName)) {
         return true;
     }
     return false;
@@ -39,7 +36,7 @@ std::string HotReloader::readSourceFile(const std::string &filepath) {
 
 bool HotReloader::attemptCompile(const std::string &fragShaderPath, const std::string &programName) {
     ShaderProgram *oldProgram = ShaderRegistry::getProgram(programName);
-    
+
     std::string vPath = (oldProgram) ? oldProgram->vertPath : "../shaders/default.vert";
 
     ShaderProgram *newProgram = new ShaderProgram(
@@ -59,6 +56,7 @@ bool HotReloader::attemptCompile(const std::string &fragShaderPath, const std::s
     }
 
     ShaderRegistry::replaceProgram(programName, newProgram);
+    InspectorEngine::reloadUniforms(programName);
     
     if (oldProgram) {
         oldProgram->kill();

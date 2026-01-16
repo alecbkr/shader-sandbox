@@ -59,11 +59,12 @@ void EditorUI::render() {
 
         if (ImGui::BeginTabBar("EditorTabs")) {
             for (int i = 0; i < EditorEngine::editors.size(); i++) {
-                std::string tabTitle = "File " + std::to_string(i + 1);
+                std::string tabTitle = EditorEngine::editors[i]->fileName + "##" + std::to_string(i + 1);
                 bool openTab = true;
                 if (ImGui::BeginTabItem(tabTitle.c_str(), &openTab)) {
 
                     renderEditor(EditorEngine::editors[i]);
+                    EditorEngine::activeEditor = i;
 
                     ImGui::EndTabItem();
                 }
@@ -71,6 +72,9 @@ void EditorUI::render() {
                 if (!openTab) {
                     EditorEngine::editors[i]->destroy();
                     EditorEngine::editors.erase(EditorEngine::editors.begin() + i);
+                    i--;
+
+                    if (EditorEngine::editors.empty()) EditorEngine::activeEditor = -1;
                 }
             }
 

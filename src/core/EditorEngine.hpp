@@ -7,7 +7,7 @@
 #include "ui/EditorUI.hpp"
 
 struct Editor {
-    Editor(unsigned int _bufferSize, std::string filePath, std::string fileName);
+    Editor(unsigned int bufferSize, std::string filePath, std::string fileName);
     char* inputTextBuffer;
     unsigned int bufferSize;
     int previousTextLen;
@@ -20,6 +20,7 @@ struct Editor {
 class EditorEngine {
 public:
     static std::vector<Editor*> editors;
+    static int activeEditor;
     static bool initialize();
     static bool spawnEditor(const EventPayload& payload);
     static std::string getFileContents(std::string filename);
