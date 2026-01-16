@@ -63,10 +63,10 @@ enum class MouseButton : uint16_t {
 Key translateGlfwKey(int glfwKey);
 MouseButton translateGlfwMouseButton(int glfwButton);
 
-constexpr size_t keyIndex(Key key) {
-    return static_cast<size_t>(key);
+constexpr std::size_t keyIndex(Key key) {
+    return static_cast<std::size_t>(key);
 }
 
-constexpr size_t buttonIndex(MouseButton button) {
-    return static_cast<size_t>(button);
+constexpr std::size_t buttonIndex(MouseButton button) {
+    return static_cast<std::size_t>(button);
 }
