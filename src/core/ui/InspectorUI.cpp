@@ -3,17 +3,22 @@
 #include <filesystem>
 
 #include "core/InspectorEngine.hpp"
+#include "core/ShaderRegistry.hpp"
 #include "core/TextureRegistry.hpp"
 #include "core/UniformRegistry.hpp"
 #include "core/EventDispatcher.hpp"
 #include "core/UniformTypes.hpp"
+#include "core/logging/LogSink.hpp"
+#include "core/logging/Logger.hpp"
 #include "engine/Errorlog.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "object/ObjCache.hpp"
 #include "object/Texture.hpp"
 #include <ostream>
 #include <string>
+#include <unistd.h>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 int InspectorUI::height = 400;
@@ -81,10 +86,13 @@ void InspectorUI::drawObjectsInspector() {
     int imGuiID = 100000;
     drawAddObjectMenu();
     for (auto &[objectName, object] : ObjCache::objMap) {
+        // When we initialize new objects, their selection values start at 0.
+        // We need to set them manually in their draw___Selector functions
         if (!objectShaderSelectors.contains(objectName)) {
             objectShaderSelectors[objectName] = ObjectShaderSelector{ 
                 .objectName = objectName,
                 .selection = 0,
+                .newSelector = true,
             };    
         }
         if (!objectTextureSelectors.contains(objectName)) {
@@ -92,6 +100,8 @@ void InspectorUI::drawObjectsInspector() {
                 .objectName = objectName,
                 .uniformName = "baseTex",
                 .textureSelection = 0,
+                .unitSelection = 0,
+                .newSelector = true,
             };    
         }
         ObjectShaderSelector& shaderSelector = objectShaderSelectors[objectName];
@@ -330,13 +340,21 @@ bool InspectorUI::drawTextInput(std::string *value, const char *label) {
 }
 
 bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
+    Object& object = *ObjCache::objMap[selector.objectName];
     bool changed = false;
+
     std::vector<const char *> shaderChoices;
     shaderChoices.reserve(ShaderRegistry::getNumberOfPrograms());
-
     auto& shaders = ShaderRegistry::getPrograms();
+    int i = 0;
     for (auto &[name, shader] : shaders) {
         shaderChoices.push_back(name.c_str());
+
+        if (selector.newSelector && shader->ID == object.getProgramID()) {
+            selector.selection = i;
+            selector.newSelector = false;
+        }
+        i++;
     }
     // display combo box
     if (ImGui::Combo("Shader", &selector.selection, shaderChoices.data(),
@@ -356,11 +374,35 @@ bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
 bool InspectorUI::drawTextureSelector(ObjectTextureSelector& selector) {
     bool changed = false;
     std::vector<const char *> textureChoices;
-    std::vector<const Texture*> textures = TextureRegistry::readTextures();
-    textureChoices.reserve(textures.size());
-    for (const Texture* tex : textures) {
+    const std::vector<const Texture*>& registryTextures = TextureRegistry::readTextures();
+    textureChoices.reserve(registryTextures.size());
+    for (const Texture* tex : registryTextures) {
         textureChoices.push_back(tex->path.c_str());
     }
+
+    // need to set the initial state of the selector if it's new
+    if (selector.newSelector) {
+        Logger::addLog(LogLevel::INFO, "drawTextureSelector", "new selector");
+        std::cout << "hi" << std::endl;
+        Object& object = *ObjCache::objMap[selector.objectName];
+        std::unordered_set<GLuint> objectTextureIDs;
+        for (const TextureBind& bind : object.renderable.mat.textures) {
+            Logger::addLog(LogLevel::INFO, "drawTextureSelector", ("objTexID: " + std::to_string(bind.texture->ID)).c_str());
+            objectTextureIDs.emplace(bind.texture->ID);
+        }
+        int i = 0;
+        for (const Texture* const tex : registryTextures) {
+            Logger::addLog(LogLevel::INFO, "drawTextureSelector", ("texID" + std::to_string(i) + ": " + std::to_string(tex->ID)).c_str());
+            if (objectTextureIDs.contains(tex->ID)) {
+                Logger::addLog(LogLevel::INFO, "drawTextureSelector", ("Found texID: " + std::to_string(tex->ID)).c_str());
+                selector.textureSelection = i; 
+                break;
+            }
+            i++;
+        }
+        selector.newSelector = false;
+    }
+
     if (ImGui::Combo("Texture", &selector.textureSelection, textureChoices.data(),
                         (int)textureChoices.size())) {
         changed = true;
@@ -378,7 +420,7 @@ bool InspectorUI::drawTextureSelector(ObjectTextureSelector& selector) {
     if (!changed) return false;
     
     // add check in case we get more types
-    const Texture* selectedTexture = textures.at(selector.textureSelection);
+    const Texture* selectedTexture = registryTextures.at(selector.textureSelection);
     ObjCache::setTexture(selector.objectName, *selectedTexture, selector.unitSelection, selector.uniformName); 
 
     return true;

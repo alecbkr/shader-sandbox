@@ -12,6 +12,7 @@
 struct ObjectShaderSelector {
     std::string objectName;
     int selection;
+    bool newSelector;
 };
 
 struct ObjectTextureSelector {
@@ -19,6 +20,7 @@ struct ObjectTextureSelector {
     std::string uniformName;
     int textureSelection;
     int unitSelection;
+    bool newSelector;
 };
 
 class InspectorUI {
