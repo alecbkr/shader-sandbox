@@ -1,7 +1,6 @@
 #include "EditorEngine.hpp"
 
 #include <fstream>
-#include <iostream>
 
 std::vector<Editor*> EditorEngine::editors{};
 
@@ -35,7 +34,7 @@ void EditorEngine::spawnEditor(unsigned int bufferSize) {
     editors.push_back(editor);
 }
 
-std::string EditorEngine::getFileContents(const char *filename) {
+std::string EditorEngine::getFileContents(const char* filename) {
     std::ifstream in(filename, std::ios::binary);
     if (in) {
         std::string contents;

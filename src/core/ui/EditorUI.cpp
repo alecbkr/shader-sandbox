@@ -1,5 +1,7 @@
 #include "EditorUI.hpp"
 
+#include <iostream>
+
 #include "core/EditorEngine.hpp"
 #include <string>
 

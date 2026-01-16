@@ -1,7 +1,11 @@
 #include "core/ui/InspectorUI.hpp"
+
+#include <filesystem>
+
 #include "core/InspectorEngine.hpp"
 #include "core/TextureRegistry.hpp"
 #include "core/UniformRegistry.hpp"
+#include "core/EventDispatcher.hpp"
 #include "core/UniformTypes.hpp"
 #include "engine/Errorlog.hpp"
 #include "engine/ShaderProgram.hpp"
@@ -38,7 +42,7 @@ void InspectorUI::render() {
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Shader Files")) {
-            drawShaderFileInspector(); // <- for lukas
+            drawShaderFileInspector();
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
@@ -124,6 +128,82 @@ void InspectorUI::drawObjectsInspector() {
 }
 
 void InspectorUI::drawAddObjectMenu() {
+    static const std::vector<float> gridPlane_verts {
+        -1.0f, 0.0f, -1.0f,  0.0f, 0.0f,
+        -1.0f, 0.0f, 1.0f,  1.0f, 0.0f,
+        1.0f, 0.0f, 1.0f,  1.0f, 1.0f,
+        1.0f, 0.0f, -1.0f, 0.0f, 1.0f
+    };
+
+    static const std::vector<int> gridPlane_indices {
+        0, 1, 2, 
+        0, 2, 3
+    };
+
+    // PYRAMID
+    static const std::vector<float> pyramidVerts = {
+        // Base
+        -0.5f, 0.0f, -0.5f,  0.0f, 0.0f, // 0: bottom-left
+        0.5f, 0.0f, -0.5f,  1.0f, 0.0f, // 1: bottom-right
+        0.5f, 0.0f,  0.5f,  1.0f, 1.0f, // 2: top-right
+        -0.5f, 0.0f,  0.5f,  0.0f, 1.0f, // 3: top-left
+
+        // Apex
+        0.0f, 1.0f, 0.0f,   0.5f, 0.5f  // 4: tip
+    };
+
+     
+    static const std::vector<int> pyramidIndices = {
+        0, 1, 2,  0, 2, 3, // base
+        0, 1, 4,            // side 1
+        1, 2, 4,            // side 2
+        2, 3, 4,            // side 3
+        3, 0, 4             // side 4
+    };
+
+    // CUBE
+    static const std::vector<float> cubeVerts = {
+        // positions       // UVs
+        -0.5f,-0.5f,-0.5f, 0.0f,0.0f,
+        0.5f,-0.5f,-0.5f, 1.0f,0.0f,
+        0.5f, 0.5f,-0.5f, 1.0f,1.0f,
+        -0.5f, 0.5f,-0.5f, 0.0f,1.0f,
+
+        -0.5f,-0.5f, 0.5f, 0.0f,0.0f,
+        0.5f,-0.5f, 0.5f, 1.0f,0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f,1.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f,1.0f
+    };
+
+    // Indices for cube (two triangles per face)
+    static const std::vector<int> cubeIndices = {
+        0,1,2, 0,2,3, // back
+        4,5,6, 4,6,7, // front
+        3,2,6, 3,6,7, // top
+        0,1,5, 0,5,4, // bottom
+        1,2,6, 1,6,5, // right
+        0,3,7, 0,7,4  // left
+    };
+    std::unordered_map<std::string, ShaderProgram*>& programs = ShaderRegistry::getPrograms();
+    if (programs.empty()) return;
+
+    // just grab a random shader program it really does not matter
+    ShaderProgram& defaultProgram = *programs.begin()->second;
+
+    int objectCount = ObjCache::getNumberOfObjects();
+
+    if (ImGui::Button("Add Plane")) {
+        ObjCache::createObj(("Plane_" + std::to_string(objectCount)).c_str(), gridPlane_verts, gridPlane_indices, false, true, defaultProgram);
+        InspectorEngine::refreshUniforms();
+    }
+    if (ImGui::Button("Add Pyramid")) {
+        ObjCache::createObj(("Pyramid_" + std::to_string(objectCount)).c_str(), pyramidVerts, pyramidIndices, false, true, defaultProgram);
+        InspectorEngine::refreshUniforms();
+    }
+    if (ImGui::Button("Add Cube")) {
+        ObjCache::createObj(("Cube_" + std::to_string(objectCount)).c_str(), cubeVerts, cubeIndices, false, true, defaultProgram);
+        InspectorEngine::refreshUniforms();
+    }
 }
 
 void InspectorUI::drawAssetsInspector() {
@@ -134,7 +214,25 @@ void InspectorUI::drawAssetsInspector() {
 
 
 void InspectorUI::drawShaderFileInspector() {
-    // Lucas can fill this in
+    std::string path = "../shaders/";
+
+    ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
+
+    for (const auto & dirEntry : std::filesystem::directory_iterator(path)) {
+        if (ImGui::Selectable(dirEntry.path().filename().string().c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
+            if (ImGui::IsMouseDoubleClicked(0)) {
+                EventDispatcher::TriggerEvent(
+                    Event{
+                        OpenFile,
+                        false,
+                        OpenFilePayload{ dirEntry.path().string(), dirEntry.path().filename().string() }
+                    }
+                );
+            }
+        }
+    }
+
+    ImGui::PopStyleVar();
 }
 
 /*
@@ -251,6 +349,7 @@ bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
     // add check in case we get more types
     ShaderProgram& selectedShader = *ShaderRegistry::getProgram(shaderChoices[selector.selection]);
     ObjCache::setProgram(selector.objectName, selectedShader); 
+    InspectorEngine::refreshUniforms();
     return true;
 }
 

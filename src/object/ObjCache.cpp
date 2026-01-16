@@ -166,6 +166,10 @@ Object* ObjCache::getObject(const std::string name) {
     return objMap[name];
 }
 
+int ObjCache::getNumberOfObjects() {
+    return objMap.size();
+}
+
 
 void ObjCache::reorderByProgram() {
     std::sort(objCache.begin(), objCache.end(),

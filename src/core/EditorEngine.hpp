@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 
+#include "EventTypes.hpp"
 #include "imgui.h"
 #include "ui/EditorUI.hpp"
 
