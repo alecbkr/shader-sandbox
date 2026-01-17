@@ -5,10 +5,11 @@
 
 class MenuUI {
 public:
-    MenuUI();
-    void render();
+    static bool initialize();
+    static void render();
 
 private:
-    void drawMenuBar();
-    void drawMenuItem(const MenuItem& item);
+    static bool initialized;
+    static void drawMenuBar();
+    static void drawMenuItem(const MenuItem& item);
 };

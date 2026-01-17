@@ -18,30 +18,27 @@ static const ImVec4 LOG_COLORS[] = {
 
 // Adapted from imgui_demo.cpp
 class ConsoleUI {
-    public: 
-    ConsoleUI(std::shared_ptr<ConsoleSink> consoleSink);    
-    ~ConsoleUI();  
-
-    ConsoleUI(const ConsoleUI&)  = delete; 
-    ConsoleUI& operator = (const ConsoleUI&) = delete; 
-
-    const void render();
+public: 
+    static bool initialize(std::shared_ptr<ConsoleSink> consoleSink);
+    static const void render();
      
-    private: 
-    std::shared_ptr<ConsoleEngine> engine; 
-    std::shared_ptr<ConsoleSink> logSrc; 
+private: 
+    static std::shared_ptr<ConsoleEngine> engine; 
+    static std::shared_ptr<ConsoleSink> logSrc; 
 
     // char inputBuf[256]; 
-    std::vector<std::string> history; 
+    static std::vector<std::string> history; 
     // int historyPos; 
 
-    bool isAutoScroll = false; 
+    static bool isAutoScroll; 
     // bool isFocused = true;      // only take in input when the user is using the widget 
-    size_t lastLogSize = 0; 
+    static size_t lastLogSize; 
+
+    static bool initialized;
     
-    const void drawConsole(); 
-    void readLogs(); 
-    const void drawMenuBar(); 
+    static const void drawConsole(); 
+    static void readLogs(); 
+    static const void drawMenuBar(); 
 
     // const void handleInputHistory(); // User input to go through logs in console 
     const void executeCommand(); 

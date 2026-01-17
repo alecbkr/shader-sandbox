@@ -13,7 +13,7 @@ class ObjCache {
                                  bool hasNorms, bool hasUVs, ShaderProgram& program);
         // static void OC_deleteObj();
         
-        static void setTexture(const std::string name, Texture& tex, int unit, std::string uniformName);
+        static void setTexture(const std::string name, const Texture& tex, int unit, std::string uniformName);
         static void setProgram(const std::string name, ShaderProgram& program);
         static void setName(const std::string name, const std::string newName);
         static void translateObj(const std::string name, glm::vec3 pos);
@@ -23,6 +23,7 @@ class ObjCache {
         static void renderObj(const std::string name, glm::mat4 projection, glm::mat4 view);
         static void renderAll(glm::mat4 projection, glm::mat4 view);
         static void printOrder();
+        static int getNumberOfObjects();
         static std::unordered_map<std::string, Object*> objMap;
 
     private:

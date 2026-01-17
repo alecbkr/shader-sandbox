@@ -68,7 +68,7 @@ void ObjCache::rotateObj(const std::string name, float angle, glm::vec3 axis) {
 }
 
 
-void ObjCache::setTexture(const std::string name, Texture& tex, int unit, std::string uniformName) {
+void ObjCache::setTexture(const std::string name, const Texture& tex, int unit, std::string uniformName) {
     Object* obj = getObject(name);
     if (obj == nullptr) {
         Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Object not found:", name); 
@@ -164,6 +164,10 @@ void ObjCache::printOrder() {
 
 Object* ObjCache::getObject(const std::string name) {
     return objMap[name];
+}
+
+int ObjCache::getNumberOfObjects() {
+    return objMap.size();
 }
 
 

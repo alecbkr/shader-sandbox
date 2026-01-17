@@ -30,6 +30,12 @@ class Camera {
         void ProcessKeyboard(Camera_Movement dir, float deltaTime);
         void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch);
         void ProcessMouseScroll(float yoffset);
+        void MoveForward();
+        void MoveBack();
+        void MoveLeft();
+        void MoveRight();
+        void MoveUp();
+        void MoveDown();
     
     private:
         void updateCameraVectors();

@@ -1,0 +1,422 @@
+[
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\application\\Application.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\application\\Application.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\application\\Application.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\application\\Application.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\ConsoleEngine.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\ConsoleEngine.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\ConsoleEngine.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\ConsoleEngine.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\ConsoleRegister.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\ConsoleRegister.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\ConsoleRegister.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\ConsoleRegister.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\EditorEngine.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\EditorEngine.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\EditorEngine.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\EditorEngine.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\EventDispatcher.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\EventDispatcher.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\EventDispatcher.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\EventDispatcher.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\HotReloader.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\HotReloader.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\HotReloader.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\HotReloader.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\InspectorEngine.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\InspectorEngine.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\InspectorEngine.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\InspectorEngine.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\MenuEngine.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\MenuEngine.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\MenuEngine.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\MenuEngine.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\ShaderRegistry.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\ShaderRegistry.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\ShaderRegistry.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\ShaderRegistry.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\TextureRegistry.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\TextureRegistry.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\TextureRegistry.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\TextureRegistry.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\UniformRegistry.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\UniformRegistry.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\UniformRegistry.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\UniformRegistry.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\input\\ActionRegistry.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\input\\ActionRegistry.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\input\\ActionRegistry.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\input\\ActionRegistry.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\input\\ContextManager.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\input\\ContextManager.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\input\\ContextManager.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\input\\ContextManager.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\input\\InputState.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\input\\InputState.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\input\\InputState.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\input\\InputState.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\input\\Keybinds.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\input\\Keybinds.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\input\\Keybinds.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\input\\Keybinds.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\logging\\ConsoleSink.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\logging\\ConsoleSink.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\logging\\ConsoleSink.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\logging\\ConsoleSink.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\logging\\FileSink.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\logging\\FileSink.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\logging\\FileSink.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\logging\\FileSink.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\logging\\LogSetup.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\logging\\LogSetup.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\logging\\LogSetup.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\logging\\LogSetup.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\logging\\Logger.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\logging\\Logger.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\logging\\Logger.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\logging\\Logger.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\logging\\StdoutSink.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\logging\\StdoutSink.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\logging\\StdoutSink.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\logging\\StdoutSink.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\ui\\ConsoleUI.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\ui\\ConsoleUI.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\ui\\ConsoleUI.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\ui\\ConsoleUI.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\ui\\EditorUI.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\ui\\EditorUI.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\ui\\EditorUI.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\ui\\EditorUI.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\ui\\InspectorUI.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\ui\\InspectorUI.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\ui\\InspectorUI.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\ui\\InspectorUI.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\ui\\MenuUI.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\ui\\MenuUI.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\ui\\MenuUI.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\ui\\MenuUI.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\core\\ui\\ViewportUI.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\ui\\ViewportUI.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\core\\ui\\ViewportUI.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\core\\ui\\ViewportUI.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\engine\\Camera.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\engine\\Camera.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\engine\\Camera.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\engine\\Camera.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\engine\\Errorlog.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\engine\\Errorlog.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\engine\\Errorlog.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\engine\\Errorlog.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\engine\\InputHandler.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\engine\\InputHandler.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\engine\\InputHandler.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\engine\\InputHandler.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\engine\\ShaderProgram.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\engine\\ShaderProgram.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\engine\\ShaderProgram.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\engine\\ShaderProgram.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\engine\\Window.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\engine\\Window.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\engine\\Window.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\engine\\Window.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\main.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\main.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\main.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\main.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\object\\Material.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\object\\Material.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\object\\Material.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\object\\Material.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\object\\Mesh.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\object\\Mesh.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\object\\Mesh.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\object\\Mesh.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\object\\ObjCache.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\object\\ObjCache.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\object\\ObjCache.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\object\\ObjCache.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\object\\Object.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\object\\Object.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\object\\Object.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\object\\Object.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\object\\Texture.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\object\\Texture.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\object\\Texture.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\object\\Texture.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\platform\\Platform.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\platform\\Platform.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\platform\\Platform.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\platform\\Platform.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\platform\\components\\Keys.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\platform\\components\\Keys.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\platform\\components\\Keys.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\platform\\components\\Keys.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\platform\\components\\Window.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\platform\\components\\Window.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\platform\\components\\Window.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\platform\\components\\Window.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\presets\\PresetAssets.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\presets\\PresetAssets.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\presets\\PresetAssets.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\presets\\PresetAssets.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\src\\ui\\UIContext.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\ui\\UIContext.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\src\\ui\\UIContext.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\src\\ui\\UIContext.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\lib\\imgui\\imgui.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\imgui\\imgui.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\imgui\\imgui.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\lib\\imgui\\imgui.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\lib\\imgui\\imgui_draw.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\imgui\\imgui_draw.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\imgui\\imgui_draw.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\lib\\imgui\\imgui_draw.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\lib\\imgui\\imgui_tables.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\imgui\\imgui_tables.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\imgui\\imgui_tables.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\lib\\imgui\\imgui_tables.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\lib\\imgui\\imgui_widgets.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\imgui\\imgui_widgets.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\imgui\\imgui_widgets.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\lib\\imgui\\imgui_widgets.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\lib\\imgui\\backends\\imgui_impl_glfw.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\imgui\\backends\\imgui_impl_glfw.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\imgui\\backends\\imgui_impl_glfw.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\lib\\imgui\\backends\\imgui_impl_glfw.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\lib\\imgui\\backends\\imgui_impl_opengl3.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\imgui\\backends\\imgui_impl_opengl3.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\imgui\\backends\\imgui_impl_opengl3.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\lib\\imgui\\backends\\imgui_impl_opengl3.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\c++.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu++20 -Wall -o CMakeFiles\\sandbox.dir\\lib\\stb\\stb_image.cpp.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\stb\\stb_image.cpp\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\stb\\stb_image.cpp",
+  "output": "CMakeFiles\\sandbox.dir\\lib\\stb\\stb_image.cpp.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/imgui/backends\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glm\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/glad\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/imgui\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/include/stb\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -std=gnu17 -Wall -o CMakeFiles\\sandbox.dir\\lib\\glad\\glad.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glad\\glad.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glad\\glad.c",
+  "output": "CMakeFiles\\sandbox.dir\\lib\\glad\\glad.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\context.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\context.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\context.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\context.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\init.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\init.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\init.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\init.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\input.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\input.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\input.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\input.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\monitor.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\monitor.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\monitor.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\monitor.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\platform.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\platform.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\platform.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\platform.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\vulkan.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\vulkan.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\vulkan.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\vulkan.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\window.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\window.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\window.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\window.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\egl_context.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\egl_context.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\egl_context.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\egl_context.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\osmesa_context.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\osmesa_context.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\osmesa_context.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\osmesa_context.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\null_init.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\null_init.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\null_init.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\null_init.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\null_monitor.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\null_monitor.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\null_monitor.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\null_monitor.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\null_window.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\null_window.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\null_window.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\null_window.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\null_joystick.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\null_joystick.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\null_joystick.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\null_joystick.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\win32_module.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\win32_module.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\win32_module.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\win32_module.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\win32_time.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\win32_time.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\win32_time.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\win32_time.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\win32_thread.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\win32_thread.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\win32_thread.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\win32_thread.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\win32_init.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\win32_init.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\win32_init.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\win32_init.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\win32_joystick.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\win32_joystick.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\win32_joystick.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\win32_joystick.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\win32_monitor.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\win32_monitor.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\win32_monitor.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\win32_monitor.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\win32_window.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\win32_window.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\win32_window.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\win32_window.c.obj"
+},
+{
+  "directory": "C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build",
+  "command": "C:\\mingw-w64\\mingw64\\bin\\gcc.exe -DUNICODE -DWINVER=0x0501 -D_GLFW_WIN32 -D_UNICODE -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/include\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/lib/glfw/src\" -I\"C:/school/Fall 2025/cop4934 - Senior Design 1/shader-sandbox/build/lib/glfw/src\" -std=c99 -Wall -o lib\\glfw\\src\\CMakeFiles\\glfw.dir\\wgl_context.c.obj -c \"C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\wgl_context.c\"",
+  "file": "C:\\school\\Fall 2025\\cop4934 - Senior Design 1\\shader-sandbox\\lib\\glfw\\src\\wgl_context.c",
+  "output": "lib\\glfw\\src\\CMakeFiles\\glfw.dir\\wgl_context.c.obj"
+}
+]

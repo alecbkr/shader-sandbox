@@ -5,9 +5,9 @@
 //#include "Inspector.hpp"
 #include "core/ui/ConsoleUI.hpp"
 
-#include "imgui/imgui.h"
-#include "imgui/imgui_impl_glfw.h"
-#include "imgui/imgui_impl_opengl3.h"
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imgui/imgui_impl_opengl3.h>
 
 class UIContext {
 public:

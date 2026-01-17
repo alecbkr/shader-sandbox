@@ -9,6 +9,7 @@
 
 class InspectorEngine {
 public:
+    static bool initialize();
     static void refreshUniforms();
     static void applyAllUniformsForObject(const std::string& objectName);
     static void setUniform(const std::string& objectName, const std::string& uniformName, UniformValue value);

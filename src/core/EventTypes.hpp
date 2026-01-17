@@ -1,6 +1,7 @@
 #pragma once
 
 #include <variant>
+#include <string>
 
 enum EventType {
     // Fill out event types here
@@ -8,16 +9,20 @@ enum EventType {
     WindowResize,
     KeyPressed,
     SaveActiveShaderFile,
+    SaveProject,
     Quit,
+    OpenFile,
 };
 
 struct WindowResizePayload { int w, h; };
 struct KeyPressedPayload { int key; };
+struct OpenFilePayload { std::string filePath; std::string fileName; };
 
 using EventPayload = std::variant<
     std::monostate,
     WindowResizePayload,
-    KeyPressedPayload
+    KeyPressedPayload,
+    OpenFilePayload
 >;
 
 struct Event {
@@ -37,3 +42,7 @@ inline Event MakeKeyPressedEvent(int key) {
 inline Event MakeQuitAppEvent() {
     return { Quit, false, std::monostate{} };
 };
+
+inline Event OpenFileEvent (std::string filePath, std::string fileName) {
+    return { OpenFile, false, OpenFilePayload{filePath, fileName} };
+}

@@ -6,7 +6,6 @@ with the prefix APPTIME.
 
 */
 
-
 #ifndef APPTIMER_HPP
 #define APPTIMER_HPP
 
@@ -15,55 +14,39 @@ with the prefix APPTIME.
 #define APPTIME AppTimer::getInstance()
 
 class AppTimer {
-    public:
+public:
 
-        static AppTimer &getInstance() {
-            static AppTimer instance;
-            return instance;
+    static bool initialize();
+
+    static void update() {
+        lastFrameTime = currTime;
+        currTime = glfwGetTime();
+        deltaTime = currTime - lastFrameTime;
+    }
+
+    static float getDt() {
+        return deltaTime;
+    }
+
+    static float getFPS() {
+        elapsedTime += deltaTime;
+        frameCount++;
+
+        if (elapsedTime >= 1.0f) {
+            fps = frameCount / elapsedTime;
+            elapsedTime = 0;
+            frameCount = 0;
         }
+        return fps;
+    }
 
-        void update() {
-            lastFrameTime = currTime;
-            currTime = glfwGetTime();
-            deltaTime = currTime - lastFrameTime;
-        }
-
-        float getDt() {
-            return deltaTime;
-        }
-        
-        float getFPS() {
-            elapsedTime += deltaTime;
-            frameCount++;
-
-            if (elapsedTime >= 1.0f) {
-                fps = frameCount / elapsedTime;
-                elapsedTime = 0;
-                frameCount = 0;
-            }
-            return fps;
-        }
-
-
-        private:
-            
-            double currTime;
-            double lastFrameTime;
-            double deltaTime;
-            double elapsedTime;
-            int frameCount;
-            float fps;
-            
-            AppTimer() {
-                currTime = 0;
-                lastFrameTime = 0;
-                deltaTime = 0;
-
-                elapsedTime = 0;
-                frameCount = 0;
-                fps = 0;
-            }
-
+private:
+    static double currTime;
+    static double lastFrameTime;
+    static double deltaTime;
+    static double elapsedTime;
+    static int frameCount;
+    static float fps;
 };
 
 #endif
