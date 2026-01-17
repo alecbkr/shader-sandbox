@@ -6,7 +6,8 @@
 // TODO: implement some way of cache clearing to remove old log files (on startup or after a few days)
 class FileSink : public LogSink {
     public: 
-    explicit FileSink(const std::string &log_dir);
+    static constexpr std::string_view DEFAULT_LOG_PATH = "./src/core/logging/logs";  // might want to change this path later 
+    FileSink(const std::string &log_dir = DEFAULT_LOG_PATH.data()); 
     ~FileSink(); 
     void addLog(const LogEntry& entry) override; 
     private:    

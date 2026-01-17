@@ -10,10 +10,12 @@ struct LogFileInfo {
     std::filesystem::file_time_type lastWritten; 
 }; 
 
-FileSink::FileSink(const std::string &log_dir) : log_dir(log_dir), logIdx(findNextLogIndex()) {
+FileSink::FileSink(const std::string &log_dir) : LogSink() {
+    logIdx = findNextLogIndex(); 
+    
     if(!std::filesystem::is_directory(log_dir)) {
         if(!std::filesystem::create_directories(log_dir)) {
-            Logger::addLog(LogLevel::CRITICAL, "createDir", "Could not create directory: ", log_dir); 
+            // Logger::addLog(LogLevel::CRITICAL, "createDir", "Could not create directory: ", log_dir); 
         }
     }
     rotateLogFile(); 
@@ -80,7 +82,7 @@ int FileSink::findNextLogIndex() {
     int maxIdx = -1; 
 
     if(!std::filesystem::exists(log_dir)) {
-        Logger::addLog(LogLevel::CRITICAL, "createDir", "Could not find directory: ", log_dir.string()); 
+        // Logger::addLog(LogLevel::CRITICAL, "createDir", "Could not find directory: ", log_dir.string()); 
         return -1; 
     }; 
     
@@ -108,7 +110,7 @@ int FileSink::findNextLogIndex() {
 // Clears the oldest log in 'logs/' to make room for new logs 
 void FileSink::clearOldLog(){
     if(!std::filesystem::exists(log_dir)) {
-        Logger::addLog(LogLevel::CRITICAL, "createDir", "Could not find directory: ", log_dir.string()); 
+        // Logger::addLog(LogLevel::CRITICAL, "createDir", "Could not find directory: ", log_dir.string()); 
         return; 
     }
 
