@@ -19,5 +19,4 @@ class ConsoleEngine {
 
     private:
     std::unordered_map<std::string, std::shared_ptr<Command>> commandRegistry; 
-    std::vector<std::string> tokenize(const std::string& input); 
 }; 
