@@ -15,7 +15,6 @@ enum class LoggerInitialization {
 class Logger {
 public: 
     Logger() = delete; 
-
     static bool initialize(LoggerInitialization initSetting);
     static void addLog(LogLevel level, std::string src, std::string msg, std::string additional = "", int lineNum = -1); 
     static void addSink(std::shared_ptr<LogSink> sink); 
@@ -23,6 +22,7 @@ public:
     static std::shared_ptr<ConsoleSink> getConsoleSinkPtr();
     
 private:
+    static LogLevel abortWhen; 
     static std::vector<std::shared_ptr<LogSink>> sinks;
     static std::shared_ptr<ConsoleSink> consoleSinkPtr;
     static bool initialized;

@@ -6,6 +6,7 @@ std::shared_ptr<ConsoleSink> Logger::consoleSinkPtr = nullptr;
 
 std::vector<std::shared_ptr<LogSink>> Logger::sinks;
 bool Logger::initialized = false;
+LogLevel Logger::abortWhen = LogLevel::CRITICAL; 
 
 bool Logger::initialize(LoggerInitialization initSetting){
     Logger::consoleSinkPtr = std::make_shared<ConsoleSink>();
@@ -63,7 +64,7 @@ void Logger::addLog(LogLevel level, std::string src, std::string msg, std::strin
         sink->addLog(entry); 
     }
 
-    if(level == LogLevel::CRITICAL) {
+    if(level == abortWhen){
         exit(1); 
     }
 }
