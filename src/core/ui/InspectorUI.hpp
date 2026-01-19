@@ -43,7 +43,8 @@ class InspectorUI {
     static UniformType newUniformType;
     static std::unordered_map<std::string, ObjectShaderSelector> objectShaderSelectors;
     static std::unordered_map<std::string, ObjectTextureSelector> objectTextureSelectors;
-    static ShaderLinkMenu shaderLinkMenu;
+    static std::unordered_map<std::string, ShaderLinkMenu> shaderPrograms;
+    static ShaderLinkMenu linkNewShaderMenu;
 
     static void drawUniformInspector();
     static void drawObjectsInspector();

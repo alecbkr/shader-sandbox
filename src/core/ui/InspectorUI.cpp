@@ -29,7 +29,8 @@ std::string InspectorUI::newUniformShaderName{};
 UniformType InspectorUI::newUniformType = UniformType::NoType;
 std::unordered_map<std::string, ObjectShaderSelector> InspectorUI::objectShaderSelectors{};
 std::unordered_map<std::string, ObjectTextureSelector> InspectorUI::objectTextureSelectors{};
-ShaderLinkMenu InspectorUI::shaderLinkMenu = ShaderLinkMenu{
+std::unordered_map<std::string, ShaderLinkMenu> InspectorUI::shaderPrograms{};
+ShaderLinkMenu InspectorUI::linkNewShaderMenu = ShaderLinkMenu{
     .shaderName = "",
     .vertSelection = 0,
     .geometrySelection = 0,
@@ -235,7 +236,7 @@ void InspectorUI::drawShaderFileInspector() {
 
     ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
 
-    drawShaderLinkMenu(shaderLinkMenu);
+    drawShaderLinkMenu(linkNewShaderMenu);
     for (const auto & dirEntry : std::filesystem::directory_iterator(path)) {
         if (ImGui::Selectable(dirEntry.path().filename().string().c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
             if (ImGui::IsMouseDoubleClicked(0)) {
@@ -345,7 +346,6 @@ bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
 
     if (!changed) return false;
     
-    // add check in case we get more types
     ShaderProgram& selectedShader = *ShaderRegistry::getProgram(shaderChoices[selector.selection]);
     ObjCache::setProgram(selector.objectName, selectedShader); 
     InspectorEngine::refreshUniforms();
@@ -354,7 +354,7 @@ bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
 
 bool InspectorUI::drawTextureSelector(ObjectTextureSelector& selector) {
     bool changed = false;
-    std::vector<const char *> textureChoices{""};
+    std::vector<const char *> textureChoices;
     const std::vector<const Texture*>& registryTextures = TextureRegistry::readTextures();
     textureChoices.reserve(registryTextures.size());
     for (const Texture* tex : registryTextures) {
