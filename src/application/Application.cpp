@@ -173,6 +173,7 @@ void Application::renderUI() {
     EditorUI::render();
     ConsoleUI::render();
     ViewportUI::render();
+    MenuUI::render();
 
     // Post Render
     ImGui::Render();

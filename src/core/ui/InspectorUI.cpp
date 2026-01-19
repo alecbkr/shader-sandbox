@@ -238,13 +238,15 @@ void InspectorUI::drawShaderFileInspector() {
 
     drawShaderLinkMenu(linkNewShaderMenu);
     for (const auto & dirEntry : std::filesystem::directory_iterator(path)) {
-        if (ImGui::Selectable(dirEntry.path().filename().string().c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
+        std::string filePath = dirEntry.path().string();
+        std::string fileName = dirEntry.path().filename().string();
+        if (ImGui::Selectable(fileName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
             if (ImGui::IsMouseDoubleClicked(0)) {
                 EventDispatcher::TriggerEvent(
                     Event{
                         OpenFile,
                         false,
-                        OpenFilePayload{ dirEntry.path().string(), dirEntry.path().filename().string() }
+                        OpenFilePayload{ filePath, fileName }
                     }
                 );
             }
