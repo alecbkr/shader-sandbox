@@ -2,7 +2,6 @@
 #include <iostream>
 #include <chrono>
 #include <format>
-#include "core/logging/Logger.hpp"
 
 struct LogFileInfo {
     std::filesystem::path path; 
@@ -10,12 +9,10 @@ struct LogFileInfo {
     std::filesystem::file_time_type lastWritten; 
 }; 
 
-FileSink::FileSink(const std::string &log_dir) : LogSink() {
-    logIdx = findNextLogIndex(); 
-    
+FileSink::FileSink(const std::filesystem::path &log_dir) : log_dir(log_dir), logIdx(findNextLogIndex()) {
     if(!std::filesystem::is_directory(log_dir)) {
         if(!std::filesystem::create_directories(log_dir)) {
-            // Logger::addLog(LogLevel::CRITICAL, "createDir", "Could not create directory: ", log_dir); 
+            std::cerr << "Could not create directory for logger" << log_dir << std::endl; 
         }
     }
     rotateLogFile(); 
@@ -50,8 +47,7 @@ void FileSink::addLog(const LogEntry& entry) {
     auto now = std::chrono::system_clock::now(); 
     std::string timestamp = std::format("{:%Y-%m-%d %H:%M:%SZ}", now); 
 
-    // std::string newLog = '[' +  timestamp + "] " + "[" + alert.str() + entry.src + "] " + entry.msg + entry.additional + '\n';   
-   std::string newLog = std::format("[{}] [{}{}] {}{}\n", 
+    std::string newLog = std::format("[{}] [{}{}] {}{}\n", 
         timestamp, 
         alert.str(), 
         entry.src, 
@@ -59,7 +55,7 @@ void FileSink::addLog(const LogEntry& entry) {
         entry.additional
     );
 
-    activeLogFile << newLog << std::endl; 
+    activeLogFile << newLog << std::flush;      
 }
 
 void FileSink::rotateLogFile(){
@@ -82,7 +78,7 @@ int FileSink::findNextLogIndex() {
     int maxIdx = -1; 
 
     if(!std::filesystem::exists(log_dir)) {
-        // Logger::addLog(LogLevel::CRITICAL, "createDir", "Could not find directory: ", log_dir.string()); 
+        std::cout << "Could not find directory" << std::endl; 
         return -1; 
     }; 
     
@@ -110,7 +106,7 @@ int FileSink::findNextLogIndex() {
 // Clears the oldest log in 'logs/' to make room for new logs 
 void FileSink::clearOldLog(){
     if(!std::filesystem::exists(log_dir)) {
-        // Logger::addLog(LogLevel::CRITICAL, "createDir", "Could not find directory: ", log_dir.string()); 
+        std::cout << "Could not find directory" << log_dir << std::endl;  
         return; 
     }
 
@@ -131,7 +127,6 @@ void FileSink::clearOldLog(){
     }
 
     if(totalLogSize < MAX_LOGS_SIZE) {
-        Logger::addLog(LogLevel::INFO, "clearOldLog", "total log size is not large enough to clear");
         return;  
     }
 
@@ -143,9 +138,7 @@ void FileSink::clearOldLog(){
             std::filesystem::remove(log.path, ec);
             totalLogSize -= log.size; 
             std::cout << "cleared log file" << std::endl; 
-            // Logger::addLog(LogLevel::INFO, "clearOldLog", "cleared log file: " + log.path.string()); 
         } catch(...) {
-            // Logger::addLog(LogLevel::ERROR, "clearOldLog", "Failed to delete old log file" + log.path.string()); 
             std::cerr << "Could not clear log file" << std::endl; 
         }
     }
