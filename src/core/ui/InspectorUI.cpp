@@ -236,7 +236,22 @@ void InspectorUI::drawShaderFileInspector() {
 
     ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
 
+    ImGui::Text("--------------");
+    ImGui::Text("Shader Programs");
+    ImGui::Text("--------------");
     drawShaderLinkMenu(linkNewShaderMenu);
+    for (const auto & [shaderName, shaderProgram] : ShaderRegistry::getPrograms()) {
+        if (ImGui::TreeNode(shaderName.c_str())) {
+            ImGui::Text("vert: %s", shaderProgram->vertPath.c_str());
+            ImGui::Text("frag %s", shaderProgram->fragPath.c_str());
+            ImGui::TreePop();
+        }
+    }
+    ImGui::Text("");
+
+    ImGui::Text("--------------");
+    ImGui::Text("Shader Files");
+    ImGui::Text("--------------");
     for (const auto & dirEntry : std::filesystem::directory_iterator(path)) {
         std::string filePath = dirEntry.path().string();
         std::string fileName = dirEntry.path().filename().string();
