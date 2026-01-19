@@ -12,6 +12,7 @@ enum EventType {
     SaveProject,
     Quit,
     OpenFile,
+    NewFile,
 };
 
 struct WindowResizePayload { int w, h; };
@@ -43,6 +44,10 @@ inline Event MakeQuitAppEvent() {
     return { Quit, false, std::monostate{} };
 };
 
-inline Event OpenFileEvent (std::string filePath, std::string fileName) {
+inline Event OpenFileEvent(std::string filePath, std::string fileName) {
     return { OpenFile, false, OpenFilePayload{filePath, fileName} };
+}
+
+inline Event NewFileEvent() {
+    return {NewFile, false, std::monostate{} };
 }

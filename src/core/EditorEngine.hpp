@@ -22,10 +22,11 @@ public:
     static std::vector<Editor*> editors;
     static int activeEditor;
     static bool initialize();
-    static bool spawnEditor(const EventPayload& payload);
     static std::string getFileContents(std::string filename);
+    static bool createFile(const std::string& filePath);
     static int EditorInputCallback(ImGuiInputTextCallbackData* data);
 private:
+    static bool spawnEditor(const EventPayload& payload);
     static void matchBrace(ImGuiInputTextCallbackData* data, Editor* editor);
     static void updateLineCount(ImGuiInputTextCallbackData* data, Editor* editor);
     static void updatePropertiesDueToMassDelete(ImGuiInputTextCallbackData* data, Editor* editor);

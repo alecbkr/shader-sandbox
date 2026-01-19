@@ -9,11 +9,12 @@ std::vector<Editor*> EditorEngine::editors{};
 int EditorEngine::activeEditor = -1;
 
 Editor::Editor(unsigned int bufferSize, std::string filePath, std::string fileName) {
+    this->bufferSize = bufferSize;
     this->inputTextBuffer = new char[bufferSize];
     this->filePath = filePath;
     this->fileName = fileName;
+
     strcpy(this->inputTextBuffer, EditorEngine::getFileContents(filePath).c_str());
-    this->bufferSize = bufferSize;
 
     this->lineCount = 1;
 
@@ -33,23 +34,25 @@ void Editor::destroy() {
 
 bool EditorEngine::initialize() {
     EventDispatcher::Subscribe(EventType::OpenFile, spawnEditor);
+    EventDispatcher::Subscribe(EventType::NewFile, spawnEditor);
     return true;
 }
 
 bool EditorEngine::spawnEditor(const EventPayload& payload) {
     if (const auto* data = std::get_if<OpenFilePayload>(&payload)) {
         if (!data->filePath.empty()) {
-            Editor *editor = new Editor(1024, data->filePath, data->fileName);
-            editors.push_back(editor);
+            editors.push_back(new Editor(2056, data->filePath, data->fileName));
         } else {
-            Editor *editor = new Editor(1024, "../shaders/texture.frag", "texture.frag");
-            editors.push_back(editor);
+            editors.push_back(new Editor(2056, "../shaders/texture.frag", "texture.frag"));
         }
+    } else if (std::get_if<std::monostate>(&payload)) {
+        editors.push_back(new Editor(2056, "", ""));
     } else {
         Logger::addLog(LogLevel::ERROR, "spawnEditor", "Invalid Payload Type");
+        return false;
     }
 
-    return false;
+    return true;
 }
 
 std::string EditorEngine::getFileContents(std::string filename) {
@@ -64,6 +67,25 @@ std::string EditorEngine::getFileContents(std::string filename) {
         return(contents);
     }
     return "";
+}
+
+bool EditorEngine::createFile(const std::string& filePath) {
+    if (!std::filesystem::exists("../shaders/")) {
+        Logger::addLog(LogLevel::ERROR, "EditorEngine::createFile", "Shader directory does not exist.", "../shaders/");
+        return false;
+    }
+
+    std::ofstream outfile(filePath);
+    if (outfile.is_open()) {
+        outfile << "#version 330 core\n\n";
+        outfile << "void main() {\n\t\n}";
+        outfile.close();
+
+        return true;
+    }
+
+    Logger::addLog(LogLevel::ERROR, "EditorEngine::createFile", "Invalid File.", filePath);
+    return false;
 }
 
 int EditorEngine::EditorInputCallback(ImGuiInputTextCallbackData* data) {
