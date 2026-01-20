@@ -15,6 +15,7 @@
 #include "core/HotReloader.hpp"
 #include "presets/PresetAssets.hpp"
 #include "core/TextureRegistry.hpp"
+#include "core/FileRegistry.hpp"
 #include "object/ObjCache.hpp"
 #include "core/input/InputState.hpp"
 #include "core/input/ActionRegistry.hpp"
@@ -91,6 +92,10 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
     }
     if (!ShaderRegistry::initialize()) {
         std::cout << "Shader Registry was not initialized successfully." << std::endl;
+        return false;
+    }
+    if (!FileRegistry::initialize()) {
+        std::cout << "File Registry was not initialized successfully." << std::endl;
         return false;
     }
     if (!EditorEngine::initialize()) {

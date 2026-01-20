@@ -13,17 +13,23 @@ enum EventType {
     Quit,
     OpenFile,
     NewFile,
+    RenameFile,
+    DeleteFile,
 };
 
 struct WindowResizePayload { int w, h; };
 struct KeyPressedPayload { int key; };
 struct OpenFilePayload { std::string filePath; std::string fileName; };
+struct RenameFilePayload { std::string oldName, newName; };
+struct DeleteFilePayload { std::string fileName; };
 
 using EventPayload = std::variant<
     std::monostate,
     WindowResizePayload,
     KeyPressedPayload,
-    OpenFilePayload
+    OpenFilePayload,
+    RenameFilePayload,
+    DeleteFilePayload
 >;
 
 struct Event {
@@ -50,4 +56,12 @@ inline Event OpenFileEvent(std::string filePath, std::string fileName) {
 
 inline Event NewFileEvent() {
     return {NewFile, false, std::monostate{} };
+}
+
+inline Event RenameFileEvent(std::string oldName, std::string newName) {
+    return { RenameFile, false, RenameFilePayload{oldName, newName} };
+}
+
+inline Event DeleteFileEvent(std::string fileName) {
+    return { DeleteFile, false, DeleteFilePayload{fileName} };
 }
