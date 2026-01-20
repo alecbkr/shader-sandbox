@@ -1,6 +1,7 @@
 #include "EditorEngine.hpp"
 
 #include <fstream>
+
 #include "logging/Logger.hpp"
 #include "core/EventDispatcher.hpp"
 
@@ -35,6 +36,8 @@ void Editor::destroy() {
 bool EditorEngine::initialize() {
     EventDispatcher::Subscribe(EventType::OpenFile, spawnEditor);
     EventDispatcher::Subscribe(EventType::NewFile, spawnEditor);
+    EventDispatcher::Subscribe(EventType::RenameFile, renameEditor);
+    EventDispatcher::Subscribe(EventType::DeleteFile, deleteEditor);
     return true;
 }
 
@@ -49,10 +52,43 @@ bool EditorEngine::spawnEditor(const EventPayload& payload) {
         editors.push_back(new Editor(2056, "", ""));
     } else {
         Logger::addLog(LogLevel::ERROR, "spawnEditor", "Invalid Payload Type");
-        return false;
     }
 
-    return true;
+    return false;
+}
+
+bool EditorEngine::renameEditor(const EventPayload& payload) {
+    if (const auto* data = std::get_if<RenameFilePayload>(&payload)) {
+        for (auto* editor : editors) {
+            if (editor->fileName == data->oldName) {
+                editor->fileName = data->newName;
+
+                std::filesystem::path newPath = editor->filePath;
+                newPath.replace_filename(data->newName);
+                editor->filePath = newPath.string();
+            }
+        }
+    } else {
+        Logger::addLog(LogLevel::ERROR, "renameEditor", "Invalid Payload Type");
+    }
+    return false;
+}
+
+bool EditorEngine::deleteEditor(const EventPayload& payload) {
+    if (const auto* data = std::get_if<DeleteFilePayload>(&payload)) {
+        for (int i = 0; i < editors.size(); i++) {
+            if (editors[i]->fileName == data->fileName) {
+                editors[i]->destroy();
+                editors.erase(editors.begin() + i);
+
+                if (editors.empty()) activeEditor = -1;
+                i--;
+            }
+        }
+    } else {
+        Logger::addLog(LogLevel::ERROR, "renameEditor", "Invalid Payload Type");
+    }
+    return false;
 }
 
 std::string EditorEngine::getFileContents(std::string filename) {
@@ -69,23 +105,11 @@ std::string EditorEngine::getFileContents(std::string filename) {
     return "";
 }
 
-bool EditorEngine::createFile(const std::string& filePath) {
-    if (!std::filesystem::exists("../shaders/")) {
-        Logger::addLog(LogLevel::ERROR, "EditorEngine::createFile", "Shader directory does not exist.", "../shaders/");
-        return false;
-    }
-
+void EditorEngine::createFile(const std::string& filePath) {
     std::ofstream outfile(filePath);
-    if (outfile.is_open()) {
-        outfile << "#version 330 core\n\n";
-        outfile << "void main() {\n\t\n}";
-        outfile.close();
-
-        return true;
-    }
-
-    Logger::addLog(LogLevel::ERROR, "EditorEngine::createFile", "Invalid File.", filePath);
-    return false;
+    outfile << "#version 330 core\n\n";
+    outfile << "void main() {\n\t\n}";
+    outfile.close();
 }
 
 int EditorEngine::EditorInputCallback(ImGuiInputTextCallbackData* data) {

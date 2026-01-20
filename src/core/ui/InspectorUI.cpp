@@ -22,6 +22,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include "core/FileRegistry.hpp"
+
 int InspectorUI::height = 400;
 int InspectorUI::width = 400;
 std::vector<std::string> InspectorUI::uniformNamesToDelete{};
@@ -230,9 +232,74 @@ void InspectorUI::drawAssetsInspector() {
     }
 }
 
+void drawRenameFileEntry(ShaderFile* fileData) {
+    static char buf[256];
+    strncpy(buf, fileData->renameBuffer.c_str(), 255);
+
+    bool keyboardSubmitted = ImGui::InputText(("##FileNameInput" + fileData->fileName).c_str(), buf, 256, ImGuiInputTextFlags_EnterReturnsTrue);
+    fileData->renameBuffer = buf;
+
+    ImGui::SameLine();
+
+    bool buttonSumitted = ImGui::Button(("OK##" + fileData->fileName).c_str());
+
+    if ((keyboardSubmitted || buttonSumitted) && !fileData->renameBuffer.empty()) {
+        EventDispatcher::TriggerEvent(Event { RenameFile, false, RenameFilePayload {fileData->fileName, fileData->renameBuffer} });
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button(("CANCEL##" + fileData->fileName).c_str())) {
+        fileData->state = NONE;
+        fileData->renameBuffer = fileData->fileName;
+    }
+}
+
+void drawDeleteFileEntity(ShaderFile* fileData) {
+    ImGui::Text(fileData->fileName.c_str());
+
+    ImGui::SameLine();
+
+    if (ImGui::Button(("DELETE##" + fileData->fileName).c_str())) {
+        EventDispatcher::TriggerEvent(Event { DeleteFile, false, DeleteFilePayload { fileData->fileName } });
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button(("CANCEL##" + fileData->fileName).c_str())) {
+        fileData->state = NONE;
+    }
+}
+
+void drawContextMenu(ShaderFile* fileData) {
+    if (ImGui::BeginPopupContextItem()) {
+        if (ImGui::Selectable("Rename")) {
+            fileData->state = RENAME;
+        }
+        if (ImGui::Selectable("Delete")) {
+            fileData->state = DELETE;
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
+void drawStandardFileEntry(ShaderFile* fileData) {
+    if (ImGui::Selectable(fileData->fileName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
+        if (ImGui::IsMouseDoubleClicked(0)) {
+            EventDispatcher::TriggerEvent(
+                Event{
+                    OpenFile,
+                    false,
+                    OpenFilePayload{ fileData->filePath, fileData->fileName }
+                }
+            );
+        }
+    }
+    drawContextMenu(fileData);
+}
 
 void InspectorUI::drawShaderFileInspector() {
-
     std::string path = "../shaders/";
 
     ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
@@ -261,19 +328,21 @@ void InspectorUI::drawShaderFileInspector() {
     ImGui::Text("--------------");
     ImGui::Text("Shader Files");
     ImGui::Text("--------------");
-    for (const auto & dirEntry : std::filesystem::directory_iterator(path)) {
-        std::string filePath = dirEntry.path().string();
-        std::string fileName = dirEntry.path().filename().string();
-        if (ImGui::Selectable(fileName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
-            if (ImGui::IsMouseDoubleClicked(0)) {
-                EventDispatcher::TriggerEvent(
-                    Event{
-                        OpenFile,
-                        false,
-                        OpenFilePayload{ filePath, fileName }
-                    }
-                );
-            }
+    FileRegistry::reloadMap();
+
+    for (const auto &[fileName, fileData] : FileRegistry::getFiles()) {
+        switch (fileData->state) {
+            case RENAME:
+                drawRenameFileEntry(fileData);
+                break;
+            case DELETE:
+                drawDeleteFileEntity(fileData);
+                break;
+            case NEW:
+                break;
+            case NONE: default:
+                drawStandardFileEntry(fileData);
+                break;
         }
     }
 
