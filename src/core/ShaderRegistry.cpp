@@ -1,4 +1,7 @@
 #include "core/ShaderRegistry.hpp"
+#include "core/logging/LogSink.hpp"
+#include "core/logging/Logger.hpp"
+#include "engine/ShaderProgram.hpp"
 
 std::unordered_map<std::string, ShaderProgram *> ShaderRegistry::programs;
 bool ShaderRegistry::initialized = false;
@@ -48,6 +51,22 @@ void ShaderRegistry::replaceProgram(const std::string &programName, ShaderProgra
         return;
     }
     it->second = newProgram;
+}
+
+void ShaderRegistry::replaceProgram(const std::string &programName, const std::string& vertex_file, const std::string& fragment_file) {
+    if (!ShaderRegistry::initialized) return;
+    if (!programs.contains(programName)) {
+        Logger::addLog(LogLevel::WARNING, "replaceProgram", "programName does not exist!");
+        return;
+    }
+    ShaderProgram *newProgram, *oldProgram;
+    newProgram = new ShaderProgram(vertex_file.c_str(), fragment_file.c_str(), programName.c_str());
+    oldProgram = programs[programName];
+    programs[programName] = newProgram;
+    if (oldProgram) {
+        delete oldProgram;
+    }
+    return;
 }
 
 std::unordered_map<std::string, ShaderProgram*>& ShaderRegistry::getPrograms() {

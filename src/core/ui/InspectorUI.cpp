@@ -14,6 +14,7 @@
 #include "engine/ShaderProgram.hpp"
 #include "object/ObjCache.hpp"
 #include "object/Texture.hpp"
+#include <memory>
 #include <ostream>
 #include <string>
 #include <unistd.h>
@@ -239,11 +240,19 @@ void InspectorUI::drawShaderFileInspector() {
     ImGui::Text("--------------");
     ImGui::Text("Shader Programs");
     ImGui::Text("--------------");
-    drawShaderLinkMenu(linkNewShaderMenu);
+    drawShaderLinkMenu(linkNewShaderMenu, ShaderLinkMenuType::Create);
     for (const auto & [shaderName, shaderProgram] : ShaderRegistry::getPrograms()) {
+        if (!shaderPrograms.contains(shaderName)) {
+            shaderPrograms[shaderName] = ShaderLinkMenu{ 
+                .shaderName = shaderName,
+                .vertSelection = 0,
+                .geometrySelection = 0,
+                .fragSelection = 0,
+                .newSelector = true
+            };    
+        }
         if (ImGui::TreeNode(shaderName.c_str())) {
-            ImGui::Text("vert: %s", shaderProgram->vertPath.c_str());
-            ImGui::Text("frag %s", shaderProgram->fragPath.c_str());
+            drawShaderLinkMenu(shaderPrograms[shaderName], ShaderLinkMenuType::Edit);
             ImGui::TreePop();
         }
     }
@@ -271,16 +280,29 @@ void InspectorUI::drawShaderFileInspector() {
     ImGui::PopStyleVar();
 }
 
-void InspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu) {
+void InspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuType type) {
+    // for  conciseness, put newSelector logic up here into a separate variable.
+    const bool isEditor = type == ShaderLinkMenuType::Edit;
+    const bool isNewEditor = isEditor && menu.newSelector;
+    menu.newSelector = false;
+    const ShaderProgram *oldProgram;
+    if (isEditor) {
+        oldProgram = ShaderRegistry::getProgram(menu.shaderName);
+        if (oldProgram == nullptr) {
+            Logger::addLog(LogLevel::ERROR, "drawShaderLinkMenu", "Couldn't find shader program with name " + menu.shaderName);
+            return;
+        }
+    }
     bool changed = false;
 
-    std::string path = "../shaders/";
+    const std::string path = "../shaders/";
     std::vector<std::string> files;
     std::vector<std::string> extensions;
     for (const auto & dirEntry : std::filesystem::directory_iterator(path)) {
         files.push_back(dirEntry.path());
         extensions.push_back(dirEntry.path().extension());
     }
+
     std::vector<const char*> vertChoices{""};
     std::vector<const char*> fragChoices{""};
     std::vector<const char*> geoChoices{""}; // not doing this right now
@@ -289,13 +311,25 @@ void InspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu) {
         Logger::addLog(LogLevel::ERROR, "drawShaderLinkMenu", "files & extensions vectors have different sizes. this should never happen");
         return;
     }
+
+    int vertIndex = 1;
+    int fragIndex = 1;
     for (int i = 0; i < files.size() && i < extensions.size(); i++) {
-        std::string& extension = extensions[i];
+        const std::string& extension = extensions[i];
+        const std::string& filePath = files[i];
         if (extension == ".vert") {
-            vertChoices.push_back(files[i].c_str());
+            vertChoices.push_back(filePath.c_str());
+            if (isNewEditor && oldProgram->vertPath == filePath) {
+                 menu.vertSelection = vertIndex;
+            }
+            vertIndex++;
         }
         else if (extension == ".frag") {
-            fragChoices.push_back(files[i].c_str());
+            fragChoices.push_back(filePath.c_str());
+            if (isNewEditor && oldProgram->fragPath == filePath) {
+                 menu.fragSelection = fragIndex;
+            }
+            fragIndex++;
         }
         else {
             Logger::addLog(LogLevel::WARNING, "drawShaderLinkMenu", "Shader file type " + extension + " not supported, only .vert and .frag");
@@ -313,7 +347,7 @@ void InspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu) {
     }
 
     char buffer[256];
-    if (ImGui::InputText("New Program Name", buffer, sizeof(buffer))) {
+    if (type == ShaderLinkMenuType::Create && ImGui::InputText("New Program Name", buffer, sizeof(buffer))) {
         menu.shaderName = buffer;
     }
 
@@ -323,7 +357,12 @@ void InspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu) {
         const std::string vert = vertChoices[menu.vertSelection];
         const std::string frag = fragChoices[menu.fragSelection];
         const std::string& name = menu.shaderName;
-        ShaderRegistry::registerProgram(vert, frag, name);
+        if (type == ShaderLinkMenuType::Create) {
+            ShaderRegistry::registerProgram(vert, frag, name);
+        }
+        else if (type == ShaderLinkMenuType::Edit) {
+            ShaderRegistry::replaceProgram(name, vert, frag);
+        }
     }
 }
 

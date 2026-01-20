@@ -9,6 +9,8 @@
 #include "object/Object.hpp"
 #include "core/UniformTypes.hpp"
 
+enum ShaderLinkMenuType { Create, Edit };
+
 struct ObjectShaderSelector {
     std::string objectName;
     int selection;
@@ -28,6 +30,7 @@ struct ShaderLinkMenu {
     int vertSelection;
     int geometrySelection;
     int fragSelection;
+    bool newSelector;
 };
 
 class InspectorUI {
@@ -51,7 +54,7 @@ class InspectorUI {
     static void drawAssetsInspector();
     static void drawShaderFileInspector();
     static void drawAddObjectMenu();
-    static void drawShaderLinkMenu(ShaderLinkMenu& menu);
+    static void drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuType type);
     static bool drawShaderProgramSelector(ObjectShaderSelector& selector);
     static bool drawTextureSelector(ObjectTextureSelector& selector);
     static bool drawTextInput(std::string *value, const char *label);

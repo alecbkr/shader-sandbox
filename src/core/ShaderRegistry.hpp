@@ -12,6 +12,7 @@ public:
     static ShaderProgram* getProgram(const std::string& programName);
     //static std::unordered_map<std::string, ShaderProgram>& getPrograms();
     static void replaceProgram(const std::string &programName, ShaderProgram *newProgram);
+    static void replaceProgram(const std::string &programName, const std::string& vertex_file, const std::string& fragment_file);
     static std::unordered_map<std::string, ShaderProgram*> &getPrograms();
     static size_t getNumberOfPrograms();
 private:
