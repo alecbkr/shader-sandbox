@@ -9,6 +9,7 @@ enum EventType {
     WindowResize,
     KeyPressed,
     SaveActiveShaderFile,
+    ReloadShader,
     SaveProject,
     Quit,
     OpenFile,
@@ -17,6 +18,8 @@ enum EventType {
     DeleteFile,
 };
 
+struct SaveActiveShaderFilePayload { std::string filePath; std::string programName; };
+struct ReloadShaderPayload { std::string programName; };
 struct WindowResizePayload { int w, h; };
 struct KeyPressedPayload { int key; };
 struct OpenFilePayload { std::string filePath; std::string fileName; };
@@ -25,6 +28,8 @@ struct DeleteFilePayload { std::string fileName; };
 
 using EventPayload = std::variant<
     std::monostate,
+    SaveActiveShaderFilePayload,
+    ReloadShaderPayload,
     WindowResizePayload,
     KeyPressedPayload,
     OpenFilePayload,
@@ -36,6 +41,14 @@ struct Event {
     EventType type;
     bool handled = false;
     EventPayload payload;
+};
+
+inline Event MakeSaveActiveShaderFileEvent(std::string filePath, std::string programName) {
+    return { SaveActiveShaderFile, false, SaveActiveShaderFilePayload{filePath, programName} };
+};
+
+inline Event MakeReloadShaderEvent(std::string programName) {
+    return { ReloadShader, false, ReloadShaderPayload{programName} };
 };
 
 inline Event MakeWindowResizeEvent(int w, int h) {
