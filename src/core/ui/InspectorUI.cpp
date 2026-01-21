@@ -304,6 +304,7 @@ void InspectorUI::drawShaderFileInspector() {
 
     ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
 
+    // This is temporary, I don't know what to put here.
     ImGui::Text("--------------");
     ImGui::Text("Shader Programs");
     ImGui::Text("--------------");
@@ -311,7 +312,7 @@ void InspectorUI::drawShaderFileInspector() {
     for (const auto & [shaderName, shaderProgram] : ShaderRegistry::getPrograms()) {
         if (!shaderPrograms.contains(shaderName)) {
             shaderPrograms[shaderName] = ShaderLinkMenu{ 
-                .shaderName = shaderName,
+                .shaderName = std::string(shaderName),
                 .vertSelection = 0,
                 .geometrySelection = 0,
                 .fragSelection = 0,
@@ -421,6 +422,7 @@ void InspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuType ty
     }
 
 
+
     bool validSelection = menu.fragSelection != 0 && menu.vertSelection != 0 && menu.shaderName != "";
     if (validSelection && ImGui::Button("Link Shader Program")) {
         const std::string vert = vertChoices[menu.vertSelection];
@@ -430,8 +432,10 @@ void InspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuType ty
             ShaderRegistry::registerProgram(vert, frag, name);
         }
         else if (type == ShaderLinkMenuType::Edit) {
-            ShaderRegistry::replaceProgram(name, vert, frag);
+            Logger::addLog(LogLevel::INFO, "drawShaderLinkMenu", "Edit feature not done yet");
+            // Sadly, I'm not sure how to implement this, there's no good function in the registry to update a program.
         }
+        InspectorEngine::refreshUniforms();
     }
 }
 
@@ -539,6 +543,7 @@ bool InspectorUI::drawUniformInputValue(int* value) {
 bool InspectorUI::drawUniformInputValue(float* value) {
     return ImGui::InputFloat("value", value);
 }
+
 
 bool InspectorUI::drawUniformInputValue(glm::vec3* value) {
     bool changed = false;

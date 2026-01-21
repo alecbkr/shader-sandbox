@@ -19,6 +19,10 @@ bool ShaderRegistry::initialize() {
 }
 
 bool ShaderRegistry::registerProgram(const std::string& vertex_file, const std::string& fragment_file, const std::string& programName) {
+    if (programName == "") {
+        Logger::addLog(LogLevel::WARNING, "registerProgram", "Shader name cannot be empty");
+        return false;
+    }
     ShaderProgram *newProgram = new ShaderProgram(vertex_file.c_str(), fragment_file.c_str(), programName.c_str());
     auto [it, inserted] = programs.emplace(programName, newProgram);
     //auto [it, inserted] = programs.emplace( programName, ShaderProgram(vertex_file.c_str(), fragment_file.c_str(), programName.c_str()));
@@ -51,22 +55,6 @@ void ShaderRegistry::replaceProgram(const std::string &programName, ShaderProgra
         return;
     }
     it->second = newProgram;
-}
-
-void ShaderRegistry::replaceProgram(const std::string &programName, const std::string& vertex_file, const std::string& fragment_file) {
-    if (!ShaderRegistry::initialized) return;
-    if (!programs.contains(programName)) {
-        Logger::addLog(LogLevel::WARNING, "replaceProgram", "programName does not exist!");
-        return;
-    }
-    ShaderProgram *newProgram, *oldProgram;
-    newProgram = new ShaderProgram(vertex_file.c_str(), fragment_file.c_str(), programName.c_str());
-    oldProgram = programs[programName];
-    programs[programName] = newProgram;
-    if (oldProgram) {
-        delete oldProgram;
-    }
-    return;
 }
 
 std::unordered_map<std::string, ShaderProgram*>& ShaderRegistry::getPrograms() {
