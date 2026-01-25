@@ -15,6 +15,7 @@
 #include "core/HotReloader.hpp"
 #include "presets/PresetAssets.hpp"
 #include "core/TextureRegistry.hpp"
+#include "core/FileRegistry.hpp"
 #include "object/ObjCache.hpp"
 #include "core/input/InputState.hpp"
 #include "core/input/ActionRegistry.hpp"
@@ -93,6 +94,17 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
         std::cout << "Shader Registry was not initialized successfully." << std::endl;
         return false;
     }
+    if (!HotReloader::initialize()) {
+        std::cout << "Hot Reloader was not initialized successfully." << std::endl;
+    }
+    if (!ObjCache::initialize()) {
+        std::cout << "Object Cache was not initialized successfully." << std::endl;
+        return false;
+    }
+    if (!FileRegistry::initialize()) {
+        std::cout << "File Registry was not initialized successfully." << std::endl;
+        return false;
+    }
     if (!EditorEngine::initialize()) {
         std::cout << "Editor Engine was not initialized successfully." << std::endl;
         return false;
@@ -153,6 +165,7 @@ void Application::runLoop() {
         InputState::beginFrame();
         Platform::pollEvents();
         Platform::processInput();
+        HotReloader::update();
         EventDispatcher::ProcessQueue();
         Application::renderUI();
         Platform::swapBuffers();
@@ -173,6 +186,7 @@ void Application::renderUI() {
     EditorUI::render();
     ConsoleUI::render();
     ViewportUI::render();
+    MenuUI::render();
 
     // Post Render
     ImGui::Render();

@@ -18,8 +18,9 @@
 //     {"Quit", "Alt+F4"},
 // }};
 
-static constexpr std::array<MenuItem, 2> fileMenu = {{
+static constexpr std::array<MenuItem, 3> fileMenu = {{
     {"Save Active Shader File", "Ctrl+S", false, {}, EventType::SaveActiveShaderFile},
+    {"New Shader File", "Ctrl+N", false, {}, EventType::NewFile},
     {"Quit", "Alt+F4", false, {}, EventType::Quit},
 }};
 

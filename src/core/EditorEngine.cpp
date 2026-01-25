@@ -1,6 +1,7 @@
 #include "EditorEngine.hpp"
 
 #include <fstream>
+
 #include "logging/Logger.hpp"
 #include "core/EventDispatcher.hpp"
 
@@ -9,11 +10,12 @@ std::vector<Editor*> EditorEngine::editors{};
 int EditorEngine::activeEditor = -1;
 
 Editor::Editor(unsigned int bufferSize, std::string filePath, std::string fileName) {
+    this->bufferSize = bufferSize;
     this->inputTextBuffer = new char[bufferSize];
     this->filePath = filePath;
     this->fileName = fileName;
+
     strcpy(this->inputTextBuffer, EditorEngine::getFileContents(filePath).c_str());
-    this->bufferSize = bufferSize;
 
     this->lineCount = 1;
 
@@ -33,22 +35,59 @@ void Editor::destroy() {
 
 bool EditorEngine::initialize() {
     EventDispatcher::Subscribe(EventType::OpenFile, spawnEditor);
+    EventDispatcher::Subscribe(EventType::NewFile, spawnEditor);
+    EventDispatcher::Subscribe(EventType::RenameFile, renameEditor);
+    EventDispatcher::Subscribe(EventType::DeleteFile, deleteEditor);
     return true;
 }
 
 bool EditorEngine::spawnEditor(const EventPayload& payload) {
     if (const auto* data = std::get_if<OpenFilePayload>(&payload)) {
         if (!data->filePath.empty()) {
-            Editor *editor = new Editor(1024, data->filePath, data->fileName);
-            editors.push_back(editor);
+            editors.push_back(new Editor(2056, data->filePath, data->fileName));
         } else {
-            Editor *editor = new Editor(1024, "../shaders/texture.frag", "texture.frag");
-            editors.push_back(editor);
+            editors.push_back(new Editor(2056, "../shaders/texture.frag", "texture.frag"));
         }
+    } else if (std::get_if<std::monostate>(&payload)) {
+        editors.push_back(new Editor(2056, "", ""));
     } else {
         Logger::addLog(LogLevel::ERROR, "spawnEditor", "Invalid Payload Type");
     }
 
+    return false;
+}
+
+bool EditorEngine::renameEditor(const EventPayload& payload) {
+    if (const auto* data = std::get_if<RenameFilePayload>(&payload)) {
+        for (auto* editor : editors) {
+            if (editor->fileName == data->oldName) {
+                editor->fileName = data->newName;
+
+                std::filesystem::path newPath = editor->filePath;
+                newPath.replace_filename(data->newName);
+                editor->filePath = newPath.string();
+            }
+        }
+    } else {
+        Logger::addLog(LogLevel::ERROR, "renameEditor", "Invalid Payload Type");
+    }
+    return false;
+}
+
+bool EditorEngine::deleteEditor(const EventPayload& payload) {
+    if (const auto* data = std::get_if<DeleteFilePayload>(&payload)) {
+        for (int i = 0; i < editors.size(); i++) {
+            if (editors[i]->fileName == data->fileName) {
+                editors[i]->destroy();
+                editors.erase(editors.begin() + i);
+
+                if (editors.empty()) activeEditor = -1;
+                i--;
+            }
+        }
+    } else {
+        Logger::addLog(LogLevel::ERROR, "renameEditor", "Invalid Payload Type");
+    }
     return false;
 }
 
@@ -64,6 +103,13 @@ std::string EditorEngine::getFileContents(std::string filename) {
         return(contents);
     }
     return "";
+}
+
+void EditorEngine::createFile(const std::string& filePath) {
+    std::ofstream outfile(filePath);
+    outfile << "#version 330 core\n\n";
+    outfile << "void main() {\n\t\n}";
+    outfile.close();
 }
 
 int EditorEngine::EditorInputCallback(ImGuiInputTextCallbackData* data) {

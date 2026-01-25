@@ -8,6 +8,7 @@
 #include "exponential.hpp"
 #include "imgui.h"
 #include "core/EventDispatcher.hpp"
+#include "core/logging/Logger.hpp"
 
 void renderEditor(Editor* editor) {
     ImGuiTableFlags lineNumberFlags = ImGuiTableFlags_BordersInnerV;
@@ -20,7 +21,7 @@ void renderEditor(Editor* editor) {
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
 
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 8.0f);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, 0.0f));
         for (int i = 1; i <= editor->lineCount; i++) {
             ImGui::Text(std::to_string(i).c_str());
@@ -45,36 +46,47 @@ void renderEditor(Editor* editor) {
 void EditorUI::render() {
     ImGui::SetNextWindowSize(ImVec2( 500, 500), ImGuiCond_Once);
 
-    if (ImGui::Begin("Editor", nullptr, ImGuiWindowFlags_MenuBar)) {
-        if (ImGui::BeginMenuBar()) {
-            if (ImGui::BeginMenu("File")) {
-                if (ImGui::MenuItem("New")) {
-                    EventDispatcher::TriggerEvent(Event{ OpenFile, false, OpenFilePayload{"", ""} });
-                }
-
-                ImGui::EndMenu();
-            }
-            ImGui::EndMenuBar();
-        }
-
-        if (ImGui::BeginTabBar("EditorTabs")) {
+    if (ImGui::Begin("Editor", nullptr)) {
+        ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyScroll;
+        if (ImGui::BeginTabBar("EditorTabs", tabBarFlags)) {
             for (int i = 0; i < EditorEngine::editors.size(); i++) {
                 std::string tabTitle = EditorEngine::editors[i]->fileName + "##" + std::to_string(i + 1);
                 bool openTab = true;
-                if (ImGui::BeginTabItem(tabTitle.c_str(), &openTab)) {
 
-                    renderEditor(EditorEngine::editors[i]);
-                    EditorEngine::activeEditor = i;
+                if (!EditorEngine::editors[i]->filePath.empty()) {
+                    if (ImGui::BeginTabItem(tabTitle.c_str(), &openTab)) {
+                        renderEditor(EditorEngine::editors[i]);
+                        EditorEngine::activeEditor = i;
 
-                    ImGui::EndTabItem();
+                        ImGui::EndTabItem();
+                    }
+                } else {
+                    if (ImGui::BeginTabItem(("Untitled##" + std::to_string(i)).c_str(), &openTab)) {
+                        ImGui::Text("Enter File Name:");
+                        char buf[256] = "\0";
+                        if (ImGui::InputText("##FileNameInput", buf, 256, ImGuiInputTextFlags_EnterReturnsTrue) && buf[0] != '\0') {
+                            std::string filePath = "../shaders/" + std::string(buf);
+                            try {
+                                EditorEngine::createFile(filePath);
+                                EditorEngine::editors[i]->destroy();
+                                EditorEngine::editors[i] = new Editor(2056, filePath, buf);
+
+                            } catch (const std::filesystem::filesystem_error& e) {
+                                Logger::addLog(LogLevel::ERROR, "EditorEngine::createFile", std::string("Filesystem error: ") + e.what());
+                            }
+                        }
+
+                        EditorEngine::activeEditor = i;
+                        ImGui::EndTabItem();
+                    }
                 }
 
                 if (!openTab) {
                     EditorEngine::editors[i]->destroy();
                     EditorEngine::editors.erase(EditorEngine::editors.begin() + i);
-                    i--;
 
                     if (EditorEngine::editors.empty()) EditorEngine::activeEditor = -1;
+                    i--;
                 }
             }
 

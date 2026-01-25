@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 
 enum class Key : uint16_t {
     Unknown = 0,
