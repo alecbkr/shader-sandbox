@@ -1,3 +1,6 @@
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
 // ENGINE
 #include "core/InspectorEngine.hpp"
 #include "engine/Window.hpp"
@@ -7,7 +10,7 @@
 #include "engine/Camera.hpp"
 #include "engine/DrawMetrics.hpp"
 #include "core/EventDispatcher.hpp"
-#include "object/Object.hpp"
+// #include "object/Object.hpp"
 #include "engine/ShaderProgram.hpp"
 
 #include "ui/UIContext.hpp"
@@ -16,20 +19,24 @@
 #include "core/EditorEngine.hpp"
 #include "core/ui/ViewportUI.hpp"
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
-#include "object/ObjCache.hpp"
+
+// #include "object/ObjCache.hpp"
+#include "object/ModelCache.hpp"
+#include "object/CustomModel.hpp"
+#include "object/ImportedModel.hpp"
+#include "object/Texture.hpp"
+#include "object/TextureType.hpp"
 
 
 void processInput(GLFWwindow *window);
 void cameraControls(GLFWwindow *window, Camera &camera);
 void editorControls(GLFWwindow *window);
-
 
 enum AppState {
     AS_EDITOR,
@@ -58,13 +65,13 @@ int main() {
 
     // GRIDPLANE
     std::vector<float> gridPlane_verts {
-        -1.0f, 0.0f, -1.0f,  0.0f, 0.0f,
-        -1.0f, 0.0f, 1.0f,  1.0f, 0.0f,
-        1.0f, 0.0f, 1.0f,  1.0f, 1.0f,
-        1.0f, 0.0f, -1.0f, 0.0f, 1.0f
+        -1.0f, 0.0f, -1.0f, 
+        -1.0f, 0.0f, 1.0f, 
+        1.0f, 0.0f, 1.0f, 
+        1.0f, 0.0f, -1.0f
     };
 
-    std::vector<int> gridPlane_indices {
+    std::vector<unsigned int> gridPlane_indices {
         0, 1, 2, 
         0, 2, 3
     };
@@ -81,7 +88,7 @@ int main() {
         0.0f, 1.0f, 0.0f,   0.5f, 0.5f  // 4: tip
     };
 
-    std::vector<int> pyramidIndices = {
+    std::vector<unsigned int> pyramidIndices = {
         0, 1, 2,  0, 2, 3, // base
         0, 1, 4,            // side 1
         1, 2, 4,            // side 2
@@ -104,7 +111,7 @@ int main() {
     };
 
     // Indices for cube (two triangles per face)
-    std::vector<int> cubeIndices = {
+    std::vector<unsigned int> cubeIndices = {
         0,1,2, 0,2,3, // back
         4,5,6, 4,6,7, // front
         3,2,6, 3,6,7, // top
@@ -115,48 +122,26 @@ int main() {
 
     
     // TEXTURES
-    Texture waterTex("../assets/textures/water.png");
-    Texture faceTex("../assets/textures/bigface.jpg");
-    Texture edgeTex("../assets/textures/rim.png");
-    Texture gridTex("../assets/textures/grid.png");
+    Texture waterTex("../assets/textures/water.png", TEX_DIFFUSE);
+    Texture faceTex("../assets/textures/bigface.jpg", TEX_DIFFUSE);
+    Texture edgeTex("../assets/textures/rim.png", TEX_DIFFUSE);
+    Texture gridTex("../assets/textures/grid.png", TEX_DIFFUSE);
 
-
-    // PROGRAMS
-    ShaderHandler::registerProgram("../shaders/3d.vert", "../shaders/texture.frag", "program");
-    ShaderHandler::registerProgram("../shaders/default.vert", "../shaders/default.frag", "untex");
-
-
-    ShaderProgram* programPtr = ShaderHandler::getProgram("program");
-    ShaderProgram* untexPtr = ShaderHandler::getProgram("untex");
-    if (programPtr == nullptr || untexPtr == nullptr) {
-        ERRLOG.logEntry(EL_CRITICAL, "main", "pointer not registered properly?");
-    }
-    ShaderProgram& program = *programPtr;
-    ShaderProgram& untex = *untexPtr;
+    // TEMP PROGRAMS
+    ShaderProgram tex = ShaderProgram("../shaders/tex.vert", "../shaders/tex.frag", "temp");
+    // ShaderProgram plane = ShaderProgram("../shaders/gridplane.vert", "../shaders/gridplane.frag", "plane");
+    ShaderProgram color = ShaderProgram("../shaders/color.vert", "../shaders/color.frag", "tex");
 
     
-    // OBJECTS
-    ObjCache::createObj("grid", gridPlane_verts, gridPlane_indices, false, true, program);
-    ObjCache::setTexture("grid", gridTex, 0, "baseTex");
-    ObjCache::scaleObj("grid", glm::vec3(5.0f));
 
-    ObjCache::createObj("pyramid0", pyramidVerts, pyramidIndices, false, true, untex);
-    ObjCache::translateObj("pyramid0", glm::vec3(3.3f, 0.0f, -1.0f));
-    ObjCache::scaleObj("pyramid0", glm::vec3(2.0f));
-    ObjCache::rotateObj("pyramid0", 23.2f, glm::vec3(0.0f, 1.0f, 0.0f));
-
-    ObjCache::createObj("cube", cubeVerts, cubeIndices, false, true, program);
-    ObjCache::setTexture("cube", faceTex, 0, "baseTex");
-    ObjCache::translateObj("cube", glm::vec3(4.0f, 3.0f, -5.0f));
-    ObjCache::scaleObj("cube", glm::vec3(1.0, 0.5f, 1.0f));
-    ObjCache::rotateObj("cube", 45.0f, glm::vec3(0.5f, 0.5f, 0.5f));
-
-    ObjCache::createObj("pyramid1", pyramidVerts, pyramidIndices, false, true, untex);
-    ObjCache::translateObj("pyramid1", glm::vec3(-1.3f, 0.0f, -1.0f));
+    // CustomModel C("nut");
+    ModelCache::createModel(0, "../assets/models/backpack/backpack.obj");
+    ModelCache::setProgram(0, tex);
+    ModelCache::createModel(1, gridPlane_verts, gridPlane_indices, true, false, false);
+    ModelCache::setProgram(1, color);
 
 
     ERRLOG.printClear();
-    
     glEnable(GL_DEPTH_TEST);
     
     InspectorEngine::refreshUniforms();
@@ -185,9 +170,10 @@ int main() {
 
         glm::mat4 perspective = glm::perspective(glm::radians(45.0f), viewport.getAspect(), 0.1f, 100.0f);
         glm::mat4 view = cam.GetViewMatrix();
-        ObjCache::renderAll(perspective, view);
+        ModelCache::renderAll(perspective, view);
+        
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        viewport.unbind();
         viewport.draw();
         
         
@@ -201,8 +187,9 @@ int main() {
         ERRLOG.printClear();
         win.swapBuffers();
     }
-
+    
     ui.destroy();
+    glfwTerminate();
 }
 
 
@@ -270,3 +257,4 @@ void editorControls(GLFWwindow *window) {
         appstate = AS_CAMERA;
     }
 }
+

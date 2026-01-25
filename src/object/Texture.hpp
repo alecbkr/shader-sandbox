@@ -1,4 +1,4 @@
-// DESCRIPTION
+// DESCRIPTION ***OUTDATED***
 /*
 Texture constructor will save all the necessary data for OpenGL texture creation
 and hold on to it until Destructor is ran. An OpenGL texture will NOT be produced
@@ -14,27 +14,31 @@ is for now.
 #define TEXTURE_HPP
 
 #include <glad/glad.h>
+#include "TextureType.hpp"
+
 
 class Texture {
     
-        
     public:
         GLuint ID;
         unsigned char* pixels;
+        
         int width;
         int height;
         GLenum format;
-        Texture(const char *texture_path);
-        ~Texture();
+        Texture(const char *texture_path, TextureType type);
+        // ~Texture();
         void bind(int texNum);
         void unbind(int texNum);
         bool isValid() const;
+        TextureType getType();
     
     private:
-        bool initialized = false;
-        bool loadedInGPU = false;
-        void sendToGPU();
-        void deleteFromGPU();
+        TextureType type = TEX_UNDEFINED;
+        bool valid = false;
+        bool isLoadedInGPU = false;
+        void loadToGPU();
+        void unloadFromGPU();
 };
 
 #endif

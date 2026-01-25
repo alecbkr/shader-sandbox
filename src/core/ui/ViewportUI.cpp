@@ -59,9 +59,25 @@ ViewportUI::ViewportUI() {
 }
 
 
+ViewportUI::~ViewportUI() {
+    glDeleteFramebuffers(1, &fbo);
+    glDeleteRenderbuffers(1, &rbo);
+    glDeleteTextures(1, &viewportTex);
+    fbo = 0;
+    rbo = 0;
+    viewportTex = 0;
+}
+
+
 void ViewportUI::bind() {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glViewport(0, 0, dimensions.x, dimensions.y);
+}
+
+
+void ViewportUI::unbind() {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, WINDOWSIZE.width, WINDOWSIZE.height);
 }
 
 

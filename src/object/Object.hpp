@@ -43,6 +43,10 @@ class Object {
 
     public:
         Renderling renderable;
+        std::string name;
+        glm::vec3 objPosition = glm::vec3(0.0f);
+        glm::vec3 objScale = glm::vec3(1.0f);
+        glm::quat objOrientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f); 
 
         Object(std::vector<float> verts, std::vector<int> indicies, bool hasNorms, bool hasUVs);
         void render();
@@ -54,10 +58,7 @@ class Object {
         glm::mat4 getModelM();
         void setTexture(Texture &tex, int unit, std::string uniformName);
         void setProgram(ShaderProgram &program);
-        std::string name;
-        glm::vec3 objPosition = glm::vec3(0.0f);
-        glm::vec3 objScale = glm::vec3(1.0f);
-        glm::quat objOrientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f); 
+        
 
     private:
         int objectID;

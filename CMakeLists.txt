@@ -18,6 +18,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # ---------------------------------------------------------
 add_subdirectory(lib/glfw)
 
+# ASSIMP
+add_subdirectory(lib/assimp)
+
 # GLFW exposes this include path
 include_directories(lib/glfw/include)
 
@@ -53,10 +56,10 @@ set(STB_SRC
     ${CMAKE_SOURCE_DIR}/lib/stb/stb_image.cpp
 )
 
-
 set(SRC_C 
     "${CMAKE_SOURCE_DIR}/lib/glad/glad.c"
 )
+
 
 # ---------------------------------------------------------
 # EXECUTABLE
@@ -66,13 +69,14 @@ add_executable(sandbox
     ${SRC_C}
     ${IMGUI_SRC}
     ${STB_SRC}
+    ${ASSIMP_SRC}
 )
 
 # ---------------------------------------------------------
 # LINK GLFW AND SYSTEM LIBS
 # (GLFW builds a target called glfw)
 # ---------------------------------------------------------
-target_link_libraries(sandbox glfw)
+target_link_libraries(sandbox glfw assimp)
 
 if (WIN32)
     target_link_libraries(sandbox 

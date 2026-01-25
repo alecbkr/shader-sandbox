@@ -17,13 +17,16 @@ void Object::translate(glm::vec3 vector) {
     objPosition = vector;
 }
 
+
 void Object::scale(glm::vec3 vector) {
     objScale = vector;
 }
 
+
 void Object::rotate(float angle, glm::vec3 axis) {
     objOrientation = glm::angleAxis(glm::radians(angle), glm::normalize(axis));
 }
+
 
 glm::mat4 Object::getModelM() {
     glm::mat4 model = glm::mat4(1.0f);
