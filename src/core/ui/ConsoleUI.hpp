@@ -8,6 +8,18 @@
 #include "../logging/ConsoleSink.hpp"
 #include "../ConsoleEngine.hpp"
 
+struct ConsoleBtns {
+    bool isAutoScroll; 
+    bool isCollapsedLogs; 
+    bool isShowErrors; 
+    bool isShowWarning; 
+    bool isShowInfo; 
+    // Filters/ShowSources menu 
+    bool isShowShader; 
+    bool isShowSystem; 
+    bool isShowAssets;
+};
+
 // Lookup table for textcolors for each log 
 static const ImVec4 LOG_COLORS[] = {
     ImVec4(1.0f, 0.0f, 0.0f, 1.0f),         // Critical (Deep Red) 
@@ -37,7 +49,7 @@ private:
     static int selectionEnd; 
 
     static bool initialized;
-    static bool isAutoScroll; 
+    static ConsoleBtns btns; 
 
     static size_t lastLogSize; 
     static void drawLogs(); 

@@ -2,12 +2,21 @@
 #include "string"
 #include "iostream"
 
-bool ConsoleUI::initialized = false;
-
+bool ConsoleUI::initialized = false; 
 size_t ConsoleUI::lastLogSize = 0;
 int ConsoleUI::selectionStart = -1; 
-int ConsoleUI::selectionEnd = -1; 
-bool ConsoleUI::isAutoScroll = true;
+int ConsoleUI::selectionEnd = -1;
+
+ConsoleBtns ConsoleUI::btns = {
+    false, 
+    false, 
+    true, 
+    true, 
+    true, 
+    true, 
+    true, 
+    true
+}; 
 
 std::shared_ptr<ConsoleEngine> ConsoleUI::engine = nullptr;
 std::shared_ptr<ConsoleSink> ConsoleUI::logSrc = nullptr;
@@ -60,12 +69,12 @@ void ConsoleUI::drawLogs(){
     const auto& logs = logSrc->getLogs(); 
 
     if (logs.size() > lastLogSize) {
-        isAutoScroll = true; 
+        btns.isAutoScroll = true; 
         lastLogSize = logs.size(); 
 
         // only scroll when user is not dragging to copy text 
         if (selectionStart == -1) {
-            isAutoScroll = true; 
+            btns.isAutoScroll = true; 
         }
     }
 
@@ -109,18 +118,6 @@ void ConsoleUI::drawLogs(){
             ImGui::TextUnformatted(fullMsg.c_str()); 
         }
 
-        // Deprecated way of printing out logs 
-        // ImGui::PushStyleColor(ImGuiCol_Text, LOG_COLORS[idx]); 
-        // ImGui::TextUnformatted(alert.c_str()); 
-        // // ImGui::SameLine(0.0f, 0.0f); 
-        // ImGui::PopStyleColor(); 
-        // ImGui::TextUnformatted(log.msg.c_str());
-
-        // if (!log.additional.empty()) {
-        //     std::string additional = "  " + log.additional; 
-        //     ImGui::TextUnformatted(additional.c_str());  
-        // }
-
         ImGui::PopID(); 
     }
 
@@ -128,36 +125,20 @@ void ConsoleUI::drawLogs(){
         isCursorDragging = false; 
     }
 
-    if(isAutoScroll) {
+    if(btns.isAutoScroll) {
         ImGui::SetScrollHereY(1.0f); 
-        isAutoScroll = false; 
+        btns.isAutoScroll = false; 
     }
 }
 
-const void ConsoleUI::drawMenuBar() {
-
-    // TODO: modify this behavior once we have some sort of way to store user preferences
-    // View menu
-    static bool isAutoScroll = false;
-    static bool isCollapsedLogs = false; 
-    // Filters menu
-    static bool isShowErrors = true; 
-    static bool isShowWarnings = true; 
-    static bool isShowInfo = true; 
-    // Filters/ShowSources menu 
-    static bool isShowShader = true; 
-    static bool isShowSystem = true; 
-    static bool isShowAssets = true; 
-
-         
+const void ConsoleUI::drawMenuBar() {         
     if(ImGui::BeginMenuBar()) {
 
         if(ImGui::BeginMenu("View")) {
             ImGui::MenuItem("Clear", "Ctrl + l"); 
-
             ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
-            ImGui::MenuItem("Auto-Scroll", nullptr, &isAutoScroll); 
-            ImGui::MenuItem("Collapse Logs", nullptr, &isCollapsedLogs);
+            ImGui::MenuItem("Auto-Scroll", nullptr, &btns.isAutoScroll); 
+            ImGui::MenuItem("Collapse Logs", nullptr, &btns.isCollapsedLogs);
             ImGui::PopItemFlag(); 
             
             ImGui::MenuItem("Copy Logs"); 
@@ -167,16 +148,16 @@ const void ConsoleUI::drawMenuBar() {
 
         if (ImGui::BeginMenu("Filters")) {
             ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
-            ImGui::MenuItem("Show Errors", nullptr, &isShowErrors);
-            ImGui::MenuItem("Show Warning", nullptr, &isShowWarnings);
-            ImGui::MenuItem("Show Info", nullptr, &isShowInfo); 
+            ImGui::MenuItem("Show Errors", nullptr, btns.isShowErrors);
+            ImGui::MenuItem("Show Warning", nullptr, &btns.isShowWarning);
+            ImGui::MenuItem("Show Info", nullptr, &btns.isShowInfo); 
             ImGui::PopItemFlag(); 
             // Todo: add source filter to filter out shader errors, system errors, errors loading textures/objs, etc. 
             if (ImGui::BeginMenu("Show Sources")) {
                 ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
-                ImGui::MenuItem("Shader", nullptr, &isShowShader); 
-                ImGui::MenuItem("System", nullptr, &isShowSystem); 
-                ImGui::MenuItem("Assets", nullptr, &isShowAssets);
+                ImGui::MenuItem("Shader", nullptr, &btns.isShowShader); 
+                ImGui::MenuItem("System", nullptr, &btns.isShowSystem); 
+                ImGui::MenuItem("Assets", nullptr, &btns.isShowAssets);
                 ImGui::PopItemFlag(); 
                 ImGui::EndMenu(); 
             }
