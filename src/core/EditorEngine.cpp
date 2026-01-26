@@ -9,14 +9,34 @@
 std::vector<Editor*> EditorEngine::editors{};
 int EditorEngine::activeEditor = -1;
 
-Editor::Editor(unsigned int bufferSize, std::string filePath, std::string fileName) {
-    this->bufferSize = bufferSize;
-    this->inputTextBuffer = new char[bufferSize];
+Editor::Editor(std::string filePath, std::string fileName) {
+    //this->bufferSize = bufferSize;
+    //this->inputTextBuffer = new char[bufferSize];
     this->filePath = filePath;
     this->fileName = fileName;
 
-    strcpy(this->inputTextBuffer, EditorEngine::getFileContents(filePath).c_str());
+    auto lang = TextEditor::LanguageDefinition::GLSL();
+    // Will probably need to find the entire list of glsl keywords
+    const char* const glslKeywords[] = {
+        "vec2", "vec3", "vec4", "mat2", "mat3", "mat4", "sampler2D", "samplerCube", 
+        "out", "in", "uniform", "layout"
+    };
 
+    for (auto& k : glslKeywords)
+        lang.mKeywords.insert(k);
+
+    this->textEditor.SetLanguageDefinition(lang);
+    auto palette = TextEditor::GetDarkPalette();
+
+    // Change palette colors here
+    palette[(int)TextEditor::PaletteIndex::Identifier] = 0xff9cdcfe;
+    palette[(int)TextEditor::PaletteIndex::Keyword] = 0xffd197d9;
+    textEditor.SetPalette(palette);
+
+    std::string content = EditorEngine::getFileContents(filePath);
+    this->textEditor.SetText(content);
+    /*
+    strcpy(this->inputTextBuffer, EditorEngine::getFileContents(filePath).c_str());
     this->lineCount = 1;
 
     int i = 0;
@@ -26,10 +46,11 @@ Editor::Editor(unsigned int bufferSize, std::string filePath, std::string fileNa
     }
 
     this->previousTextLen = i;
+    */
 }
 
 void Editor::destroy() {
-    free(inputTextBuffer);
+    //free(inputTextBuffer);
     delete this;
 }
 
@@ -44,12 +65,15 @@ bool EditorEngine::initialize() {
 bool EditorEngine::spawnEditor(const EventPayload& payload) {
     if (const auto* data = std::get_if<OpenFilePayload>(&payload)) {
         if (!data->filePath.empty()) {
-            editors.push_back(new Editor(2056, data->filePath, data->fileName));
+            editors.push_back(new Editor(data->filePath, data->fileName));
+            //editors.push_back(new Editor(2056, data->filePath, data->fileName));
         } else {
-            editors.push_back(new Editor(2056, "../shaders/texture.frag", "texture.frag"));
+            editors.push_back(new Editor("../shaders/texture.frag", "texture.frag"));
+            //editors.push_back(new Editor(2056, "../shaders/texture.frag", "texture.frag"));
         }
     } else if (std::get_if<std::monostate>(&payload)) {
-        editors.push_back(new Editor(2056, "", ""));
+        editors.push_back(new Editor("", ""));
+        //editors.push_back(new Editor(2056, "", ""));
     } else {
         Logger::addLog(LogLevel::ERROR, "spawnEditor", "Invalid Payload Type");
     }
@@ -111,7 +135,7 @@ void EditorEngine::createFile(const std::string& filePath) {
     outfile << "void main() {\n\t\n}";
     outfile.close();
 }
-
+/*
 int EditorEngine::EditorInputCallback(ImGuiInputTextCallbackData* data) {
     Editor* editor = static_cast<Editor*>(data->UserData);
 
@@ -203,3 +227,4 @@ void EditorEngine::updateLineCount(ImGuiInputTextCallbackData* data, Editor* edi
     }
 
 }
+*/

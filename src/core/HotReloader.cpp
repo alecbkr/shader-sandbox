@@ -29,7 +29,7 @@ void HotReloader::update() {
             auto* active = EditorEngine::editors[activeIdx];
             
             std::ofstream out(active->filePath, std::ios::binary);
-            out << active->inputTextBuffer;
+            out << active->textEditor.GetText();
             out.close();
 
             EventDispatcher::TriggerEvent(MakeSaveActiveShaderFileEvent(active->filePath, "program"));

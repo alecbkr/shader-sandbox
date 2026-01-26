@@ -11,6 +11,8 @@
 #include "core/logging/Logger.hpp"
 
 void renderEditor(Editor* editor) {
+    editor->textEditor.Render("ShaderEditor");
+    /*
     ImGuiTableFlags lineNumberFlags = ImGuiTableFlags_BordersInnerV;
     ImGuiInputTextFlags textBoxFlags = ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_CallbackEdit;
 
@@ -41,6 +43,7 @@ void renderEditor(Editor* editor) {
 
         ImGui::EndTable();
     }
+    */
 }
 
 void EditorUI::render() {
@@ -69,7 +72,8 @@ void EditorUI::render() {
                             try {
                                 EditorEngine::createFile(filePath);
                                 EditorEngine::editors[i]->destroy();
-                                EditorEngine::editors[i] = new Editor(2056, filePath, buf);
+                                EditorEngine::editors[i] = new Editor(filePath, buf);
+                                //EditorEngine::editors[i] = new Editor(2056, filePath, buf);
 
                             } catch (const std::filesystem::filesystem_error& e) {
                                 Logger::addLog(LogLevel::ERROR, "EditorEngine::createFile", std::string("Filesystem error: ") + e.what());
