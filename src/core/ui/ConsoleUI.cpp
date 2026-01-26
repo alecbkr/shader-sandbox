@@ -1,9 +1,13 @@
 #include "ConsoleUI.hpp"
 #include <algorithm>
+#include <iostream>
 
 bool ConsoleUI::initialized = false;
 bool ConsoleUI::isAutoScroll = false;
 size_t ConsoleUI::lastLogSize = 0;
+float ConsoleUI::targetWidth = 0.0f;
+float ConsoleUI::targetHeight = 0.0f;
+ImVec2 ConsoleUI::windowPos = ImVec2(0, 0);
 
 std::shared_ptr<ConsoleEngine> ConsoleUI::engine = nullptr;
 std::shared_ptr<ConsoleSink> ConsoleUI::logSrc = nullptr;
@@ -12,6 +16,7 @@ std::vector<std::string> ConsoleUI::history{};
 bool ConsoleUI::initialize(std::shared_ptr<ConsoleSink> consoleSink) {
     engine = std::make_shared<ConsoleEngine>();
     logSrc = consoleSink;
+
     initialized = true;
     return true;
 }
@@ -22,9 +27,24 @@ const void ConsoleUI::render() {
 }
 
 const void ConsoleUI::drawConsole(){
-    ImGui::SetNextWindowSize(ImVec2(520, 600), ImGuiCond_Once);
+    float menuBarHeight = ImGui::GetFrameHeight();
     
-    if(ImGui::Begin("Console", nullptr, ImGuiWindowFlags_MenuBar)) {  
+    int displayWidth = ImGui::GetIO().DisplaySize.x;
+    int displayHeight = ImGui::GetIO().DisplaySize.y - menuBarHeight;
+    ConsoleUI::targetWidth = (float)displayWidth * 0.4f;
+    ConsoleUI::targetHeight = (float)displayHeight * 0.3f;
+    
+    int editorOffsetY = displayHeight * 0.7f;
+    
+    ConsoleUI::windowPos.x = 0;
+    ConsoleUI::windowPos.y = editorOffsetY + menuBarHeight;
+
+    ImGui::SetNextWindowSize(ImVec2(targetWidth, targetHeight + 1), ImGuiCond_Once);
+    ImGui::SetNextWindowPos(windowPos, ImGuiCond_Once);
+    
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar;
+
+    if(ImGui::Begin("Console", nullptr, flags)) {  
         ConsoleUI::drawMenuBar();
         {
             ImGui::BeginChild("ShowLogs", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.95f), true);

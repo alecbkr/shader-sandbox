@@ -148,6 +148,10 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
         std::cout << "Menu UI was not successfully initialized." << std::endl;
         return false;
     }
+    if (!EditorUI::initialize()) {
+        std::cout << "Editor UI was not successfully initialized." << std::endl;
+        return false;
+    }
 
     Logger::addLog(LogLevel::INFO, "Application Initialization", "Application Layer Initialized.");
     Application::initialized = true;

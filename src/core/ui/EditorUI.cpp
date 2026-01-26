@@ -10,6 +10,10 @@
 #include "core/EventDispatcher.hpp"
 #include "core/logging/Logger.hpp"
 
+float EditorUI::targetWidth = 0.0f;
+float EditorUI::targetHeight = 0.0f;
+ImVec2 EditorUI::windowPos = ImVec2(0, 0);
+
 void renderEditor(Editor* editor) {
     ImGuiTableFlags lineNumberFlags = ImGuiTableFlags_BordersInnerV;
     ImGuiInputTextFlags textBoxFlags = ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_CallbackEdit;
@@ -44,9 +48,19 @@ void renderEditor(Editor* editor) {
 }
 
 void EditorUI::render() {
-    ImGui::SetNextWindowSize(ImVec2( 500, 500), ImGuiCond_Once);
+    float menuBarHeight = ImGui::GetFrameHeight();
 
-    if (ImGui::Begin("Editor", nullptr)) {
+    int displayWidth = ImGui::GetIO().DisplaySize.x;
+    int displayHeight = ImGui::GetIO().DisplaySize.y - menuBarHeight;
+    float width = (float)displayWidth * EditorUI::targetWidth;
+    float height = (float)displayHeight * EditorUI::targetHeight;
+
+    ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_Once);
+    ImGui::SetNextWindowPos(ImVec2(windowPos.x, windowPos.y + menuBarHeight), ImGuiCond_Once);
+
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
+
+    if (ImGui::Begin("Editor", nullptr, flags)) {
         ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyScroll;
         if (ImGui::BeginTabBar("EditorTabs", tabBarFlags)) {
             for (int i = 0; i < EditorEngine::editors.size(); i++) {
@@ -95,4 +109,17 @@ void EditorUI::render() {
 
     }
     ImGui::End();
+}
+
+#define TARGET_WIDTH 0.4f
+#define TARGET_HEIGHT 0.7f
+#define START_X 0;
+#define START_Y 0;
+
+bool EditorUI::initialize() {
+    EditorUI::targetWidth = TARGET_WIDTH;
+    EditorUI::targetHeight = TARGET_HEIGHT;
+    EditorUI::windowPos.x = START_X;
+    EditorUI::windowPos.y = START_Y;
+    return true;
 }
