@@ -21,6 +21,10 @@ public:
     static ImVec2 pos;
     static std::unique_ptr<Camera> camPtr;
 
+    static float targetWidth;
+    static float targetHeight;
+    static ImVec2 windowPos;
+
     static void bind();
     static void draw();
     static void reformat();

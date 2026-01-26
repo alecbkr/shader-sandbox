@@ -22,7 +22,11 @@ public:
     static bool initialize(std::shared_ptr<ConsoleSink> consoleSink);
     static const void render();
      
-private: 
+private:
+    static float targetWidth;
+    static float targetHeight;
+    static ImVec2 windowPos;
+    
     static std::shared_ptr<ConsoleEngine> engine; 
     static std::shared_ptr<ConsoleSink> logSrc; 
 

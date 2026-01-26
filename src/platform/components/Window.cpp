@@ -2,7 +2,7 @@
 #include <iostream>
 
 std::unique_ptr<Window> Window::createWindow(u32 width, u32 height, std::string title, bool& outIsValid) {
-    std::unique_ptr<Window> windowPtr = make_unique<Window>(width, height, title);
+    std::unique_ptr<Window> windowPtr = std::make_unique<Window>(width, height, title);
     outIsValid = windowPtr->checkValidity();
     return windowPtr;
 }
