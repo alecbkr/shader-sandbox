@@ -1,6 +1,7 @@
 #include "ConsoleUI.hpp"
 #include <algorithm>
 #include <iostream>
+#include "platform/Platform.hpp"
 
 bool ConsoleUI::initialized = false;
 bool ConsoleUI::isAutoScroll = false;
@@ -39,8 +40,8 @@ const void ConsoleUI::drawConsole(){
     ConsoleUI::windowPos.x = 0;
     ConsoleUI::windowPos.y = editorOffsetY + menuBarHeight;
 
-    ImGui::SetNextWindowSize(ImVec2(targetWidth, targetHeight + 1), ImGuiCond_Once);
-    ImGui::SetNextWindowPos(windowPos, ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(targetWidth, targetHeight + 1), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(windowPos, ImGuiCond_Always);
     
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar;
 

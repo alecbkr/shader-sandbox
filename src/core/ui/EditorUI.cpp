@@ -55,8 +55,8 @@ void EditorUI::render() {
     float width = (float)displayWidth * EditorUI::targetWidth;
     float height = (float)displayHeight * EditorUI::targetHeight;
 
-    ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_Once);
-    ImGui::SetNextWindowPos(ImVec2(windowPos.x, windowPos.y + menuBarHeight), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(windowPos.x, windowPos.y + menuBarHeight), ImGuiCond_Always);
 
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 

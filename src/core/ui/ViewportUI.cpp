@@ -145,8 +145,8 @@ void ViewportUI::draw() {
 
     float editorOffsetX = (float)displayWidth * ViewportUI::targetWidth; // viewport and editor have same width
 
-    ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_Once);
-    ImGui::SetNextWindowPos(ImVec2(windowPos.x + editorOffsetX, windowPos.y + menuBarHeight), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(windowPos.x + editorOffsetX, windowPos.y + menuBarHeight), ImGuiCond_Always);
 
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 

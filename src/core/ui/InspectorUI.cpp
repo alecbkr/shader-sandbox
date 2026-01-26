@@ -28,27 +28,44 @@ std::unordered_map<std::string, ObjectShaderSelector> InspectorUI::objectShaderS
 std::unordered_map<std::string, ObjectTextureSelector> InspectorUI::objectTextureSelectors{};
 
 void InspectorUI::render() {
-    ImGui::Text("Inspector");
-    if (ImGui::BeginTabBar("Inspector tabs")) {
+    float menuBarHeight = ImGui::GetFrameHeight();
+    
+    int displayWidth = ImGui::GetIO().DisplaySize.x;
+    int displayHeight = ImGui::GetIO().DisplaySize.y - menuBarHeight;
+    int targetWidth = (float)displayWidth * 0.2f;
+    int targetHeight = (float)displayHeight * 1.0f;
+    
+    int offsetX = displayWidth * 0.8f;
+    
+    ImGui::SetNextWindowSize(ImVec2(targetWidth, targetHeight + 1), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(offsetX, menuBarHeight), ImGuiCond_Always);
+    
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
-        if (ImGui::BeginTabItem("Uniforms")) {
-            drawUniformInspector();
-            ImGui::EndTabItem();
+    if (ImGui::Begin("Inspector", nullptr, flags)) {
+
+        if (ImGui::BeginTabBar("Inspector tabs")) {
+            
+            if (ImGui::BeginTabItem("Uniforms")) {
+                drawUniformInspector();
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Objects")) {
+                drawObjectsInspector();
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Assets")) {
+                drawAssetsInspector();
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Shader Files")) {
+                drawShaderFileInspector();
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
         }
-        if (ImGui::BeginTabItem("Objects")) {
-            drawObjectsInspector();
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Assets")) {
-            drawAssetsInspector();
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Shader Files")) {
-            drawShaderFileInspector();
-            ImGui::EndTabItem();
-        }
-        ImGui::EndTabBar();
     }
+    ImGui::End();
 }
 
 void InspectorUI::drawUniformInspector() {
