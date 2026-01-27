@@ -16,6 +16,20 @@ enum class UniformType {
     UniformRef
 };
 
+inline std::string to_string(UniformType type) {
+    switch (type) {
+        case UniformType::NoType:     return "NoType";
+        case UniformType::Int:        return "Int";
+        case UniformType::Float:      return "Float";
+        case UniformType::Vec3:       return "Vec3";
+        case UniformType::Vec4:       return "Vec4";
+        case UniformType::Mat4:       return "Mat4";
+        case UniformType::Sampler2D:  return "Sampler2D";
+        case UniformType::UniformRef: return "UniformRef";
+    }
+    return "Unknown(string for this type not added yet!";
+}
+
 struct InspectorSampler2D {
     int textureUnit; 
 };
