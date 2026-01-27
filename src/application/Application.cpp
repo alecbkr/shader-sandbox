@@ -109,6 +109,10 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
         std::cout << "Editor Engine was not initialized successfully." << std::endl;
         return false;
     }
+    if (!ConsoleEngine::initialize(Logger::getConsoleSinkPtr())) {
+        std::cout << "Console Engine was not initialized successfully." << std::endl; 
+        return false; 
+    }
     if (!PresetAssets::initialize()) {
         std::cout << "Preset Assets were not initialized successfully." << std::endl;
         return false;
@@ -136,7 +140,13 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
     }
     // setup UI
     initializeUI();
-    if (!ConsoleUI::initialize(Logger::getConsoleSinkPtr())) {
+    // Old way 
+    // if (!ConsoleUI::initialize(Logger::getConsoleSinkPtr())) {
+    //     std::cout << "ConsoleUI was not initialized successfully." << std::endl;
+    //     return false;
+    // }
+    // New way (moved the console sink to the engine)
+    if(!ConsoleUI::initialize()) {
         std::cout << "ConsoleUI was not initialized successfully." << std::endl;
         return false;
     }

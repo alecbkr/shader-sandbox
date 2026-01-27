@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <deque>
+#include "../logging/Logger.hpp"
 #include "../logging/ConsoleSink.hpp"
 #include "../ConsoleEngine.hpp"
 
@@ -26,12 +27,13 @@ static const ImVec4 LOG_COLORS[] = {
     ImVec4(1.0f, 0.4f, 0.4f, 1.0f),         // Error (lighter red)
     ImVec4(1.0f, 0.1f, 0.5f, 1.0f),         // Warning (Magenta)
     ImVec4(1.0f, 1.0f, 1.0f, 1.0f),         // Info (White)
+                                            // Anomaly (light gray)
 }; 
 
 // Adapted from imgui_demo.cpp
 class ConsoleUI {
 public: 
-    static bool initialize(std::shared_ptr<ConsoleSink> consoleSink);
+    static bool initialize();
     static const void render();
      
 private: 
@@ -40,8 +42,9 @@ private:
         ImVec4 color; 
     }; 
 
-    static std::shared_ptr<ConsoleEngine> engine; 
-    static std::shared_ptr<ConsoleSink> logSrc; 
+    // static std::shared_ptr<ConsoleEngine> engine; 
+    // static std::shared_ptr<ConsoleSink> logSrc; 
+
     static std::vector<std::string> history; 
 
     static std::vector<std::string> selectedLogIndices; 

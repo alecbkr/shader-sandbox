@@ -18,13 +18,13 @@ ConsoleBtns ConsoleUI::btns = {
     true
 }; 
 
-std::shared_ptr<ConsoleEngine> ConsoleUI::engine = nullptr;
-std::shared_ptr<ConsoleSink> ConsoleUI::logSrc = nullptr;
 std::vector<std::string> ConsoleUI::history{};
 
-bool ConsoleUI::initialize(std::shared_ptr<ConsoleSink> consoleSink) {
-    engine = std::make_shared<ConsoleEngine>();
-    logSrc = consoleSink;
+bool ConsoleUI::initialize() {
+    // TODO: maybe create a file that implements all these callbacks so this function isn't as messy 
+    ConsoleEngine::registerToggle(ConsoleEngine::Cmd::AUTO_SCROLL, 
+        [&](bool state){btns.isAutoScroll = state;});
+
     initialized = true;
     return true;
 }
@@ -62,19 +62,15 @@ const void ConsoleUI::render() {
 
 // TODO: allow for users to select multiple text boxes to copy 
 void ConsoleUI::drawLogs(){
-    if (!logSrc) {
-        return; 
-    }
+    const auto& logs = ConsoleEngine::getLogs(); 
 
-    const auto& logs = logSrc->getLogs(); 
-
+    bool isScroll = false; 
     if (logs.size() > lastLogSize) {
-        btns.isAutoScroll = true; 
         lastLogSize = logs.size(); 
 
         // only scroll when user is not dragging to copy text 
-        if (selectionStart == -1) {
-            btns.isAutoScroll = true; 
+        if (selectionStart == -1 && btns.isAutoScroll) {
+            isScroll = true; 
         }
     }
 
@@ -125,9 +121,8 @@ void ConsoleUI::drawLogs(){
         isCursorDragging = false; 
     }
 
-    if(btns.isAutoScroll) {
+    if(isScroll) {
         ImGui::SetScrollHereY(1.0f); 
-        btns.isAutoScroll = false; 
     }
 }
 
@@ -135,7 +130,9 @@ const void ConsoleUI::drawMenuBar() {
     if(ImGui::BeginMenuBar()) {
 
         if(ImGui::BeginMenu("View")) {
-            ImGui::MenuItem("Clear", "Ctrl + l"); 
+            if (ImGui::MenuItem("Clear", "Ctrl + l")) {
+                ConsoleEngine::executeBtnAction("clear"); 
+            } 
             ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
             ImGui::MenuItem("Auto-Scroll", nullptr, &btns.isAutoScroll); 
             ImGui::MenuItem("Collapse Logs", nullptr, &btns.isCollapsedLogs);
@@ -185,7 +182,7 @@ void ConsoleUI::copyLogsToClipboard() {
     int endIdx = (selectionStart > selectionEnd) ? selectionStart : selectionEnd; 
 
     std::string clipText; 
-    auto& logs = logSrc->getLogs(); 
+    auto& logs = ConsoleEngine::getLogs(); 
 
     for (int i = startIdx; i <= endIdx; ++i) {
         if(i >= 0 && i < logs.size()) {
@@ -201,9 +198,9 @@ void ConsoleUI::copyLogsToClipboard() {
 }
 
 const void ConsoleUI::executeCommand() {
-    if(!engine) {
-        return; 
-    }
+    // if(!engine) {
+    //     return; 
+    // }
 
     // std::string command(inputBuf); 
     // Logger::addLog(LogLevel::INFO, ">", command, ); 
