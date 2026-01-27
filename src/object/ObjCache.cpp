@@ -2,6 +2,8 @@
 #include "core/InspectorEngine.hpp"
 #include "core/UniformRegistry.hpp"
 #include "core/UniformTypes.hpp"
+#include "core/EventDispatcher.hpp"
+#include "core/ShaderRegistry.hpp"
 #include <algorithm>
 #include <iostream>
 
@@ -19,6 +21,28 @@ std::unordered_map<std::string, Object*> ObjCache::objMap;
 //     //     });
 //     // }
 // }
+
+bool ObjCache::initialize() {
+    EventDispatcher::Subscribe(EventType::ReloadShader, [](const EventPayload& payload) -> bool {
+        
+        if (const auto* data = std::get_if<ReloadShaderPayload>(&payload)) {
+            
+            ShaderProgram* newProg = ShaderRegistry::getProgram(data->programName);
+            if (newProg) {
+                for (auto& [name, object] : objMap) {
+                    if (object->getProgram()->name == data->programName) {
+                        object->setProgram(*newProg);
+                    }
+                }
+                reorderByProgram();
+                return true;
+            }
+        }
+        return false;
+    });
+
+    return true;
+}
 
 void ObjCache::createObj(const std::string& name, std::vector<float> verts, std::vector<int> indices, 
                             bool hasNorms, bool hasUVs, ShaderProgram &program) {

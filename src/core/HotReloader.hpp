@@ -5,6 +5,8 @@
 
 class HotReloader{
 public:
+    static bool initialize();
+    static void update();
     static bool compile(const std::string &filepath, const std::string &programName);
 
 private:

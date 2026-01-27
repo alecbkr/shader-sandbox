@@ -38,51 +38,44 @@ ShaderLinkMenu InspectorUI::linkNewShaderMenu = ShaderLinkMenu{
 };
 
 void InspectorUI::render() {
-    ImGui::Text("Inspector");
-    if (ImGui::BeginTabBar("Inspector tabs")) {
+    float menuBarHeight = ImGui::GetFrameHeight();
+    
+    int displayWidth = ImGui::GetIO().DisplaySize.x;
+    int displayHeight = ImGui::GetIO().DisplaySize.y - menuBarHeight;
+    int targetWidth = (float)displayWidth * 0.2f;
+    int targetHeight = (float)displayHeight * 1.0f;
+    
+    int offsetX = displayWidth * 0.8f;
+    
+    ImGui::SetNextWindowSize(ImVec2(targetWidth, targetHeight + 1), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(offsetX, menuBarHeight), ImGuiCond_Always);
+    
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
-        if (ImGui::BeginTabItem("Uniforms")) {
-            drawUniformInspector();
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Objects")) {
-            drawObjectsInspector();
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Assets")) {
-            drawAssetsInspector();
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Shader Files")) {
-            drawShaderFileInspector();
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Shader Programs")) {
-            // This is temporary, I don't know what to put here for a header.
-            ImGui::Text("--------------");
-            ImGui::Text("Shader Programs");
-            ImGui::Text("--------------");
-            drawShaderLinkMenu(linkNewShaderMenu, ShaderLinkMenuType::Create);
-            for (const auto & [shaderName, shaderProgram] : ShaderRegistry::getPrograms()) {
-                if (!shaderPrograms.contains(shaderName)) {
-                    shaderPrograms[shaderName] = ShaderLinkMenu{ 
-                        .shaderName = std::string(shaderName),
-                        .vertSelection = 0,
-                        .geometrySelection = 0,
-                        .fragSelection = 0,
-                        .newSelector = true
-                    };    
-                }
-                if (ImGui::TreeNode(shaderName.c_str())) {
-                    drawShaderLinkMenu(shaderPrograms[shaderName], ShaderLinkMenuType::Edit);
-                    ImGui::TreePop();
-                }
+    if (ImGui::Begin("Inspector", nullptr, flags)) {
+
+        if (ImGui::BeginTabBar("Inspector tabs")) {
+            
+            if (ImGui::BeginTabItem("Uniforms")) {
+                drawUniformInspector();
+                ImGui::EndTabItem();
             }
-            ImGui::Text("");
-            ImGui::EndTabItem();
+            if (ImGui::BeginTabItem("Objects")) {
+                drawObjectsInspector();
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Assets")) {
+                drawAssetsInspector();
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Shader Files")) {
+                drawShaderFileInspector();
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
         }
-        ImGui::EndTabBar();
     }
+    ImGui::End();
 }
 
 void InspectorUI::drawUniformInspector() {
