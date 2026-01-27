@@ -8,14 +8,14 @@
 class UniformRegistry {
     public:
     static UniformRegistry& instance();
-    const Uniform* tryReadUniform(const std::string& objectName, const std::string& uniformName) const; // return false if we didn't find it.
-    bool containsUniform(const std::string& objectName, const std::string& uniformName);
-    const std::unordered_map<std::string, Uniform>* tryReadUniforms(const std::string& objectName) const;
-    void registerUniform(const std::string& objectName, Uniform uniform);
-    void insertUniformMap(const std::string& objectName, const std::unordered_map<std::string, Uniform>& map);
-    void eraseUniform(const std::string& objectName, const std::string& uniformName);
+    const Uniform* tryReadUniform(unsigned int modelID, const std::string& uniformName) const; // return false if we didn't find it.
+    bool containsUniform(unsigned int modelID, const std::string& uniformName);
+    const std::unordered_map<std::string, Uniform>* tryReadUniforms(unsigned int modelID) const;
+    void registerUniform(unsigned int modelID, Uniform uniform);
+    void insertUniformMap(unsigned int modelID, const std::unordered_map<std::string, Uniform>& map);
+    void eraseUniform(unsigned int modelID, const std::string& uniformName);
 
     private:
     UniformRegistry();
-    std::unordered_map<std::string, std::unordered_map<std::string, Uniform>> uniforms;
+    std::unordered_map<unsigned int, std::unordered_map<std::string, Uniform>> uniforms;
 };
