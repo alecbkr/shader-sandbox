@@ -14,6 +14,7 @@ class ConsoleEngine {
 
         // toggles 
         static constexpr const char* AUTO_SCROLL = "autoscroll";
+        static constexpr const char* COLLAPSE_LOGS = "collapse_logs"; 
         static constexpr const char* SHOW_ERRORS = "show_errors";
         static constexpr const char* SHOW_INFO   = "show_info";
         static constexpr const char* SHOW_WARN   = "show_warnings";

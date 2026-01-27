@@ -9,14 +9,14 @@ int ConsoleUI::selectionEnd = -1;
 SearchText ConsoleUI::searcher; 
 
 ConsoleBtns ConsoleUI::btns = {
-    false, 
-    false, 
-    true, 
-    true, 
-    true, 
-    true, 
-    true, 
-    true
+    .isAutoScroll = true, 
+    .isCollapsedLogs = false, 
+    .isShowErrors = true, 
+    .isShowWarning = true, 
+    .isShowInfo = true, 
+    .isShowShader = true, 
+    .isShowSystem = true, 
+    .isShowAssets = true
 }; 
 
 std::vector<std::string> ConsoleUI::history{};
@@ -25,143 +25,54 @@ bool ConsoleUI::initialize() {
     // TODO: maybe create a file that implements all these callbacks so this function isn't as messy 
     ConsoleEngine::registerToggle(ConsoleEngine::Cmd::AUTO_SCROLL, 
         [&](bool state){btns.isAutoScroll = state;});
-    searcher.flags = SearchUIFlags::DEFAULT;
+    ConsoleEngine::registerToggle(ConsoleEngine::Cmd::COLLAPSE_LOGS, 
+        [&](bool state) {btns.isCollapsedLogs = state; });
+
+
+    searcher.flags = SearchUIFlags::ADVANCED;
     initialized = true;
+
+    for (int i = 0; i < 200; ++i) {
+        Logger::addLog(LogLevel::INFO, "Testing", "This is a test"); 
+    }
+    Logger::addLog(LogLevel::INFO, "Testing", "This is a test"); 
+
+
     return true;
 }
 
 // change this to draw the entire componenet 
 const void ConsoleUI::render() {
     if (!initialized) return;
-     ImGui::SetNextWindowSize(ImVec2(520, 600), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(520, 600), ImGuiCond_Once);
     
     if(ImGui::Begin("Console", nullptr, ImGuiWindowFlags_MenuBar)) {  
         ConsoleUI::drawMenuBar();
 
-        bool isWinFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows); 
-
-        if (isWinFocused && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_C)) {
-            Logger::addLog(LogLevel::INFO, "ConsoleTest", "Hit Ctrl + C"); 
-            copyLogsToClipboard(); 
-        }
-
-        if(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered()) {
-            ConsoleUI::selectionStart = -1; 
-            ConsoleUI::selectionEnd = -1; 
-        }
-
         {
-            // std::string test_buffer = "Hello \n World \n Testing \n ..."; 
             ImGui::BeginChild("ShowLogs", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.95f), true);
             ConsoleUI::drawLogs(); 
-            // ImGui::InputTextMultiline("##source", test_buffer.data(), test_buffer.size() + 1, ImVec2(-1.0f, -1.0f), ImGuiInputTextFlags_ReadOnly);
             ImGui::EndChild(); 
         }
     }
     ImGui::End(); 
 }
 
-// TODO: allow for users to select multiple text boxes to copy 
-void ConsoleUI::drawLogs(){
+void ConsoleUI::drawLogs() {
     const auto& logs = ConsoleEngine::getLogs(); 
-
-    // search logic when user updates their search input 
-    if (searcher.GetisDirty() || (searcher.hasQuery() && logs.size() > lastLogSize)) {
-        searcher.updateMatches(logs, [](const LogEntry &log){ 
-            return ConsoleUI::formatLogString(log); 
-        });
-    }
-
     bool isScroll = false; 
-    if (logs.size() > lastLogSize) {
-        lastLogSize = logs.size(); 
+    updateSearchAndScroll(logs, isScroll); 
 
-        // only scroll when user is not dragging to copy text 
-        if (selectionStart == -1 && btns.isAutoScroll) {
-            isScroll = true; 
-        }
+    for (int i = 0; i < logs.size(); ++i) {
+        int repeatCount = getCollapseCount(logs, i); 
+        drawSingleLog(logs[i], i, repeatCount, isScroll); 
+        i += repeatCount; 
     }
 
-    ImDrawList* drawList = ImGui::GetWindowDrawList(); 
-    static bool isCursorDragging = false; 
-
-    for(int i = 0; i < logs.size(); i ++) {
-        auto log = logs[i]; 
-        LogStyle style = getLogStyle(log); 
-        bool isSelected = false; 
-        
-        if(selectionStart != -1 && selectionEnd != -1) {
-            int startIdx = (selectionStart < selectionEnd) ? selectionStart : selectionEnd; 
-            int endIdx = (selectionStart > selectionEnd) ? selectionStart : selectionEnd; 
-            isSelected = (i >= startIdx && i <= endIdx); 
-        }
-
-        ImGui::PushID(i); 
-        ImVec2 lastCursorPos = ImGui::GetCursorPos(); 
-        // ImGui::Selectable("##logline", isSelected, ImGuiSelectableFlags_SpanAllColumns);
-        ImGui::Selectable("##logline", isSelected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap);
-
-        // draw highlighted lines from search 
-        if (searcher.isItemActiveMatch(i)) {
-            if (searcher.checkAndClearScrollRequest()) {
-                ImGui::SetScrollHereY(0.5f); 
-                isScroll = false; 
-            }
-
-            // draw the highlighted box 
-            const auto& match = searcher.getActiveMatch(); 
-            std::string fullText = formatLogString(log); 
-
-            if (match.charIdx + match.length <= fullText.size()) {
-                std::string textBefore = fullText.substr(0, match.charIdx); 
-                std::string textMatch = fullText.substr(match.charIdx, match.length); 
-
-                float offsetX = ImGui::CalcTextSize(textBefore.c_str()).x; 
-                float width = ImGui::CalcTextSize(textMatch.c_str()).x; 
-
-                // draw rectangle 
-                drawList->AddRectFilled (
-                    ImVec2(lastCursorPos.x + offsetX, lastCursorPos.y),
-                    ImVec2(lastCursorPos.x + offsetX + width, lastCursorPos.y + ImGui::GetTextLineHeight()),
-                    IM_COL32(255, 255, 0, 100)
-                );
-            }
-        }
-
-
-
-        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-            selectionStart = i; 
-            selectionEnd = i; 
-            isCursorDragging = true; 
-        }
-
-        // handles dragging logic for when users drag their cursor to select multiple lines from the console 
-        if (ImGui::IsItemHovered() && ImGui::IsMouseDown(ImGuiMouseButton_Left) && isCursorDragging) {
-            selectionEnd = i; 
-        }
-
-        ImGui::SetCursorPos(lastCursorPos); 
-        ImGui::TextColored(style.color, "%s", style.prefix.c_str());
-        ImGui::SameLine(0,0); 
-        
-        if(log.additional.empty()) {
-            ImGui::TextUnformatted(log.msg.c_str()); 
-        } else {
-            std::string fullMsg = log.msg + " " + log.additional; 
-            ImGui::TextUnformatted(fullMsg.c_str()); 
-        }
-
-        ImGui::PopID(); 
-    }
-
-    if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-        isCursorDragging = false; 
-    }
-
-    if(isScroll) {
+    if (isScroll) {
         ImGui::SetScrollHereY(1.0f); 
     }
+
 }
 
 const void ConsoleUI::drawMenuBar() {         
@@ -183,7 +94,7 @@ const void ConsoleUI::drawMenuBar() {
 
         if (ImGui::BeginMenu("Filters")) {
             ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
-            ImGui::MenuItem("Show Errors", nullptr, btns.isShowErrors);
+            ImGui::MenuItem("Show Errors", nullptr, &btns.isShowErrors);
             ImGui::MenuItem("Show Warning", nullptr, &btns.isShowWarning);
             ImGui::MenuItem("Show Info", nullptr, &btns.isShowInfo); 
             ImGui::PopItemFlag(); 
@@ -212,42 +123,96 @@ const void ConsoleUI::drawMenuBar() {
     }
 }
 
-void ConsoleUI::copyLogsToClipboard() {
-    // nothing was selected in the console
-    if (selectionStart == -1 || selectionEnd == -1) {
-        Logger::addLog(LogLevel::INFO, "Console Test", "Nothing was selected"); 
-        return; 
-    }  
+// updates search results from find and autoscroll if btn is active 
+void ConsoleUI::updateSearchAndScroll(const std::deque<LogEntry> &logs, bool& isScroll) {
+    if (searcher.GetisDirty() || (searcher.hasQuery() && logs.size() > lastLogSize)) {
+        searcher.updateMatches(logs, [](const LogEntry &log){ 
+            return ConsoleUI::formatLogString(log); 
+        });
+    }
 
-    // normalize between the start and end 
-    int startIdx = (selectionStart < selectionEnd) ? selectionStart : selectionEnd; 
-    int endIdx = (selectionStart > selectionEnd) ? selectionStart : selectionEnd; 
+    if (logs.size() > lastLogSize) {
+        lastLogSize = logs.size();
+        if (selectionStart == -1 && btns.isAutoScroll && !searcher.hasQuery()) {
+            isScroll = true;
+        }
+    }
+}
 
-    std::string clipText; 
-    auto& logs = ConsoleEngine::getLogs(); 
+int ConsoleUI::getCollapseCount(const std::deque<LogEntry> &logs, int currIdx) {
+    if (!btns.isCollapsedLogs) return 0;
 
-    for (int i = startIdx; i <= endIdx; ++i) {
-        if(i >= 0 && i < logs.size()) {
-            clipText += formatLogString(logs[i]) + "\n"; 
+    int count = 0;
+    int nextIdx = currIdx + 1;
+    
+    while (nextIdx < logs.size()) {
+        const auto& current = logs[currIdx];
+        const auto& next = logs[nextIdx];
 
+        bool isEqual = (current.msg == next.msg && 
+                        current.level == next.level && 
+                        current.src == next.src && 
+                        current.additional == next.additional);
+
+        if (isEqual) {
+            count++;
+            nextIdx++;
+        } else {
+            break;
+        }
+    }
+    return count;
+}
+
+void ConsoleUI::drawSingleLog(const LogEntry& log, int idx, int repeatCount, bool& isScroll) {
+    LogStyle style = getLogStyle(log);
+    ImGui::PushID(idx);
+    ImVec2 screenPos = ImGui::GetCursorScreenPos();
+
+    // Draw the search highlight 
+    if (searcher.isItemActiveMatch(idx)) {
+        if (searcher.checkAndClearScrollRequest()) {
+            ImGui::SetScrollHereY(0.5f);
+            isScroll = false; 
+        }
+
+        const auto& match = searcher.getActiveMatch();
+        std::string fullText = formatLogString(log);
+
+        if (match.charIdx + match.length <= fullText.size()) {
+            std::string textBefore = fullText.substr(0, match.charIdx);
+            std::string textMatch = fullText.substr(match.charIdx, match.length);
+
+            float offsetX = ImGui::CalcTextSize(textBefore.c_str()).x;
+            float width = ImGui::CalcTextSize(textMatch.c_str()).x;
+
+            ImGui::GetWindowDrawList()->AddRectFilled(
+                ImVec2(screenPos.x + offsetX, screenPos.y),
+                ImVec2(screenPos.x + offsetX + width, screenPos.y + ImGui::GetTextLineHeight()),
+                IM_COL32(255, 255, 0, 100)
+            );
         }
     }
 
-    // TODO: Maybe change this based on if we keep copy from the menu or not 
-    if(!clipText.empty()) {
-        ImGui::SetClipboardText(clipText.c_str()); 
+    ImGui::TextColored(style.color, "%s", style.prefix.c_str());
+    ImGui::SameLine(0, 0);
+    
+    if (log.additional.empty()) {
+        ImGui::TextUnformatted(log.msg.c_str());
+    } else {
+        std::string fullMsg = log.msg + " " + log.additional;
+        ImGui::TextUnformatted(fullMsg.c_str());
     }
+
+    // 6. Draw Collapse Counter
+    if (repeatCount > 0) {
+        ImGui::SameLine();
+        ImGui::TextDisabled("(%d)", repeatCount + 1);
+    }
+
+    ImGui::PopID();
 }
 
-const void ConsoleUI::executeCommand() {
-    // if(!engine) {
-    //     return; 
-    // }
-
-    // std::string command(inputBuf); 
-    // Logger::addLog(LogLevel::INFO, ">", command, ); 
-    // engine->processInput(command); 
-}
 
 ConsoleUI::LogStyle ConsoleUI::getLogStyle(const LogEntry& log) {
     LogStyle style; 

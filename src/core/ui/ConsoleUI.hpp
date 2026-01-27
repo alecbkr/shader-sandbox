@@ -60,10 +60,12 @@ private:
     static size_t lastLogSize; 
     static void drawLogs(); 
     static const void drawMenuBar(); 
+    static void updateSearchAndScroll(const std::deque<LogEntry> &logs, bool& isScroll); 
+    static int getCollapseCount(const std::deque<LogEntry> &logs, int currIdx);
+    static void drawSingleLog(const LogEntry& log, int index, int repeatCount, bool& isScroll);
 
     // Allows for users to copy their logs from the console (because of the way ImGui renders text I had to do this)
     static void copyLogsToClipboard(); 
-    static const void executeCommand(); 
     static LogStyle getLogStyle(const LogEntry& log); 
     static std::string formatLogString(const LogEntry& log); 
 }; 
