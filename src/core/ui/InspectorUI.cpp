@@ -1,7 +1,5 @@
 #include "core/ui/InspectorUI.hpp"
-
 #include <filesystem>
-
 #include "core/InspectorEngine.hpp"
 #include "core/ShaderRegistry.hpp"
 #include "core/TextureRegistry.hpp"
@@ -14,7 +12,6 @@
 #include "engine/ShaderProgram.hpp"
 #include "object/ObjCache.hpp"
 #include "object/Texture.hpp"
-#include <memory>
 #include <ostream>
 #include <string>
 #include <unistd.h>
@@ -60,6 +57,30 @@ void InspectorUI::render() {
             drawShaderFileInspector();
             ImGui::EndTabItem();
         }
+        if (ImGui::BeginTabItem("Shader Programs")) {
+            // This is temporary, I don't know what to put here for a header.
+            ImGui::Text("--------------");
+            ImGui::Text("Shader Programs");
+            ImGui::Text("--------------");
+            drawShaderLinkMenu(linkNewShaderMenu, ShaderLinkMenuType::Create);
+            for (const auto & [shaderName, shaderProgram] : ShaderRegistry::getPrograms()) {
+                if (!shaderPrograms.contains(shaderName)) {
+                    shaderPrograms[shaderName] = ShaderLinkMenu{ 
+                        .shaderName = std::string(shaderName),
+                        .vertSelection = 0,
+                        .geometrySelection = 0,
+                        .fragSelection = 0,
+                        .newSelector = true
+                    };    
+                }
+                if (ImGui::TreeNode(shaderName.c_str())) {
+                    drawShaderLinkMenu(shaderPrograms[shaderName], ShaderLinkMenuType::Edit);
+                    ImGui::TreePop();
+                }
+            }
+            ImGui::Text("");
+            ImGui::EndTabItem();
+        }
         ImGui::EndTabBar();
     }
 }
@@ -82,9 +103,11 @@ void InspectorUI::drawUniformInspector() {
                 ImGui::PopID();
                 imGuiID++;
             }
+            /*
             for (std::string uniformName : uniformNamesToDelete)
                 UNIFORM_REGISTRY.eraseUniform(objectName, uniformName);
             uniformNamesToDelete.clear();
+            */
 
             ImGui::TreePop();
         }
@@ -303,28 +326,6 @@ void InspectorUI::drawShaderFileInspector() {
     std::string path = "../shaders/";
 
     ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
-
-    // This is temporary, I don't know what to put here.
-    ImGui::Text("--------------");
-    ImGui::Text("Shader Programs");
-    ImGui::Text("--------------");
-    drawShaderLinkMenu(linkNewShaderMenu, ShaderLinkMenuType::Create);
-    for (const auto & [shaderName, shaderProgram] : ShaderRegistry::getPrograms()) {
-        if (!shaderPrograms.contains(shaderName)) {
-            shaderPrograms[shaderName] = ShaderLinkMenu{ 
-                .shaderName = std::string(shaderName),
-                .vertSelection = 0,
-                .geometrySelection = 0,
-                .fragSelection = 0,
-                .newSelector = true
-            };    
-        }
-        if (ImGui::TreeNode(shaderName.c_str())) {
-            drawShaderLinkMenu(shaderPrograms[shaderName], ShaderLinkMenuType::Edit);
-            ImGui::TreePop();
-        }
-    }
-    ImGui::Text("");
 
     ImGui::Text("--------------");
     ImGui::Text("Shader Files");
@@ -593,6 +594,10 @@ bool InspectorUI::drawUniformInputValue(glm::mat4* value) {
     return changed;
 }
 
+bool InspectorUI:: drawUniformInputValue(InspectorSampler2D* value) {
+    drawUniformInputValue(&value->textureUnit);
+}
+
 void InspectorUI::drawUniformInput(Uniform& uniform, const std::string& objectName) {
     if (ImGui::TreeNode(uniform.name.c_str())) {
         bool changed = false;
@@ -604,9 +609,11 @@ void InspectorUI::drawUniformInput(Uniform& uniform, const std::string& objectNa
             InspectorEngine::applyInput(objectName, uniform);
         }
 
+        /*
         if (ImGui::Button("Delete Uniform", ImVec2(100, 20))) {
             uniformNamesToDelete.push_back(uniform.name);
         }
+        */
         ImGui::TreePop();
     }
 }

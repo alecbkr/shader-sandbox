@@ -15,7 +15,8 @@ const std::unordered_map<std::string, UniformType> InspectorEngine::typeMap = {
     {"vec4", UniformType::Vec4},
     {"int", UniformType::Int},
     {"float", UniformType::Float},
-    {"mat4", UniformType::Mat4 }
+    {"mat4", UniformType::Mat4},
+    {"sampler2D", UniformType::Sampler2D}
 };
 
 bool InspectorEngine::initialize() {
@@ -168,6 +169,9 @@ void InspectorEngine::assignDefaultValue(Uniform& uniform) {
     case UniformType::Mat4:
         uniform.value = glm::mat4(0.0f);
         break;
+    case UniformType::Sampler2D:
+        uniform.value = 0; // Default to texture unit 0
+        break;
     default:
         // Logger::addLog(LogLevel::WARNING, "assignDefaultValue", "Invalid Uniform Type, making it an int");
         Logger::addLog(LogLevel::WARNING, "assignDefaultValue", "Invalid Uniform Type, making it an int"); 
@@ -238,6 +242,13 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
     case UniformType::Mat4:
         program.setUniform_mat4float(uniform.name.c_str(), std::get<glm::mat4>(uniform.value));
         break;
+            /*
+    case UniformType::Sampler2D: {
+        const InspectorSampler2D& sampler = std::get<InspectorSampler2D>(uniform.value);
+        program.setUniform_int(uniform.name.c_str(), sampler.textureUnit);
+        break;
+    }
+    */
     default:
         // Logger::addLog(LogLevel::WARNING, "applyUniform", "Invalid Uniform Type: ");
         Logger::addLog(LogLevel::WARNING, "applyUniform", "Invalid Uniform Type: "); 

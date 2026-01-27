@@ -12,10 +12,15 @@ enum class UniformType {
     Vec3,
     Vec4,
     Mat4,
+    Sampler2D,
     UniformRef
 };
 
-using UniformValue = std::variant<int, float, glm::vec3, glm::vec4, glm::mat4>;
+struct InspectorSampler2D {
+    int textureUnit; 
+};
+
+using UniformValue = std::variant<int, float, glm::vec3, glm::vec4, glm::mat4, InspectorSampler2D>;
 
 struct UniformRef {
     std::string shaderName;

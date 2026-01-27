@@ -64,5 +64,6 @@ class InspectorUI {
     static bool drawUniformInputValue(glm::vec4* value);
     static bool drawUniformInputValue(glm::mat4* value);
     static bool drawUniformInputValue(glm::quat* value);
+    static bool drawUniformInputValue(InspectorSampler2D* value);
     static void drawUniformInput(Uniform& uniform, const std::string& objectName);
 };
