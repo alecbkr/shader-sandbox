@@ -6,6 +6,7 @@ bool ConsoleUI::initialized = false;
 size_t ConsoleUI::lastLogSize = 0;
 int ConsoleUI::selectionStart = -1; 
 int ConsoleUI::selectionEnd = -1;
+SearchText ConsoleUI::searcher; 
 
 ConsoleBtns ConsoleUI::btns = {
     false, 
@@ -24,7 +25,7 @@ bool ConsoleUI::initialize() {
     // TODO: maybe create a file that implements all these callbacks so this function isn't as messy 
     ConsoleEngine::registerToggle(ConsoleEngine::Cmd::AUTO_SCROLL, 
         [&](bool state){btns.isAutoScroll = state;});
-
+    searcher.flags = SearchUIFlags::DEFAULT;
     initialized = true;
     return true;
 }
@@ -64,6 +65,13 @@ const void ConsoleUI::render() {
 void ConsoleUI::drawLogs(){
     const auto& logs = ConsoleEngine::getLogs(); 
 
+    // search logic when user updates their search input 
+    if (searcher.GetisDirty() || (searcher.hasQuery() && logs.size() > lastLogSize)) {
+        searcher.updateMatches(logs, [](const LogEntry &log){ 
+            return ConsoleUI::formatLogString(log); 
+        });
+    }
+
     bool isScroll = false; 
     if (logs.size() > lastLogSize) {
         lastLogSize = logs.size(); 
@@ -74,6 +82,7 @@ void ConsoleUI::drawLogs(){
         }
     }
 
+    ImDrawList* drawList = ImGui::GetWindowDrawList(); 
     static bool isCursorDragging = false; 
 
     for(int i = 0; i < logs.size(); i ++) {
@@ -91,6 +100,35 @@ void ConsoleUI::drawLogs(){
         ImVec2 lastCursorPos = ImGui::GetCursorPos(); 
         // ImGui::Selectable("##logline", isSelected, ImGuiSelectableFlags_SpanAllColumns);
         ImGui::Selectable("##logline", isSelected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap);
+
+        // draw highlighted lines from search 
+        if (searcher.isItemActiveMatch(i)) {
+            if (searcher.checkAndClearScrollRequest()) {
+                ImGui::SetScrollHereY(0.5f); 
+                isScroll = false; 
+            }
+
+            // draw the highlighted box 
+            const auto& match = searcher.getActiveMatch(); 
+            std::string fullText = formatLogString(log); 
+
+            if (match.charIdx + match.length <= fullText.size()) {
+                std::string textBefore = fullText.substr(0, match.charIdx); 
+                std::string textMatch = fullText.substr(match.charIdx, match.length); 
+
+                float offsetX = ImGui::CalcTextSize(textBefore.c_str()).x; 
+                float width = ImGui::CalcTextSize(textMatch.c_str()).x; 
+
+                // draw rectangle 
+                drawList->AddRectFilled (
+                    ImVec2(lastCursorPos.x + offsetX, lastCursorPos.y),
+                    ImVec2(lastCursorPos.x + offsetX + width, lastCursorPos.y + ImGui::GetTextLineHeight()),
+                    IM_COL32(255, 255, 0, 100)
+                );
+            }
+        }
+
+
 
         if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
             selectionStart = i; 
@@ -162,7 +200,11 @@ const void ConsoleUI::drawMenuBar() {
         }
 
         if (ImGui::BeginMenu("Find")) {
+            if(searcher.drawSearchUI()) {
 
+            }
+
+            // ImGui::PopItemFlag(); 
             ImGui::EndMenu(); 
         }
         // Logger::addLog(LogLevel::INFO, "", "Drawing", -1); 

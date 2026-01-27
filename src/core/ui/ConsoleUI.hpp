@@ -1,6 +1,7 @@
 #pragma once 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
+#include <imgui_internal.h>
 #include <string>
 #include <vector>
 #include <memory>
@@ -8,6 +9,7 @@
 #include "../logging/Logger.hpp"
 #include "../logging/ConsoleSink.hpp"
 #include "../ConsoleEngine.hpp"
+#include "engine/SearchText.hpp"
 
 struct ConsoleBtns {
     bool isAutoScroll; 
@@ -35,6 +37,7 @@ class ConsoleUI {
 public: 
     static bool initialize();
     static const void render();
+    static SearchText searcher;
      
 private: 
     struct LogStyle {
