@@ -67,32 +67,11 @@ void EditorUI::render() {
                 std::string tabTitle = EditorEngine::editors[i]->fileName + "##" + std::to_string(i + 1);
                 bool openTab = true;
 
-                if (!EditorEngine::editors[i]->filePath.empty()) {
-                    if (ImGui::BeginTabItem(tabTitle.c_str(), &openTab)) {
-                        renderEditor(EditorEngine::editors[i]);
-                        EditorEngine::activeEditor = i;
+                if (ImGui::BeginTabItem(tabTitle.c_str(), &openTab)) {
+                    renderEditor(EditorEngine::editors[i]);
+                    EditorEngine::activeEditor = i;
 
-                        ImGui::EndTabItem();
-                    }
-                } else {
-                    if (ImGui::BeginTabItem(("Untitled##" + std::to_string(i)).c_str(), &openTab)) {
-                        ImGui::Text("Enter File Name:");
-                        char buf[256] = "\0";
-                        if (ImGui::InputText("##FileNameInput", buf, 256, ImGuiInputTextFlags_EnterReturnsTrue) && buf[0] != '\0') {
-                            std::string filePath = "../shaders/" + std::string(buf);
-                            try {
-                                EditorEngine::createFile(filePath);
-                                EditorEngine::editors[i]->destroy();
-                                EditorEngine::editors[i] = new Editor(2056, filePath, buf);
-
-                            } catch (const std::filesystem::filesystem_error& e) {
-                                Logger::addLog(LogLevel::ERROR, "EditorEngine::createFile", std::string("Filesystem error: ") + e.what());
-                            }
-                        }
-
-                        EditorEngine::activeEditor = i;
-                        ImGui::EndTabItem();
-                    }
+                    ImGui::EndTabItem();
                 }
 
                 if (!openTab) {
