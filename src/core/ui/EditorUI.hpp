@@ -1,12 +1,14 @@
 #pragma once
+#include <filesystem>
+
+#include "core/EditorEngine.hpp"
 
 class EditorUI {
 public:
-    char* inputTextBuffer;
-    unsigned int bufferSize;
-    int previousTextLen;
-    int lineCount;
-    EditorUI(unsigned int bufferSize);
-    void render();
-    void destroy();
+    static void render();
+    static bool initialize();
+private:
+    static float targetWidth;
+    static float targetHeight;
+    static ImVec2 windowPos;
 };

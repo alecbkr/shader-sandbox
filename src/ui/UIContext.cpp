@@ -1,6 +1,7 @@
 #include "UIContext.hpp"
 
 #include "core/EditorEngine.hpp"
+#include "core/EventDispatcher.hpp"
 
 void styleImGui(ImGuiIO& io);
 
@@ -32,7 +33,7 @@ void UIContext::destroy() {
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    for (EditorUI* editor: EditorEngine::editors) editor->destroy();
+    for (Editor* editor: EditorEngine::editors) editor->destroy();
 }
 
 void UIContext::renderEditorWindow(float width, float height) {
@@ -42,7 +43,7 @@ void UIContext::renderEditorWindow(float width, float height) {
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::MenuItem("New")) {
-                    EditorEngine::spawnEditor(1024);
+                    EventDispatcher::TriggerEvent(Event{ OpenFile, false, OpenFilePayload{"", ""} });
                 }
 
                 ImGui::EndMenu();
@@ -52,11 +53,11 @@ void UIContext::renderEditorWindow(float width, float height) {
 
         if (ImGui::BeginTabBar("EditorTabs")) {
             for (int i = 0; i < EditorEngine::editors.size(); i++) {
-                std::string tabTitle = "File " + std::to_string(i + 1);
+                std::string tabTitle = EditorEngine::editors[i]->fileName + "##" + std::to_string(i + 1);
                 bool openTab = true;
                 if (ImGui::BeginTabItem(tabTitle.c_str(), &openTab)) {
 
-                    EditorEngine::editors[i]->render();
+                    //EditorEngine::editors[i]->render();
 
                     ImGui::EndTabItem();
                 }
@@ -231,4 +232,7 @@ void styleImGui(ImGuiIO& io) {
     colors[ImGuiCol_Tab] = ImVec4(0.18f, 0.18f, 0.19f, 1.00f);
     colors[ImGuiCol_TabHovered] = ImVec4(0.28f, 0.28f, 0.29f, 1.00f);
     colors[ImGuiCol_TabActive] = ImVec4(0.23f, 0.23f, 0.24f, 1.00f);
+}
+void UIContext::render(ConsoleUI& consoleUI) {
+    consoleUI.render(); 
 }

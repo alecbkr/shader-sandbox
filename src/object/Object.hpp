@@ -56,7 +56,7 @@ class Object {
         GLuint getProgramID();
         ShaderProgram* getProgram();
         glm::mat4 getModelM();
-        void setTexture(Texture &tex, int unit, std::string uniformName);
+        void setTexture(const Texture &tex, int unit, std::string uniformName);
         void setProgram(ShaderProgram &program);
         
 

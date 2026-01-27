@@ -44,7 +44,7 @@ ShaderProgram* Object::getProgram() {
     return renderable.mat.program;
 }
 
-void Object::setTexture(Texture &tex, int unit, std::string uniformName) {
+void Object::setTexture(const Texture &tex, int unit, std::string uniformName) {
     renderable.mat.setTexture(tex, unit, uniformName);
 }
 

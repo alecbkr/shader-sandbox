@@ -1,6 +1,6 @@
 #include "Material.hpp"
 
-void Material::setTexture(Texture &tex, int unit, std::string uniformName) {
+void Material::setTexture(const Texture &tex, int unit, std::string uniformName) {
     if (tex.isValid() == false) {
         ERRLOG.logEntry(EL_WARNING, "MATERIAL", "Cannot set uninitialized texture");
         return;

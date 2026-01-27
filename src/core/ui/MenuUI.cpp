@@ -1,6 +1,8 @@
 #include "core/ui/MenuUI.hpp"
 #include "core/EventDispatcher.hpp"
 
+bool MenuUI::initialized = false;
+
 bool testMenuUIQuit(const EventPayload& payload) {
     printf("Testing Quit\n");
     return true;
@@ -11,9 +13,11 @@ bool testMenuUISave(const EventPayload& payload) {
     return true;
 }
 
-MenuUI::MenuUI() {
+bool MenuUI::initialize() {
     EventDispatcher::Subscribe(EventType::SaveActiveShaderFile, testMenuUISave);
     EventDispatcher::Subscribe(EventType::Quit, testMenuUIQuit);
+    MenuUI::initialized = true;
+    return true;
 }
 
 void MenuUI::render() {

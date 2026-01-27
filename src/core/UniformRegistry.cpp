@@ -52,6 +52,9 @@ const Uniform* UniformRegistry::tryReadUniform(unsigned int modelID, const std::
 
     return &uniformPair->second;
 }
+bool UniformRegistry::containsObject(const std::string& objectName) {
+    return uniforms.contains(objectName);
+}
 
 bool UniformRegistry::containsUniform(unsigned int modelID, const std::string& uniformName) {
     const auto& programPair = uniforms.find(modelID);

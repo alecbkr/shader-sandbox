@@ -1,10 +1,9 @@
 #include "InspectorEngine.hpp"
 #include "core/UniformRegistry.hpp"
-#include "../engine/Errorlog.hpp"
 #include <unordered_map>
 #include <sstream>
 #include <iostream>
-#include "core/ShaderHandler.hpp"
+#include "core/ShaderRegistry.hpp"
 #include "core/UniformTypes.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "object/ObjCache.hpp"
@@ -19,32 +18,66 @@ const std::unordered_map<std::string, UniformType> InspectorEngine::typeMap = {
     {"mat4", UniformType::Mat4 }
 };
 
+bool InspectorEngine::initialize() {
+    refreshUniforms();
+    return true;
+}
+
 void InspectorEngine::refreshUniforms() {
-    auto& programs = ShaderHandler::getPrograms();
+    auto& programs = ShaderRegistry::getPrograms();
     
     // NOTE: this will break if we do any multithreading with the program list.
     // Please be careful.
     std::unordered_map<std::string, std::vector<std::string>> programToObjectList;
-    for (auto& [programName, program] : programs) {
+    for (const auto& [programName, program] : programs) {
         programToObjectList[programName] = std::vector<std::string>();
     }
 
-    for (auto& pair : ObjCache::objMap) {
+    for (const auto& pair : ObjCache::objMap) {
         // separate them so that debugger works.
-        auto& objectName = pair.first;
-        auto& object = pair.second;
-        auto& programName = object->getProgram()->name;
+        const auto& objectName = pair.first;
+        const auto& object = pair.second;
+        const auto& programName = object->getProgram()->name;
         programToObjectList[programName].push_back(objectName);
     }
 
-    for (auto& [programName, program] : programs) {
-        auto uniformMap = parseUniforms(program);
+    // sry for the nesting
+    for (const auto& [programName, program] : programs) {
+        const auto& parsedUniforms = parseUniforms(*program);
         std::cout << programName << std::endl;
         std::cout << programToObjectList[programName].size() << std::endl;
         for (std::string& objectName : programToObjectList[programName]) {
-            std::cout << objectName << " " << program.name << std::endl;
-            UNIFORM_REGISTRY.insertUniformMap(objectName, uniformMap);
-            applyAllUniformsForObject(objectName);
+            std::cout << objectName << " " << program->name << std::endl;
+            const bool newObject = !UNIFORM_REGISTRY.containsObject(objectName);
+            if (newObject) {
+                UNIFORM_REGISTRY.insertUniformMap(objectName, parsedUniforms);
+                applyAllUniformsForObject(objectName);
+                continue;
+            }
+
+            // if not a new object
+            const auto& objectUniforms = UNIFORM_REGISTRY.tryReadUniforms(objectName);
+            if (objectUniforms == nullptr) {
+                ERRLOG.logEntry(EL_WARNING, "refreshUniforms", "object does not exist in registry??? code should be unreachable");
+                continue;
+            }
+
+            for (const auto& [uniformName, parsedUniform] : parsedUniforms) {
+                const Uniform* existingUniform = UNIFORM_REGISTRY.tryReadUniform(objectName, uniformName);
+                const bool mustRegister = existingUniform == nullptr || existingUniform->type != parsedUniform.type;
+                
+                if (mustRegister) UNIFORM_REGISTRY.registerUniform(objectName, parsedUniform); 
+            }
+
+            std::vector<std::string> uniformsToErase;
+            for (const auto& [uniformName, uniform] : *objectUniforms) {
+                if (!parsedUniforms.contains(uniformName))       
+                    uniformsToErase.push_back(uniformName);
+            }
+
+            for (const std::string& uniformName : uniformsToErase) {
+                UNIFORM_REGISTRY.eraseUniform(objectName, uniformName);
+            }
         }
     }
 }
@@ -75,7 +108,8 @@ std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const Sh
             if (typePair != typeMap.end()) {
                 uniform.type = typePair->second;
             } else {
-                ERRLOG.logEntry(EL_WARNING, "parseUniforms", "Invalid Uniform Type: ", word.c_str());
+                // ERRLOG.logEntry(EL_WARNING, "parseUniforms", "Invalid Uniform Type: ", word.c_str());
+                Logger::addLog(LogLevel::WARNING, "parseUnifroms", "Invalid Uniform Type: ", word); 
                 continue;
             }
             assignDefaultValue(uniform);
@@ -86,6 +120,7 @@ std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const Sh
                 uniform.name.pop_back();
             }
 
+            uniform.ref.shaderName = program.name;
             programUniforms[uniform.name] = uniform;
             std::cout << "Read " << uniform.name << std::endl;
         }
@@ -94,7 +129,7 @@ std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const Sh
     // I'm really not sure this is necessary, it's a bit of a relic from the prototype where the uniform registry wasn't the source of truth...
     /*
     // Find old program uniforms
-    auto oldProgramPair = uniforms.find(program.name);
+    auto oldProgramPair = uniforms.find(program->name);
     if (oldProgramPair != uniforms.end()) {
         auto& oldProgramUniforms = oldProgramPair->second;
         
@@ -134,7 +169,8 @@ void InspectorEngine::assignDefaultValue(Uniform& uniform) {
         uniform.value = glm::mat4(0.0f);
         break;
     default:
-        ERRLOG.logEntry(EL_WARNING, "assignDefaultValue", "Invalid Uniform Type, making it an int");
+        // ERRLOG.logEntry(EL_WARNING, "assignDefaultValue", "Invalid Uniform Type, making it an int");
+        Logger::addLog(LogLevel::WARNING, "assignDefaultValue", "Invalid Uniform Type, making it an int"); 
         uniform.type = UniformType::Int;
         uniform.value = 0;
         break;
@@ -151,7 +187,8 @@ void InspectorEngine::setUniform(const std::string& objectName, const std::strin
         applyUniform(objectName, newUniform);
     }
     else {
-        ERRLOG.logEntry(EL_WARNING, "setUniform", "failed to set: ", uniformName.c_str());
+        // ERRLOG.logEntry(EL_WARNING, "setUniform", "failed to set: ", uniformName.c_str());
+        Logger::addLog(LogLevel::WARNING, "setUniform", "failed to set:", uniformName.c_str()); 
     }
 }
 
@@ -159,7 +196,8 @@ void InspectorEngine::applyAllUniformsForObject(const std::string& objectName) {
     const std::unordered_map<std::string, Uniform>* objectUniforms = UNIFORM_REGISTRY.tryReadUniforms(objectName);
 
     if (objectUniforms == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", objectName.c_str());
+        // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", objectName.c_str());
+        Logger::addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", objectName); 
     }
 
     for (auto& [uniformName, uniform] : *objectUniforms) {
@@ -169,11 +207,12 @@ void InspectorEngine::applyAllUniformsForObject(const std::string& objectName) {
 
 void InspectorEngine::applyUniform(const std::string& objectName, const Uniform& uniform) {
     if (!ObjCache::objMap.contains(objectName)) {
-        ERRLOG.logEntry(EL_WARNING, "applyUniform", (objectName + " not found in registry").c_str());
+        // ERRLOG.logEntry(EL_WARNING, "applyUniform", (objectName + " not found in registry").c_str());
+        Logger::addLog(LogLevel::WARNING, "applyUniform", (objectName + " not found in registry")); 
         return;
     }
     Object& object = *ObjCache::objMap.at(objectName);
-    ShaderProgram* program = ShaderHandler::getProgram(object.getProgram()->name);
+    ShaderProgram* program = ShaderRegistry::getProgram(object.getProgram()->name);
     applyUniform(*program, uniform);
 }
 
@@ -200,7 +239,8 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
         program.setUniform_mat4float(uniform.name.c_str(), std::get<glm::mat4>(uniform.value));
         break;
     default:
-        ERRLOG.logEntry(EL_WARNING, "applyUniform", "Invalid Uniform Type: ");
+        // ERRLOG.logEntry(EL_WARNING, "applyUniform", "Invalid Uniform Type: ");
+        Logger::addLog(LogLevel::WARNING, "applyUniform", "Invalid Uniform Type: "); 
         break;
     }
 }
@@ -209,4 +249,17 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
 void InspectorEngine::applyInput(const std::string& objectName, const Uniform& uniform) {
     UNIFORM_REGISTRY.registerUniform(objectName, uniform);
     applyUniform(objectName, uniform);
+}
+void InspectorEngine::reloadUniforms(const std::string &programName){
+    ShaderProgram *newProgram = ShaderRegistry::getProgram(programName);
+    if (!newProgram || !newProgram->isCompiled()){
+        return;
+    }
+    std::unordered_map<std::string, Uniform> newUniformMap = parseUniforms(*newProgram);
+    for (auto& [objectName, objectPtr] : ObjCache::objMap) {
+        if (objectPtr->getProgram()->name == programName) {
+            UNIFORM_REGISTRY.insertUniformMap(objectName, newUniformMap);
+            applyAllUniformsForObject(objectName);
+        }
+    }
 }

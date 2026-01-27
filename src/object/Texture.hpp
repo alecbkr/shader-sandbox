@@ -20,7 +20,8 @@ is for now.
 class Texture {
     
     public:
-        GLuint ID;
+        mutable GLuint ID;
+        std::string path;
         unsigned char* pixels;
         
         int width;
