@@ -10,6 +10,7 @@ Model::Model(const unsigned int ID) : ID(ID) {
 
 // -----FUNCTIONALITY
 void Model::renderModel() {
+    
     if (properties.hasMeshes == false) {
         ERRLOG.logEntry(EL_WARNING, "MODEL", "Render failure, no meshes present");
         return;
@@ -41,19 +42,19 @@ void Model::unloadModel() {
 // -----TRANSLATIONS
 void Model::translate(glm::vec3 position) {
     this->position = position;
-    this->modelM = calcModelM();
+    calcModelM();
 }
 
 
 void Model::rescale(glm::vec3 scale) {
     this->scale = scale;
-    this->modelM = calcModelM();
+    calcModelM();
 }
 
 
 void Model::rotate(float angle, glm::vec3 axis) {
     this->orientation = glm::angleAxis(glm::radians(angle), glm::normalize(axis));
-    this->modelM = calcModelM();
+    calcModelM();
 }
 
 
@@ -75,12 +76,31 @@ void Model::addTexture(std::string pathname) {
 }
 
 
-glm::mat4 Model::calcModelM() {
+void Model::setPosition(glm::vec3 position) {
+    this->position = position;
+    calcModelM();
+}
+
+
+void Model::setScale(glm::vec3 scale) {
+    this->scale = scale;
+    calcModelM();
+}
+
+
+void Model::setRotation(float angle, glm::vec3 axis) {
+    rotation = glm::vec4(angle, axis);
+    this->orientation = glm::angleAxis(glm::radians(angle), glm::normalize(axis));
+    calcModelM();
+}
+
+
+void Model::calcModelM() {
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, position);
     model *= glm::mat4_cast(orientation); 
     model = glm::scale(model, scale);
-    return model;
+    this->modelM = model;
 }
 
 
@@ -91,6 +111,21 @@ ShaderProgram* Model::getProgram() {
 
 const int Model::getID() {
     return ID;
+}
+
+
+glm::vec3 Model::getPosition() {
+    return position;
+}
+
+
+glm::vec3 Model::getScale() {
+    return scale;
+}
+
+
+glm::vec4 Model::getRotation() {
+    return rotation;
 }
 
 

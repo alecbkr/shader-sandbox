@@ -9,6 +9,7 @@ class UniformRegistry {
     public:
     static UniformRegistry& instance();
     const Uniform* tryReadUniform(unsigned int modelID, const std::string& uniformName) const; // return false if we didn't find it.
+    bool containsObject(unsigned int modelID);
     bool containsUniform(unsigned int modelID, const std::string& uniformName);
     const std::unordered_map<std::string, Uniform>* tryReadUniforms(unsigned int modelID) const;
     void registerUniform(unsigned int modelID, Uniform uniform);

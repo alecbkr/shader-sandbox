@@ -11,13 +11,13 @@ class InspectorEngine {
 public:
     static bool initialize();
     static void refreshUniforms();
-    static void applyAllUniformsForObject(const std::string& objectName);
-    static void setUniform(const std::string& objectName, const std::string& uniformName, UniformValue value);
-    static void applyInput(const std::string& objectName, const Uniform& uniform);
+    static void applyAllUniformsForObject(unsigned int modelID);
+    static void setUniform(unsigned int modelID, const std::string& uniformName, UniformValue value);
+    static void applyInput(unsigned int modelID, const Uniform& uniform);
     static void reloadUniforms(const std::string& programName);
 
 private:
-    static void applyUniform(const std::string& objectName, const Uniform& uniform);
+    static void applyUniform(unsigned int modelID, const Uniform& uniform);
     static void applyUniform(ShaderProgram& program, const Uniform& uniform);
     static const std::unordered_map<std::string, UniformType> typeMap; // Kept private
     static std::unordered_map<std::string, Uniform> parseUniforms(const ShaderProgram& program);

@@ -15,6 +15,7 @@ is for now.
 
 #include <glad/glad.h>
 #include "TextureType.hpp"
+#include <string>
 
 
 class Texture {

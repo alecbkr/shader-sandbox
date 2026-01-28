@@ -4,7 +4,6 @@
 
 
 Texture::Texture(const char *texture_path, TextureType type) {
-    ERRLOG.announce(("start"));
     stbi_set_flip_vertically_on_load(true);
 
     int channelCnt;
@@ -14,7 +13,6 @@ Texture::Texture(const char *texture_path, TextureType type) {
         valid = false;
         return;
     }
-    ERRLOG.announce(("done"));
 
     switch (channelCnt) {
         case 1: format = GL_RED;  break;
