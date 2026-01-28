@@ -49,7 +49,15 @@ bool EditorEngine::spawnEditor(const EventPayload& payload) {
             editors.push_back(new Editor(2056, "../shaders/texture.frag", "texture.frag"));
         }
     } else if (std::get_if<std::monostate>(&payload)) {
-        editors.push_back(new Editor(2056, "", ""));
+        try {
+            const std::string fileName = "Untitled " + findNextUntitledNumber();
+            const std::string filePath = "../shaders/" + fileName;
+            createFile(filePath);
+            editors.push_back(new Editor(2056, filePath, fileName));
+
+        } catch (const std::filesystem::filesystem_error& e) {
+            Logger::addLog(LogLevel::ERROR, "EditorEngine::createFile", std::string("Filesystem error: ") + e.what());
+        }
     } else {
         Logger::addLog(LogLevel::ERROR, "spawnEditor", "Invalid Payload Type");
     }
@@ -110,6 +118,12 @@ void EditorEngine::createFile(const std::string& filePath) {
     outfile << "#version 330 core\n\n";
     outfile << "void main() {\n\t\n}";
     outfile.close();
+}
+
+std::string EditorEngine::findNextUntitledNumber() {
+    int i = 0;
+    while (std::filesystem::exists("../shaders/Untitled " + std::to_string(i))) i++;
+    return std::to_string(i);
 }
 
 int EditorEngine::EditorInputCallback(ImGuiInputTextCallbackData* data) {
