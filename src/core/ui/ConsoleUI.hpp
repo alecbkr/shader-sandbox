@@ -47,6 +47,12 @@ private:
 
     // static std::shared_ptr<ConsoleEngine> engine; 
     // static std::shared_ptr<ConsoleSink> logSrc; 
+    static float targetWidth;
+    static float targetHeight;
+    static ImVec2 windowPos;
+    
+    static std::shared_ptr<ConsoleEngine> engine; 
+    static std::shared_ptr<ConsoleSink> logSrc; 
 
     static std::vector<std::string> history; 
 

@@ -1,9 +1,14 @@
 #include "ConsoleUI.hpp"
 #include "string"
 #include "iostream"
+#include <iostream>
+#include "platform/Platform.hpp"
 
 bool ConsoleUI::initialized = false; 
 size_t ConsoleUI::lastLogSize = 0;
+float ConsoleUI::targetWidth = 0.0f;
+float ConsoleUI::targetHeight = 0.0f;
+ImVec2 ConsoleUI::windowPos = ImVec2(0, 0);
 int ConsoleUI::selectionStart = -1; 
 int ConsoleUI::selectionEnd = -1;
 SearchText ConsoleUI::searcher; 
@@ -30,12 +35,13 @@ bool ConsoleUI::initialize() {
 
 
     searcher.setSearchFlag(SearchUIFlags::ADVANCED); 
+
     initialized = true;
 
-    for (int i = 0; i < 200; ++i) {
-        Logger::addLog(LogLevel::INFO, "Testing", "This is a test"); 
-    }
-    Logger::addLog(LogLevel::INFO, "Testing", "This is a test"); 
+    // for (int i = 0; i < 200; ++i) {
+    //     Logger::addLog(LogLevel::INFO, "Testing", "This is a test"); 
+    // }
+    // Logger::addLog(LogLevel::INFO, "Testing", "This is a test"); 
 
 
     return true;
@@ -44,9 +50,24 @@ bool ConsoleUI::initialize() {
 // change this to draw the entire componenet 
 const void ConsoleUI::render() {
     if (!initialized) return;
-    ImGui::SetNextWindowSize(ImVec2(520, 600), ImGuiCond_Once);
+    float menuBarHeight = ImGui::GetFrameHeight();
     
-    if(ImGui::Begin("Console", nullptr, ImGuiWindowFlags_MenuBar)) {  
+    int displayWidth = ImGui::GetIO().DisplaySize.x;
+    int displayHeight = ImGui::GetIO().DisplaySize.y - menuBarHeight;
+    ConsoleUI::targetWidth = (float)displayWidth * 0.4f;
+    ConsoleUI::targetHeight = (float)displayHeight * 0.3f;
+    
+    int editorOffsetY = displayHeight * 0.7f;
+    
+    ConsoleUI::windowPos.x = 0;
+    ConsoleUI::windowPos.y = editorOffsetY + menuBarHeight;
+
+    ImGui::SetNextWindowSize(ImVec2(targetWidth, targetHeight + 1), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(windowPos, ImGuiCond_Always);
+    
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar;
+
+    if(ImGui::Begin("Console", nullptr, flags)) {  
         ConsoleUI::drawMenuBar();
 
         {

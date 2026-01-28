@@ -35,10 +35,10 @@ Uniform UniformRegistry::getUniform(std::string shaderProgramName, std::string u
 */
 
 // returns nullptr if uniform doesn't exist
-const Uniform* UniformRegistry::tryReadUniform(const std::string& objectName, const std::string& uniformName) const {
-    const auto& programPair = uniforms.find(objectName);
+const Uniform* UniformRegistry::tryReadUniform(unsigned int modelID, const std::string& uniformName) const {
+    const auto& programPair = uniforms.find(modelID);
     if (programPair == uniforms.end()) {
-        Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniform", ("No object with name " + objectName + " found in Uniform Registry").c_str());
+        Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniform:", "no object found with ID", static_cast<int>(modelID));
         return nullptr;
     }
 
@@ -46,18 +46,18 @@ const Uniform* UniformRegistry::tryReadUniform(const std::string& objectName, co
     
     const auto uniformPair = programUniforms.find(uniformName);
     if (uniformPair == programUniforms.end()) {
-        Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniform", ("No object with name " + objectName + " found in Uniform Registry").c_str());
+        Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniform", "No object found in Uniform Registry with ID ", modelID);
         return nullptr;
     }
 
     return &uniformPair->second;
 }
-bool UniformRegistry::containsObject(const std::string& objectName) {
-    return uniforms.contains(objectName);
+bool UniformRegistry::containsObject(unsigned int modelID) {
+    return uniforms.contains(modelID);
 }
 
-bool UniformRegistry::containsUniform(const std::string& objectName, const std::string& uniformName) {
-    const auto& programPair = uniforms.find(objectName);
+bool UniformRegistry::containsUniform(unsigned int modelID, const std::string& uniformName) {
+    const auto& programPair = uniforms.find(modelID);
     if (programPair == uniforms.end()) {
         return false;
     }
@@ -73,37 +73,37 @@ bool UniformRegistry::containsUniform(const std::string& objectName, const std::
 }
 
 // returns nullptr if uniform doesn't exist
-const std::unordered_map<std::string, Uniform>* UniformRegistry::tryReadUniforms(const std::string& objectName) const {
-    if (uniforms.count(objectName) <= 0) {
-        Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniforms", ("No object with name " + objectName + " found in Uniform Registry").c_str());
+const std::unordered_map<std::string, Uniform>* UniformRegistry::tryReadUniforms(unsigned int modelID) const {
+    if (uniforms.count(modelID) <= 0) {
+        Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniforms", "No object found in Uniform Registry with ID", modelID );
         return nullptr;
     }
 
-    //std::unordered_map<std::string, Uniform>* programUniforms = &uniforms[objectName];
-    const std::unordered_map<std::string, Uniform> *programUniforms = &(uniforms.at(objectName));
+    //std::unordered_map<std::string, Uniform>* programUniforms = &uniforms[modelID];
+    const std::unordered_map<std::string, Uniform> *programUniforms = &(uniforms.at(modelID));
 
     return programUniforms;
 }
 
-void UniformRegistry::registerUniform(const std::string& objectName, Uniform uniform) {
-    uniforms[objectName][uniform.name] = uniform;
+void UniformRegistry::registerUniform(unsigned int modelID, Uniform uniform) {
+    uniforms[modelID][uniform.name] = uniform;
 }
 
-void UniformRegistry::insertUniformMap(const std::string& objectName, const std::unordered_map<std::string, Uniform>& map) {
-    uniforms[objectName] = map;
+void UniformRegistry::insertUniformMap(unsigned int modelID, const std::unordered_map<std::string, Uniform>& map) {
+    uniforms[modelID] = map;
 }
 
-void UniformRegistry::eraseUniform(const std::string& objectName, const std::string& uniformName) {
-    if (uniforms.count(objectName) <= 0) {
-        Errorlog::getInstance().logEntry(EL_WARNING, "eraseUniform", ("No object with name " + objectName + " found in Uniform Registry").c_str());
+void UniformRegistry::eraseUniform(unsigned int modelID, const std::string& uniformName) {
+    if (uniforms.count(modelID) <= 0) {
+        Errorlog::getInstance().logEntry(EL_WARNING, "eraseUniform", "No object found in Uniform Registry with ID ", modelID);
         return;
     }
     
-    if (uniforms.at(objectName).count(uniformName) <= 0) {
+    if (uniforms.at(modelID).count(uniformName) <= 0) {
         Errorlog::getInstance().logEntry(EL_WARNING, "eraseUniform", ("No uniform with name " + uniformName + " found in Uniform Registry").c_str());
         return;
     }
-    uniforms.at(objectName).erase(uniformName);
+    uniforms.at(modelID).erase(uniformName);
 }
 
 

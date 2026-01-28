@@ -1,0 +1,18 @@
+#pragma once
+
+enum TextureType {
+    TEX_UNDEFINED,
+    TEX_DIFFUSE,
+    TEX_SPECULAR,
+    TEX_NORMAL,
+    TEX_HEIGHT,
+    TEX_EMISSIVE,
+    TEX_OPACITY,
+    TEX_AMBIENT,
+    TEX_BASECOLOR,
+    TEX_METALNESS,
+    TEX_ROUGHNESS,
+    TEX_AO,
+    TEX_EMISSION,
+    TEX_MAXTYPE
+};

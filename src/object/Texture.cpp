@@ -2,40 +2,39 @@
 #include <stb/stb_image.h>
 #include "core/logging/Logger.hpp"
 
-Texture::Texture(const char *texture_path) {
-    if (!texture_path  || texture_path[0] == '\0') return;
-    this->path = texture_path; 
+Texture::Texture(const char *texture_path, TextureType type) {
     stbi_set_flip_vertically_on_load(true);
 
     int channelCnt;
     pixels = stbi_load(texture_path, &width, &height, &channelCnt, 0);
-    if (!(pixels == nullptr)) {
-        
-        switch (channelCnt) {
-            case 1: format = GL_RED;  break;
-            case 3: format = GL_RGB;  break;
-            case 4: format = GL_RGBA; break;
-            default: 
-                Logger::addLog(LogLevel::ERROR, "TEXTURE", "Format could not be determined"); 
-                return;
-        }
+    if (pixels == nullptr) {
+        Logger::addLog(LogLevel::ERROR, "TEXTURE", "Format could not be determined"); 
+        valid = false;
+        return;
+    }
 
-        initialized = true;
+    switch (channelCnt) {
+        case 1: format = GL_RED;  break;
+        case 3: format = GL_RGB;  break;
+        case 4: format = GL_RGBA; break;
+        default: 
+            Logger::addLog(LogLevel::ERROR, "TEXTURE", "Format could not be determined"); 
+            valid = false;
+            return;
     }
-    else {
-        Logger::addLog(LogLevel::ERROR, "TEXTURE", "Could not find texture from path:", texture_path); 
-    }
+    this->type = type;
+    valid = true;
 }
 
 
-Texture::~Texture() {
-    deleteFromGPU();
-    stbi_image_free(pixels);
-}
+// Texture::~Texture() {
+//     unloadFromGPU();
+//     stbi_image_free(pixels);
+// }
 
 
-void Texture::bind(int texNum) const {
-    sendToGPU();
+void Texture::bind(int texNum) {
+    loadToGPU();
     glActiveTexture(GL_TEXTURE0 + texNum);
     glBindTexture(GL_TEXTURE_2D, ID);
 }
@@ -48,17 +47,17 @@ void Texture::unbind(int texNum) {
 
 
 bool Texture::isValid() const { 
-    return initialized;
+    return valid;
 }
 
 
-void Texture::sendToGPU() const {
-    if (!initialized) {
+void Texture::loadToGPU() {
+    if (valid == false) {
         Logger::addLog(LogLevel::WARNING, "TEXTURE", "Can't send uninitialized texture to GPU"); 
         return;
     } 
 
-    if (loadedInGPU) return;
+    if (isLoadedInGPU) return;
 
     glGenTextures(1, &ID);
     glBindTexture(GL_TEXTURE_2D, ID);
@@ -72,13 +71,18 @@ void Texture::sendToGPU() const {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glBindTexture(GL_TEXTURE_2D, 0);
-    loadedInGPU = true;
+    isLoadedInGPU = true;
 }
 
 
-void Texture::deleteFromGPU() {
-    if (!loadedInGPU) return;
+void Texture::unloadFromGPU() {
+    if (isLoadedInGPU == false) return;
     glDeleteTextures(1, &ID);
 
-    loadedInGPU = false;
+    isLoadedInGPU = false;
+}
+
+
+TextureType Texture::getType() {
+    return type;
 }

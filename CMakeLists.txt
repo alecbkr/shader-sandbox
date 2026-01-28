@@ -12,6 +12,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # ADD GLFW (source version)
 # ---------------------------------------------------------
 add_subdirectory(lib/glfw)
+
+# ASSIMP
+add_subdirectory(lib/assimp)
+
 # GLFW exposes this include path
 include_directories(lib/glfw/include)
 # ---------------------------------------------------------
@@ -47,12 +51,14 @@ add_executable(sandbox
     ${SRC_C}
     ${IMGUI_SRC}
     ${STB_SRC}
+    ${ASSIMP_SRC}
 )
 # ---------------------------------------------------------
 # LINK GLFW AND SYSTEM LIBS
 # (GLFW builds a target called glfw)
 # ---------------------------------------------------------
-target_link_libraries(sandbox glfw)
+target_link_libraries(sandbox glfw assimp)
+
 if (WIN32)
     target_link_libraries(sandbox
         opengl32
