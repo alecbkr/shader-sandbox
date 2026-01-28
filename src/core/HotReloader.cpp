@@ -3,7 +3,7 @@
 #include "core/EditorEngine.hpp"
 #include "core/InspectorEngine.hpp"
 #include "core/ShaderRegistry.hpp"
-#include "engine/Errorlog.hpp"
+#include "logging/Logger.hpp"
 #include "core/EventDispatcher.hpp"
 #include <fstream>
 #include <iostream>

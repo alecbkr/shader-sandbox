@@ -4,6 +4,7 @@
 #include "core/UniformTypes.hpp"
 #include "core/EventDispatcher.hpp"
 #include "core/ShaderRegistry.hpp"
+#include "core/logging/Logger.hpp"
 #include <algorithm>
 #include <iostream>
 

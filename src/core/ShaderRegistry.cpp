@@ -39,7 +39,6 @@ ShaderProgram* ShaderRegistry::getProgram(const std::string& programName) {
     if (!ShaderRegistry::initialized) return nullptr;
     auto programPair = programs.find(programName);
     if (programPair == programs.end()) {
-        std::cout << "Get Program: No program with name " << programName <<" found in the Shader Handler programs" << std::endl;
         return nullptr;
     }
 
