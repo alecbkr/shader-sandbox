@@ -29,7 +29,7 @@ bool ConsoleUI::initialize() {
         [&](bool state) {btns.isCollapsedLogs = state; });
 
 
-    searcher.flags = SearchUIFlags::ADVANCED;
+    searcher.setSearchFlag(SearchUIFlags::ADVANCED); 
     initialized = true;
 
     for (int i = 0; i < 200; ++i) {
@@ -79,7 +79,7 @@ const void ConsoleUI::drawMenuBar() {
     if(ImGui::BeginMenuBar()) {
 
         if(ImGui::BeginMenu("View")) {
-            if (ImGui::MenuItem("Clear", "Ctrl + l")) {
+            if (ImGui::MenuItem("Clear")) {
                 ConsoleEngine::executeBtnAction("clear"); 
             } 
             ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
@@ -189,7 +189,7 @@ void ConsoleUI::drawSingleLog(const LogEntry& log, int idx, int repeatCount, boo
             ImGui::GetWindowDrawList()->AddRectFilled(
                 ImVec2(screenPos.x + offsetX, screenPos.y),
                 ImVec2(screenPos.x + offsetX + width, screenPos.y + ImGui::GetTextLineHeight()),
-                IM_COL32(255, 255, 0, 100)
+                IM_COL32(200, 200, 200, 100)
             );
         }
     }
@@ -242,3 +242,28 @@ std::string ConsoleUI::formatLogString(const LogEntry& log) {
     return fullMsg; 
 }
 
+void ConsoleUI::copyLogsToClipboard() {
+    const auto& logs = ConsoleEngine::getLogs(); 
+    if(logs.empty()) return; 
+    size_t maxLogs = 128; 
+    size_t maxLineLength = 256; 
+    size_t startIdx = (logs.size() > maxLogs) ? (logs.size() - maxLogs) : 0;
+
+    std::string clipTxt; 
+    clipTxt.reserve(maxLogs * 256); 
+
+    for(size_t i = startIdx; i < logs.size(); ++i) {
+        std::string line = formatLogString(logs[i]); 
+
+        if (line.length() > 256) {
+            line = line.substr(0, 256) + "..."; 
+        }
+
+        clipTxt += line + "\n"; 
+    }
+
+    if (!clipTxt.empty()) {
+        ImGui::SetClipboardText(clipTxt.c_str()); 
+        Logger::addLog(LogLevel::INFO, "ConsoleUI", "Copied Text"); 
+    }
+}

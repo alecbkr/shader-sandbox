@@ -6,7 +6,9 @@
 #include <regex> 
 #include <algorithm>
 #include <deque>
-// find widget (may need to modify a bit if we need to implement it somewhere other than the console)
+
+
+// bool flags that control what you want to appear in the search widget 
 enum class SearchUIFlags {
     NONE = 0, 
     CASE_SENSITIVE = 1 << 0,
@@ -17,15 +19,15 @@ enum class SearchUIFlags {
     ADVANCED = CASE_SENSITIVE | MATCH_WHOLE_WORD | REGEX // add replace later 
 }; 
 
-// enforces enum usage to prevent using different enums with SearchUIFlags
+// enforces enum usage to prevent using different enums or bools with SearchUIFlags
 inline SearchUIFlags operator | (SearchUIFlags a, SearchUIFlags b) {
     return static_cast<SearchUIFlags>(static_cast<int>(a) | static_cast<int>(b)); 
 }
-
 inline bool operator & (SearchUIFlags a, SearchUIFlags b) {
     return (static_cast<int>(a) & static_cast<int>(b)) != 0; 
 }
 
+// find widget note: that highlighting text must be done inside the implementation of the desired widget
 class SearchText {
     public: 
     struct Match {
@@ -35,19 +37,17 @@ class SearchText {
     }; 
 
     SearchText() = default;
-    SearchUIFlags flags = SearchUIFlags::DEFAULT;
     bool useRegex = false; 
     bool caseSensitive = false; 
     bool matchWholeWord = false; 
     bool showReplace = false; 
 
-    // UI for find 
-    bool drawSearchUI(std::function<void()> onReplaceClick = nullptr); 
-    bool GetisDirty() const {return isDirty;}
+    bool drawSearchUI(std::function<void()> onReplaceClick = nullptr);     // UI for find 
+    bool GetisDirty() const {return isDirty;}                              // User updated the search bar 
     void setDirty() {isDirty = true;}
     bool hasQuery() const {return inputBuffer[0] != '\0'; }
 
-    // Backend for find (accepts containers, e.g. vectors, deque)
+    // Where the actual text filtering will take place 
     template <typename Container, typename Func> 
     void updateMatches(const Container &data, Func textExtractor) {
         matches.clear(); 
@@ -162,6 +162,7 @@ class SearchText {
         return matches[currentMatchIdx]; 
     }
 
+    void setSearchFlag(SearchUIFlags newFlags); 
 
     private: 
     void clearResultState() {
@@ -173,7 +174,7 @@ class SearchText {
 
     char inputBuffer[512] = ""; 
     char replaceBuffer[512] = "";
-    
+    SearchUIFlags flags = SearchUIFlags::DEFAULT;
     std::vector<Match> matches; 
     int currentMatchIdx = -1; 
     bool requestScroll = false; 

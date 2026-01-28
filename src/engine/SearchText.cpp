@@ -87,3 +87,7 @@ bool SearchText::drawSearchUI(std::function<void()> onReplaceClick) {
 
     return changed;
 }
+
+void SearchText::setSearchFlag(SearchUIFlags newFlags) {
+    flags = newFlags; 
+}
