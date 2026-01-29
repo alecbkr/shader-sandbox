@@ -9,7 +9,8 @@
 #include "core/logging/Logger.hpp"
 #include "engine/Errorlog.hpp"
 #include "engine/ShaderProgram.hpp"
-#include "object/ObjCache.hpp"
+#include "object/Model.hpp"
+#include "object/ModelCache.hpp"
 #include "object/Texture.hpp"
 #include <glm/glm.hpp>
 #include <ostream>
@@ -28,8 +29,8 @@ std::vector<std::string> InspectorUI::uniformNamesToDelete{};
 std::string InspectorUI::newUniformName{};
 std::string InspectorUI::newUniformShaderName{};
 UniformType InspectorUI::newUniformType = UniformType::NoType;
-std::unordered_map<std::string, ObjectShaderMenu> InspectorUI::objectShaderMenus{};
-std::unordered_map<std::string, ObjectTextureMenu> InspectorUI::objectTextureMenus{};
+std::unordered_map<unsigned int, ModelShaderMenu> InspectorUI::modelShaderMenus{};
+std::unordered_map<unsigned int, ModelTextureMenu> InspectorUI::modelTextureMenus{};
 std::unordered_map<std::string, ShaderLinkMenu> InspectorUI::shaderLinkMenus{};
 
 void InspectorUI::render() {
@@ -74,25 +75,26 @@ void InspectorUI::render() {
 
 void InspectorUI::drawUniformInspector() {
     int imGuiID = 0;
-    for (auto &[objectName, object] : ObjCache::objMap) {
-        if (ImGui::TreeNode(objectName.c_str())) {
-            const std::unordered_map<std::string, Uniform>* uniformMap = UNIFORM_REGISTRY.tryReadUniforms(objectName);
+    for (auto &[modelID, model] : ModelCache::modelIDMap) {
+        std::string label = "model " + std::to_string(modelID);
+        if (ImGui::TreeNode(label.c_str())) {
+            const std::unordered_map<std::string, Uniform>* uniformMap = UNIFORM_REGISTRY.tryReadUniforms(modelID);
 
             if (uniformMap == nullptr) {
-                Errorlog::getInstance().logEntry(EL_WARNING, "drawUniformInspector", ("Object not found in registry: " + objectName).c_str());
+                Errorlog::getInstance().logEntry(EL_WARNING, "drawUniformInspector", "Object not found in registry: ", modelID);
                 continue;
             }
 
             for (auto &[uniformName, uniformRef] : *uniformMap) {
                 ImGui::PushID(imGuiID);
                 Uniform uniformCopy = uniformRef;
-                drawUniformInput(uniformCopy, objectName);
+                drawUniformInput(uniformCopy, modelID);
                 ImGui::PopID();
                 imGuiID++;
             }
             /*
             for (std::string uniformName : uniformNamesToDelete)
-                UNIFORM_REGISTRY.eraseUniform(objectName, uniformName);
+                UNIFORM_REGISTRY.eraseUniform(modelID, uniformName);
             uniformNamesToDelete.clear();
             */
 
@@ -105,39 +107,38 @@ void InspectorUI::drawObjectsInspector() {
     // This is messy. I need to split it up into different functions at some point.
     // something like "setupObjectsInspector"
     drawAddObjectMenu();
-    for (auto &[objectName, object] : ObjCache::objMap) {
-        // When we initialize new objects, their selection values start at 0.
-        // We need to set them manually in their draw___Selector functions
-        if (!objectShaderMenus.contains(objectName)) {
-            objectShaderMenus[objectName] = ObjectShaderMenu{ 
-                .objectName = objectName,
+    for (auto &[modelID, model] : ModelCache::modelIDMap) {
+        if (!modelShaderMenus.contains(modelID)) {
+            modelShaderMenus[modelID] = ModelShaderMenu{ 
+                .modelID = modelID,
                 .selection = 0,
                 .initialized = false,
             };    
         }
-        if (!objectTextureMenus.contains(objectName)) {
-            objectTextureMenus[objectName] = ObjectTextureMenu{ 
-                .objectName = objectName,
+        if (!modelTextureMenus.contains(modelID)) {
+            modelTextureMenus[modelID] = ModelTextureMenu{ 
+                .modelID = modelID,
                 .uniformName = "baseTex",
                 .textureSelection = 0,
                 .unitSelection = 0,
                 .initialized = false,
             };    
         }
-        ObjectShaderMenu& shaderMenu = objectShaderMenus[objectName];
-        ObjectTextureMenu& textureMenu = objectTextureMenus[objectName];
+        ModelShaderMenu& shaderMenu = modelShaderMenus[modelID];
+        ModelTextureMenu& textureMenu = modelTextureMenus[modelID];
 
-        if (ImGui::TreeNode(objectName.c_str())) {
+        std::string label = "model " + std::to_string(modelID);
+        if (ImGui::TreeNode(label.c_str())) {
             if (ImGui::TreeNode("position")) {
-                drawUniformInputValue(&object->objPosition);
+                drawModelPositionInput(model.get());
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("scale")) {
-                drawUniformInputValue(&object->objScale);
+                drawModelScaleInput(model.get());
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("orientation")) {
-                drawUniformInputValue(&object->objOrientation);
+                drawModelOrientationInput(model.get());
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("mesh")) {
@@ -145,9 +146,9 @@ void InspectorUI::drawObjectsInspector() {
             }
             if (ImGui::TreeNode("textures")) {
                 if (!textureMenu.initialized) {
-                    initializeMenu(textureMenu);
+                    //initializeMenu(textureMenu);
                 }
-                drawTextureMenu(textureMenu);
+                //drawTextureMenu(textureMenu);
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("shader program")) {
@@ -169,30 +170,83 @@ void InspectorUI::drawObjectsInspector() {
 }
 
 void InspectorUI::drawAddObjectMenu() {
+static const std::vector<float> gridPlane_verts {
+        -1.0f, 0.0f, -1.0f,  0.0f, 0.0f,
+        -1.0f, 0.0f, 1.0f,  1.0f, 0.0f,
+        1.0f, 0.0f, 1.0f,  1.0f, 1.0f,
+        1.0f, 0.0f, -1.0f, 0.0f, 1.0f
+    };
+
+    static const std::vector<unsigned int> gridPlane_indices {
+        0, 1, 2, 
+        0, 2, 3
+    };
+
+    // PYRAMID
+    static const std::vector<float> pyramidVerts = {
+        // Base
+        -0.5f, 0.0f, -0.5f,  0.0f, 0.0f, // 0: bottom-left
+        0.5f, 0.0f, -0.5f,  1.0f, 0.0f, // 1: bottom-right
+        0.5f, 0.0f,  0.5f,  1.0f, 1.0f, // 2: top-right
+        -0.5f, 0.0f,  0.5f,  0.0f, 1.0f, // 3: top-left
+
+        // Apex
+        0.0f, 1.0f, 0.0f,   0.5f, 0.5f  // 4: tip
+    };
+
+     
+    static const std::vector<unsigned int> pyramidIndices = {
+        0, 1, 2,  0, 2, 3, // base
+        0, 1, 4,            // side 1
+        1, 2, 4,            // side 2
+        2, 3, 4,            // side 3
+        3, 0, 4             // side 4
+    };
+
+    // CUBE
+    static const std::vector<float> cubeVerts = {
+        // positions       // UVs
+        -0.5f,-0.5f,-0.5f, 0.0f,0.0f,
+        0.5f,-0.5f,-0.5f, 1.0f,0.0f,
+        0.5f, 0.5f,-0.5f, 1.0f,1.0f,
+        -0.5f, 0.5f,-0.5f, 0.0f,1.0f,
+
+        -0.5f,-0.5f, 0.5f, 0.0f,0.0f,
+        0.5f,-0.5f, 0.5f, 1.0f,0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f,1.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f,1.0f
+    };
+
+    // Indices for cube (two triangles per face)
+    static const std::vector<unsigned int> cubeIndices = {
+        0,1,2, 0,2,3, // back
+        4,5,6, 4,6,7, // front
+        3,2,6, 3,6,7, // top
+        0,1,5, 0,5,4, // bottom
+        1,2,6, 1,6,5, // right
+        0,3,7, 0,7,4  // left
+    };
     std::unordered_map<std::string, ShaderProgram*>& programs = ShaderRegistry::getPrograms();
     if (programs.empty()) return;
 
     // just grab a random shader program it really does not matter
     ShaderProgram& defaultProgram = *programs.begin()->second;
 
-    int objectCount = ObjCache::getNumberOfObjects();
-
     if (ImGui::Button("Add Plane")) {
-        MeshData meshData = PresetAssets::getPresetMesh(MeshPreset::PLANE);
-        ObjCache::createObj(("Plane_" + std::to_string(objectCount)).c_str(), meshData.verts, meshData.indices, false, true, defaultProgram);
+        unsigned int planeID = ModelCache::createModel(gridPlane_verts, gridPlane_indices, true, false, true);
+        ModelCache::setProgram(planeID, defaultProgram);
         InspectorEngine::refreshUniforms();
     }
     if (ImGui::Button("Add Pyramid")) {
-        MeshData meshData = PresetAssets::getPresetMesh(MeshPreset::PYRAMID);
-        ObjCache::createObj(("Pyramid_" + std::to_string(objectCount)).c_str(), meshData.verts, meshData.indices, false, true, defaultProgram);
+        unsigned int pyramidID = ModelCache::createModel(pyramidVerts, pyramidIndices, true, false, true);
+        ModelCache::setProgram(pyramidID, defaultProgram);
         InspectorEngine::refreshUniforms();
     }
     if (ImGui::Button("Add Cube")) {
-        MeshData meshData = PresetAssets::getPresetMesh(MeshPreset::CUBE);
-        ObjCache::createObj(("Cube_" + std::to_string(objectCount)).c_str(), meshData.verts, meshData.indices, false, true, defaultProgram);
+        unsigned int cubeID = ModelCache::createModel(cubeVerts, cubeIndices, true, false, true);
+        ModelCache::setProgram(cubeID, defaultProgram);
         InspectorEngine::refreshUniforms();
-    }
-}
+    }}
 
 void InspectorUI::drawAssetsInspector() {
     for (const Texture* texPtr : TextureRegistry::readTextures()) {
@@ -385,12 +439,12 @@ void InspectorUI::initializeMenu(ShaderLinkMenu& menu, const std::vector<const c
     menu.initialized = true; 
 }
 
-void InspectorUI::initializeMenu(ObjectShaderMenu& menu, const std::vector<const char*>& shaderChoices) {
+void InspectorUI::initializeMenu(ModelShaderMenu& menu, const std::vector<const char*>& shaderChoices) {
     int i = 0;
-    Object* object = ObjCache::objMap[menu.objectName];
-    if (object == nullptr) {
-        Logger::addLog(LogLevel::ERROR, "initializeMenu:ObjectShaderMenu", "couldn't find object: " + menu.objectName);
+    if (!ModelCache::modelIDMap.contains(menu.modelID)) {
+        Logger::addLog(LogLevel::ERROR, "initializeMenu:ModelShaderMenu", "couldn't find model: " + std::to_string(menu.modelID));
     }
+    Model& model = *ModelCache::modelIDMap[menu.modelID];
 
     for (auto& shaderName: shaderChoices) {
         const ShaderProgram* shader = ShaderRegistry::getProgram(shaderName);
@@ -399,7 +453,7 @@ void InspectorUI::initializeMenu(ObjectShaderMenu& menu, const std::vector<const
             continue;
         }
 
-        if (shader->ID == object->getProgramID()) {
+        if (shader->ID == model.getProgram()->ID) {
             menu.selection = i;
             menu.initialized = true;
         }
@@ -408,10 +462,12 @@ void InspectorUI::initializeMenu(ObjectShaderMenu& menu, const std::vector<const
     menu.initialized = true; 
 }
 
-void InspectorUI::initializeMenu(ObjectTextureMenu& menu) {
-    Object& object = *ObjCache::objMap[menu.objectName];
+void InspectorUI::initializeMenu(ModelTextureMenu& menu) {
+    Logger::addLog(LogLevel::CRITICAL, "intializeMenu:ModelTextureMenu", "Shouldn not be calling this function! it doesn't work right now");
+    /*
+    Model& model = *ModelCache::modelIDMap[menu.modelID];
     std::unordered_set<GLuint> objectTextureIDs;
-    for (const TextureBind& bind : object.renderable.mat.textures) {
+    for (const TextureBind& bind : model.?) {
         Logger::addLog(LogLevel::INFO, "initializeMenu: ObjectTextureMenu", ("objTexID: " + std::to_string(bind.texture->ID)).c_str());
         objectTextureIDs.emplace(bind.texture->ID);
     }
@@ -424,6 +480,7 @@ void InspectorUI::initializeMenu(ObjectTextureMenu& menu) {
         i++;
     }
     menu.initialized = true;
+    */
 }
 
 void InspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, const std::vector<const char*>& vertChoices, const std::vector<const char*>& geoChoices, const std::vector<const char*>& fragChoices) {
@@ -466,7 +523,7 @@ bool InspectorUI::drawTextInput(std::string *value, const char *label) {
     return changed;
 }
 
-bool InspectorUI::drawShaderProgramMenu(ObjectShaderMenu& menu, const std::vector<const char*>& shaderChoices) {
+bool InspectorUI::drawShaderProgramMenu(ModelShaderMenu& menu, const std::vector<const char*>& shaderChoices) {
     bool changed = false;
 
     // display combo box
@@ -477,13 +534,15 @@ bool InspectorUI::drawShaderProgramMenu(ObjectShaderMenu& menu, const std::vecto
 
     if (!changed) return false;
     
+    // add check in case we get more types
     ShaderProgram& selectedShader = *ShaderRegistry::getProgram(shaderChoices[menu.selection]);
-    ObjCache::setProgram(menu.objectName, selectedShader); 
+    ModelCache::setProgram(menu.modelID, selectedShader); 
     InspectorEngine::refreshUniforms();
     return true;
 }
 
-bool InspectorUI::drawTextureMenu(ObjectTextureMenu& menu) {
+bool InspectorUI::drawTextureMenu(ModelTextureMenu& menu) {
+    // Not sure what the deal is here yet...
     bool changed = false;
     std::vector<const char *> textureChoices;
     const std::vector<const Texture*>& registryTextures = TextureRegistry::readTextures();
@@ -506,14 +565,36 @@ bool InspectorUI::drawTextureMenu(ObjectTextureMenu& menu) {
         changed = true;
         std::cout << "changed uniform name" << std::endl;
     }
+    // bool changed = false;
+    // std::vector<const char *> textureChoices;
+    // std::vector<const Texture*> textures = TextureRegistry::readTextures();
+    // textureChoices.reserve(textures.size());
+    // for (const Texture* tex : textures) {
+    //     textureChoices.push_back(tex->path.c_str());
+    // }
+    // if (ImGui::Combo("Texture", &selector.textureSelection, textureChoices.data(),
+    //                     (int)textureChoices.size())) {
+    //     changed = true;
+    //     std::cout << "changed texture" << std::endl;
+    // }
+    // if (ImGui::InputInt("Unit", &selector.unitSelection)) {
+    //     changed = true;
+    //     std::cout << "changed unit" << std::endl;
+    // }
+    // if (drawTextInput(&selector.uniformName, "Uniform Name")) {
+    //     changed = true;
+    //     std::cout << "changed uniform name" << std::endl;
+    // }
 
-    if (!changed) return false;
+    // if (!changed) return false;
     
-    // add check in case we get more types
-    const Texture* selectedTexture = registryTextures.at(menu.textureSelection);
-    ObjCache::setTexture(menu.objectName, *selectedTexture, menu.unitSelection, menu.uniformName); 
+    // // add check in case we get more types
+    // const Texture* selectedTexture = textures.at(selector.textureSelection);
+    // ModelCache::setTexture(selector.modelID, *selectedTexture, selector.unitSelection, selector.uniformName); 
 
-    return true;
+    // return true;
+
+    return false; //TEMP ADDING AND CHANGING TEXTURES DOESNT CURRENTLY WORK
 }
 
 bool InspectorUI::drawUniformInputValue(int* value, Uniform* uniform) {
@@ -599,7 +680,7 @@ bool InspectorUI:: drawUniformInputValue(InspectorSampler2D* value, Uniform* uni
     return drawUniformInputValue(&value->textureUnit);
 }
 
-void InspectorUI::drawUniformInput(Uniform& uniform, const std::string& objectName) {
+void InspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID) {
     if (ImGui::TreeNode(uniform.name.c_str())) {
         bool changed = false;
         std::visit([&](auto& val){
@@ -607,7 +688,7 @@ void InspectorUI::drawUniformInput(Uniform& uniform, const std::string& objectNa
         }, uniform.value);
 
         if (changed) {
-            InspectorEngine::applyInput(objectName, uniform);
+            InspectorEngine::applyInput(modelID, uniform);
         }
 
         /*
@@ -617,4 +698,50 @@ void InspectorUI::drawUniformInput(Uniform& uniform, const std::string& objectNa
         */
         ImGui::TreePop();
     }
+}
+
+
+bool InspectorUI::drawModelPositionInput(Model* model) {
+    bool changed = false;
+    ImGui::PushID(model);
+
+    glm::vec3 position = model->getPosition();
+    changed |= ImGui::InputFloat("x", &position.x);
+    changed |= ImGui::InputFloat("y", &position.y);
+    changed |= ImGui::InputFloat("z", &position.z);
+
+    ImGui::PopID();
+    if (changed) model->setPosition(position);
+    return changed;
+}
+
+
+bool InspectorUI::drawModelScaleInput(Model* model) {
+    bool changed = false;
+    ImGui::PushID(model);
+
+    glm::vec3 scale = model->getScale();
+    changed |= ImGui::InputFloat("x", &scale.x);
+    changed |= ImGui::InputFloat("y", &scale.y);
+    changed |= ImGui::InputFloat("z", &scale.z);
+
+    ImGui::PopID();
+    if (changed) model->setScale(scale);
+    return changed;
+}
+
+
+bool InspectorUI::drawModelOrientationInput(Model* model) {
+    bool changed = false;
+    ImGui::PushID(model);
+
+    glm::vec4 rotation = model->getRotation();
+    changed |= ImGui::InputFloat("angle", &rotation.x);
+    changed |= ImGui::InputFloat("x-axis", &rotation.y);
+    changed |= ImGui::InputFloat("y-axis", &rotation.z);
+    changed |= ImGui::InputFloat("z-axis", &rotation.w);
+
+    ImGui::PopID();
+    if (changed) model->setRotation(rotation.x, glm::vec3(rotation.y, rotation.z, rotation.w));
+    return changed;
 }

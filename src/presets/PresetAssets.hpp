@@ -19,7 +19,7 @@ enum class TexturePreset {
 
 struct MeshData {
     std::vector<float> verts;
-    std::vector<int> indices;
+    std::vector<unsigned int> indices;
 };
 
 class PresetAssets {
@@ -32,8 +32,8 @@ private:
     static MeshData pyramidMesh;
     static MeshData cubeMesh;
 
-    static std::unique_ptr<Texture> waterTex;
-    static std::unique_ptr<Texture> faceTex;
-    static std::unique_ptr<Texture> metalTex;
-    static std::unique_ptr<Texture> gridTex;
+    static Texture waterTex;
+    static Texture faceTex;
+    static Texture metalTex;
+    static Texture gridTex;
 };

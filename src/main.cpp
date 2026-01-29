@@ -1,3 +1,6 @@
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
 // ENGINE
 #include "application/Application.hpp"
 
@@ -8,3 +11,4 @@ int main() {
     Application::runLoop();
     return 0;
 }
+

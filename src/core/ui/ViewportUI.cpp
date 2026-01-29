@@ -3,7 +3,7 @@
 #include "engine/InputHandler.hpp"
 #include "engine/Errorlog.hpp"
 #include "engine/AppTimer.hpp"
-#include "object/ObjCache.hpp"
+#include "object/ModelCache.hpp"
 #include <string>
 #include <glm/gtc/matrix_transform.hpp>
 #include "platform/Platform.hpp"
@@ -105,8 +105,7 @@ void ViewportUI::render() {
 
     glm::mat4 perspective = glm::perspective(glm::radians(45.0f), ViewportUI::getAspect(), 0.1f, 100.0f);
     glm::mat4 view = camPtr->GetViewMatrix();
-
-    ObjCache::renderAll(perspective, view);
+    ModelCache::renderAll(perspective, view);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     ViewportUI::draw();
@@ -118,8 +117,24 @@ Camera* ViewportUI::getCamera() {
 }
 
 
+ViewportUI::~ViewportUI() {
+    glDeleteFramebuffers(1, &fbo);
+    glDeleteRenderbuffers(1, &rbo);
+    glDeleteTextures(1, &viewportTex);
+    fbo = 0;
+    rbo = 0;
+    viewportTex = 0;
+}
+
+
 void ViewportUI::bind() {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glViewport(0, 0, dimensions.x, dimensions.y);
+}
+
+
+void ViewportUI::unbind() {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, dimensions.x, dimensions.y);
 }
 

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <GLFW/glfw3.h>
 #include <imgui/imgui_impl_glfw.h>
+#include <stb_image.h>
 //#include "core/input/InputState.hpp"
 #include "core/input/Keybinds.hpp"
 #include "core/input/ContextManager.hpp"
@@ -13,6 +14,23 @@ std::unique_ptr<Window> Platform::windowPtr = nullptr;
 
 void setContextCurrent(Window& window) {
     window.setContextCurrent();
+}
+
+void Platform::setWindowIcon() {
+    int w = 0, h = 0, channels = 0;
+    stbi_set_flip_vertically_on_load(false);
+    unsigned char* pixels = stbi_load("../assets/icon.png", &w, &h, &channels, 4);
+    if (!pixels) {
+        std::cout << "stbi didnt load the window icon" << std::endl;
+        return;
+    }
+    GLFWimage img;
+    img.width = w;
+    img.height = h;
+    img.pixels = pixels;
+
+    glfwSetWindowIcon(Platform::windowPtr->getGLFWWindow(), 1, &img);
+    stbi_image_free(pixels);
 }
 
 bool Platform::initialize(const PlatformInitStruct& initStruct) {
@@ -30,6 +48,7 @@ bool Platform::initialize(const PlatformInitStruct& initStruct) {
     bool windowIsValid;
     Platform::windowPtr = Window::createWindow(initStruct.width, initStruct.height, initStruct.title, windowIsValid);
     if (!windowIsValid) return false;
+    setWindowIcon();
     setContextCurrent(*Platform::windowPtr);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {

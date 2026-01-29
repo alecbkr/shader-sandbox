@@ -12,19 +12,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # ADD GLFW (source version)
 # ---------------------------------------------------------
 add_subdirectory(lib/glfw)
-# GLFW exposes this include path
-include_directories(lib/glfw/include)
-# ---------------------------------------------------------
-# INCLUDE PROJECT DIRECTORIES
-# ---------------------------------------------------------
-include_directories(
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/include/glm
-    ${CMAKE_SOURCE_DIR}/include/glad
-    ${CMAKE_SOURCE_DIR}/include/imgui
-    ${CMAKE_SOURCE_DIR}/include/stb
-    ${CMAKE_SOURCE_DIR}/src
-)
+
+# ASSIMP
+add_subdirectory(lib/assimp)
+
 # ---------------------------------------------------------
 # RECURSIVE SOURCE COLLECTION
 # ---------------------------------------------------------
@@ -42,17 +33,41 @@ set(SRC_C "${CMAKE_SOURCE_DIR}/lib/glad/glad.c" )
 # ---------------------------------------------------------
 # EXECUTABLE
 # ---------------------------------------------------------
+set(WINDOWS_RESOURCES)
+
 add_executable(sandbox
     ${SRC_CPP}
     ${SRC_C}
     ${IMGUI_SRC}
     ${STB_SRC}
+    ${ASSIMP_SRC}
 )
+
+# Normal C/C++ include dirs (won't affect RC anymore)
+target_include_directories(sandbox PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/glm
+    ${CMAKE_SOURCE_DIR}/include/glad
+    ${CMAKE_SOURCE_DIR}/include/imgui
+    ${CMAKE_SOURCE_DIR}/include/stb
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/lib/glfw/include
+)
+
+# ---- Windows RC in its own target (no include dirs passed to windres) ----
+if (WIN32)
+    add_library(sandbox_rc OBJECT ${CMAKE_SOURCE_DIR}/src/app.rc)
+    set_target_properties(sandbox_rc PROPERTIES LINKER_LANGUAGE C)
+
+    # Add the compiled .obj from the rc target into the exe
+    target_sources(sandbox PRIVATE $<TARGET_OBJECTS:sandbox_rc>)
+endif()
 # ---------------------------------------------------------
 # LINK GLFW AND SYSTEM LIBS
 # (GLFW builds a target called glfw)
 # ---------------------------------------------------------
-target_link_libraries(sandbox glfw)
+target_link_libraries(sandbox glfw assimp)
+
 if (WIN32)
     target_link_libraries(sandbox
         opengl32

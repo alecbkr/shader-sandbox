@@ -1,22 +1,16 @@
 #include "presets/PresetAssets.hpp"
-#include <memory>
-
+#include "object/TextureType.hpp"
 MeshData PresetAssets::planeMesh{};
 MeshData PresetAssets::pyramidMesh{};
 MeshData PresetAssets::cubeMesh{};
 
-std::unique_ptr<Texture> PresetAssets::waterTex;
-std::unique_ptr<Texture> PresetAssets::faceTex;
-std::unique_ptr<Texture> PresetAssets::metalTex;
-std::unique_ptr<Texture> PresetAssets::gridTex;
+Texture PresetAssets::waterTex{"", TEX_DIFFUSE};
+Texture PresetAssets::faceTex{"", TEX_DIFFUSE};
+Texture PresetAssets::metalTex{"", TEX_DIFFUSE};
+Texture PresetAssets::gridTex{"", TEX_DIFFUSE};
 
 // We need to define these now, but they need to be initialized AFTER the logger.
 bool PresetAssets::initialize() {
-    PresetAssets::waterTex = std::make_unique<Texture>("../assets/textures/water.png");
-    PresetAssets::faceTex = std::make_unique<Texture>("../assets/textures/bigface.jpg");
-    PresetAssets::metalTex = std::make_unique<Texture>("../assets/textures/rim.png");
-    PresetAssets::gridTex = std::make_unique<Texture>("../assets/textures/grid.png");
-
     PresetAssets::planeMesh.verts = {
         -1.0f, 0.0f, -1.0f,  0.0f, 0.0f,
         -1.0f, 0.0f, 1.0f,  1.0f, 0.0f,
@@ -84,15 +78,15 @@ MeshData& PresetAssets::getPresetMesh(MeshPreset preset) {
 Texture& PresetAssets::getPresetTexture(TexturePreset preset) {
     switch (preset) {
         case TexturePreset::WATER:
-            return *PresetAssets::waterTex;
+            return PresetAssets::waterTex;
         
         case TexturePreset::FACE:
-            return *PresetAssets::faceTex;
+            return PresetAssets::faceTex;
         
         case TexturePreset::METAL:
-            return *PresetAssets::metalTex;
+            return PresetAssets::metalTex;
         
         case TexturePreset::GRID:
-            return *PresetAssets::gridTex;
+            return PresetAssets::gridTex;
     }
 }
