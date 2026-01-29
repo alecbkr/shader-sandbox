@@ -19,7 +19,7 @@ enum class SearchUIFlags {
     ADVANCED = CASE_SENSITIVE | MATCH_WHOLE_WORD | REGEX // add replace later 
 }; 
 
-// enforces enum usage to prevent using different enums or bools with SearchUIFlags
+// enforces enum usage to prevent using different enums or bools with SearchUIFlags bitmask
 inline SearchUIFlags operator | (SearchUIFlags a, SearchUIFlags b) {
     return static_cast<SearchUIFlags>(static_cast<int>(a) | static_cast<int>(b)); 
 }
@@ -42,10 +42,11 @@ class SearchText {
     bool matchWholeWord = false; 
     bool showReplace = false; 
 
-    bool drawSearchUI(std::function<void()> onReplaceClick = nullptr);     // UI for find 
-    bool GetisDirty() const {return isDirty;}                              // User updated the search bar 
-    void setDirty() {isDirty = true;}
-    bool hasQuery() const {return inputBuffer[0] != '\0'; }
+    bool drawSearchUI(std::function<void()> onReplaceClick = nullptr);      // UI for find 
+    bool GetisDirty() const {return isDirty;}                               // On update of things we need to search through 
+    void setDirty(bool dirty) {isDirty = dirty;}    
+    bool hasQuery() const {return inputBuffer[0] != '\0'; }                 // user has typed in the input field
+    bool hasMatches() const { return !matches.empty(); }                    // user input has matches in whatever text they're searching through
 
     // Where the actual text filtering will take place 
     template <typename Container, typename Func> 

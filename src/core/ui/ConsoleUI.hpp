@@ -61,7 +61,7 @@ private:
     static int selectionEnd; 
 
     static bool initialized;
-    static ConsoleBtns btns; 
+    static ConsoleToggles &togStates; 
 
     static size_t lastLogSize; 
     static void drawLogs(); 

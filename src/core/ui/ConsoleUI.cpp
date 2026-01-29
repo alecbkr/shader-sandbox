@@ -1,8 +1,7 @@
 #include "ConsoleUI.hpp"
-#include "string"
-#include "iostream"
-#include <iostream>
 #include "platform/Platform.hpp"
+#include <string>
+#include <iostream>
 
 bool ConsoleUI::initialized = false; 
 size_t ConsoleUI::lastLogSize = 0;
@@ -12,38 +11,14 @@ ImVec2 ConsoleUI::windowPos = ImVec2(0, 0);
 int ConsoleUI::selectionStart = -1; 
 int ConsoleUI::selectionEnd = -1;
 SearchText ConsoleUI::searcher; 
-
-ConsoleBtns ConsoleUI::btns = {
-    .isAutoScroll = true, 
-    .isCollapsedLogs = false, 
-    .isShowErrors = true, 
-    .isShowWarning = true, 
-    .isShowInfo = true, 
-    .isShowShader = true, 
-    .isShowSystem = true, 
-    .isShowAssets = true
-}; 
+ConsoleToggles& ConsoleUI::togStates = ConsoleEngine::getToggles();
 
 std::vector<std::string> ConsoleUI::history{};
 
 bool ConsoleUI::initialize() {
-    // TODO: maybe create a file that implements all these callbacks so this function isn't as messy 
-    ConsoleEngine::registerToggle(ConsoleEngine::Cmd::AUTO_SCROLL, 
-        [&](bool state){btns.isAutoScroll = state;});
-    ConsoleEngine::registerToggle(ConsoleEngine::Cmd::COLLAPSE_LOGS, 
-        [&](bool state) {btns.isCollapsedLogs = state; });
-
-
     searcher.setSearchFlag(SearchUIFlags::ADVANCED); 
 
     initialized = true;
-
-    // for (int i = 0; i < 200; ++i) {
-    //     Logger::addLog(LogLevel::INFO, "Testing", "This is a test"); 
-    // }
-    // Logger::addLog(LogLevel::INFO, "Testing", "This is a test"); 
-
-
     return true;
 }
 
@@ -96,16 +71,16 @@ void ConsoleUI::drawLogs() {
 
 }
 
-const void ConsoleUI::drawMenuBar() {         
+const void ConsoleUI::drawMenuBar() {      
     if(ImGui::BeginMenuBar()) {
 
         if(ImGui::BeginMenu("View")) {
             if (ImGui::MenuItem("Clear")) {
-                ConsoleEngine::executeBtnAction("clear"); 
+                ConsoleEngine::executeBtnAction(ConsoleActions::CLEAR); 
             } 
             ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
-            ImGui::MenuItem("Auto-Scroll", nullptr, &btns.isAutoScroll); 
-            ImGui::MenuItem("Collapse Logs", nullptr, &btns.isCollapsedLogs);
+            ImGui::MenuItem("Auto-Scroll", nullptr, &togStates.isAutoScroll); 
+            ImGui::MenuItem("Collapse Logs", nullptr, &togStates.isCollapsedLogs);
             ImGui::PopItemFlag(); 
             
             ImGui::MenuItem("Copy Logs"); 
@@ -115,19 +90,46 @@ const void ConsoleUI::drawMenuBar() {
 
         if (ImGui::BeginMenu("Filters")) {
             ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
-            ImGui::MenuItem("Show Errors", nullptr, &btns.isShowErrors);
-            ImGui::MenuItem("Show Warning", nullptr, &btns.isShowWarning);
-            ImGui::MenuItem("Show Info", nullptr, &btns.isShowInfo); 
+
+            if (ImGui::MenuItem("Show Errors", nullptr, &togStates.isShowError))
+                searcher.setDirty(true);
+
+            if (ImGui::MenuItem("Show Warning", nullptr, &togStates.isShowWarning))
+                searcher.setDirty(true);
+
+            if (ImGui::MenuItem("Show Info", nullptr, &togStates.isShowInfo))
+                searcher.setDirty(true); 
+
             ImGui::PopItemFlag(); 
             // Todo: add source filter to filter out shader errors, system errors, errors loading textures/objs, etc. 
             if (ImGui::BeginMenu("Show Sources")) {
                 ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
-                ImGui::MenuItem("Shader", nullptr, &btns.isShowShader); 
-                ImGui::MenuItem("System", nullptr, &btns.isShowSystem); 
-                ImGui::MenuItem("Assets", nullptr, &btns.isShowAssets);
+                ImGui::MenuItem("Shader", nullptr, &togStates.isShowShader); 
+                ImGui::MenuItem("System", nullptr, &togStates.isShowSystem); 
+                ImGui::MenuItem("Assets", nullptr, &togStates.isShowAssets);
                 ImGui::PopItemFlag(); 
                 ImGui::EndMenu(); 
             }
+            ImGui::EndMenu(); 
+        }
+
+        // Used to test console UI 
+        if (ImGui::BeginMenu("Spawn New Log")) {
+            ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
+            if (ImGui::MenuItem("Spawn 1 Error Log")) {
+                Logger::addLog(LogLevel::ERROR, "Console Menu", "This is an error test", "Additional"); 
+            }
+            if (ImGui::MenuItem("Spawn 1 Warning Log")) {
+                Logger::addLog(LogLevel::WARNING, "Console Menu", "This is a test warning", "Additional"); 
+            }
+            if (ImGui::MenuItem("Spawn 1 Info Log")) {
+                Logger::addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
+            }
+            if (ImGui::MenuItem("Spawn 10 Info Logs")) {
+                for (int i = 0; i < 10; i ++)
+                    Logger::addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
+            }
+            ImGui::PopItemFlag(); 
             ImGui::EndMenu(); 
         }
 
@@ -147,21 +149,40 @@ const void ConsoleUI::drawMenuBar() {
 // updates search results from find and autoscroll if btn is active 
 void ConsoleUI::updateSearchAndScroll(const std::deque<LogEntry> &logs, bool& isScroll) {
     if (searcher.GetisDirty() || (searcher.hasQuery() && logs.size() > lastLogSize)) {
-        searcher.updateMatches(logs, [](const LogEntry &log){ 
+        
+        // used to avoid collapsed logs in search 
+        const LogEntry* lastLog = nullptr; 
+        searcher.updateMatches(logs, [&](const LogEntry &log) -> std::string {
+            bool isDuplicate = false; 
+            if(togStates.isCollapsedLogs && lastLog) {
+                if (log.msg == lastLog ->msg && log.level == lastLog->level && 
+                    log.src == lastLog->src && log.additional == lastLog->additional) {
+                    isDuplicate = true;
+            }
+        }
+
+        lastLog = &log; 
+        if(isDuplicate) return ""; 
+
+        // avoid filtered logs in search
+            if (log.level == LogLevel::ERROR   && !togStates.isShowError)   return "";
+            if (log.level == LogLevel::WARNING && !togStates.isShowWarning) return "";
+            if (log.level == LogLevel::INFO    && !togStates.isShowInfo)    return "";
             return ConsoleUI::formatLogString(log); 
         });
     }
 
     if (logs.size() > lastLogSize) {
         lastLogSize = logs.size();
-        if (selectionStart == -1 && btns.isAutoScroll && !searcher.hasQuery()) {
+        if (selectionStart == -1 && togStates.isAutoScroll && !searcher.hasQuery()) {
             isScroll = true;
         }
     }
 }
 
 int ConsoleUI::getCollapseCount(const std::deque<LogEntry> &logs, int currIdx) {
-    if (!btns.isCollapsedLogs) return 0;
+
+    if (!togStates.isCollapsedLogs) return 0;
 
     int count = 0;
     int nextIdx = currIdx + 1;
@@ -186,12 +207,25 @@ int ConsoleUI::getCollapseCount(const std::deque<LogEntry> &logs, int currIdx) {
 }
 
 void ConsoleUI::drawSingleLog(const LogEntry& log, int idx, int repeatCount, bool& isScroll) {
+    if (log.level == LogLevel::ERROR && !togStates.isShowError) return; 
+    if (log.level == LogLevel::WARNING && !togStates.isShowWarning) return; 
+    if (log.level == LogLevel::INFO && !togStates.isShowInfo) return; 
+    
     LogStyle style = getLogStyle(log);
     ImGui::PushID(idx);
     ImVec2 screenPos = ImGui::GetCursorScreenPos();
 
+    // logic for checking collapsed logs 
+    int matchIndexToCheck = idx; 
+    if (repeatCount > 0 && searcher.hasMatches()) {
+        const auto& activeMatch = searcher.getActiveMatch(); 
+        if(activeMatch.itemIdx > idx && activeMatch.itemIdx <= (idx + repeatCount)) {
+            matchIndexToCheck = activeMatch.itemIdx; 
+        }
+    }
+
     // Draw the search highlight 
-    if (searcher.isItemActiveMatch(idx)) {
+    if (searcher.isItemActiveMatch(matchIndexToCheck)) {
         if (searcher.checkAndClearScrollRequest()) {
             ImGui::SetScrollHereY(0.5f);
             isScroll = false; 
@@ -233,7 +267,6 @@ void ConsoleUI::drawSingleLog(const LogEntry& log, int idx, int repeatCount, boo
 
     ImGui::PopID();
 }
-
 
 ConsoleUI::LogStyle ConsoleUI::getLogStyle(const LogEntry& log) {
     LogStyle style; 
