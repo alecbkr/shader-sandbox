@@ -1,13 +1,14 @@
 #include "presets/PresetAssets.hpp"
+#include "object/TextureType.hpp"
 
 MeshData PresetAssets::planeMesh{};
 MeshData PresetAssets::pyramidMesh{};
 MeshData PresetAssets::cubeMesh{};
 
-Texture PresetAssets::waterTex{""};
-Texture PresetAssets::faceTex{""};
-Texture PresetAssets::metalTex{""};
-Texture PresetAssets::gridTex{""};
+Texture PresetAssets::waterTex{"", TEX_DIFFUSE};
+Texture PresetAssets::faceTex{"", TEX_DIFFUSE};
+Texture PresetAssets::metalTex{"", TEX_DIFFUSE};
+Texture PresetAssets::gridTex{"", TEX_DIFFUSE};
 
 bool PresetAssets::initialize() {
     PresetAssets::planeMesh.verts = {

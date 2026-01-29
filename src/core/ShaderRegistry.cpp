@@ -4,10 +4,10 @@ std::unordered_map<std::string, ShaderProgram *> ShaderRegistry::programs;
 bool ShaderRegistry::initialized = false;
 
 bool ShaderRegistry::initialize() {
-    if (!registerProgram("../shaders/3d.vert", "../shaders/texture.frag", "program")) {
+    if (!registerProgram("../shaders/tex.vert", "../shaders/tex.frag", "tex")) {
         return false;
     };
-    if (!registerProgram("../shaders/default.vert", "../shaders/default.frag", "untex")) {
+    if (!registerProgram("../shaders/color.vert", "../shaders/color.frag", "color")) {
         return false;
     }
 

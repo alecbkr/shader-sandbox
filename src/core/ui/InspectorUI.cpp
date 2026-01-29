@@ -9,7 +9,7 @@
 #include "core/UniformTypes.hpp"
 #include "engine/Errorlog.hpp"
 #include "engine/ShaderProgram.hpp"
-#include "object/ObjCache.hpp"
+#include "object/ModelCache.hpp"
 #include "object/Texture.hpp"
 #include <ostream>
 #include <string>
@@ -24,8 +24,8 @@ std::vector<std::string> InspectorUI::uniformNamesToDelete{};
 std::string InspectorUI::newUniformName{};
 std::string InspectorUI::newUniformShaderName{};
 UniformType InspectorUI::newUniformType = UniformType::NoType;
-std::unordered_map<std::string, ObjectShaderSelector> InspectorUI::objectShaderSelectors{};
-std::unordered_map<std::string, ObjectTextureSelector> InspectorUI::objectTextureSelectors{};
+std::unordered_map<unsigned int, ObjectShaderSelector> InspectorUI::modelShaderSelectors{};
+std::unordered_map<unsigned int, ObjectTextureSelector> InspectorUI::modelTextureSelectors{};
 
 void InspectorUI::render() {
     float menuBarHeight = ImGui::GetFrameHeight();
@@ -70,24 +70,25 @@ void InspectorUI::render() {
 
 void InspectorUI::drawUniformInspector() {
     int imGuiID = 0;
-    for (auto &[objectName, object] : ObjCache::objMap) {
-        if (ImGui::TreeNode(objectName.c_str())) {
-            const std::unordered_map<std::string, Uniform>* uniformMap = UNIFORM_REGISTRY.tryReadUniforms(objectName);
+    for (auto &[modelID, model] : ModelCache::modelIDMap) {
+        std::string label = "model " + std::to_string(modelID);
+        if (ImGui::TreeNode(label.c_str())) {
+            const std::unordered_map<std::string, Uniform>* uniformMap = UNIFORM_REGISTRY.tryReadUniforms(modelID);
 
             if (uniformMap == nullptr) {
-                Errorlog::getInstance().logEntry(EL_WARNING, "drawUniformInspector", ("Object not found in registry: " + objectName).c_str());
+                Errorlog::getInstance().logEntry(EL_WARNING, "drawUniformInspector", "Object not found in registry: ", modelID);
                 continue;
             }
 
             for (auto &[uniformName, uniformRef] : *uniformMap) {
                 ImGui::PushID(imGuiID);
                 Uniform uniformCopy = uniformRef;
-                drawUniformInput(uniformCopy, objectName);
+                drawUniformInput(uniformCopy, modelID);
                 ImGui::PopID();
                 imGuiID++;
             }
             for (std::string uniformName : uniformNamesToDelete)
-                UNIFORM_REGISTRY.eraseUniform(objectName, uniformName);
+                UNIFORM_REGISTRY.eraseUniform(modelID, uniformName);
             uniformNamesToDelete.clear();
 
             ImGui::TreePop();
@@ -99,34 +100,35 @@ void InspectorUI::drawObjectsInspector() {
     // TODO: an arbitrary high number, just somewhere above the uniform inspector's ids.
     int imGuiID = 100000;
     drawAddObjectMenu();
-    for (auto &[objectName, object] : ObjCache::objMap) {
-        if (!objectShaderSelectors.contains(objectName)) {
-            objectShaderSelectors[objectName] = ObjectShaderSelector{ 
-                .objectName = objectName,
+    for (auto &[modelID, model] : ModelCache::modelIDMap) {
+        if (!modelShaderSelectors.contains(modelID)) {
+            modelShaderSelectors[modelID] = ObjectShaderSelector{ 
+                .modelID = modelID,
                 .selection = 0,
             };    
         }
-        if (!objectTextureSelectors.contains(objectName)) {
-            objectTextureSelectors[objectName] = ObjectTextureSelector{ 
-                .objectName = objectName,
+        if (!modelTextureSelectors.contains(modelID)) {
+            modelTextureSelectors[modelID] = ObjectTextureSelector{ 
+                .modelID = modelID,
                 .uniformName = "baseTex",
                 .textureSelection = 0,
             };    
         }
-        ObjectShaderSelector& shaderSelector = objectShaderSelectors[objectName];
-        ObjectTextureSelector& textureSelector = objectTextureSelectors[objectName];
+        ObjectShaderSelector& shaderSelector = modelShaderSelectors[modelID];
+        ObjectTextureSelector& textureSelector = modelTextureSelectors[modelID];
 
-        if (ImGui::TreeNode(objectName.c_str())) {
+        std::string label = "model " + std::to_string(modelID);
+        if (ImGui::TreeNode(label.c_str())) {
             if (ImGui::TreeNode("position")) {
-                drawUniformInputValue(&object->objPosition);
+                drawModelPositionInput(model.get());
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("scale")) {
-                drawUniformInputValue(&object->objScale);
+                drawModelScaleInput(model.get());
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("orientation")) {
-                drawUniformInputValue(&object->objOrientation);
+                drawModelOrientationInput(model.get());
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("mesh")) {
@@ -154,7 +156,7 @@ void InspectorUI::drawAddObjectMenu() {
         1.0f, 0.0f, -1.0f, 0.0f, 1.0f
     };
 
-    static const std::vector<int> gridPlane_indices {
+    static const std::vector<unsigned int> gridPlane_indices {
         0, 1, 2, 
         0, 2, 3
     };
@@ -172,7 +174,7 @@ void InspectorUI::drawAddObjectMenu() {
     };
 
      
-    static const std::vector<int> pyramidIndices = {
+    static const std::vector<unsigned int> pyramidIndices = {
         0, 1, 2,  0, 2, 3, // base
         0, 1, 4,            // side 1
         1, 2, 4,            // side 2
@@ -195,7 +197,7 @@ void InspectorUI::drawAddObjectMenu() {
     };
 
     // Indices for cube (two triangles per face)
-    static const std::vector<int> cubeIndices = {
+    static const std::vector<unsigned int> cubeIndices = {
         0,1,2, 0,2,3, // back
         4,5,6, 4,6,7, // front
         3,2,6, 3,6,7, // top
@@ -209,18 +211,19 @@ void InspectorUI::drawAddObjectMenu() {
     // just grab a random shader program it really does not matter
     ShaderProgram& defaultProgram = *programs.begin()->second;
 
-    int objectCount = ObjCache::getNumberOfObjects();
-
     if (ImGui::Button("Add Plane")) {
-        ObjCache::createObj(("Plane_" + std::to_string(objectCount)).c_str(), gridPlane_verts, gridPlane_indices, false, true, defaultProgram);
+        unsigned int planeID = ModelCache::createModel(gridPlane_verts, gridPlane_indices, true, false, true);
+        ModelCache::setProgram(planeID, defaultProgram);
         InspectorEngine::refreshUniforms();
     }
     if (ImGui::Button("Add Pyramid")) {
-        ObjCache::createObj(("Pyramid_" + std::to_string(objectCount)).c_str(), pyramidVerts, pyramidIndices, false, true, defaultProgram);
+        unsigned int pyramidID = ModelCache::createModel(pyramidVerts, pyramidIndices, true, false, true);
+        ModelCache::setProgram(pyramidID, defaultProgram);
         InspectorEngine::refreshUniforms();
     }
     if (ImGui::Button("Add Cube")) {
-        ObjCache::createObj(("Cube_" + std::to_string(objectCount)).c_str(), cubeVerts, cubeIndices, false, true, defaultProgram);
+        unsigned int cubeID = ModelCache::createModel(cubeVerts, cubeIndices, true, false, true);
+        ModelCache::setProgram(cubeID, defaultProgram);
         InspectorEngine::refreshUniforms();
     }
 }
@@ -435,40 +438,42 @@ bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
     
     // add check in case we get more types
     ShaderProgram& selectedShader = *ShaderRegistry::getProgram(shaderChoices[selector.selection]);
-    ObjCache::setProgram(selector.objectName, selectedShader); 
+    ModelCache::setProgram(selector.modelID, selectedShader); 
     InspectorEngine::refreshUniforms();
     return true;
 }
 
 bool InspectorUI::drawTextureSelector(ObjectTextureSelector& selector) {
-    bool changed = false;
-    std::vector<const char *> textureChoices;
-    std::vector<const Texture*> textures = TextureRegistry::readTextures();
-    textureChoices.reserve(textures.size());
-    for (const Texture* tex : textures) {
-        textureChoices.push_back(tex->path.c_str());
-    }
-    if (ImGui::Combo("Texture", &selector.textureSelection, textureChoices.data(),
-                        (int)textureChoices.size())) {
-        changed = true;
-        std::cout << "changed texture" << std::endl;
-    }
-    if (ImGui::InputInt("Unit", &selector.unitSelection)) {
-        changed = true;
-        std::cout << "changed unit" << std::endl;
-    }
-    if (drawTextInput(&selector.uniformName, "Uniform Name")) {
-        changed = true;
-        std::cout << "changed uniform name" << std::endl;
-    }
+    // bool changed = false;
+    // std::vector<const char *> textureChoices;
+    // std::vector<const Texture*> textures = TextureRegistry::readTextures();
+    // textureChoices.reserve(textures.size());
+    // for (const Texture* tex : textures) {
+    //     textureChoices.push_back(tex->path.c_str());
+    // }
+    // if (ImGui::Combo("Texture", &selector.textureSelection, textureChoices.data(),
+    //                     (int)textureChoices.size())) {
+    //     changed = true;
+    //     std::cout << "changed texture" << std::endl;
+    // }
+    // if (ImGui::InputInt("Unit", &selector.unitSelection)) {
+    //     changed = true;
+    //     std::cout << "changed unit" << std::endl;
+    // }
+    // if (drawTextInput(&selector.uniformName, "Uniform Name")) {
+    //     changed = true;
+    //     std::cout << "changed uniform name" << std::endl;
+    // }
 
-    if (!changed) return false;
+    // if (!changed) return false;
     
-    // add check in case we get more types
-    const Texture* selectedTexture = textures.at(selector.textureSelection);
-    ObjCache::setTexture(selector.objectName, *selectedTexture, selector.unitSelection, selector.uniformName); 
+    // // add check in case we get more types
+    // const Texture* selectedTexture = textures.at(selector.textureSelection);
+    // ModelCache::setTexture(selector.modelID, *selectedTexture, selector.unitSelection, selector.uniformName); 
 
-    return true;
+    // return true;
+
+    return false; //TEMP ADDING AND CHANGING TEXTURES DOESNT CURRENTLY WORK
 }
 
 bool InspectorUI::drawUniformInputValue(int* value) {
@@ -527,7 +532,7 @@ bool InspectorUI::drawUniformInputValue(glm::mat4* value) {
     return changed;
 }
 
-void InspectorUI::drawUniformInput(Uniform& uniform, const std::string& objectName) {
+void InspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID) {
     if (ImGui::TreeNode(uniform.name.c_str())) {
         bool changed = false;
         std::visit([&](auto& val){
@@ -535,7 +540,7 @@ void InspectorUI::drawUniformInput(Uniform& uniform, const std::string& objectNa
         }, uniform.value);
 
         if (changed) {
-            InspectorEngine::applyInput(objectName, uniform);
+            InspectorEngine::applyInput(modelID, uniform);
         }
 
         if (ImGui::Button("Delete Uniform", ImVec2(100, 20))) {
@@ -543,4 +548,50 @@ void InspectorUI::drawUniformInput(Uniform& uniform, const std::string& objectNa
         }
         ImGui::TreePop();
     }
+}
+
+
+bool InspectorUI::drawModelPositionInput(Model* model) {
+    bool changed = false;
+    ImGui::PushID(model);
+
+    glm::vec3 position = model->getPosition();
+    changed |= ImGui::InputFloat("x", &position.x);
+    changed |= ImGui::InputFloat("y", &position.y);
+    changed |= ImGui::InputFloat("z", &position.z);
+
+    ImGui::PopID();
+    if (changed) model->setPosition(position);
+    return changed;
+}
+
+
+bool InspectorUI::drawModelScaleInput(Model* model) {
+    bool changed = false;
+    ImGui::PushID(model);
+
+    glm::vec3 scale = model->getScale();
+    changed |= ImGui::InputFloat("x", &scale.x);
+    changed |= ImGui::InputFloat("y", &scale.y);
+    changed |= ImGui::InputFloat("z", &scale.z);
+
+    ImGui::PopID();
+    if (changed) model->setScale(scale);
+    return changed;
+}
+
+
+bool InspectorUI::drawModelOrientationInput(Model* model) {
+    bool changed = false;
+    ImGui::PushID(model);
+
+    glm::vec4 rotation = model->getRotation();
+    changed |= ImGui::InputFloat("angle", &rotation.x);
+    changed |= ImGui::InputFloat("x-axis", &rotation.y);
+    changed |= ImGui::InputFloat("y-axis", &rotation.z);
+    changed |= ImGui::InputFloat("z-axis", &rotation.w);
+
+    ImGui::PopID();
+    if (changed) model->setRotation(rotation.x, glm::vec3(rotation.y, rotation.z, rotation.w));
+    return changed;
 }

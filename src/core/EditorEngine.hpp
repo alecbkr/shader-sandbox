@@ -24,6 +24,7 @@ public:
     static bool initialize();
     static std::string getFileContents(std::string filename);
     static void createFile(const std::string& filePath);
+    static std::string findNextUntitledNumber();
     static int EditorInputCallback(ImGuiInputTextCallbackData* data);
 private:
     static bool spawnEditor(const EventPayload& payload);
