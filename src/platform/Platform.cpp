@@ -17,6 +17,7 @@ void setContextCurrent(Window& window) {
 
 void Platform::setWindowIcon() {
     int w = 0, h = 0, channels = 0;
+    stbi_set_flip_vertically_on_load(false);
     unsigned char* pixels = stbi_load("../assets/icon.png", &w, &h, &channels, 4);
     if (!pixels) {
         std::cout << "stbi didnt load the window icon" << std::endl;

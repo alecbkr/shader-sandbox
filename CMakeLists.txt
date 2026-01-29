@@ -16,19 +16,6 @@ add_subdirectory(lib/glfw)
 # ASSIMP
 add_subdirectory(lib/assimp)
 
-# GLFW exposes this include path
-include_directories(lib/glfw/include)
-# ---------------------------------------------------------
-# INCLUDE PROJECT DIRECTORIES
-# ---------------------------------------------------------
-include_directories(
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/include/glm
-    ${CMAKE_SOURCE_DIR}/include/glad
-    ${CMAKE_SOURCE_DIR}/include/imgui
-    ${CMAKE_SOURCE_DIR}/include/stb
-    ${CMAKE_SOURCE_DIR}/src
-)
 # ---------------------------------------------------------
 # RECURSIVE SOURCE COLLECTION
 # ---------------------------------------------------------
