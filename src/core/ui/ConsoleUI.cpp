@@ -2,6 +2,9 @@
 #include "platform/Platform.hpp"
 #include <string>
 #include <iostream>
+#include <algorithm>
+#include <iostream>
+#include "platform/Platform.hpp"
 
 bool ConsoleUI::initialized = false; 
 size_t ConsoleUI::lastLogSize = 0;

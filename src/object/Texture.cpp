@@ -2,6 +2,7 @@
 #include <stb/stb_image.h>
 #include "core/logging/Logger.hpp"
 
+
 Texture::Texture(const char *texture_path, TextureType type) {
     stbi_set_flip_vertically_on_load(true);
 

@@ -39,7 +39,6 @@ public:
     static const void render();
     static SearchText searcher;
      
-private: 
     struct LogStyle {
         std::string prefix; 
         ImVec4 color; 
@@ -47,6 +46,7 @@ private:
 
     // static std::shared_ptr<ConsoleEngine> engine; 
     // static std::shared_ptr<ConsoleSink> logSrc; 
+private:
     static float targetWidth;
     static float targetHeight;
     static ImVec2 windowPos;
