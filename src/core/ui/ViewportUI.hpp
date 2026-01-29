@@ -11,6 +11,7 @@ public:
     static bool initialize();
     static void render();
     static Camera* getCamera();
+    ~ViewportUI();
     
     private:
     static bool initialized;
@@ -21,7 +22,12 @@ public:
     static ImVec2 pos;
     static std::unique_ptr<Camera> camPtr;
 
+    static float targetWidth;
+    static float targetHeight;
+    static ImVec2 windowPos;
+
     static void bind();
+    static void unbind();
     static void draw();
     static void reformat();
     static float getAspect();

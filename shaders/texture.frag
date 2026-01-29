@@ -1,18 +1,14 @@
 #version 330 core
 
-in vec2 TexCoord;
+uniform sampler2D base;
 
-uniform sampler2D baseTex;
-uniform sampler2D outlineTex;
+in vec2 TexCoord;
+in vec4 fragColor;
 
 out vec4 FragColor;
 
 void main() {
-    float thresh = 0.05;
-    vec4 base = texture(baseTex, TexCoord);
-    vec4 outline = texture(outlineTex, TexCoord);
-    
-    bool isBlack = outline.r < thresh && outline.b < thresh && outline.g < thresh;
 
-    FragColor = (isBlack ? base : outline)*vec4(1,0,1,1);
+    //FragColor = vec4(TexCoord, 0.5, 1.0);
+    FragColor = texture(base, TexCoord);
 }

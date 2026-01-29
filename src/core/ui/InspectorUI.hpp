@@ -6,16 +6,16 @@
 #include "core/InspectorEngine.hpp"
 #include "core/ShaderRegistry.hpp"
 #include "core/UniformRegistry.hpp"
-#include "object/Object.hpp"
+#include "object/Model.hpp"
 #include "core/UniformTypes.hpp"
 
 struct ObjectShaderSelector {
-    std::string objectName;
+    unsigned int modelID; //std::string objectName;
     int selection;
 };
 
 struct ObjectTextureSelector {
-    std::string objectName;
+    unsigned int modelID; //std::string objectName;
     std::string uniformName;
     int textureSelection;
     int unitSelection;
@@ -32,8 +32,8 @@ class InspectorUI {
     static std::string newUniformName;
     static std::string newUniformShaderName;
     static UniformType newUniformType;
-    static std::unordered_map<std::string, ObjectShaderSelector> objectShaderSelectors;
-    static std::unordered_map<std::string, ObjectTextureSelector> objectTextureSelectors;
+    static std::unordered_map<unsigned int, ObjectShaderSelector> modelShaderSelectors;
+    static std::unordered_map<unsigned int, ObjectTextureSelector> modelTextureSelectors;
 
     static void drawUniformInspector();
     static void drawObjectsInspector();
@@ -49,5 +49,8 @@ class InspectorUI {
     static bool drawUniformInputValue(glm::vec4* value);
     static bool drawUniformInputValue(glm::mat4* value);
     static bool drawUniformInputValue(glm::quat* value);
-    static void drawUniformInput(Uniform& uniform, const std::string& objectName);
+    static void drawUniformInput(Uniform& uniform, unsigned int modelID);
+    static bool drawModelPositionInput(Model* model);
+    static bool drawModelScaleInput(Model* model);
+    static bool drawModelOrientationInput(Model* model);
 };

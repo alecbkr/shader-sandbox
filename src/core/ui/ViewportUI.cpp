@@ -3,7 +3,7 @@
 #include "engine/InputHandler.hpp"
 #include "engine/Errorlog.hpp"
 #include "engine/AppTimer.hpp"
-#include "object/ObjCache.hpp"
+#include "object/ModelCache.hpp"
 #include <string>
 #include <glm/gtc/matrix_transform.hpp>
 #include "platform/Platform.hpp"
@@ -18,6 +18,14 @@ ImVec2 ViewportUI::dimensions = ImVec2(0, 0);
 ImVec2 ViewportUI::prevDimensions = ImVec2(0, 0);
 ImVec2 ViewportUI::pos = ImVec2(0, 0);
 std::unique_ptr<Camera> ViewportUI::camPtr = nullptr;
+float ViewportUI::targetWidth = 0.0f;
+float ViewportUI::targetHeight = 0.0f;
+ImVec2 ViewportUI::windowPos = ImVec2(0, 0);
+
+#define TARGET_WIDTH 0.4f
+#define TARGET_HEIGHT 1.0f
+#define START_X 0;
+#define START_Y 0;
 
 bool ViewportUI::initialize() {
     if (ViewportUI::initialized) {
@@ -77,6 +85,11 @@ bool ViewportUI::initialize() {
 
     ViewportUI::camPtr = std::make_unique<Camera>();
 
+    ViewportUI::targetWidth = TARGET_WIDTH;
+    ViewportUI::targetHeight = TARGET_HEIGHT;
+    ViewportUI::windowPos.x = START_X;
+    ViewportUI::windowPos.y = START_Y;
+
     ViewportUI::initialized = true;
     return true;
 }
@@ -92,8 +105,7 @@ void ViewportUI::render() {
 
     glm::mat4 perspective = glm::perspective(glm::radians(45.0f), ViewportUI::getAspect(), 0.1f, 100.0f);
     glm::mat4 view = camPtr->GetViewMatrix();
-
-    ObjCache::renderAll(perspective, view);
+    ModelCache::renderAll(perspective, view);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     ViewportUI::draw();
@@ -105,24 +117,55 @@ Camera* ViewportUI::getCamera() {
 }
 
 
+ViewportUI::~ViewportUI() {
+    glDeleteFramebuffers(1, &fbo);
+    glDeleteRenderbuffers(1, &rbo);
+    glDeleteTextures(1, &viewportTex);
+    fbo = 0;
+    rbo = 0;
+    viewportTex = 0;
+}
+
+
 void ViewportUI::bind() {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glViewport(0, 0, dimensions.x, dimensions.y);
 }
 
 
+void ViewportUI::unbind() {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, dimensions.x, dimensions.y);
+}
+
+
 void ViewportUI::draw() {
-    if (initPos) {
-        ImGui::SetNextWindowSize(dimensions, ImGuiCond_Always);
-        ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
-        prevDimensions = dimensions;
-        initPos = false;
-    }
+    // if (initPos) {
+    //     ImGui::SetNextWindowSize(dimensions, ImGuiCond_Always);
+    //     ImGui::SetNextWindowPos(pos, ImGuiCond_Always);
+    //     prevDimensions = dimensions;
+    //     initPos = false;
+    // }
     
     // ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f); //removes border
     // ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar);
 
-    ImGui::Begin("Viewport");
+    float menuBarHeight = ImGui::GetFrameHeight();
+
+    int displayWidth = ImGui::GetIO().DisplaySize.x;
+    int displayHeight = ImGui::GetIO().DisplaySize.y - menuBarHeight;
+
+    float width = (float)displayWidth * ViewportUI::targetWidth;
+    float height = (float)displayHeight * ViewportUI::targetHeight;
+
+    float editorOffsetX = (float)displayWidth * ViewportUI::targetWidth; // viewport and editor have same width
+
+    ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(windowPos.x + editorOffsetX, windowPos.y + menuBarHeight), ImGuiCond_Always);
+
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
+
+    ImGui::Begin("Viewport", nullptr, flags);
 
     dimensions = ImGui::GetWindowSize();
     pos = ImGui::GetWindowPos();

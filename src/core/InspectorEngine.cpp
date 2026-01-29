@@ -6,8 +6,8 @@
 #include "core/ShaderRegistry.hpp"
 #include "core/UniformTypes.hpp"
 #include "engine/ShaderProgram.hpp"
-#include "object/ObjCache.hpp"
-#include "object/Object.hpp"
+#include "object/ModelCache.hpp"
+#include "object/Model.hpp"
 #include "engine/Errorlog.hpp"
 
 const std::unordered_map<std::string, UniformType> InspectorEngine::typeMap = {
@@ -28,17 +28,19 @@ void InspectorEngine::refreshUniforms() {
     
     // NOTE: this will break if we do any multithreading with the program list.
     // Please be careful.
-    std::unordered_map<std::string, std::vector<std::string>> programToObjectList;
+    std::unordered_map<std::string, std::vector<unsigned int>> programToObjectList;
     for (const auto& [programName, program] : programs) {
-        programToObjectList[programName] = std::vector<std::string>();
+        programToObjectList[programName] = std::vector<unsigned int>();
     }
 
-    for (const auto& pair : ObjCache::objMap) {
+    for (const auto& pair : ModelCache::modelIDMap) {
         // separate them so that debugger works.
-        const auto& objectName = pair.first;
-        const auto& object = pair.second;
-        const auto& programName = object->getProgram()->name;
-        programToObjectList[programName].push_back(objectName);
+        const auto& modelID = pair.first;
+        const auto& model = pair.second;
+        if (model->getProgram() != nullptr) {
+            const auto& programName = model->getProgram()->name;
+            programToObjectList[programName].push_back(modelID);
+        }
     }
 
     // sry for the nesting
@@ -46,27 +48,27 @@ void InspectorEngine::refreshUniforms() {
         const auto& parsedUniforms = parseUniforms(*program);
         std::cout << programName << std::endl;
         std::cout << programToObjectList[programName].size() << std::endl;
-        for (std::string& objectName : programToObjectList[programName]) {
-            std::cout << objectName << " " << program->name << std::endl;
-            const bool newObject = !UNIFORM_REGISTRY.containsObject(objectName);
-            if (newObject) {
-                UNIFORM_REGISTRY.insertUniformMap(objectName, parsedUniforms);
-                applyAllUniformsForObject(objectName);
+        for (unsigned int modelID : programToObjectList[programName]) {
+            std::cout << modelID << " " << program->name << std::endl;
+            const bool newModel = !UNIFORM_REGISTRY.containsObject(modelID);
+            if (newModel) {
+                UNIFORM_REGISTRY.insertUniformMap(modelID, parsedUniforms);
+                applyAllUniformsForObject(modelID);
                 continue;
             }
 
             // if not a new object
-            const auto& objectUniforms = UNIFORM_REGISTRY.tryReadUniforms(objectName);
+            const auto& objectUniforms = UNIFORM_REGISTRY.tryReadUniforms(modelID);
             if (objectUniforms == nullptr) {
                 ERRLOG.logEntry(EL_WARNING, "refreshUniforms", "object does not exist in registry??? code should be unreachable");
                 continue;
             }
 
             for (const auto& [uniformName, parsedUniform] : parsedUniforms) {
-                const Uniform* existingUniform = UNIFORM_REGISTRY.tryReadUniform(objectName, uniformName);
+                const Uniform* existingUniform = UNIFORM_REGISTRY.tryReadUniform(modelID, uniformName);
                 const bool mustRegister = existingUniform == nullptr || existingUniform->type != parsedUniform.type;
                 
-                if (mustRegister) UNIFORM_REGISTRY.registerUniform(objectName, parsedUniform); 
+                if (mustRegister) UNIFORM_REGISTRY.registerUniform(modelID, parsedUniform); 
             }
 
             std::vector<std::string> uniformsToErase;
@@ -76,7 +78,7 @@ void InspectorEngine::refreshUniforms() {
             }
 
             for (const std::string& uniformName : uniformsToErase) {
-                UNIFORM_REGISTRY.eraseUniform(objectName, uniformName);
+                UNIFORM_REGISTRY.eraseUniform(modelID, uniformName);
             }
         }
     }
@@ -177,14 +179,14 @@ void InspectorEngine::assignDefaultValue(Uniform& uniform) {
     }
 }
 
-void InspectorEngine::setUniform(const std::string& objectName, const std::string& uniformName, UniformValue value) {
-    const Uniform* const oldUniform = UNIFORM_REGISTRY.tryReadUniform(objectName, uniformName);
+void InspectorEngine::setUniform(unsigned int modelID, const std::string& uniformName, UniformValue value) {
+    const Uniform* const oldUniform = UNIFORM_REGISTRY.tryReadUniform(modelID, uniformName);
     if (oldUniform != nullptr) {
         Uniform newUniform = *oldUniform;
         newUniform.value = value;
-        UNIFORM_REGISTRY.registerUniform(objectName, newUniform);
+        UNIFORM_REGISTRY.registerUniform(modelID, newUniform);
 
-        applyUniform(objectName, newUniform);
+        applyUniform(modelID, newUniform);
     }
     else {
         // ERRLOG.logEntry(EL_WARNING, "setUniform", "failed to set: ", uniformName.c_str());
@@ -192,27 +194,27 @@ void InspectorEngine::setUniform(const std::string& objectName, const std::strin
     }
 }
 
-void InspectorEngine::applyAllUniformsForObject(const std::string& objectName) {
-    const std::unordered_map<std::string, Uniform>* objectUniforms = UNIFORM_REGISTRY.tryReadUniforms(objectName);
+void InspectorEngine::applyAllUniformsForObject(unsigned int modelID) {
+    const std::unordered_map<std::string, Uniform>* objectUniforms = UNIFORM_REGISTRY.tryReadUniforms(modelID);
 
     if (objectUniforms == nullptr) {
-        // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", objectName.c_str());
-        Logger::addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", objectName); 
+        // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", modelID.c_str());
+        Logger::addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", std::to_string(modelID)); 
     }
 
     for (auto& [uniformName, uniform] : *objectUniforms) {
-        applyUniform(objectName, uniform);
+        applyUniform(modelID, uniform);
     }
 }
 
-void InspectorEngine::applyUniform(const std::string& objectName, const Uniform& uniform) {
-    if (!ObjCache::objMap.contains(objectName)) {
-        // ERRLOG.logEntry(EL_WARNING, "applyUniform", (objectName + " not found in registry").c_str());
-        Logger::addLog(LogLevel::WARNING, "applyUniform", (objectName + " not found in registry")); 
+void InspectorEngine::applyUniform(unsigned int modelID, const Uniform& uniform) {
+    if (!ModelCache::modelIDMap.contains(modelID)) {
+        // ERRLOG.logEntry(EL_WARNING, "applyUniform", (modelID + " not found in registry").c_str());
+        Logger::addLog(LogLevel::WARNING, "applyUniform", (modelID + " not found in registry")); 
         return;
     }
-    Object& object = *ObjCache::objMap.at(objectName);
-    ShaderProgram* program = ShaderRegistry::getProgram(object.getProgram()->name);
+    Model& model = *ModelCache::modelIDMap.at(modelID);
+    ShaderProgram* program = ShaderRegistry::getProgram(model.getProgram()->name);
     applyUniform(*program, uniform);
 }
 
@@ -246,9 +248,9 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
 }
 
 // Include this along with setUniform because setUniform is used for other stuff.
-void InspectorEngine::applyInput(const std::string& objectName, const Uniform& uniform) {
-    UNIFORM_REGISTRY.registerUniform(objectName, uniform);
-    applyUniform(objectName, uniform);
+void InspectorEngine::applyInput(unsigned int modelID, const Uniform& uniform) {
+    UNIFORM_REGISTRY.registerUniform(modelID, uniform);
+    applyUniform(modelID, uniform);
 }
 void InspectorEngine::reloadUniforms(const std::string &programName){
     ShaderProgram *newProgram = ShaderRegistry::getProgram(programName);
@@ -256,10 +258,10 @@ void InspectorEngine::reloadUniforms(const std::string &programName){
         return;
     }
     std::unordered_map<std::string, Uniform> newUniformMap = parseUniforms(*newProgram);
-    for (auto& [objectName, objectPtr] : ObjCache::objMap) {
-        if (objectPtr->getProgram()->name == programName) {
-            UNIFORM_REGISTRY.insertUniformMap(objectName, newUniformMap);
-            applyAllUniformsForObject(objectName);
+    for (auto& [modelID, modelPtr] : ModelCache::modelIDMap) {
+        if (modelPtr->getProgram()->name == programName) {
+            UNIFORM_REGISTRY.insertUniformMap(modelID, newUniformMap);
+            applyAllUniformsForObject(modelID);
         }
     }
 }

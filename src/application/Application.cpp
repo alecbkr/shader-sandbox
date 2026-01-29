@@ -16,12 +16,15 @@
 #include "presets/PresetAssets.hpp"
 #include "core/TextureRegistry.hpp"
 #include "core/FileRegistry.hpp"
-#include "object/ObjCache.hpp"
+#include "object/ModelCache.hpp"
 #include "core/input/InputState.hpp"
 #include "core/input/ActionRegistry.hpp"
 #include "core/input/ContextManager.hpp"
 #include "core/input/Keybinds.hpp"
 #include "engine/AppTimer.hpp"
+
+
+#include "engine/Errorlog.hpp"
 
 bool Application::initialized = false;
 AppStateControls Application::appControls = AppStateControls::NO_STATE;
@@ -42,31 +45,38 @@ void loadPresetAssets() {
     TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::FACE));
     TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::METAL));
     TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::GRID));
-
-    ShaderProgram* programPtr = ShaderRegistry::getProgram("program");
-    ShaderProgram* untexPtr = ShaderRegistry::getProgram("untex");
+    
+    ShaderProgram* texPtr = ShaderRegistry::getProgram("tex");
+    ShaderProgram* colorPtr = ShaderRegistry::getProgram("color");
 
     MeshData& plane = PresetAssets::getPresetMesh(MeshPreset::PLANE);
     MeshData& cube = PresetAssets::getPresetMesh(MeshPreset::CUBE);
     MeshData& pyramid = PresetAssets::getPresetMesh(MeshPreset::PYRAMID);
+    
+    unsigned int gridID = ModelCache::createModel(plane.verts, plane.indices, true, false, true);
+    // ModelCache::setProgram(gridID, *colorPtr);
+    ModelCache::scaleModel(gridID, glm::vec3(5.0f));
+    // ModelCache::setTexture("grid", PresetAssets::getPresetTexture(TexturePreset::GRID), 0, "baseTex");
 
-    ObjCache::createObj("grid", plane.verts, plane.indices, false, true, *programPtr);
-    ObjCache::setTexture("grid", PresetAssets::getPresetTexture(TexturePreset::GRID), 0, "baseTex");
-    ObjCache::scaleObj("grid", glm::vec3(5.0f));
+    unsigned int backpackID = ModelCache::createModel("../assets/models/backpack/backpack.obj");
+    ModelCache::setProgram(backpackID, *texPtr);
+    
+    unsigned int pyramid0ID = ModelCache::createModel(pyramid.verts, pyramid.indices, true, false, true);
+    ModelCache::setProgram(pyramid0ID, *colorPtr);
+    
+    ModelCache::translateModel(pyramid0ID, glm::vec3(3.3f, 0.0f, -1.0f));
+    ModelCache::scaleModel(pyramid0ID, glm::vec3(2.0f));
+    ModelCache::rotateModel(pyramid0ID, 23.2f, glm::vec3(0.0f, 1.0f, 0.0f));
+    
+    unsigned int pyramid1ID = ModelCache::createModel(pyramid.verts, pyramid.indices, true, false, true);
+    ModelCache::setProgram(pyramid1ID, *colorPtr);
+    ModelCache::translateModel(pyramid1ID, glm::vec3(-1.3f, 0.0f, -1.0f));
 
-    ObjCache::createObj("pyramid0", pyramid.verts, pyramid.indices, false, true, *untexPtr);
-    ObjCache::translateObj("pyramid0", glm::vec3(3.3f, 0.0f, -1.0f));
-    ObjCache::scaleObj("pyramid0", glm::vec3(2.0f));
-    ObjCache::rotateObj("pyramid0", 23.2f, glm::vec3(0.0f, 1.0f, 0.0f));
-
-    ObjCache::createObj("cube", cube.verts, cube.indices, false, true, *programPtr);
-    ObjCache::setTexture("cube", PresetAssets::getPresetTexture(TexturePreset::FACE), 0, "baseTex");
-    ObjCache::translateObj("cube", glm::vec3(4.0f, 3.0f, -5.0f));
-    ObjCache::scaleObj("cube", glm::vec3(1.0, 0.5f, 1.0f));
-    ObjCache::rotateObj("cube", 45.0f, glm::vec3(0.5f, 0.5f, 0.5f));
-
-    ObjCache::createObj("pyramid1", pyramid.verts, pyramid.indices, false, true, *untexPtr);
-    ObjCache::translateObj("pyramid1", glm::vec3(-1.3f, 0.0f, -1.0f));
+    unsigned int cubeID = ModelCache::createModel(cube.verts, cube.indices, true, false, true);
+    ModelCache::setProgram(cubeID, *colorPtr);
+    ModelCache::translateModel(cubeID, glm::vec3(4.0f, 3.0f, -5.0f));
+    ModelCache::scaleModel(cubeID, glm::vec3(1.0, 0.5f, 1.0f));
+    ModelCache::rotateModel(cubeID, 23.2f, glm::vec3(0.5f, 0.5f, 0.5f));
 }
 
 bool Application::initialize(const ApplicationInitStruct& initStruct) {
@@ -97,7 +107,7 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
     if (!HotReloader::initialize()) {
         std::cout << "Hot Reloader was not initialized successfully." << std::endl;
     }
-    if (!ObjCache::initialize()) {
+    if (!ModelCache::initialize()) {
         std::cout << "Object Cache was not initialized successfully." << std::endl;
         return false;
     }
@@ -148,6 +158,10 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
         std::cout << "Menu UI was not successfully initialized." << std::endl;
         return false;
     }
+    if (!EditorUI::initialize()) {
+        std::cout << "Editor UI was not successfully initialized." << std::endl;
+        return false;
+    }
 
     Logger::addLog(LogLevel::INFO, "Application Initialization", "Application Layer Initialized.");
     Application::initialized = true;
@@ -161,6 +175,7 @@ void Application::runLoop() {
     }
 
     while (!Application::shouldClose()) {
+        ERRLOG.printClear();
         AppTimer::update();
         InputState::beginFrame();
         Platform::pollEvents();
