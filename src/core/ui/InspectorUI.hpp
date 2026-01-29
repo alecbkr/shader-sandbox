@@ -2,27 +2,22 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
-
-#include "core/InspectorEngine.hpp"
-#include "core/ShaderRegistry.hpp"
-#include "core/UniformRegistry.hpp"
-#include "object/Object.hpp"
+#include <unordered_map>
+#include <vector>
 #include "core/UniformTypes.hpp"
 
-enum ShaderLinkMenuType { Create, Edit };
-
-struct ObjectShaderSelector {
+struct ObjectShaderMenu {
     std::string objectName;
     int selection;
-    bool newSelector;
+    bool initialized;
 };
 
-struct ObjectTextureSelector {
+struct ObjectTextureMenu {
     std::string objectName;
     std::string uniformName;
     int textureSelection;
     int unitSelection;
-    bool newSelector;
+    bool initialized;
 };
 
 struct ShaderLinkMenu {
@@ -30,7 +25,7 @@ struct ShaderLinkMenu {
     int vertSelection;
     int geometrySelection;
     int fragSelection;
-    bool newSelector;
+    bool initialized;
 };
 
 class InspectorUI {
@@ -44,26 +39,29 @@ class InspectorUI {
     static std::string newUniformName;
     static std::string newUniformShaderName;
     static UniformType newUniformType;
-    static std::unordered_map<std::string, ObjectShaderSelector> objectShaderSelectors;
-    static std::unordered_map<std::string, ObjectTextureSelector> objectTextureSelectors;
-    static std::unordered_map<std::string, ShaderLinkMenu> shaderPrograms;
-    static ShaderLinkMenu linkNewShaderMenu;
+    static std::unordered_map<std::string, ObjectShaderMenu> objectShaderMenus;
+    static std::unordered_map<std::string, ObjectTextureMenu> objectTextureMenus;
+    static std::unordered_map<std::string, ShaderLinkMenu> shaderLinkMenus;
 
     static void drawUniformInspector();
     static void drawObjectsInspector();
     static void drawAssetsInspector();
     static void drawShaderFileInspector();
     static void drawAddObjectMenu();
-    static void drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuType type);
-    static bool drawShaderProgramSelector(ObjectShaderSelector& selector);
-    static bool drawTextureSelector(ObjectTextureSelector& selector);
+    static void drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus);
+    static void drawShaderLinkMenu(ShaderLinkMenu& menu, const std::vector<const char*>& vertChoices, const std::vector<const char*>& geoChoices, const std::vector<const char*>& fragChoices);
+    static void initializeMenu(ShaderLinkMenu& menu, const std::vector<const char*>& vertChoices, const std::vector<const char*>& geoChoices, const std::vector<const char*>& fragChoices);
+    static void initializeMenu(ObjectShaderMenu& menu, const std::vector<const char*>& shaderChoices);
+    static void initializeMenu(ObjectTextureMenu& menu);
+    static bool drawShaderProgramMenu(ObjectShaderMenu& selector, const std::vector<const char*>& shaderChoices);
+    static bool drawTextureMenu(ObjectTextureMenu& selector);
     static bool drawTextInput(std::string *value, const char *label);
-    static bool drawUniformInputValue(int* value);
-    static bool drawUniformInputValue(float* value);
-    static bool drawUniformInputValue(glm::vec3* value);
-    static bool drawUniformInputValue(glm::vec4* value);
-    static bool drawUniformInputValue(glm::mat4* value);
-    static bool drawUniformInputValue(glm::quat* value);
-    static bool drawUniformInputValue(InspectorSampler2D* value);
+    static bool drawUniformInputValue(int* value, Uniform* uniform = nullptr);
+    static bool drawUniformInputValue(float* value, Uniform* uniform = nullptr);
+    static bool drawUniformInputValue(glm::vec3* value, Uniform* uniform = nullptr);
+    static bool drawUniformInputValue(glm::vec4* value, Uniform* uniform = nullptr);
+    static bool drawUniformInputValue(glm::mat4* value, Uniform* uniform = nullptr);
+    static bool drawUniformInputValue(glm::quat* value, Uniform* uniform = nullptr);
+    static bool drawUniformInputValue(InspectorSampler2D* value, Uniform* uniform = nullptr);
     static void drawUniformInput(Uniform& uniform, const std::string& objectName);
 };

@@ -1,5 +1,4 @@
 #include "core/ui/InspectorUI.hpp"
-#include <filesystem>
 #include "core/InspectorEngine.hpp"
 #include "core/ShaderRegistry.hpp"
 #include "core/TextureRegistry.hpp"
@@ -12,6 +11,7 @@
 #include "engine/ShaderProgram.hpp"
 #include "object/ObjCache.hpp"
 #include "object/Texture.hpp"
+#include <glm/glm.hpp>
 #include <ostream>
 #include <string>
 #include <unistd.h>
@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "core/FileRegistry.hpp"
+#include "presets/PresetAssets.hpp"
 
 int InspectorUI::height = 400;
 int InspectorUI::width = 400;
@@ -27,15 +28,9 @@ std::vector<std::string> InspectorUI::uniformNamesToDelete{};
 std::string InspectorUI::newUniformName{};
 std::string InspectorUI::newUniformShaderName{};
 UniformType InspectorUI::newUniformType = UniformType::NoType;
-std::unordered_map<std::string, ObjectShaderSelector> InspectorUI::objectShaderSelectors{};
-std::unordered_map<std::string, ObjectTextureSelector> InspectorUI::objectTextureSelectors{};
-std::unordered_map<std::string, ShaderLinkMenu> InspectorUI::shaderPrograms{};
-ShaderLinkMenu InspectorUI::linkNewShaderMenu = ShaderLinkMenu{
-    .shaderName = "",
-    .vertSelection = 0,
-    .geometrySelection = 0,
-    .fragSelection = 0,
-};
+std::unordered_map<std::string, ObjectShaderMenu> InspectorUI::objectShaderMenus{};
+std::unordered_map<std::string, ObjectTextureMenu> InspectorUI::objectTextureMenus{};
+std::unordered_map<std::string, ShaderLinkMenu> InspectorUI::shaderLinkMenus{};
 
 void InspectorUI::render() {
     float menuBarHeight = ImGui::GetFrameHeight();
@@ -53,7 +48,6 @@ void InspectorUI::render() {
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
     if (ImGui::Begin("Inspector", nullptr, flags)) {
-
         if (ImGui::BeginTabBar("Inspector tabs")) {
             
             if (ImGui::BeginTabItem("Uniforms")) {
@@ -108,30 +102,30 @@ void InspectorUI::drawUniformInspector() {
 }
 
 void InspectorUI::drawObjectsInspector() {
-    // TODO: an arbitrary high number, just somewhere above the uniform inspector's ids.
-    int imGuiID = 100000;
+    // This is messy. I need to split it up into different functions at some point.
+    // something like "setupObjectsInspector"
     drawAddObjectMenu();
     for (auto &[objectName, object] : ObjCache::objMap) {
         // When we initialize new objects, their selection values start at 0.
         // We need to set them manually in their draw___Selector functions
-        if (!objectShaderSelectors.contains(objectName)) {
-            objectShaderSelectors[objectName] = ObjectShaderSelector{ 
+        if (!objectShaderMenus.contains(objectName)) {
+            objectShaderMenus[objectName] = ObjectShaderMenu{ 
                 .objectName = objectName,
                 .selection = 0,
-                .newSelector = true,
+                .initialized = false,
             };    
         }
-        if (!objectTextureSelectors.contains(objectName)) {
-            objectTextureSelectors[objectName] = ObjectTextureSelector{ 
+        if (!objectTextureMenus.contains(objectName)) {
+            objectTextureMenus[objectName] = ObjectTextureMenu{ 
                 .objectName = objectName,
                 .uniformName = "baseTex",
                 .textureSelection = 0,
                 .unitSelection = 0,
-                .newSelector = true,
+                .initialized = false,
             };    
         }
-        ObjectShaderSelector& shaderSelector = objectShaderSelectors[objectName];
-        ObjectTextureSelector& textureSelector = objectTextureSelectors[objectName];
+        ObjectShaderMenu& shaderMenu = objectShaderMenus[objectName];
+        ObjectTextureMenu& textureMenu = objectTextureMenus[objectName];
 
         if (ImGui::TreeNode(objectName.c_str())) {
             if (ImGui::TreeNode("position")) {
@@ -147,15 +141,26 @@ void InspectorUI::drawObjectsInspector() {
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("mesh")) {
-
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("textures")) {
-                drawTextureSelector(textureSelector);
+                if (!textureMenu.initialized) {
+                    initializeMenu(textureMenu);
+                }
+                drawTextureMenu(textureMenu);
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("shader program")) {
-                drawShaderProgramSelector(shaderSelector);
+                std::vector<const char *> shaderChoices;
+                shaderChoices.reserve(ShaderRegistry::getNumberOfPrograms());
+                auto& shaders = ShaderRegistry::getPrograms();
+                for (auto &[name, shader] : shaders) {
+                    shaderChoices.push_back(name.c_str());
+                }
+                if (!shaderMenu.initialized) {
+                    initializeMenu(shaderMenu, shaderChoices);
+                }
+                drawShaderProgramMenu(shaderMenu, shaderChoices);
                 ImGui::TreePop();
             }
             ImGui::TreePop();
@@ -164,62 +169,6 @@ void InspectorUI::drawObjectsInspector() {
 }
 
 void InspectorUI::drawAddObjectMenu() {
-    static const std::vector<float> gridPlane_verts {
-        -1.0f, 0.0f, -1.0f,  0.0f, 0.0f,
-        -1.0f, 0.0f, 1.0f,  1.0f, 0.0f,
-        1.0f, 0.0f, 1.0f,  1.0f, 1.0f,
-        1.0f, 0.0f, -1.0f, 0.0f, 1.0f
-    };
-
-    static const std::vector<int> gridPlane_indices {
-        0, 1, 2, 
-        0, 2, 3
-    };
-
-    // PYRAMID
-    static const std::vector<float> pyramidVerts = {
-        // Base
-        -0.5f, 0.0f, -0.5f,  0.0f, 0.0f, // 0: bottom-left
-        0.5f, 0.0f, -0.5f,  1.0f, 0.0f, // 1: bottom-right
-        0.5f, 0.0f,  0.5f,  1.0f, 1.0f, // 2: top-right
-        -0.5f, 0.0f,  0.5f,  0.0f, 1.0f, // 3: top-left
-
-        // Apex
-        0.0f, 1.0f, 0.0f,   0.5f, 0.5f  // 4: tip
-    };
-
-     
-    static const std::vector<int> pyramidIndices = {
-        0, 1, 2,  0, 2, 3, // base
-        0, 1, 4,            // side 1
-        1, 2, 4,            // side 2
-        2, 3, 4,            // side 3
-        3, 0, 4             // side 4
-    };
-
-    // CUBE
-    static const std::vector<float> cubeVerts = {
-        // positions       // UVs
-        -0.5f,-0.5f,-0.5f, 0.0f,0.0f,
-        0.5f,-0.5f,-0.5f, 1.0f,0.0f,
-        0.5f, 0.5f,-0.5f, 1.0f,1.0f,
-        -0.5f, 0.5f,-0.5f, 0.0f,1.0f,
-
-        -0.5f,-0.5f, 0.5f, 0.0f,0.0f,
-        0.5f,-0.5f, 0.5f, 1.0f,0.0f,
-        0.5f, 0.5f, 0.5f, 1.0f,1.0f,
-        -0.5f, 0.5f, 0.5f, 0.0f,1.0f
-    };
-
-    // Indices for cube (two triangles per face)
-    static const std::vector<int> cubeIndices = {
-        0,1,2, 0,2,3, // back
-        4,5,6, 4,6,7, // front
-        3,2,6, 3,6,7, // top
-        0,1,5, 0,5,4, // bottom
-        1,2,6, 1,6,5, // right
-        0,3,7, 0,7,4  // left
-    };
     std::unordered_map<std::string, ShaderProgram*>& programs = ShaderRegistry::getPrograms();
     if (programs.empty()) return;
 
@@ -229,15 +178,18 @@ void InspectorUI::drawAddObjectMenu() {
     int objectCount = ObjCache::getNumberOfObjects();
 
     if (ImGui::Button("Add Plane")) {
-        ObjCache::createObj(("Plane_" + std::to_string(objectCount)).c_str(), gridPlane_verts, gridPlane_indices, false, true, defaultProgram);
+        MeshData meshData = PresetAssets::getPresetMesh(MeshPreset::PLANE);
+        ObjCache::createObj(("Plane_" + std::to_string(objectCount)).c_str(), meshData.verts, meshData.indices, false, true, defaultProgram);
         InspectorEngine::refreshUniforms();
     }
     if (ImGui::Button("Add Pyramid")) {
-        ObjCache::createObj(("Pyramid_" + std::to_string(objectCount)).c_str(), pyramidVerts, pyramidIndices, false, true, defaultProgram);
+        MeshData meshData = PresetAssets::getPresetMesh(MeshPreset::PYRAMID);
+        ObjCache::createObj(("Pyramid_" + std::to_string(objectCount)).c_str(), meshData.verts, meshData.indices, false, true, defaultProgram);
         InspectorEngine::refreshUniforms();
     }
     if (ImGui::Button("Add Cube")) {
-        ObjCache::createObj(("Cube_" + std::to_string(objectCount)).c_str(), cubeVerts, cubeIndices, false, true, defaultProgram);
+        MeshData meshData = PresetAssets::getPresetMesh(MeshPreset::CUBE);
+        ObjCache::createObj(("Cube_" + std::to_string(objectCount)).c_str(), meshData.verts, meshData.indices, false, true, defaultProgram);
         InspectorEngine::refreshUniforms();
     }
 }
@@ -272,7 +224,7 @@ void drawRenameFileEntry(ShaderFile* fileData) {
 }
 
 void drawDeleteFileEntity(ShaderFile* fileData) {
-    ImGui::Text(fileData->fileName.c_str());
+    ImGui::Text("%s", fileData->fileName.c_str());
 
     ImGui::SameLine();
 
@@ -341,64 +293,142 @@ void InspectorUI::drawShaderFileInspector() {
         }
     }
 
+    
+    ImGui::Text("--------------");
+    ImGui::Text("Shader Programs");
+    ImGui::Text("--------------");
+    static int newShaders = 0;
+    if (ImGui::Button("+")) {
+        shaderLinkMenus.emplace(std::make_pair("myShader_" + std::to_string(newShaders), ShaderLinkMenu{
+            .shaderName = "myShader_" + std::to_string(newShaders),
+            .initialized = false
+        }));
+        newShaders++;
+    }
+    drawShaderLinkMenus(shaderLinkMenus);
+
     ImGui::PopStyleVar();
 }
 
-void InspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuType type) {
-    // for  conciseness, put newSelector logic up here into a separate variable.
-    const bool isEditor = type == ShaderLinkMenuType::Edit;
-    const bool isNewEditor = isEditor && menu.newSelector;
-    menu.newSelector = false;
-    const ShaderProgram *oldProgram;
-    if (isEditor) {
-        oldProgram = ShaderRegistry::getProgram(menu.shaderName);
-        if (oldProgram == nullptr) {
-            Logger::addLog(LogLevel::ERROR, "drawShaderLinkMenu", "Couldn't find shader program with name " + menu.shaderName);
-            return;
+// Need to set this to multiple functions, it's confusing & inefficient
+void InspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus) {
+    for (const auto &[shaderName, shader] : ShaderRegistry::getPrograms()) {
+        if (!menus.contains(shaderName)) {
+            menus[shaderName] = ShaderLinkMenu{
+                .shaderName = shaderName,
+                .initialized = false,
+            };
         }
     }
-    bool changed = false;
 
-    const std::string path = "../shaders/";
-    std::vector<std::string> files;
-    std::vector<std::string> extensions;
-    for (const auto & dirEntry : std::filesystem::directory_iterator(path)) {
-        files.push_back(dirEntry.path());
-        extensions.push_back(dirEntry.path().extension());
-    }
-
+    // These need to contain empty string first! if you have an issue, check stuff relating to this.
+    // TODO: this doesn't work, there's going to be state issues when we add or delete files. We also have no way of maintaining order! 
     std::vector<const char*> vertChoices{""};
     std::vector<const char*> fragChoices{""};
     std::vector<const char*> geoChoices{""}; // not doing this right now
 
-    if (files.size() != extensions.size()) {
-        Logger::addLog(LogLevel::ERROR, "drawShaderLinkMenu", "files & extensions vectors have different sizes. this should never happen");
-        return;
-    }
-
-    int vertIndex = 1;
-    int fragIndex = 1;
-    for (int i = 0; i < files.size() && i < extensions.size(); i++) {
-        const std::string& extension = extensions[i];
-        const std::string& filePath = files[i];
+    for (const auto& [id, file] : FileRegistry::getFiles()) {
+        std::string& extension = file->extension;
+        std::string& filePath = file->filePath;
         if (extension == ".vert") {
             vertChoices.push_back(filePath.c_str());
-            if (isNewEditor && oldProgram->vertPath == filePath) {
-                 menu.vertSelection = vertIndex;
-            }
-            vertIndex++;
         }
         else if (extension == ".frag") {
             fragChoices.push_back(filePath.c_str());
-            if (isNewEditor && oldProgram->fragPath == filePath) {
-                 menu.fragSelection = fragIndex;
-            }
-            fragIndex++;
         }
         else {
             Logger::addLog(LogLevel::WARNING, "drawShaderLinkMenu", "Shader file type " + extension + " not supported, only .vert and .frag");
         }
     }
+
+
+    ImGuiID guiID = 0;
+    for (auto& [shaderName, menu] : menus) {
+        if (!menu.initialized) {
+            initializeMenu(menu, vertChoices, geoChoices, fragChoices);
+        }
+        
+        if (ImGui::TreeNode(menu.shaderName.c_str())) {
+            ImGui::PushID(guiID);
+            drawShaderLinkMenu(menu, vertChoices, geoChoices, fragChoices);
+            ImGui::PopID();
+            guiID++;
+            ImGui::TreePop();
+        }
+    }
+}
+
+void InspectorUI::initializeMenu(ShaderLinkMenu& menu, const std::vector<const char*>& vertChoices, const std::vector<const char*>& geoChoices, const std::vector<const char*>& fragChoices) {
+    const ShaderProgram *oldProgram = ShaderRegistry::getProgram(menu.shaderName);
+    bool isNewProgram = oldProgram == nullptr;
+    if (isNewProgram) {
+        menu.vertSelection = 0;
+        menu.fragSelection = 0;
+        menu.geometrySelection = 0;
+        menu.initialized = true; 
+        return;
+    }
+
+    for (int i = 0; i < vertChoices.size(); i++) {
+        std::string filePath = vertChoices[i];
+        if (oldProgram->vertPath == filePath) {
+            menu.vertSelection = i;
+        }
+    }
+    for (int i = 0; i < fragChoices.size(); i++) {
+        std::string filePath = fragChoices[i];
+        if (oldProgram->fragPath == filePath) {
+            menu.fragSelection = i;
+        }
+    }
+    menu.geometrySelection = 0;
+    menu.initialized = true; 
+}
+
+void InspectorUI::initializeMenu(ObjectShaderMenu& menu, const std::vector<const char*>& shaderChoices) {
+    int i = 0;
+    Object* object = ObjCache::objMap[menu.objectName];
+    if (object == nullptr) {
+        Logger::addLog(LogLevel::ERROR, "initializeMenu:ObjectShaderMenu", "couldn't find object: " + menu.objectName);
+    }
+
+    for (auto& shaderName: shaderChoices) {
+        const ShaderProgram* shader = ShaderRegistry::getProgram(shaderName);
+        if (shader == nullptr) {
+            // might log this later? idk
+            continue;
+        }
+
+        if (shader->ID == object->getProgramID()) {
+            menu.selection = i;
+            menu.initialized = true;
+        }
+        i++;
+    }
+    menu.initialized = true; 
+}
+
+void InspectorUI::initializeMenu(ObjectTextureMenu& menu) {
+    Object& object = *ObjCache::objMap[menu.objectName];
+    std::unordered_set<GLuint> objectTextureIDs;
+    for (const TextureBind& bind : object.renderable.mat.textures) {
+        Logger::addLog(LogLevel::INFO, "initializeMenu: ObjectTextureMenu", ("objTexID: " + std::to_string(bind.texture->ID)).c_str());
+        objectTextureIDs.emplace(bind.texture->ID);
+    }
+    int i = 0;
+    for (const Texture* const tex : TextureRegistry::readTextures()) {
+        if (objectTextureIDs.contains(tex->ID)) {
+            menu.textureSelection = i; 
+            break;
+        }
+        i++;
+    }
+    menu.initialized = true;
+}
+
+void InspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, const std::vector<const char*>& vertChoices, const std::vector<const char*>& geoChoices, const std::vector<const char*>& fragChoices) {
+    // for  conciseness, put newSelector logic up here into a separate variable.
+    bool changed = false;
 
     if (ImGui::Combo("Vertex Shader", &menu.vertSelection, vertChoices.data(), (int)vertChoices.size())) { 
         changed = true; 
@@ -410,26 +440,18 @@ void InspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuType ty
         changed = true; 
     }
 
-    char buffer[256];
-    if (type == ShaderLinkMenuType::Create && ImGui::InputText("New Program Name", buffer, sizeof(buffer))) {
-        menu.shaderName = buffer;
-    }
-
-
-
     bool validSelection = menu.fragSelection != 0 && menu.vertSelection != 0 && menu.shaderName != "";
-    if (validSelection && ImGui::Button("Link Shader Program")) {
+    if (validSelection) {
+        ImGui::Text("Valid");
+    }
+    else {
+        ImGui::Text("Invalid! Using old program..."); 
+    }
+    if (validSelection && changed) {
         const std::string vert = vertChoices[menu.vertSelection];
         const std::string frag = fragChoices[menu.fragSelection];
         const std::string& name = menu.shaderName;
-        if (type == ShaderLinkMenuType::Create) {
-            ShaderRegistry::registerProgram(vert, frag, name);
-        }
-        else if (type == ShaderLinkMenuType::Edit) {
-            Logger::addLog(LogLevel::INFO, "drawShaderLinkMenu", "Edit feature not done yet");
-            // Sadly, I'm not sure how to implement this, there's no good function in the registry to update a program.
-        }
-        InspectorEngine::refreshUniforms();
+        InspectorEngine::handleEditShaderProgram(vert, frag, name);
     }
 }
 
@@ -444,38 +466,24 @@ bool InspectorUI::drawTextInput(std::string *value, const char *label) {
     return changed;
 }
 
-bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
-    Object& object = *ObjCache::objMap[selector.objectName];
+bool InspectorUI::drawShaderProgramMenu(ObjectShaderMenu& menu, const std::vector<const char*>& shaderChoices) {
     bool changed = false;
 
-    std::vector<const char *> shaderChoices;
-    shaderChoices.reserve(ShaderRegistry::getNumberOfPrograms());
-    auto& shaders = ShaderRegistry::getPrograms();
-    int i = 0;
-    for (auto &[name, shader] : shaders) {
-        shaderChoices.push_back(name.c_str());
-
-        if (selector.newSelector && shader->ID == object.getProgramID()) {
-            selector.selection = i;
-            selector.newSelector = false;
-        }
-        i++;
-    }
     // display combo box
-    if (ImGui::Combo("Shader", &selector.selection, shaderChoices.data(),
+    if (ImGui::Combo("Shader", &menu.selection, shaderChoices.data(),
                         (int)shaderChoices.size())) {
         changed = true;
     }
 
     if (!changed) return false;
     
-    ShaderProgram& selectedShader = *ShaderRegistry::getProgram(shaderChoices[selector.selection]);
-    ObjCache::setProgram(selector.objectName, selectedShader); 
+    ShaderProgram& selectedShader = *ShaderRegistry::getProgram(shaderChoices[menu.selection]);
+    ObjCache::setProgram(menu.objectName, selectedShader); 
     InspectorEngine::refreshUniforms();
     return true;
 }
 
-bool InspectorUI::drawTextureSelector(ObjectTextureSelector& selector) {
+bool InspectorUI::drawTextureMenu(ObjectTextureMenu& menu) {
     bool changed = false;
     std::vector<const char *> textureChoices;
     const std::vector<const Texture*>& registryTextures = TextureRegistry::readTextures();
@@ -484,39 +492,17 @@ bool InspectorUI::drawTextureSelector(ObjectTextureSelector& selector) {
         textureChoices.push_back(tex->path.c_str());
     }
 
-    // need to set the initial state of the selector if it's new
-    if (selector.newSelector) {
-        Logger::addLog(LogLevel::INFO, "drawTextureSelector", "new selector");
-        std::cout << "hi" << std::endl;
-        Object& object = *ObjCache::objMap[selector.objectName];
-        std::unordered_set<GLuint> objectTextureIDs;
-        for (const TextureBind& bind : object.renderable.mat.textures) {
-            Logger::addLog(LogLevel::INFO, "drawTextureSelector", ("objTexID: " + std::to_string(bind.texture->ID)).c_str());
-            objectTextureIDs.emplace(bind.texture->ID);
-        }
-        int i = 0;
-        for (const Texture* const tex : registryTextures) {
-            Logger::addLog(LogLevel::INFO, "drawTextureSelector", ("texID" + std::to_string(i) + ": " + std::to_string(tex->ID)).c_str());
-            if (objectTextureIDs.contains(tex->ID)) {
-                Logger::addLog(LogLevel::INFO, "drawTextureSelector", ("Found texID: " + std::to_string(tex->ID)).c_str());
-                selector.textureSelection = i; 
-                break;
-            }
-            i++;
-        }
-        selector.newSelector = false;
-    }
 
-    if (ImGui::Combo("Texture", &selector.textureSelection, textureChoices.data(),
+    if (ImGui::Combo("Texture", &menu.textureSelection, textureChoices.data(),
                         (int)textureChoices.size())) {
         changed = true;
         std::cout << "changed texture" << std::endl;
     }
-    if (ImGui::InputInt("Unit", &selector.unitSelection)) {
+    if (ImGui::InputInt("Unit", &menu.unitSelection)) {
         changed = true;
         std::cout << "changed unit" << std::endl;
     }
-    if (drawTextInput(&selector.uniformName, "Uniform Name")) {
+    if (drawTextInput(&menu.uniformName, "Uniform Name")) {
         changed = true;
         std::cout << "changed uniform name" << std::endl;
     }
@@ -524,30 +510,61 @@ bool InspectorUI::drawTextureSelector(ObjectTextureSelector& selector) {
     if (!changed) return false;
     
     // add check in case we get more types
-    const Texture* selectedTexture = registryTextures.at(selector.textureSelection);
-    ObjCache::setTexture(selector.objectName, *selectedTexture, selector.unitSelection, selector.uniformName); 
+    const Texture* selectedTexture = registryTextures.at(menu.textureSelection);
+    ObjCache::setTexture(menu.objectName, *selectedTexture, menu.unitSelection, menu.uniformName); 
 
     return true;
 }
 
-bool InspectorUI::drawUniformInputValue(int* value) {
+bool InspectorUI::drawUniformInputValue(int* value, Uniform* uniform) {
     return ImGui::InputInt("value", value);
 }
 
-bool InspectorUI::drawUniformInputValue(float* value) {
+bool InspectorUI::drawUniformInputValue(float* value, Uniform* uniform) {
     return ImGui::InputFloat("value", value);
 }
 
 
-bool InspectorUI::drawUniformInputValue(glm::vec3* value) {
+bool InspectorUI::drawUniformInputValue(glm::vec3* value, Uniform* uniform) {
     bool changed = false;
-    changed |= ImGui::InputFloat("x", &value->x);
-    changed |= ImGui::InputFloat("y", &value->y);
-    changed |= ImGui::InputFloat("z", &value->z);
+    bool useColorPicker = false;
+    if (uniform != nullptr) {
+        ImGui::Checkbox("Use Color Picker", &uniform->useAlternateEditor);
+        useColorPicker = uniform->useAlternateEditor;
+    }
+
+    if (useColorPicker) {
+        changed |= ImGui::ColorPicker3("", &value->x);
+    }
+    else {
+        changed |= ImGui::InputFloat("x", &value->x);
+        changed |= ImGui::InputFloat("y", &value->y);
+        changed |= ImGui::InputFloat("z", &value->z);
+    }
     return changed;
 }
 
-bool InspectorUI::drawUniformInputValue(glm::vec4* value) {
+bool InspectorUI::drawUniformInputValue(glm::vec4* value, Uniform* uniform) {
+    bool changed = false;
+    bool useColorPicker = false;
+    if (uniform != nullptr) {
+        ImGui::Checkbox("Use Color Picker", &uniform->useAlternateEditor);
+        useColorPicker = uniform->useAlternateEditor;
+    }
+
+    if (useColorPicker) {
+        changed |= ImGui::ColorPicker4("", &value->x);
+    }
+    else {
+        changed |= ImGui::InputFloat("x", &value->x);
+        changed |= ImGui::InputFloat("y", &value->y);
+        changed |= ImGui::InputFloat("z", &value->z);
+        changed |= ImGui::InputFloat("w", &value->w);
+    }
+    return changed; 
+}
+
+bool InspectorUI::drawUniformInputValue(glm::quat* value, Uniform* uniform) {
     bool changed = false;
     changed |= ImGui::InputFloat("x", &value->x);
     changed |= ImGui::InputFloat("y", &value->y);
@@ -556,16 +573,7 @@ bool InspectorUI::drawUniformInputValue(glm::vec4* value) {
     return changed;
 }
 
-bool InspectorUI::drawUniformInputValue(glm::quat* value) {
-    bool changed = false;
-    changed |= ImGui::InputFloat("x", &value->x);
-    changed |= ImGui::InputFloat("y", &value->y);
-    changed |= ImGui::InputFloat("z", &value->z);
-    changed |= ImGui::InputFloat("w", &value->w);
-    return changed;
-}
-
-bool InspectorUI::drawUniformInputValue(glm::mat4* value) {
+bool InspectorUI::drawUniformInputValue(glm::mat4* value, Uniform* uniform) {
     static int tableID = 0;
     const int columns = 4;
     tableID++;
@@ -587,15 +595,15 @@ bool InspectorUI::drawUniformInputValue(glm::mat4* value) {
     return changed;
 }
 
-bool InspectorUI:: drawUniformInputValue(InspectorSampler2D* value) {
-    drawUniformInputValue(&value->textureUnit);
+bool InspectorUI:: drawUniformInputValue(InspectorSampler2D* value, Uniform* uniform) {
+    return drawUniformInputValue(&value->textureUnit);
 }
 
 void InspectorUI::drawUniformInput(Uniform& uniform, const std::string& objectName) {
     if (ImGui::TreeNode(uniform.name.c_str())) {
         bool changed = false;
         std::visit([&](auto& val){
-            changed = drawUniformInputValue(&val);
+            changed = drawUniformInputValue(&val, &uniform);
         }, uniform.value);
 
         if (changed) {

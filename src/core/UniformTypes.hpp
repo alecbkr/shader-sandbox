@@ -46,7 +46,9 @@ struct Uniform {
     std::string name;
     UniformType type;
     UniformValue value;
-    bool wasUniformRef = false;
     UniformRef ref;
+    bool isReadOnly = false;
+    // This setting is for the color picker, etc.
+    bool useAlternateEditor = false;
 };
 

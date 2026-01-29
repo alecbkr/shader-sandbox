@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include "engine/ShaderProgram.hpp"
 #include "core/UniformTypes.hpp"
-#include "core/logging/Logger.hpp"
 
 class InspectorEngine {
 public:
@@ -15,6 +14,7 @@ public:
     static void setUniform(const std::string& objectName, const std::string& uniformName, UniformValue value);
     static void applyInput(const std::string& objectName, const Uniform& uniform);
     static void reloadUniforms(const std::string& programName);
+    static bool handleEditShaderProgram(const std::string& vertex_file, const std::string& fragment_file, const std::string& programName);
 
 private:
     static void applyUniform(const std::string& objectName, const Uniform& uniform);
