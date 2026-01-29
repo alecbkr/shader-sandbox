@@ -6,6 +6,7 @@
 //#include "core/input/InputState.hpp"
 #include "core/input/Keybinds.hpp"
 #include "core/input/ContextManager.hpp"
+#include "core/logging/LogSink.hpp"
 #include "core/logging/Logger.hpp"
 
 bool Platform::initialized = false;
@@ -54,6 +55,12 @@ bool Platform::initialize(const PlatformInitStruct& initStruct) {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return false;
     } 
+
+    #ifdef __linux__
+        // Disable vsync on linux because it can cause issues when shader sandbox window is minimized.
+        Logger::addLog(LogLevel::INFO, "Platform::initialize", "Need to add a feature to disable/enable vsync");
+        glfwSwapInterval(0);
+    #endif
 
     Platform::initialized = true;
     return true;

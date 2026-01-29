@@ -1,14 +1,13 @@
 #include "ModelCache.hpp"
 
 #include <memory>
-#include "../engine/Errorlog.hpp"
 #include "core/InspectorEngine.hpp"
 #include "core/UniformRegistry.hpp"
-#include "core/UniformTypes.hpp"
 #include "core/EventDispatcher.hpp"
 #include "core/ShaderRegistry.hpp"
 #include <algorithm>
-#include <iostream>
+#include <string>
+#include "core/logging/Logger.hpp"
 
 std::unordered_map<unsigned int, std::unique_ptr<Model>> ModelCache::modelIDMap;
 std::vector<std::unique_ptr<Model>> ModelCache::modelCache; 
@@ -45,7 +44,7 @@ unsigned int ModelCache::createModel(
 ) {
 
     if (modelIDMap.contains(nextModelID)) {
-        ERRLOG.logEntry(EL_ERROR, "MODEL_CACHE", "createModel failed, ID already in use", nextModelID);
+        Logger::addLog(LogLevel::ERROR, "MODEL_CACHE", "createModel failed, ID already in use", std::to_string(nextModelID));
         return INVALID_MODEL;
     }
     
@@ -63,7 +62,7 @@ unsigned int ModelCache::createModel(
 unsigned int ModelCache::createModel(std::string pathname) {
 
     if (modelIDMap.contains(nextModelID)) {
-        ERRLOG.logEntry(EL_ERROR, "MODEL_CACHE", "createModel failed, ID already in use", nextModelID);
+        Logger::addLog(LogLevel::ERROR, "MODEL_CACHE", "createModel failed, ID already in use", std::to_string(nextModelID));
         return INVALID_MODEL;
     }
 
@@ -79,7 +78,7 @@ unsigned int ModelCache::createModel(std::string pathname) {
 void ModelCache::translateModel(unsigned int ID, glm::vec3 pos) {
     Model* model = getModel(ID);
     if (model == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Model ID not found:", ID);
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(ID));
         return;
     }
     model->translate(pos);
@@ -89,7 +88,7 @@ void ModelCache::translateModel(unsigned int ID, glm::vec3 pos) {
 void ModelCache::scaleModel(unsigned int ID, glm::vec3 scale) {
     Model* model = getModel(ID);
     if (model == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Model ID not found:", ID);
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(ID));
         return;
     }
     model->rescale(scale);
@@ -99,7 +98,7 @@ void ModelCache::scaleModel(unsigned int ID, glm::vec3 scale) {
 void ModelCache::rotateModel(unsigned int ID, float angle, glm::vec3 axis) {
     Model* model = getModel(ID);
     if (model == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Model ID not found:", ID);
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(ID));
         return;
     }
     model->rotate(angle, axis);
@@ -109,7 +108,7 @@ void ModelCache::rotateModel(unsigned int ID, float angle, glm::vec3 axis) {
 void ModelCache::setTexture(unsigned int ID, std::string pathname, std::string uniformName) {
     Model* model = getModel(ID);
     if (model == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Model ID not found:", ID);
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(ID));
         return;
     }
 
@@ -120,7 +119,7 @@ void ModelCache::setTexture(unsigned int ID, std::string pathname, std::string u
 void ModelCache::setProgram(unsigned int ID, ShaderProgram &program) {
     Model* model = getModel(ID);
     if (model == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Model ID not found:", ID);
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(ID));
         return;
     }
 
@@ -132,7 +131,7 @@ void ModelCache::setProgram(unsigned int ID, ShaderProgram &program) {
 void ModelCache::renderModel(unsigned int ID, glm::mat4 perspective, glm::mat4 view) {
     Model* model = getModel(ID);
     if (model == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Model ID not found:", ID);
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(ID));
         return;
     }
 

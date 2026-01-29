@@ -12,11 +12,12 @@ enum FileState {
 };
 
 struct ShaderFile {
-    ShaderFile(std::string filePath, std::string fileName);
+    ShaderFile(std::string filePath, std::string fileName, std::string extension);
     FileState state;
     std::string filePath;
     std::string fileName;
     std::string renameBuffer;
+    std::string extension;
 };
 
 class FileRegistry {

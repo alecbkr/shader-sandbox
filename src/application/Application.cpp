@@ -2,6 +2,7 @@
 #include "platform/Platform.hpp"
 #include "core/ShaderRegistry.hpp"
 #include <iostream>
+#include "core/InspectorEngine.hpp"
 #include "core/ui/InspectorUI.hpp"
 #include "core/ui/EditorUI.hpp"
 #include "core/ui/ConsoleUI.hpp"

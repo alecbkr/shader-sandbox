@@ -54,6 +54,6 @@ void ActionRegistry::processActionsForFrame() {
 }
 
 void ActionRegistry::addActionToProcess(Action action) {
-    Logger::addLog(LogLevel::INFO, "Action Registry", "An action was recorded.");
+    // Logger::addLog(LogLevel::INFO, "Action Registry", "An action was recorded.");
     ActionRegistry::actionsToProcess.push_back(action);
 }

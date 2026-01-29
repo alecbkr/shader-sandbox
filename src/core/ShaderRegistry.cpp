@@ -1,4 +1,7 @@
 #include "core/ShaderRegistry.hpp"
+#include "core/logging/LogSink.hpp"
+#include "core/logging/Logger.hpp"
+#include "engine/ShaderProgram.hpp"
 
 std::unordered_map<std::string, ShaderProgram *> ShaderRegistry::programs;
 bool ShaderRegistry::initialized = false;
@@ -16,6 +19,10 @@ bool ShaderRegistry::initialize() {
 }
 
 bool ShaderRegistry::registerProgram(const std::string& vertex_file, const std::string& fragment_file, const std::string& programName) {
+    if (programName == "") {
+        Logger::addLog(LogLevel::WARNING, "registerProgram", "Shader name cannot be empty");
+        return false;
+    }
     ShaderProgram *newProgram = new ShaderProgram(vertex_file.c_str(), fragment_file.c_str(), programName.c_str());
     auto [it, inserted] = programs.emplace(programName, newProgram);
     //auto [it, inserted] = programs.emplace( programName, ShaderProgram(vertex_file.c_str(), fragment_file.c_str(), programName.c_str()));
@@ -32,7 +39,6 @@ ShaderProgram* ShaderRegistry::getProgram(const std::string& programName) {
     if (!ShaderRegistry::initialized) return nullptr;
     auto programPair = programs.find(programName);
     if (programPair == programs.end()) {
-        std::cout << "Get Program: No program with name " << programName <<" found in the Shader Handler programs" << std::endl;
         return nullptr;
     }
 

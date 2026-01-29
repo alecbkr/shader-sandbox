@@ -1,6 +1,5 @@
 #include "UniformRegistry.hpp"
 #include "engine/Errorlog.hpp"
-#include <iostream>
 
 
 UniformRegistry::UniformRegistry() {}
