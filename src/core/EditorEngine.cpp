@@ -27,6 +27,7 @@ Editor::Editor(std::string filePath, std::string fileName) {
 
     this->textEditor.SetLanguageDefinition(lang);
     auto palette = TextEditor::GetDarkPalette();
+    this->textEditor.SetShowWhitespaces(false);
 
     // Change palette colors here
     palette[(int)TextEditor::PaletteIndex::Identifier] = 0xff9cdcfe;
