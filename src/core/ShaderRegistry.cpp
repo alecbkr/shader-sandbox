@@ -40,14 +40,15 @@ ShaderProgram* ShaderRegistry::getProgram(const std::string& programName) {
     return programPair->second;
 }
 
-void ShaderRegistry::replaceProgram(const std::string &programName, ShaderProgram *newProgram){
-    if (!ShaderRegistry::initialized) return;
+void ShaderRegistry::replaceProgram(const std::string &programName, ShaderProgram *newProgram) {
     auto it = programs.find(programName);
-    if (it == programs.end()){
-        delete newProgram;
-        return;
+    if (it != programs.end()) {
+        ShaderProgram* oldProg = it->second;
+        it->second = newProgram;
+        delete oldProg; 
+    } else {
+        programs[programName] = newProgram;
     }
-    it->second = newProgram;
 }
 
 std::unordered_map<std::string, ShaderProgram*>& ShaderRegistry::getPrograms() {

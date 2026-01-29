@@ -14,7 +14,7 @@ public:
     static void applyAllUniformsForObject(unsigned int modelID);
     static void setUniform(unsigned int modelID, const std::string& uniformName, UniformValue value);
     static void applyInput(unsigned int modelID, const Uniform& uniform);
-    static void reloadUniforms(const std::string& programName);
+    static void reloadUniforms(unsigned int modelID);
 
 private:
     static void applyUniform(unsigned int modelID, const Uniform& uniform);

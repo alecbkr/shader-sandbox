@@ -9,9 +9,10 @@
 
 struct Editor {
     TextEditor textEditor;
-    Editor(std::string filePath, std::string fileName);
+    Editor(std::string filePath, std::string fileName, unsigned int modelID);
     std::string filePath;
     std::string fileName;
+    unsigned int modelID;
     void destroy();
 };
 

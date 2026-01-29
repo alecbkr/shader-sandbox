@@ -29,12 +29,13 @@ class ModelCache {
         
         static std::unordered_map<unsigned int, std::unique_ptr<Model>> modelIDMap; 
         
+        static Model* getModel(unsigned int ID);
+
         // DEBUG
         static void printOrder();
 
     private:
         static unsigned int nextModelID;
-        static Model* getModel(unsigned int ID);
         static void reorderByProgram();
         static std::vector<std::unique_ptr<Model>> modelCache; 
         

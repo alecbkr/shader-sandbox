@@ -5,25 +5,31 @@
 #include "core/ShaderRegistry.hpp"
 #include "engine/Errorlog.hpp"
 #include "core/EventDispatcher.hpp"
+#include "object/ModelCache.hpp"
 #include <fstream>
 #include <iostream>
 
 bool HotReloader::initialize() {
     EventDispatcher::Subscribe(EventType::SaveActiveShaderFile, [](const EventPayload& payload) -> bool {
-        if (const auto* data = std::get_if<SaveActiveShaderFilePayload>(&payload)) {
-            if (HotReloader::compile(data->filePath, data->programName)) {
-                EventDispatcher::TriggerEvent(MakeReloadShaderEvent(data->programName));
+    if (const auto* data = std::get_if<SaveActiveShaderFilePayload>(&payload)) {
+        
+        Model* model = ModelCache::getModel(data->modelID);
+        if (!model || !model->getProgram()) return false;
+
+            std::string progName = model->getProgram()->name;
+
+            if (HotReloader::compile(data->filePath, progName)) {
+                InspectorEngine::reloadUniforms(data->modelID); 
                 return true;
             }
         }
-        return false; 
+        return false;
     });
     return true;
 }
 
 void HotReloader::update() {
     if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S)) {
-        
         int activeIdx = EditorEngine::activeEditor;
         if (activeIdx != -1) {
             auto* active = EditorEngine::editors[activeIdx];
@@ -32,8 +38,7 @@ void HotReloader::update() {
             out << active->textEditor.GetText();
             out.close();
 
-            EventDispatcher::TriggerEvent(MakeSaveActiveShaderFileEvent(active->filePath, "program"));
-            
+            EventDispatcher::TriggerEvent(MakeSaveActiveShaderFileEvent(active->filePath, active->modelID));            
             Logger::addLog(LogLevel::INFO, "HotReloader", "Performing Hot Reloading");
         }
     }
@@ -68,7 +73,6 @@ std::string HotReloader::readSourceFile(const std::string &filepath) {
 
 bool HotReloader::attemptCompile(const std::string &fragShaderPath, const std::string &programName) {
     ShaderProgram *oldProgram = ShaderRegistry::getProgram(programName);
-
     std::string vPath = (oldProgram) ? oldProgram->vertPath : "../shaders/default.vert";
 
     ShaderProgram *newProgram = new ShaderProgram(
@@ -88,13 +92,6 @@ bool HotReloader::attemptCompile(const std::string &fragShaderPath, const std::s
     }
 
     ShaderRegistry::replaceProgram(programName, newProgram);
-    InspectorEngine::reloadUniforms(programName);
-    
-    if (oldProgram) {
-        oldProgram->kill();
-        delete oldProgram;
-    }
-
     return true;
 }
 

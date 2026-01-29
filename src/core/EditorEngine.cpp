@@ -4,14 +4,16 @@
 
 #include "logging/Logger.hpp"
 #include "core/EventDispatcher.hpp"
+#include "object/ModelCache.hpp"
 
 
 std::vector<Editor*> EditorEngine::editors{};
 int EditorEngine::activeEditor = -1;
 
-Editor::Editor(std::string filePath, std::string fileName) {
+Editor::Editor(std::string filePath, std::string fileName, unsigned int modelID) {
     this->filePath = filePath;
     this->fileName = fileName;
+    this->modelID = modelID;
 
     auto lang = TextEditor::LanguageDefinition::GLSL();
     // Will probably need to find the entire list of glsl keywords
@@ -50,17 +52,32 @@ bool EditorEngine::initialize() {
 
 bool EditorEngine::spawnEditor(const EventPayload& payload) {
     if (const auto* data = std::get_if<OpenFilePayload>(&payload)) {
-        if (!data->filePath.empty()) {
-            editors.push_back(new Editor(data->filePath, data->fileName));
-        } else {
-            editors.push_back(new Editor("../shaders/texture.frag", "texture.frag"));
+        unsigned int linkedID = data->modelID;
+
+        if (linkedID == 0) {
+            for (auto const& [id, model] : ModelCache::modelIDMap) {
+                if (model->getProgram()) {
+                    if (model->getProgram()->fragPath == data->filePath || 
+                        model->getProgram()->vertPath == data->filePath) {
+                        linkedID = id;
+                        break;
+                    }
+                }
+            }
         }
+        if (!data->filePath.empty()) {
+            editors.push_back(new Editor(data->filePath, data->fileName, linkedID));
+        } else {
+            editors.push_back(new Editor("../shaders/tex.frag", "tex.frag", linkedID));
+        }
+        return true;
     } else if (std::get_if<std::monostate>(&payload)) {
         try {
             const std::string fileName = "Untitled " + findNextUntitledNumber();
             const std::string filePath = "../shaders/" + fileName;
             createFile(filePath);
-            editors.push_back(new Editor(filePath, fileName));
+            editors.push_back(new Editor(filePath, fileName, 0));
+            return true;
         } catch (const std::filesystem::filesystem_error& e) {
             Logger::addLog(LogLevel::ERROR, "EditorEngine::createFile", std::string("Filesystem error: ") + e.what());
         }

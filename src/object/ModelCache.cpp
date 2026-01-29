@@ -148,37 +148,20 @@ void ModelCache::renderModel(unsigned int ID, glm::mat4 perspective, glm::mat4 v
 void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view) {
     ShaderProgram *currProgram = nullptr;
     for (auto& currModel : modelCache) {
+        ShaderProgram* modelProgram = currModel->getProgram();
         if (currModel->getProgram() == nullptr) continue;
 
         if (currProgram == nullptr || currProgram->ID != currModel.get()->getProgram()->ID) {
-            currProgram = currModel.get()->getProgram();
+            currProgram = modelProgram;
             currProgram->use();
         }
         
+        UNIFORM_REGISTRY.registerUniform(currModel->ID, {"projection", UniformType::Mat4, perspective});
+        UNIFORM_REGISTRY.registerUniform(currModel->ID, {"view", UniformType::Mat4, view});
+        UNIFORM_REGISTRY.registerUniform(currModel->ID, {"model", UniformType::Mat4, currModel->modelM});
 
-        Uniform uPerspective{
-            .name = "projection",
-            .type = UniformType::Mat4,
-            .value = perspective
-        };
-        Uniform uView{
-            .name = "view",
-            .type = UniformType::Mat4,
-            .value = view
-        };
-        Uniform uModel{
-            .name = "model",
-            .type = UniformType::Mat4,
-            .value = currModel->modelM
-        };
-        UNIFORM_REGISTRY.registerUniform(currModel->ID, uPerspective);
-        UNIFORM_REGISTRY.registerUniform(currModel->ID, uView);
-        UNIFORM_REGISTRY.registerUniform(currModel->ID, uModel);
         InspectorEngine::applyAllUniformsForObject(currModel->ID); //TODO InspectorEngine
-        currProgram->setUniform_mat4float("projection", perspective);
-        currProgram->setUniform_mat4float("view", view);
-        currProgram->setUniform_mat4float("model", currModel->modelM);
-        currModel.get()->renderModel();
+        currModel->renderModel();
     }
 }
 
