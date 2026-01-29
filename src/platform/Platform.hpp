@@ -20,6 +20,7 @@ public:
     static void initializeImGui();
     static Window& getWindow();
     static void initializeInputCallbacks();
+    static void setWindowIcon();
 
 private:
     static bool initialized;
