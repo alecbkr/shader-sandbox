@@ -10,6 +10,12 @@ bool ShaderRegistry::initialize() {
     if (!registerProgram("../shaders/color.vert", "../shaders/color.frag", "color")) {
         return false;
     }
+    if (!registerProgram("../shaders/lucasSample.vert", "../shaders/uniformColor.frag", "uniformColor")) {
+        return false;
+    }
+    if (!registerProgram("../shaders/lucasSample.vert", "../shaders/normalColor.frag", "normalColor")) {
+        return false;
+    }
 
     ShaderRegistry::initialized = true;
     return true;

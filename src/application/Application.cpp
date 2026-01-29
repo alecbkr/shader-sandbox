@@ -79,6 +79,26 @@ void loadPresetAssets() {
     ModelCache::rotateModel(cubeID, 23.2f, glm::vec3(0.5f, 0.5f, 0.5f));
 }
 
+void loadSampleShaderObjects() {
+    ShaderProgram* texPtr = ShaderRegistry::getProgram("tex");
+    ShaderProgram* uniformColor = ShaderRegistry::getProgram("uniformColor");
+    ShaderProgram* normalColor = ShaderRegistry::getProgram("normalColor");
+
+    std::string backpackFilePath = "../assets/models/backpack/backpack.obj";
+
+    unsigned int backpackID0 = ModelCache::createModel(backpackFilePath);
+    ModelCache::setProgram(backpackID0, *texPtr);
+    ModelCache::translateModel(backpackID0, glm::vec3(0.0f, 0.0f, 0.0f));
+
+    unsigned int backpackID1 = ModelCache::createModel(backpackFilePath);
+    ModelCache::setProgram(backpackID1, *uniformColor);
+    ModelCache::translateModel(backpackID1, glm::vec3(4.0f, 0.0f, 0.0f));
+
+    unsigned int backpackID2 = ModelCache::createModel(backpackFilePath);
+    ModelCache::setProgram(backpackID2, *normalColor);
+    ModelCache::translateModel(backpackID2, glm::vec3(8.0f, 0.0f, 0.0f));
+}
+
 bool Application::initialize(const ApplicationInitStruct& initStruct) {
     if (Application::initialized) {
         std::cout << "Application layer already initialized." << std::endl;
@@ -123,7 +143,8 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
         std::cout << "Preset Assets were not initialized successfully." << std::endl;
         return false;
     }
-    loadPresetAssets();
+    // loadPresetAssets();
+    loadSampleShaderObjects();
     if (!InspectorEngine::initialize()) {
         std::cout << "Inspector Engine was not initialized successfully." << std::endl;
         return false;
