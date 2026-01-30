@@ -14,6 +14,7 @@
 #include "object/ModelCache.hpp"
 #include "core/InspectorEngine.hpp"
 #include "core/HotReloader.hpp"
+#include "core/FileRegistry.hpp"
 
 struct AppContext {
     AppContext(u32 _width, u32 _height, const char* _app_title)
@@ -37,4 +38,5 @@ struct AppContext {
     ModelCache model_cache;
     InspectorEngine inspector_engine;
     HotReloader hot_reloader;
+    FileRegistry file_registry;
 };

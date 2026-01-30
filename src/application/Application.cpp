@@ -134,8 +134,8 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Hot Reloader was not initialized successfully.");        
         return false;
     }
-    if (!FileRegistry::initialize()) {
-        std::cout << "File Registry was not initialized successfully." << std::endl;
+    if (!!ctx.file_registry.initialize(&ctx.logger, &ctx.events)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "File Registry was not initialized successfully.");        
         return false;
     }
     if (!EditorEngine::initialize()) {

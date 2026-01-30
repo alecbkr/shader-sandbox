@@ -3,11 +3,12 @@
 #include <filesystem>
 #include <iostream>
 
-#include "EventDispatcher.hpp"
-#include "logging/Logger.hpp"
-
-std::unordered_map<std::string, ShaderFile*> FileRegistry::files;
-bool FileRegistry::initialized = false;
+FileRegistry::FileRegistry() {
+    initialized = false;
+    eventsPtr = nullptr;
+    loggerPtr = nullptr;
+    files.clear();
+}
 
 ShaderFile::ShaderFile(std::string filePath, std::string fileName) {
     this->state = NONE;
@@ -16,9 +17,16 @@ ShaderFile::ShaderFile(std::string filePath, std::string fileName) {
     this->renameBuffer = fileName;
 }
 
-bool FileRegistry::initialize() {
-    EventDispatcher::Subscribe(RenameFile, renameFile);
-    EventDispatcher::Subscribe(DeleteFile, deleteFile);
+bool FileRegistry::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "File Registry Initialization", "File Registry was already initialized.");
+        return true;
+    }
+    loggerPtr = _loggerPtr;
+    eventsPtr = _eventsPtr;
+    
+    eventsPtr->Subscribe(RenameFile, [this](const EventPayload& payload) -> bool { renameFile(payload); });
+    eventsPtr->Subscribe(DeleteFile, [this](const EventPayload& payload) -> bool { deleteFile(payload); });
     reloadMap();
 
     initialized = true;
@@ -64,13 +72,13 @@ bool FileRegistry::renameFile(const EventPayload& payload) {
                 files.emplace(data->newName, shaderFile);
                 files.erase(data->oldName);
             } catch (const std::filesystem::filesystem_error& e) {
-                Logger::addLog(LogLevel::ERROR, "FileRegistry::renameFile", std::string("Filesystem error: ") + e.what());
+                loggerPtr->addLog(LogLevel::ERROR, "FileRegistry::renameFile", std::string("Filesystem error: ") + e.what());
             }
         } else {
-            Logger::addLog(LogLevel::ERROR, "FileRegistry::renameFile", "File being renamed does not exist.");
+            loggerPtr->addLog(LogLevel::ERROR, "FileRegistry::renameFile", "File being renamed does not exist.");
         }
     } else {
-        Logger::addLog(LogLevel::ERROR, "FileRegistry::renameFile", "Invalid Payload Type");
+        loggerPtr->addLog(LogLevel::ERROR, "FileRegistry::renameFile", "Invalid Payload Type");
     }
 
     return false;
@@ -88,10 +96,10 @@ bool FileRegistry::deleteFile(const EventPayload& payload) {
                 delete shaderFile;
                 files.erase(data->fileName);
             } catch (const std::filesystem::filesystem_error& e) {
-                Logger::addLog(LogLevel::ERROR, "FileRegistry::deleteFile", std::string("Filesystem error: ") + e.what());
+                loggerPtr->addLog(LogLevel::ERROR, "FileRegistry::deleteFile", std::string("Filesystem error: ") + e.what());
             }
         } else {
-            Logger::addLog(LogLevel::ERROR, "FileRegistry::deleteFile", "File being deleted does not exist.");
+            loggerPtr->addLog(LogLevel::ERROR, "FileRegistry::deleteFile", "File being deleted does not exist.");
         }
     }
 
