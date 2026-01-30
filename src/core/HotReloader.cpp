@@ -9,37 +9,60 @@
 #include <fstream>
 #include <iostream>
 
-bool HotReloader::initialize() {
-    EventDispatcher::Subscribe(EventType::SaveActiveShaderFile, [](const EventPayload& payload) -> bool {
+HotReloader::HotReloader() {
+    initialized = false;
+    loggerPtr = nullptr;
+    eventsPtr = nullptr;
+    shaderRegPtr = nullptr;
+    modelCachePtr = nullptr;
+    editorEngPtr = nullptr;
+    inspectorEngPtr = nullptr;
+}
+
+bool HotReloader::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, ModelCache* _modelCachePtr, EditorEngine* _editorEngPtr, InspectorEngine* _inspectorEngPtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Hot Reloader Initialization", "Hot Reloader was already initialized.");
+        return false;
+    }
+    loggerPtr = _loggerPtr;
+    eventsPtr = _eventsPtr;
+    shaderRegPtr = _shaderRegPtr;
+    modelCachePtr = _modelCachePtr;
+    editorEngPtr = _editorEngPtr;
+    inspectorEngPtr = _inspectorEngPtr;
+
+    eventsPtr->Subscribe(EventType::SaveActiveShaderFile, [this](const EventPayload& payload) -> bool {
     if (const auto* data = std::get_if<SaveActiveShaderFilePayload>(&payload)) {
         
-        Model* model = ModelCache::getModel(data->modelID);
+        Model* model = modelCachePtr->getModel(data->modelID);
         if (!model || !model->getProgram()) return false;
 
             std::string progName = model->getProgram()->name;
 
-            if (HotReloader::compile(data->filePath, progName)) {
-                InspectorEngine::reloadUniforms(data->modelID); 
+            if (compile(data->filePath, progName)) {
+                inspectorEngPtr->reloadUniforms(data->modelID); 
                 return true;
             }
         }
         return false;
     });
+
+    initialized = true;
     return true;
 }
 
 void HotReloader::update() {
     if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S)) {
-        int activeIdx = EditorEngine::activeEditor;
+        int activeIdx = editorEngPtr->activeEditor;
         if (activeIdx != -1) {
-            auto* active = EditorEngine::editors[activeIdx];
+            auto* active = editorEngPtr->editors[activeIdx];
             
             std::ofstream out(active->filePath, std::ios::binary);
             out << active->textEditor.GetText();
             out.close();
 
-            EventDispatcher::TriggerEvent(MakeSaveActiveShaderFileEvent(active->filePath, active->modelID));            
-            Logger::addLog(LogLevel::INFO, "HotReloader", "Performing Hot Reloading");
+            eventsPtr->TriggerEvent(MakeSaveActiveShaderFileEvent(active->filePath, active->modelID));            
+            loggerPtr->addLog(LogLevel::INFO, "HotReloader", "Performing Hot Reloading");
         }
     }
 }
@@ -72,7 +95,7 @@ std::string HotReloader::readSourceFile(const std::string &filepath) {
 }
 
 bool HotReloader::attemptCompile(const std::string &fragShaderPath, const std::string &programName) {
-    ShaderProgram *oldProgram = ShaderRegistry::getProgram(programName);
+    ShaderProgram *oldProgram = shaderRegPtr->getProgram(programName);
     std::string vPath = (oldProgram) ? oldProgram->vertPath : "../shaders/default.vert";
 
     ShaderProgram *newProgram = new ShaderProgram(
@@ -91,7 +114,7 @@ bool HotReloader::attemptCompile(const std::string &fragShaderPath, const std::s
         return false;
     }
 
-    ShaderRegistry::replaceProgram(programName, newProgram);
+    shaderRegPtr->replaceProgram(programName, newProgram);
     return true;
 }
 

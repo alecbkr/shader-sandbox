@@ -6,7 +6,6 @@
 #include "core/ShaderRegistry.hpp"
 #include "core/UniformTypes.hpp"
 #include "engine/ShaderProgram.hpp"
-#include "object/ModelCache.hpp"
 #include "object/Model.hpp"
 #include "engine/Errorlog.hpp"
 
@@ -19,13 +18,41 @@ const std::unordered_map<std::string, UniformType> InspectorEngine::typeMap = {
     {"sampler2D", UniformType::Int }
 };
 
-bool InspectorEngine::initialize() {
+InspectorEngine::InspectorEngine() {
+    initialized = false;
+    loggerPtr = nullptr;
+    shaderRegPtr = nullptr;
+    uniformRegPtr = nullptr;
+    modelCachePtr = nullptr;
+}
+
+bool InspectorEngine::initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, ModelCache* _modelCachePtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Inspector Engine Initialization", "Inspector Engine was already initialized.");
+        return false;
+    }
+
+    loggerPtr = _loggerPtr;
+    shaderRegPtr = _shaderRegPtr;
+    uniformRegPtr = _uniformRegPtr;
+    modelCachePtr = _modelCachePtr;
+    
     refreshUniforms();
+
+    initialized = true;
     return true;
 }
 
+void InspectorEngine::shutdown() {
+    loggerPtr = nullptr;
+    shaderRegPtr = nullptr;
+    uniformRegPtr = nullptr;
+    modelCachePtr = nullptr;
+    initialized = false;
+}
+
 void InspectorEngine::refreshUniforms() {
-    auto& programs = ShaderRegistry::getPrograms();
+    auto& programs = shaderRegPtr->getPrograms();
     
     // NOTE: this will break if we do any multithreading with the program list.
     // Please be careful.
@@ -34,7 +61,7 @@ void InspectorEngine::refreshUniforms() {
         programToObjectList[programName] = std::vector<unsigned int>();
     }
 
-    for (const auto& pair : ModelCache::modelIDMap) {
+    for (const auto& pair : modelCachePtr->modelIDMap) {
         // separate them so that debugger works.
         const auto& modelID = pair.first;
         const auto& model = pair.second;
@@ -112,7 +139,7 @@ std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const Sh
                 uniform.type = typePair->second;
             } else {
                 // ERRLOG.logEntry(EL_WARNING, "parseUniforms", "Invalid Uniform Type: ", word.c_str());
-                Logger::addLog(LogLevel::WARNING, "parseUnifroms", "Invalid Uniform Type: ", word); 
+                loggerPtr->addLog(LogLevel::WARNING, "parseUnifroms", "Invalid Uniform Type: ", word); 
                 continue;
             }
             assignDefaultValue(uniform);
@@ -173,7 +200,7 @@ void InspectorEngine::assignDefaultValue(Uniform& uniform) {
         break;
     default:
         // ERRLOG.logEntry(EL_WARNING, "assignDefaultValue", "Invalid Uniform Type, making it an int");
-        Logger::addLog(LogLevel::WARNING, "assignDefaultValue", "Invalid Uniform Type, making it an int"); 
+        loggerPtr->addLog(LogLevel::WARNING, "assignDefaultValue", "Invalid Uniform Type, making it an int"); 
         uniform.type = UniformType::Int;
         uniform.value = 0;
         break;
@@ -191,7 +218,7 @@ void InspectorEngine::setUniform(unsigned int modelID, const std::string& unifor
     }
     else {
         // ERRLOG.logEntry(EL_WARNING, "setUniform", "failed to set: ", uniformName.c_str());
-        Logger::addLog(LogLevel::WARNING, "setUniform", "failed to set:", uniformName.c_str()); 
+        loggerPtr->addLog(LogLevel::WARNING, "setUniform", "failed to set:", uniformName.c_str()); 
     }
 }
 
@@ -200,7 +227,7 @@ void InspectorEngine::applyAllUniformsForObject(unsigned int modelID) {
 
     if (objectUniforms == nullptr) {
         // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", modelID.c_str());
-        Logger::addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", std::to_string(modelID)); 
+        loggerPtr->addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", std::to_string(modelID)); 
         return;
     }
 
@@ -210,13 +237,13 @@ void InspectorEngine::applyAllUniformsForObject(unsigned int modelID) {
 }
 
 void InspectorEngine::applyUniform(unsigned int modelID, const Uniform& uniform) {
-    if (!ModelCache::modelIDMap.contains(modelID)) {
+    if (!modelCachePtr->modelIDMap.contains(modelID)) {
         // ERRLOG.logEntry(EL_WARNING, "applyUniform", (modelID + " not found in registry").c_str());
-        Logger::addLog(LogLevel::WARNING, "applyUniform", (modelID + " not found in registry")); 
+        loggerPtr->addLog(LogLevel::WARNING, "applyUniform", (modelID + " not found in registry")); 
         return;
     }
-    Model& model = *ModelCache::modelIDMap.at(modelID);
-    ShaderProgram* program = ShaderRegistry::getProgram(model.getProgram()->name);
+    Model& model = *modelCachePtr->modelIDMap.at(modelID);
+    ShaderProgram* program = shaderRegPtr->getProgram(model.getProgram()->name);
     applyUniform(*program, uniform);
 }
 
@@ -244,7 +271,7 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
         break;
     default:
         // ERRLOG.logEntry(EL_WARNING, "applyUniform", "Invalid Uniform Type: ");
-        Logger::addLog(LogLevel::WARNING, "applyUniform", "Invalid Uniform Type: "); 
+        loggerPtr->addLog(LogLevel::WARNING, "applyUniform", "Invalid Uniform Type: "); 
         break;
     }
 }
@@ -255,17 +282,17 @@ void InspectorEngine::applyInput(unsigned int modelID, const Uniform& uniform) {
     applyUniform(modelID, uniform);
 }
 void InspectorEngine::reloadUniforms(unsigned int modelID) {
-    Model* targetModel = ModelCache::getModel(modelID);
+    Model* targetModel = modelCachePtr->getModel(modelID);
     if (!targetModel || !targetModel->getProgram()) return;
 
     std::string programName = targetModel->getProgram()->name;
-    ShaderProgram* newProgram = ShaderRegistry::getProgram(programName);
+    ShaderProgram* newProgram = shaderRegPtr->getProgram(programName);
     
     if (newProgram == nullptr || !newProgram->isCompiled()) return;
 
     auto newUniforms = parseUniforms(*newProgram);
 
-    for (auto& [id, modelPtr] : ModelCache::modelIDMap) {
+    for (auto& [id, modelPtr] : modelCachePtr->modelIDMap) {
         if (modelPtr && modelPtr->getProgram() && modelPtr->getProgram()->name == programName) {
             modelPtr->setProgram(*newProgram); 
             const auto* existingRegistry = UNIFORM_REGISTRY.tryReadUniforms(id);

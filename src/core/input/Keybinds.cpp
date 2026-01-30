@@ -1,7 +1,5 @@
 #include "core/input/Keybinds.hpp"
 
-std::vector<Binding> Keybinds::bindings_{};
-
 KeyCombo::KeyCombo(std::initializer_list<Key> list) : keys(list) {
     normalize();
 }
@@ -13,7 +11,24 @@ void KeyCombo::normalize() {
     keys.erase(std::unique(keys.begin(), keys.end()), keys.end());
 }
 
-bool Keybinds::initialize() {
+Keybinds::Keybinds() {
+    initialized = false;
+    bindings_.clear();
+    loggerPtr = nullptr;
+    ctxManagerPtr = nullptr;
+    actionRegPtr = nullptr;
+}
+
+bool Keybinds::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, ActionRegistry* _actionRegPtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Keybinds Initialization", "Keybinds have already been initialzied.");
+        return false;
+    }
+    loggerPtr = _loggerPtr;
+    ctxManagerPtr = _ctxManagerPtr;
+    actionRegPtr = _actionRegPtr;
+    bindings_.clear();
+
     addBinding(makeBinding(Action::QuitApplication, KeyCombo{Key::LeftAlt, Key::F4}, ControlCtx::Editor));
     addBinding(makeBinding(Action::SaveActiveShaderFile, KeyCombo{Key::LeftCtrl, Key::S}, ControlCtx::Editor));
     addBinding(makeBinding(Action::SaveProject, KeyCombo{Key::LeftAlt, Key::S}, ControlCtx::Editor));
@@ -25,6 +40,8 @@ bool Keybinds::initialize() {
     addBinding(makeBinding(Action::CameraForward, KeyCombo{Key::W}, ControlCtx::Camera, Trigger::Down));
     addBinding(makeBinding(Action::CameraBack, KeyCombo{Key::S}, ControlCtx::Camera, Trigger::Down));
     addBinding(makeBinding(Action::None, KeyCombo{Key::G}, ControlCtx::Editor));
+    
+    initialized = true;
     return true;
 }
 
@@ -73,9 +90,9 @@ void Keybinds::gatherActionsForFrame(ControlCtx context) {
         }
 
         if (binding.trigger == Trigger::Down) {
-            if (comboDown(binding.combo)) ActionRegistry::addActionToProcess(binding.action);
+            if (comboDown(binding.combo)) actionRegPtr->addActionToProcess(binding.action);
         } else if (binding.trigger == Trigger::Pressed) {
-            if (comboPressedThisFrame(binding.combo)) ActionRegistry::addActionToProcess(binding.action);
+            if (comboPressedThisFrame(binding.combo)) actionRegPtr->addActionToProcess(binding.action);
         }
     }
 }

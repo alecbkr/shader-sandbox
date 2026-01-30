@@ -1,9 +1,19 @@
 #include "core/ShaderRegistry.hpp"
 
-std::unordered_map<std::string, ShaderProgram *> ShaderRegistry::programs;
-bool ShaderRegistry::initialized = false;
+ShaderRegistry::ShaderRegistry() {
+    initialized = false;
+    loggerPtr = nullptr;
+    programs.clear();
+}
 
-bool ShaderRegistry::initialize() {
+bool ShaderRegistry::initialize(Logger* _loggerPtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Shader Registry", "Shader Registry was already initialized.");
+        return false;
+    }
+
+    programs.clear();
+
     if (!registerProgram("../shaders/tex.vert", "../shaders/tex.frag", "tex")) {
         return false;
     };
@@ -11,8 +21,17 @@ bool ShaderRegistry::initialize() {
         return false;
     }
 
-    ShaderRegistry::initialized = true;
+    loggerPtr = _loggerPtr;
+
+    initialized = true;
     return true;
+}
+
+void ShaderRegistry::shutdown() {
+    if (!initialized) return;
+    loggerPtr = nullptr;
+    programs.clear();
+    initialized = false;
 }
 
 bool ShaderRegistry::registerProgram(const std::string& vertex_file, const std::string& fragment_file, const std::string& programName) {

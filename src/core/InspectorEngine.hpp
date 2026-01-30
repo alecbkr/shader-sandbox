@@ -6,20 +6,31 @@
 #include "engine/ShaderProgram.hpp"
 #include "core/UniformTypes.hpp"
 #include "core/logging/Logger.hpp"
+#include "core/ShaderRegistry.hpp"
+#include "core/UniformRegistry.hpp"
+#include "object/ModelCache.hpp"
+
 
 class InspectorEngine {
 public:
-    static bool initialize();
-    static void refreshUniforms();
-    static void applyAllUniformsForObject(unsigned int modelID);
-    static void setUniform(unsigned int modelID, const std::string& uniformName, UniformValue value);
-    static void applyInput(unsigned int modelID, const Uniform& uniform);
-    static void reloadUniforms(unsigned int modelID);
+    InspectorEngine();
+    bool initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, ModelCache* _modelCachePtr);
+    void shutdown();
+    void refreshUniforms();
+    void applyAllUniformsForObject(unsigned int modelID);
+    void setUniform(unsigned int modelID, const std::string& uniformName, UniformValue value);
+    void applyInput(unsigned int modelID, const Uniform& uniform);
+    void reloadUniforms(unsigned int modelID);
 
 private:
-    static void applyUniform(unsigned int modelID, const Uniform& uniform);
-    static void applyUniform(ShaderProgram& program, const Uniform& uniform);
     static const std::unordered_map<std::string, UniformType> typeMap; // Kept private
-    static std::unordered_map<std::string, Uniform> parseUniforms(const ShaderProgram& program);
-    static void assignDefaultValue(Uniform& uniform);
+    bool initialized = false;
+    Logger* loggerPtr = nullptr;
+    ShaderRegistry* shaderRegPtr = nullptr;
+    UniformRegistry* uniformRegPtr = nullptr;
+    ModelCache* modelCachePtr = nullptr;
+    void applyUniform(unsigned int modelID, const Uniform& uniform);
+    void applyUniform(ShaderProgram& program, const Uniform& uniform);
+    std::unordered_map<std::string, Uniform> parseUniforms(const ShaderProgram& program);
+    void assignDefaultValue(Uniform& uniform);
 };

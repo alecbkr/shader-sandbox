@@ -2,8 +2,10 @@
 
 #include <array>
 #include <vector>
+#include <functional>
+#include "core/logging/Logger.hpp"
 
-using ActionFn = void(*)();
+using ActionFn = std::function<void()>;
 
 enum class Action {
     None,
@@ -22,12 +24,15 @@ enum class Action {
 
 class ActionRegistry {
 public:
-    static bool initialize();
-    static void bind(Action action, ActionFn fn);
-    static void trigger(Action action);
-    static void processActionsForFrame();
-    static void addActionToProcess(Action action);
+    ActionRegistry();
+    bool initialize(Logger* _loggerPtr);
+    void bind(Action action, ActionFn fn);
+    void trigger(Action action);
+    void processActionsForFrame();
+    void addActionToProcess(Action action);
 private:
-    static std::array<ActionFn, (std::size_t)Action::Count> actions;
-    static std::vector<Action> actionsToProcess;
+    bool initialized = false;
+    std::array<ActionFn, (std::size_t)Action::Count> actions;
+    std::vector<Action> actionsToProcess;
+    Logger* loggerPtr = nullptr;
 };

@@ -1,27 +1,35 @@
 #include "core/EventDispatcher.hpp"
-#include <utility>
-#include "core/logging/Logger.hpp"
 
-bool EventDispatcher::initialized = false;
-std::unordered_map<EventType, std::vector<ListenerFn>> EventDispatcher::listeners{};
-std::deque<Event> EventDispatcher::queue{};
-
-bool EventDispatcher::initialize() {
+EventDispatcher::EventDispatcher() {
+    initialized = false;
     listeners.clear();
     queue.clear();
+    loggerPtr = nullptr;
+}
+
+bool EventDispatcher::initialize(Logger* _loggerPtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Event Dispatcher Initialization", "Event Dispatcher was already initialized.");
+        return false;
+    }
+    loggerPtr = _loggerPtr;
+    listeners.clear();
+    queue.clear();
+
     initialized = true;
     return true;
 }
 
 void EventDispatcher::shutdown() {
+    if (!initialized) return;
     queue.clear();
     listeners.clear();
     initialized = false;
+    loggerPtr = nullptr;
 }
 
 void EventDispatcher::TriggerEvent(Event e) {
     if (!initialized) return;
-    Logger::addLog(LogLevel::INFO, "EventDispatcher::TriggerEvent", "An event was triggered.");
     EventDispatcher::queue.push_back(std::move(e));
 };
 

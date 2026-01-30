@@ -2,12 +2,15 @@
 #include "UniformTypes.hpp"
 #include <unordered_map>
 #include <string>
+#include "core/logging/Logger.hpp"
 
 #define UNIFORM_REGISTRY UniformRegistry::instance()
 
 class UniformRegistry {
     public:
-    static UniformRegistry& instance();
+    UniformRegistry();
+    bool initialize(Logger* _loggerPtr);
+    void shutdown();
     const Uniform* tryReadUniform(unsigned int modelID, const std::string& uniformName) const; // return false if we didn't find it.
     bool containsObject(unsigned int modelID);
     bool containsUniform(unsigned int modelID, const std::string& uniformName);
@@ -17,6 +20,7 @@ class UniformRegistry {
     void eraseUniform(unsigned int modelID, const std::string& uniformName);
 
     private:
-    UniformRegistry();
+    bool initialized = false;
+    Logger* loggerPtr = nullptr;
     std::unordered_map<unsigned int, std::unordered_map<std::string, Uniform>> uniforms;
 };

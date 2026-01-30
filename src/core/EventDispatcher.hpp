@@ -7,19 +7,22 @@
 #include <memory>
 
 #include "core/EventTypes.hpp"
+#include "core/logging/Logger.hpp"
 
 using ListenerFn = std::function<bool(const EventPayload&)>;
 
 class EventDispatcher {
 public:
-    static bool initialize();
-    static void shutdown();
-    static void TriggerEvent(Event e);
-    static void Subscribe(EventType type, ListenerFn fn);
-    static void ProcessQueue();
+    EventDispatcher();
+    bool initialize(Logger* _loggerPtr);
+    void shutdown();
+    void TriggerEvent(Event e);
+    void Subscribe(EventType type, ListenerFn fn);
+    void ProcessQueue();
 
 private:
-    static bool initialized;
-    static std::unordered_map<EventType, std::vector<ListenerFn>> listeners;
-    static std::deque<Event> queue;
+    bool initialized = false;
+    std::unordered_map<EventType, std::vector<ListenerFn>> listeners;
+    std::deque<Event> queue;
+    Logger* loggerPtr = nullptr;
 };

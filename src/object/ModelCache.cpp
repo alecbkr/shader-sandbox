@@ -2,25 +2,39 @@
 
 #include <memory>
 #include "../engine/Errorlog.hpp"
-#include "core/InspectorEngine.hpp"
 #include "core/UniformRegistry.hpp"
 #include "core/UniformTypes.hpp"
-#include "core/EventDispatcher.hpp"
-#include "core/ShaderRegistry.hpp"
 #include <algorithm>
 #include <iostream>
 
-std::unordered_map<unsigned int, std::unique_ptr<Model>> ModelCache::modelIDMap;
-std::vector<std::unique_ptr<Model>> ModelCache::modelCache; 
-unsigned int ModelCache::nextModelID = 0;
+ModelCache::ModelCache() {
+    initialized = false;
+    inspectorEngPtrSet = false;
+    loggerPtr = nullptr;
+    inspectorEngPtr = nullptr;
+    eventsPtr = nullptr;
+    shaderRegPtr = nullptr;
+    uniformRegPtr = nullptr;
+    modelCache.clear();
+}
 
-
-bool ModelCache::initialize() {
-    EventDispatcher::Subscribe(EventType::ReloadShader, [](const EventPayload& payload) -> bool {
+bool ModelCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Model Cache Initialization", "Model Cache was already initialized.");
+        return false;
+    }
+    loggerPtr = _loggerPtr;
+    inspectorEngPtr = nullptr;;
+    eventsPtr = _eventsPtr;
+    shaderRegPtr = _shaderRegPtr;
+    uniformRegPtr = _uniformRegPtr;
+    modelCache.clear();
+    
+    eventsPtr->Subscribe(EventType::ReloadShader, [this](const EventPayload& payload) -> bool {
         
         if (const auto* data = std::get_if<ReloadShaderPayload>(&payload)) {
             
-            ShaderProgram* newProg = ShaderRegistry::getProgram(data->programName);
+            ShaderProgram* newProg = shaderRegPtr->getProgram(data->programName);
             if (newProg) {
                 for (auto& [ID, model] : modelIDMap) {
                     if (model->getProgram()->name == data->programName) {
@@ -34,7 +48,19 @@ bool ModelCache::initialize() {
         return false;
     });
 
+    initialized = true;
     return true;
+}
+
+void ModelCache::shutdown() {
+    loggerPtr = nullptr;
+    inspectorEngPtr = nullptr;
+    eventsPtr = nullptr;
+    shaderRegPtr = nullptr;
+    nextModelID = 0;
+    modelCache.clear();
+    inspectorEngPtrSet = false;
+    initialized = false;
 }
 
 
@@ -146,6 +172,10 @@ void ModelCache::renderModel(unsigned int ID, glm::mat4 perspective, glm::mat4 v
 
 
 void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view) {
+    if (!inspectorEngPtrSet) {
+        if (initialized) loggerPtr->addLog(LogLevel::WARNING, "Model Cache renderAll", "Inspector Engine pointer has not been set yet.");
+        return;
+    }
     ShaderProgram *currProgram = nullptr;
     for (auto& currModel : modelCache) {
         ShaderProgram* modelProgram = currModel->getProgram();
@@ -156,11 +186,11 @@ void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view) {
             currProgram->use();
         }
         
-        UNIFORM_REGISTRY.registerUniform(currModel->ID, {"projection", UniformType::Mat4, perspective});
-        UNIFORM_REGISTRY.registerUniform(currModel->ID, {"view", UniformType::Mat4, view});
-        UNIFORM_REGISTRY.registerUniform(currModel->ID, {"model", UniformType::Mat4, currModel->modelM});
+        uniformRegPtr->registerUniform(currModel->ID, {"projection", UniformType::Mat4, perspective});
+        uniformRegPtr->registerUniform(currModel->ID, {"view", UniformType::Mat4, view});
+        uniformRegPtr->registerUniform(currModel->ID, {"model", UniformType::Mat4, currModel->modelM});
 
-        InspectorEngine::applyAllUniformsForObject(currModel->ID); //TODO InspectorEngine
+        inspectorEngPtr->applyAllUniformsForObject(currModel->ID); //TODO InspectorEngine
         currModel->renderModel();
     }
 }
@@ -211,4 +241,9 @@ void ModelCache::reorderByProgram() {
         // Both valid compare IDs
         return progA->ID < progB->ID;
     });
+}
+
+void ModelCache::setInspectorEnginePtr(InspectorEngine* _inspectorEngPtr) {
+    inspectorEngPtr = _inspectorEngPtr;
+    inspectorEngPtrSet = true;
 }

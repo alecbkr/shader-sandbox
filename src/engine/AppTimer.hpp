@@ -5,48 +5,29 @@ with the prefix APPTIME.
 
 
 */
+#pragma once
 
-#ifndef APPTIMER_HPP
-#define APPTIMER_HPP
-
-#include <glfw/glfw3.h>
+#include "core/logging/Logger.hpp"
+#include "platform/Platform.hpp"
 
 #define APPTIME AppTimer::getInstance()
 
 class AppTimer {
 public:
-
-    static bool initialize();
-
-    static void update() {
-        lastFrameTime = currTime;
-        currTime = glfwGetTime();
-        deltaTime = currTime - lastFrameTime;
-    }
-
-    static float getDt() {
-        return deltaTime;
-    }
-
-    static float getFPS() {
-        elapsedTime += deltaTime;
-        frameCount++;
-
-        if (elapsedTime >= 1.0f) {
-            fps = frameCount / elapsedTime;
-            elapsedTime = 0;
-            frameCount = 0;
-        }
-        return fps;
-    }
+    AppTimer();
+    bool initialize(Logger* _loggerPtr, Platform* _platformPtr);
+    void update();
+    float getDt();
+    float getFPS();
 
 private:
-    static double currTime;
-    static double lastFrameTime;
-    static double deltaTime;
-    static double elapsedTime;
-    static int frameCount;
-    static float fps;
+    bool initialized = false;
+    double currTime = 0.0;
+    double lastFrameTime = 0.0;
+    double deltaTime = 0.0;
+    double elapsedTime = 0.0;
+    int frameCount = 0;
+    float fps = 0.0f;
+    Logger* loggerPtr;
+    Platform* platformPtr;
 };
-
-#endif

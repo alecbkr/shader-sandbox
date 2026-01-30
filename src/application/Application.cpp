@@ -22,12 +22,9 @@
 #include "core/input/ContextManager.hpp"
 #include "core/input/Keybinds.hpp"
 #include "engine/AppTimer.hpp"
-
-
 #include "engine/Errorlog.hpp"
 
 bool Application::initialized = false;
-AppStateControls Application::appControls = AppStateControls::NO_STATE;
 
 void initializeUI() {
     IMGUI_CHECKVERSION();
@@ -54,7 +51,7 @@ void loadPresetAssets() {
     MeshData& pyramid = PresetAssets::getPresetMesh(MeshPreset::PYRAMID);
     
     unsigned int gridID = ModelCache::createModel(plane.verts, plane.indices, true, false, true);
-    // ModelCache::setProgram(gridID, *colorPtr);
+    ModelCache::setProgram(gridID, *colorPtr);
     ModelCache::scaleModel(gridID, glm::vec3(5.0f));
     // ModelCache::setTexture("grid", PresetAssets::getPresetTexture(TexturePreset::GRID), 0, "baseTex");
 
@@ -79,36 +76,62 @@ void loadPresetAssets() {
     ModelCache::rotateModel(cubeID, 23.2f, glm::vec3(0.5f, 0.5f, 0.5f));
 }
 
-bool Application::initialize(const ApplicationInitStruct& initStruct) {
+bool Application::initialize(AppContext& ctx) {
     if (Application::initialized) {
-        std::cout << "Application layer already initialized." << std::endl;
+        ctx.logger.addLog(LogLevel::WARNING, "Application Initialization", "Application was already initialized.");
         return false;
     }
-    if (!Logger::initialize(initStruct.loggerSetting)) {
+    if (!ctx.logger.initialize()) {
         std::cout << "Logger was not initialized successfully." << std::endl;
         return false;
     }
-    if (!Platform::initialize({initStruct.width, initStruct.height, initStruct.title})) {
-        std::cout << "Platform layer was not initialized successfully." << std::endl;
+    if (!ctx.action_registry.initialize(&ctx.logger)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Action Registry was not initialized successfully.");
         return false;
     }
-    if (!AppTimer::initialize()) {
-        std::cout << "App Timer was not initialized successfully." << std::endl;
+    if (!ctx.ctx_manager.initialize(&ctx.logger, &ctx.action_registry)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Context Manager was not initialized successfully.");
         return false;
     }
-    if (!EventDispatcher::initialize()) {
-        std::cout << "Event Dispatcher was not initialized successfully." << std::endl;
+    if (!ctx.keybinds.initialize(&ctx.logger, &ctx.ctx_manager, &ctx.action_registry)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Keybinds were not initialized successfully.");
         return false;
     }
-    if (!ShaderRegistry::initialize()) {
-        std::cout << "Shader Registry was not initialized successfully." << std::endl;
+    if (!ctx.platform.initialize(&ctx.logger, &ctx.ctx_manager, &ctx.keybinds, &ctx.action_registry, ctx.width, ctx.height, ctx.app_title)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Platform layer was not initialized successfully.");
         return false;
     }
-    if (!HotReloader::initialize()) {
-        std::cout << "Hot Reloader was not initialized successfully." << std::endl;
+    if (!ctx.inputs.initialize(&ctx.logger, &ctx.platform)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Input State was not initialized successfully.");
+        return false;
     }
-    if (!ModelCache::initialize()) {
-        std::cout << "Object Cache was not initialized successfully." << std::endl;
+    if (!ctx.timer.initialize(&ctx.logger, &ctx.platform)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "App Timer was not initialized successfully.");
+        return false;
+    }
+    if (!ctx.events.initialize(&ctx.logger)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Event Dispatcher was not initialized successfully.");
+        return false;
+    }
+    if (!ctx.shader_registry.initialize(&ctx.logger)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Shader Registry was not initialized successfully.");
+        return false;
+    }
+    if (!ctx.uniform_registry.initialize(&ctx.logger)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Uniform Registry was not initialized successfully.");        
+        return false;
+    }
+    if (!ctx.model_cache.initialize(&ctx.logger, &ctx.events, &ctx.shader_registry, &ctx.uniform_registry)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");        
+        return false;
+    }
+    if (!ctx.inspector_engine.initialize(&ctx.logger, &ctx.shader_registry, &ctx.uniform_registry, &ctx.model_cache)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Inspector Engine was not initialized successfully.");        
+        return false;
+    }
+    ctx.model_cache.setInspectorEnginePtr(&ctx.inspector_engine);
+    if (!ctx.hot_reloader.initialize(&ctx.logger, &ctx.events, &ctx.shader_registry, &ctx.model_cache, &ctx.editor_engine, &ctx.inspector_engine)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Hot Reloader was not initialized successfully.");        
         return false;
     }
     if (!FileRegistry::initialize()) {
@@ -124,26 +147,6 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
         return false;
     }
     loadPresetAssets();
-    if (!InspectorEngine::initialize()) {
-        std::cout << "Inspector Engine was not initialized successfully." << std::endl;
-        return false;
-    }
-    if (!InputState::initialize()) {
-        std::cout << "Input State was not initialized successfully." << std::endl;
-        return false;
-    }
-    if (!ActionRegistry::initialize()) {
-        std::cout << "Action Registry was not initialized successfully." << std::endl;
-        return false;
-    }
-    if (!ContextManager::initialize()) {
-        std::cout << "Context Manager was not initialized successfully." << std::endl;
-        return false;
-    }
-    if (!Keybinds::initialize()) {
-        std::cout << "Keybinds were not initialized successfully." << std::endl;
-        return false;
-    }
     // setup UI
     initializeUI();
     if (!ConsoleUI::initialize(Logger::getConsoleSinkPtr())) {
