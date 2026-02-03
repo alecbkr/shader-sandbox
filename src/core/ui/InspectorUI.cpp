@@ -1,7 +1,5 @@
 #include "core/ui/InspectorUI.hpp"
 
-#include <filesystem>
-
 #include "core/InspectorEngine.hpp"
 #include "core/TextureRegistry.hpp"
 #include "core/UniformRegistry.hpp"
@@ -11,7 +9,6 @@
 #include "engine/ShaderProgram.hpp"
 #include "object/ModelCache.hpp"
 #include "object/Texture.hpp"
-#include <ostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -71,12 +68,17 @@ void InspectorUI::render() {
 void InspectorUI::drawUniformInspector() {
     int imGuiID = 0;
     for (auto &[modelID, model] : ModelCache::modelIDMap) {
+        if (model->getProgram() == nullptr) {
+            // show models with no shader...
+            continue;
+        }
         std::string label = "model " + std::to_string(modelID);
         if (ImGui::TreeNode(label.c_str())) {
             const std::unordered_map<std::string, Uniform>* uniformMap = UNIFORM_REGISTRY.tryReadUniforms(modelID);
 
             if (uniformMap == nullptr) {
                 Errorlog::getInstance().logEntry(EL_WARNING, "drawUniformInspector", "Object not found in registry: ", modelID);
+                ImGui::TreePop();
                 continue;
             }
 
@@ -87,10 +89,11 @@ void InspectorUI::drawUniformInspector() {
                 ImGui::PopID();
                 imGuiID++;
             }
-            for (std::string uniformName : uniformNamesToDelete)
+            for (std::string uniformName : uniformNamesToDelete) {
                 UNIFORM_REGISTRY.eraseUniform(modelID, uniformName);
+            }
             uniformNamesToDelete.clear();
-
+            
             ImGui::TreePop();
         }
     }
