@@ -284,7 +284,7 @@ void InspectorEngine::reloadUniforms(unsigned int modelID) {
         return;
     }
     ShaderProgram* modelProgram = ShaderRegistry::getProgram(targetModel->getProgramID());
-    if (modelProgram != nullptr || !modelProgram->isCompiled()) {
+    if (modelProgram == nullptr || !modelProgram->isCompiled()) {
         Logger::addLog(LogLevel::WARNING, "reloadUnioforms", "model " + std::to_string(modelID) + " has no shader! or is not compiled");
         return;
     }
