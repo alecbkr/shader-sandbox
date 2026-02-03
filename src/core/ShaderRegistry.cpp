@@ -37,7 +37,6 @@ bool ShaderRegistry::registerProgram(const std::string& vertex_file, const std::
 
 ShaderProgram* ShaderRegistry::getProgram(const std::string& programName) {
     if (!ShaderRegistry::initialized) return nullptr;
-    Logger::addLog(LogLevel::INFO, "getProgram", "got " + programName);
     auto programPair = programs.find(programName);
     if (programPair == programs.end()) {
         return nullptr;
