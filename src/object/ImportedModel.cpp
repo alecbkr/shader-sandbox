@@ -1,13 +1,13 @@
 #include "ImportedModel.hpp"
 
 #include "ModelImporter.hpp"
-#include "../engine/Errorlog.hpp"
+#include "core/logging/LogSink.hpp"
 
 
 ImportedModel::ImportedModel(const unsigned int ID, std::string pathname) : Model(ID) {
     
     if (importModel(pathname, *this) == false) {
-        ERRLOG.logEntry(EL_ERROR, "MODEL", "Model import failed, returned false");
+        Logger::addLog(LogLevel::ERROR, "MODEL", "Model import failed, returned false");
         return;
     }
     all_meshes.empty() == true ? properties.hasMeshes = false : properties.hasMeshes = true;
