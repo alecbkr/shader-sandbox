@@ -40,6 +40,9 @@ OldWindow::OldWindow(const char *processName, int widthIn, int heightIn) {
 
 
     // glViewport(0, 0, WINDOWSIZE.width, WINDOWSIZE.height);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     // ERRLOG.logEntry(EL_INFO, "WINDOW", "Success");

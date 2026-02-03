@@ -22,8 +22,8 @@ class ModelCache {
         static void scaleModel(unsigned int ID, glm::vec3 scale);
         static void rotateModel(unsigned int ID, float angle, glm::vec3 axis);
         
-        static void renderModel(unsigned int ID, glm::mat4 projection, glm::mat4 view);
-        static void renderAll(glm::mat4 projection, glm::mat4 view);
+        static void renderModel(unsigned int ID, glm::mat4 projection, glm::mat4 view, glm::vec3 camPos);
+        static void renderAll(glm::mat4 projection, glm::mat4 view, glm::vec3 camPos);
 
         static int getNumberOfModels();
         

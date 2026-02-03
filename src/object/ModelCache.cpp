@@ -126,7 +126,7 @@ void ModelCache::setProgram(unsigned int ID, ShaderProgram &program) {
 }
 
 
-void ModelCache::renderModel(unsigned int ID, glm::mat4 perspective, glm::mat4 view) {
+void ModelCache::renderModel(unsigned int ID, glm::mat4 perspective, glm::mat4 view, glm::vec3 camPos) {
     Model* model = getModel(ID);
     if (model == nullptr) {
         Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(ID));
@@ -146,7 +146,7 @@ void ModelCache::renderModel(unsigned int ID, glm::mat4 perspective, glm::mat4 v
 }
 
 
-void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view) {
+void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camPos) {
     ShaderProgram *currProgram = nullptr;
     for (auto& currModel : modelCache) {
         ShaderProgram* modelProgram = ShaderRegistry::getProgram(currModel->getProgramID());
@@ -156,10 +156,17 @@ void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view) {
             currProgram = modelProgram;
             currProgram->use();
         }
+
+        // Temp handling for anything that takes camera pos
+        if (currModel->getID() == 0 /*gridplane*/) {
+            currProgram->setUniform_vec3float("cameraPos", camPos);
+        }
+
         
         UNIFORM_REGISTRY.registerUniform(currModel->ID, {"projection", UniformType::Mat4, perspective});
         UNIFORM_REGISTRY.registerUniform(currModel->ID, {"view", UniformType::Mat4, view});
         UNIFORM_REGISTRY.registerUniform(currModel->ID, {"model", UniformType::Mat4, currModel->modelM});
+
 
         InspectorEngine::applyAllUniformsForObject(currModel->ID); //TODO InspectorEngine
         currModel->renderModel();

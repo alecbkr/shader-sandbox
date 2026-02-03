@@ -105,7 +105,7 @@ void ViewportUI::render() {
 
     glm::mat4 perspective = glm::perspective(glm::radians(45.0f), ViewportUI::getAspect(), 0.1f, 100.0f);
     glm::mat4 view = camPtr->GetViewMatrix();
-    ModelCache::renderAll(perspective, view);
+    ModelCache::renderAll(perspective, view, camPtr->Position); 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     ViewportUI::draw();

@@ -30,6 +30,7 @@
 bool Application::initialized = false;
 AppStateControls Application::appControls = AppStateControls::NO_STATE;
 
+
 void initializeUI() {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -49,35 +50,40 @@ void loadPresetAssets() {
     
     ShaderProgram* texPtr = ShaderRegistry::getProgram("tex");
     ShaderProgram* colorPtr = ShaderRegistry::getProgram("color");
+    ShaderProgram* gridplanePtr = ShaderRegistry::getProgram("gridplane");
 
     MeshData& plane = PresetAssets::getPresetMesh(MeshPreset::PLANE);
     MeshData& cube = PresetAssets::getPresetMesh(MeshPreset::CUBE);
     MeshData& pyramid = PresetAssets::getPresetMesh(MeshPreset::PYRAMID);
     
     unsigned int gridID = ModelCache::createModel(plane.verts, plane.indices, true, false, true);
-    // ModelCache::setProgram(gridID, *colorPtr);
-    ModelCache::scaleModel(gridID, glm::vec3(5.0f));
+    ModelCache::setProgram(gridID, *gridplanePtr);
+    ModelCache::scaleModel(gridID, glm::vec3(50.0f));
     // ModelCache::setTexture("grid", PresetAssets::getPresetTexture(TexturePreset::GRID), 0, "baseTex");
 
-    unsigned int backpackID = ModelCache::createModel("../assets/models/backpack/backpack.obj");
-    ModelCache::setProgram(backpackID, *texPtr);
-    
-    unsigned int pyramid0ID = ModelCache::createModel(pyramid.verts, pyramid.indices, true, false, true);
-    ModelCache::setProgram(pyramid0ID, *colorPtr);
-    
-    ModelCache::translateModel(pyramid0ID, glm::vec3(3.3f, 0.0f, -1.0f));
-    ModelCache::scaleModel(pyramid0ID, glm::vec3(2.0f));
-    ModelCache::rotateModel(pyramid0ID, 23.2f, glm::vec3(0.0f, 1.0f, 0.0f));
-    
-    unsigned int pyramid1ID = ModelCache::createModel(pyramid.verts, pyramid.indices, true, false, true);
-    ModelCache::setProgram(pyramid1ID, *colorPtr);
-    ModelCache::translateModel(pyramid1ID, glm::vec3(-1.3f, 0.0f, -1.0f));
 
-    unsigned int cubeID = ModelCache::createModel(cube.verts, cube.indices, true, false, true);
-    ModelCache::setProgram(cubeID, *colorPtr);
-    ModelCache::translateModel(cubeID, glm::vec3(4.0f, 3.0f, -5.0f));
-    ModelCache::scaleModel(cubeID, glm::vec3(1.0, 0.5f, 1.0f));
-    ModelCache::rotateModel(cubeID, 23.2f, glm::vec3(0.5f, 0.5f, 0.5f));
+    unsigned int jewcubeID = ModelCache::createModel(cube.verts, cube.indices, true, false, true);
+    ModelCache::translateModel(jewcubeID, glm::vec3(0.5f, 0.5f, 0.5f));
+    ModelCache::setProgram(jewcubeID, *colorPtr);
+
+    // unsigned int backpackID = ModelCache::createModel("../assets/models/backpack/backpack.obj");
+    // ModelCache::setProgram(backpackID, *texPtr);
+    
+    // unsigned int pyramid0ID = ModelCache::createModel(pyramid.verts, pyramid.indices, true, false, true);
+    // ModelCache::setProgram(pyramid0ID, *colorPtr);
+    // ModelCache::translateModel(pyramid0ID, glm::vec3(3.3f, 0.0f, -1.0f));
+    // ModelCache::scaleModel(pyramid0ID, glm::vec3(2.0f));
+    // ModelCache::rotateModel(pyramid0ID, 23.2f, glm::vec3(0.0f, 1.0f, 0.0f));
+    
+    // unsigned int pyramid1ID = ModelCache::createModel(pyramid.verts, pyramid.indices, true, false, true);
+    // ModelCache::setProgram(pyramid1ID, *colorPtr);
+    // ModelCache::translateModel(pyramid1ID, glm::vec3(-1.3f, 0.0f, -1.0f));
+
+    // unsigned int cubeID = ModelCache::createModel(cube.verts, cube.indices, true, false, true);
+    // ModelCache::setProgram(cubeID, *colorPtr);
+    // ModelCache::translateModel(cubeID, glm::vec3(4.0f, 3.0f, -5.0f));
+    // ModelCache::scaleModel(cubeID, glm::vec3(1.0, 0.5f, 1.0f));
+    // ModelCache::rotateModel(cubeID, 23.2f, glm::vec3(0.5f, 0.5f, 0.5f));
 }
 
 bool Application::initialize(const ApplicationInitStruct& initStruct) {
@@ -186,6 +192,8 @@ void Application::runLoop() {
         Application::renderUI();
         Platform::swapBuffers();
     }
+
+    glfwTerminate();
 }
 
 void Application::renderUI() {

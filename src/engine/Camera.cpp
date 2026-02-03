@@ -40,6 +40,7 @@ glm::mat4 Camera::GetViewMatrix() {
 void Camera::MoveForward() {
     float velocity = MovementSpeed * AppTimer::getDt();
     Position += Front * velocity;
+    
 }
 void Camera::MoveBack() {
     float velocity = MovementSpeed * AppTimer::getDt();

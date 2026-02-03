@@ -28,6 +28,7 @@ void Model::renderModel() {
         mesh.bind();
         bindTextures(mesh);
         glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
 }
 

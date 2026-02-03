@@ -79,7 +79,7 @@ void InspectorUI::drawUniformInspector() {
         std::string label = "model " + std::to_string(modelID);
         if (ImGui::TreeNode(label.c_str())) {
             const std::unordered_map<std::string, Uniform>* uniformMap = UNIFORM_REGISTRY.tryReadUniforms(modelID);
-
+            
             if (uniformMap == nullptr) {
                 Errorlog::getInstance().logEntry(EL_WARNING, "drawUniformInspector", "Object not found in registry: ", modelID);
                 ImGui::TreePop();
