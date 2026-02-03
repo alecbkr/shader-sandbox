@@ -31,7 +31,7 @@ void FileRegistry::reloadMap() {
     for (const auto & dirEntry : std::filesystem::directory_iterator("../shaders/")) {
         std::string filePath = dirEntry.path().string();
         std::string fileName = dirEntry.path().filename().string();
-        std::string fileExtension = dirEntry.path().extension();
+        std::string fileExtension = dirEntry.path().extension().string();
         if (!tempMap.contains(fileName)) {
             ShaderFile* shaderFile = new ShaderFile(filePath, fileName, fileExtension);
 

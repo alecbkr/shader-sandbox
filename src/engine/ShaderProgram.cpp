@@ -43,14 +43,16 @@ ShaderProgram::ShaderProgram(const char *vertShader_path, const char *fragShader
     if (!success) {
         char infoLog[512];
         glGetShaderInfoLog(vertShader, 512, NULL, infoLog);
-        Logger::addLog(LogLevel::CRITICAL, "VERTEX SHADER", "Compilation error:\n", infoLog);
+        Logger::addLog(LogLevel::ERROR, "VERTEX SHADER", "Compilation error:\n", infoLog);
+        return;
     }
 
     glGetShaderiv(fragShader, GL_COMPILE_STATUS, &success);
     if (!success) {
         char infoLog[512];
         glGetShaderInfoLog(fragShader, 512, NULL, infoLog);
-        Logger::addLog(LogLevel::CRITICAL, "FRAGMENT SHADER", "Compilation error:\n", infoLog);
+        Logger::addLog(LogLevel::ERROR, "FRAGMENT SHADER", "Compilation error:\n", infoLog);
+        return;
     }
 
     ID = glCreateProgram();
@@ -63,7 +65,8 @@ ShaderProgram::ShaderProgram(const char *vertShader_path, const char *fragShader
     if (!success) {
         char infoLog[512];
         glGetProgramInfoLog(ID, 512, NULL, infoLog);
-        Logger::addLog(LogLevel::CRITICAL, "SHADER LINK", infoLog);
+        Logger::addLog(LogLevel::ERROR, "SHADER LINK", infoLog);
+        return;
     }
 
     if (success){
@@ -71,7 +74,7 @@ ShaderProgram::ShaderProgram(const char *vertShader_path, const char *fragShader
     } else {
         char infoLog[512];
         glGetProgramInfoLog(ID, 512, NULL, infoLog);
-        Logger::addLog(LogLevel::CRITICAL, "Shader Link Error:\n", infoLog);
+        Logger::addLog(LogLevel::ERROR, "Shader Link Error:\n", infoLog);
         glDeleteProgram(ID);
         this->ID = 0;
         this->m_compiled = false;

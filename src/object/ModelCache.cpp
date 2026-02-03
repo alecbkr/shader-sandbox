@@ -19,16 +19,14 @@ bool ModelCache::initialize() {
         
         if (const auto* data = std::get_if<ReloadShaderPayload>(&payload)) {
             
-            ShaderProgram* newProg = ShaderRegistry::getProgram(data->programName);
-            if (newProg) {
-                for (auto& [ID, model] : modelIDMap) {
-                    if (model->getProgram()->name == data->programName) {
-                        model->setProgram(*newProg);
-                    }
+            std::string programName = data->programName;
+            for (auto& [ID, model] : modelIDMap) {
+                if (model->getProgramID() == programName) {
+                    model->setProgramID(programName);
                 }
-                reorderByProgram();
-                return true;
             }
+            reorderByProgram();
+            return true;
         }
         return false;
     });
@@ -123,7 +121,7 @@ void ModelCache::setProgram(unsigned int ID, ShaderProgram &program) {
         return;
     }
 
-    model->setProgram(program);
+    model->setProgramID(program.name);
     reorderByProgram();
 }
 
@@ -135,7 +133,11 @@ void ModelCache::renderModel(unsigned int ID, glm::mat4 perspective, glm::mat4 v
         return;
     }
 
-    ShaderProgram* currProgram = model->getProgram();
+    ShaderProgram* currProgram = ShaderRegistry::getProgram(model->getProgramID());
+    if (currProgram == nullptr) {
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Shader ID not found:", model->getProgramID());
+        return;
+    }
     currProgram->use();
     currProgram->setUniform_mat4float("projection", perspective);
     currProgram->setUniform_mat4float("view", view);
@@ -147,10 +149,10 @@ void ModelCache::renderModel(unsigned int ID, glm::mat4 perspective, glm::mat4 v
 void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view) {
     ShaderProgram *currProgram = nullptr;
     for (auto& currModel : modelCache) {
-        ShaderProgram* modelProgram = currModel->getProgram();
-        if (currModel->getProgram() == nullptr) continue;
+        ShaderProgram* modelProgram = ShaderRegistry::getProgram(currModel->getProgramID());
+        if (modelProgram == nullptr) continue;
 
-        if (currProgram == nullptr || currProgram->ID != currModel.get()->getProgram()->ID) {
+        if (currProgram == nullptr || currProgram->ID != modelProgram->ID) {
             currProgram = modelProgram;
             currProgram->use();
         }
@@ -167,7 +169,10 @@ void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view) {
 
 void ModelCache::printOrder() {
     for (auto& model : modelCache) {
-        std::cout << model->getProgram()->ID << std::endl;
+        
+        ShaderProgram* modelProgram = ShaderRegistry::getProgram(model->getProgramID());
+        if (modelProgram == nullptr) continue;
+        std::cout << modelProgram->ID << std::endl;
     }
 }
 
@@ -192,8 +197,8 @@ void ModelCache::reorderByProgram() {
         [](const std::unique_ptr<Model>& a, 
         const std::unique_ptr<Model>& b) 
     {  
-        auto* progA = a->getProgram();
-        auto* progB = b->getProgram();
+        auto* progA = ShaderRegistry::getProgram(a->getProgramID());
+        auto* progB = ShaderRegistry::getProgram(b->getProgramID());
     
         // Both null equal
         if (!progA && !progB)
