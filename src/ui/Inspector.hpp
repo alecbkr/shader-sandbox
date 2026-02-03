@@ -1,9 +1,9 @@
 #ifndef INSPECTOR_HPP
 #define INSPECTOR_HPP
 
-#include "../engine/ShaderProgram.hpp"
+#include "engine/ShaderProgram.hpp"
 // #include "nlohmanjson.hpp"
-#include <GLFW/glfw3.h>
+#include "platform/GL.hpp"
 #include <fstream>
 #include <glad.h>
 #include <glm/glm.hpp>

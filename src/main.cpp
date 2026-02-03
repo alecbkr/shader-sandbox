@@ -9,6 +9,6 @@ int main() {
     if (!Application::initialize(ctx)) {
         return 1;
     }
-    Application::runLoop();
+    Application::runLoop(ctx);
     return 0;
 }

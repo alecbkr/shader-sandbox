@@ -15,6 +15,14 @@
 #include "core/InspectorEngine.hpp"
 #include "core/HotReloader.hpp"
 #include "core/FileRegistry.hpp"
+#include "core/EditorEngine.hpp"
+#include "presets/PresetAssets.hpp"
+#include "core/TextureRegistry.hpp"
+#include "core/ui/ConsoleUI.hpp"
+#include "core/ui/ViewportUI.hpp"
+#include "core/ui/MenuUI.hpp"
+#include "core/ui/EditorUI.hpp"
+#include "core/ui/InspectorUI.hpp"
 
 struct AppContext {
     AppContext(u32 _width, u32 _height, const char* _app_title)
@@ -34,9 +42,16 @@ struct AppContext {
     EventDispatcher events;
     ShaderRegistry shader_registry;
     UniformRegistry uniform_registry;
-    EditorEngine editor_engine;
     ModelCache model_cache;
     InspectorEngine inspector_engine;
     HotReloader hot_reloader;
     FileRegistry file_registry;
+    EditorEngine editor_engine;
+    PresetAssets preset_assets;
+    TextureRegistry texture_registry;
+    ConsoleUI console_ui;
+    ViewportUI viewport_ui;
+    MenuUI menu_ui;
+    EditorUI editor_ui;
+    InspectorUI inspector_ui;
 };

@@ -5,11 +5,11 @@
 #include <unordered_map>
 #include "engine/ShaderProgram.hpp"
 #include "core/UniformTypes.hpp"
-#include "core/logging/Logger.hpp"
-#include "core/ShaderRegistry.hpp"
-#include "core/UniformRegistry.hpp"
-#include "object/ModelCache.hpp"
 
+class Logger;
+class ShaderRegistry;
+class UniformRegistry;
+class ModelCache;
 
 class InspectorEngine {
 public:

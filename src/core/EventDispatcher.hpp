@@ -7,7 +7,8 @@
 #include <memory>
 
 #include "core/EventTypes.hpp"
-#include "core/logging/Logger.hpp"
+
+class Logger;
 
 using ListenerFn = std::function<bool(const EventPayload&)>;
 

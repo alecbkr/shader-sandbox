@@ -3,12 +3,13 @@
 #include <cstdint>
 #include <vector>
 #include <algorithm>
-
-#include "platform/components/Keys.hpp"
-#include "core/logging/Logger.hpp"
 #include "core/input/ActionRegistry.hpp"
-#include "core/input/InputState.hpp"
 #include "core/input/ContextManager.hpp"
+#include "platform/components/Keys.hpp"
+//#include "core/input/InputState.hpp"
+
+class Logger;
+class InputState;
 
 enum class Trigger : uint8_t {
     Pressed,
@@ -38,6 +39,8 @@ class Keybinds {
 public:
     Keybinds();
     bool initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, ActionRegistry* actionRegPtr);
+    void shutdown();
+    void setInputsPtr(InputState* _inputsPtr);
     Binding makeBinding(Action action, KeyCombo combo, ControlCtx ctx, Trigger trigger = Trigger::Pressed, bool enabled = true);
     void setBindings(const std::vector<Binding>& b);
     void addBinding(const Binding& b);
@@ -49,8 +52,10 @@ public:
 
 private:
     bool initialized = false;
+    bool inputStateInitialized = false;
     std::vector<Binding> bindings_;
     Logger* loggerPtr = nullptr;
     ContextManager* ctxManagerPtr = nullptr;
     ActionRegistry* actionRegPtr = nullptr;
+    InputState* inputsPtr = nullptr;
 };

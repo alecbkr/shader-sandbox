@@ -1,4 +1,6 @@
 #include "engine/AppTimer.hpp"
+#include "core/logging/Logger.hpp"
+#include "platform/Platform.hpp"
 
 AppTimer::AppTimer() {
     initialized = false;

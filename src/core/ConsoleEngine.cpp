@@ -25,7 +25,7 @@ void ConsoleEngine::processInput(const std::string& input) {
         std::shared_ptr<Command> cmd = iter->second; 
         cmd->Execute(args); 
     } else {
-        Logger::addLog(LogLevel::ERROR, "command not found", "Could not find command '" + args[0] + "'");
+        //Logger::addLog(LogLevel::LOG_ERROR, "command not found", "Could not find command '" + args[0] + "'");
     }
 }
 

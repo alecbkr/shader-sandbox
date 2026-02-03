@@ -1,5 +1,5 @@
 #include "core/input/ActionRegistry.hpp"
-#include "core/EventDispatcher.hpp"
+#include "core/logging/Logger.hpp"
 
 // void cameraForwardCB() { ViewportUI::getCamera()->MoveForward(); } // Move camera forward
 // void cameraBackCB() { ViewportUI::getCamera()->MoveBack(); } // Move camera back

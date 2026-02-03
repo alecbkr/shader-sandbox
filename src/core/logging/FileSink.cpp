@@ -23,7 +23,7 @@ void FileSink::addLog(const LogEntry& entry) {
 
     switch (entry.level) {
         case    LogLevel::CRITICAL:  alert << "CRITICAL: ";  break; 
-        case    LogLevel::ERROR:     alert  << "ERROR: ";    break; 
+        case    LogLevel::LOG_ERROR:     alert  << "ERROR: ";    break; 
         case    LogLevel::WARNING:   alert  << "WARNING: ";  break; 
         case    LogLevel::INFO:      alert << "INFO: ";      break;
         default:                     alert << "ANOMALY: ";   break; 

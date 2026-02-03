@@ -1,13 +1,14 @@
 #include "core/HotReloader.hpp"
 #include "engine/ShaderProgram.hpp"
-#include "core/EditorEngine.hpp"
-#include "core/InspectorEngine.hpp"
-#include "core/ShaderRegistry.hpp"
 #include "engine/Errorlog.hpp"
-#include "core/EventDispatcher.hpp"
-#include "object/ModelCache.hpp"
 #include <fstream>
 #include <iostream>
+#include "core/logging/Logger.hpp"
+#include "core/EventDispatcher.hpp"
+#include "core/ShaderRegistry.hpp"
+#include "object/ModelCache.hpp"
+#include "core/EditorEngine.hpp"
+#include "core/InspectorEngine.hpp"
 
 HotReloader::HotReloader() {
     initialized = false;
@@ -49,6 +50,17 @@ bool HotReloader::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, Sh
 
     initialized = true;
     return true;
+}
+
+void HotReloader::shutdown() {
+    if (!initialized) return;
+    loggerPtr = nullptr;
+    eventsPtr = nullptr;
+    shaderRegPtr = nullptr;
+    modelCachePtr = nullptr;
+    editorEngPtr = nullptr;
+    inspectorEngPtr = nullptr;
+    initialized = false;
 }
 
 void HotReloader::update() {

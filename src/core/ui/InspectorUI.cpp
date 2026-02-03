@@ -2,30 +2,71 @@
 
 #include <filesystem>
 
+#include "core/logging/Logger.hpp"
 #include "core/InspectorEngine.hpp"
 #include "core/TextureRegistry.hpp"
 #include "core/UniformRegistry.hpp"
 #include "core/EventDispatcher.hpp"
 #include "core/UniformTypes.hpp"
+#include "core/UniformRegistry.hpp"
+#include "core/ShaderRegistry.hpp"
 #include "engine/Errorlog.hpp"
-#include "engine/ShaderProgram.hpp"
 #include "object/ModelCache.hpp"
 #include "object/Texture.hpp"
+#include "core/FileRegistry.hpp"
+#include "engine/ShaderProgram.hpp"
 #include <ostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "core/FileRegistry.hpp"
 
-int InspectorUI::height = 400;
-int InspectorUI::width = 400;
-std::vector<std::string> InspectorUI::uniformNamesToDelete{};
-std::string InspectorUI::newUniformName{};
-std::string InspectorUI::newUniformShaderName{};
-UniformType InspectorUI::newUniformType = UniformType::NoType;
-std::unordered_map<unsigned int, ObjectShaderSelector> InspectorUI::modelShaderSelectors{};
-std::unordered_map<unsigned int, ObjectTextureSelector> InspectorUI::modelTextureSelectors{};
+InspectorUI::InspectorUI() {
+    uniformNamesToDelete.clear();
+    newUniformName = "";
+    newUniformShaderName = "";
+    newUniformType = UniformType::NoType;
+    modelShaderSelectors.clear();
+    modelTextureSelectors.clear();
+    intitialized = false;
+    loggerPtr = nullptr;
+    inspectorEngPtr = nullptr;
+    textureRegPtr = nullptr;
+    shaderRegPtr = nullptr;
+    uniformRegPtr = nullptr;
+    eventsPtr = nullptr;
+    modelCachePtr = nullptr;
+    fileRegPtr = nullptr;
+}
+
+bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr) {
+    if (intitialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Inspector UI Initialization", "Inspector UI was already initialized.");
+        return false;
+    }
+    loggerPtr = _loggerPtr;
+    inspectorEngPtr = _inspectorEngPtr;
+    textureRegPtr = _textureRegPtr;
+    shaderRegPtr = _shaderRegPtr;
+    uniformRegPtr = _uniformRegPtr;
+    eventsPtr = _eventsPtr;
+    modelCachePtr = _modelCachePtr;
+    fileRegPtr = _fileRegPtr;
+    intitialized = true;
+    return true;
+}
+
+void InspectorUI::shutdown() {
+    if (!intitialized) return;
+    loggerPtr = nullptr;
+    inspectorEngPtr = nullptr;
+    textureRegPtr = nullptr;
+    shaderRegPtr = nullptr;
+    uniformRegPtr = nullptr;
+    eventsPtr = nullptr;
+    modelCachePtr = nullptr;
+    intitialized = false;
+}
 
 void InspectorUI::render() {
     float menuBarHeight = ImGui::GetFrameHeight();
@@ -70,10 +111,10 @@ void InspectorUI::render() {
 
 void InspectorUI::drawUniformInspector() {
     int imGuiID = 0;
-    for (auto &[modelID, model] : ModelCache::modelIDMap) {
+    for (auto &[modelID, model] : modelCachePtr->modelIDMap) {
         std::string label = "model " + std::to_string(modelID);
         if (ImGui::TreeNode(label.c_str())) {
-            const std::unordered_map<std::string, Uniform>* uniformMap = UNIFORM_REGISTRY.tryReadUniforms(modelID);
+            const std::unordered_map<std::string, Uniform>* uniformMap = uniformRegPtr->tryReadUniforms(modelID);
 
             if (uniformMap == nullptr) {
                 Errorlog::getInstance().logEntry(EL_WARNING, "drawUniformInspector", "Object not found in registry: ", modelID);
@@ -88,7 +129,7 @@ void InspectorUI::drawUniformInspector() {
                 imGuiID++;
             }
             for (std::string uniformName : uniformNamesToDelete)
-                UNIFORM_REGISTRY.eraseUniform(modelID, uniformName);
+                uniformRegPtr->eraseUniform(modelID, uniformName);
             uniformNamesToDelete.clear();
 
             ImGui::TreePop();
@@ -100,7 +141,7 @@ void InspectorUI::drawObjectsInspector() {
     // TODO: an arbitrary high number, just somewhere above the uniform inspector's ids.
     int imGuiID = 100000;
     drawAddObjectMenu();
-    for (auto &[modelID, model] : ModelCache::modelIDMap) {
+    for (auto &[modelID, model] : modelCachePtr->modelIDMap) {
         if (!modelShaderSelectors.contains(modelID)) {
             modelShaderSelectors[modelID] = ObjectShaderSelector{ 
                 .modelID = modelID,
@@ -205,36 +246,36 @@ void InspectorUI::drawAddObjectMenu() {
         1,2,6, 1,6,5, // right
         0,3,7, 0,7,4  // left
     };
-    std::unordered_map<std::string, ShaderProgram*>& programs = ShaderRegistry::getPrograms();
+    std::unordered_map<std::string, ShaderProgram*>& programs = shaderRegPtr->getPrograms();
     if (programs.empty()) return;
 
     // just grab a random shader program it really does not matter
     ShaderProgram& defaultProgram = *programs.begin()->second;
 
     if (ImGui::Button("Add Plane")) {
-        unsigned int planeID = ModelCache::createModel(gridPlane_verts, gridPlane_indices, true, false, true);
-        ModelCache::setProgram(planeID, defaultProgram);
-        InspectorEngine::refreshUniforms();
+        unsigned int planeID = modelCachePtr->createModel(gridPlane_verts, gridPlane_indices, true, false, true);
+        modelCachePtr->setProgram(planeID, defaultProgram);
+        inspectorEngPtr->refreshUniforms();
     }
     if (ImGui::Button("Add Pyramid")) {
-        unsigned int pyramidID = ModelCache::createModel(pyramidVerts, pyramidIndices, true, false, true);
-        ModelCache::setProgram(pyramidID, defaultProgram);
-        InspectorEngine::refreshUniforms();
+        unsigned int pyramidID = modelCachePtr->createModel(pyramidVerts, pyramidIndices, true, false, true);
+        modelCachePtr->setProgram(pyramidID, defaultProgram);
+        inspectorEngPtr->refreshUniforms();
     }
     if (ImGui::Button("Add Cube")) {
-        unsigned int cubeID = ModelCache::createModel(cubeVerts, cubeIndices, true, false, true);
-        ModelCache::setProgram(cubeID, defaultProgram);
-        InspectorEngine::refreshUniforms();
+        unsigned int cubeID = modelCachePtr->createModel(cubeVerts, cubeIndices, true, false, true);
+        modelCachePtr->setProgram(cubeID, defaultProgram);
+        inspectorEngPtr->refreshUniforms();
     }
 }
 
 void InspectorUI::drawAssetsInspector() {
-    for (const Texture* texPtr : TextureRegistry::readTextures()) {
+    for (const Texture* texPtr : textureRegPtr->readTextures()) {
         ImGui::Text("%s\n", texPtr->path.c_str());
     }
 }
 
-void drawRenameFileEntry(ShaderFile* fileData) {
+void InspectorUI::drawRenameFileEntry(ShaderFile* fileData) {
     static char buf[256];
     strncpy(buf, fileData->renameBuffer.c_str(), 255);
 
@@ -246,7 +287,7 @@ void drawRenameFileEntry(ShaderFile* fileData) {
     bool buttonSumitted = ImGui::Button(("OK##" + fileData->fileName).c_str());
 
     if ((keyboardSubmitted || buttonSumitted) && !fileData->renameBuffer.empty()) {
-        EventDispatcher::TriggerEvent(Event { RenameFile, false, RenameFilePayload {fileData->fileName, fileData->renameBuffer} });
+        eventsPtr->TriggerEvent(Event { RenameFile, false, RenameFilePayload {fileData->fileName, fileData->renameBuffer} });
     }
 
     ImGui::SameLine();
@@ -257,13 +298,13 @@ void drawRenameFileEntry(ShaderFile* fileData) {
     }
 }
 
-void drawDeleteFileEntity(ShaderFile* fileData) {
+void InspectorUI::drawDeleteFileEntity(ShaderFile* fileData) {
     ImGui::Text(fileData->fileName.c_str());
 
     ImGui::SameLine();
 
     if (ImGui::Button(("DELETE##" + fileData->fileName).c_str())) {
-        EventDispatcher::TriggerEvent(Event { DeleteFile, false, DeleteFilePayload { fileData->fileName } });
+        eventsPtr->TriggerEvent(Event { DeleteFile, false, DeleteFilePayload { fileData->fileName } });
     }
 
     ImGui::SameLine();
@@ -286,10 +327,10 @@ void drawContextMenu(ShaderFile* fileData) {
     }
 }
 
-void drawStandardFileEntry(ShaderFile* fileData) {
+void InspectorUI::drawStandardFileEntry(ShaderFile* fileData) {
     if (ImGui::Selectable(fileData->fileName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
         if (ImGui::IsMouseDoubleClicked(0)) {
-            EventDispatcher::TriggerEvent(
+            eventsPtr->TriggerEvent(
                 Event{
                     OpenFile,
                     false,
@@ -304,9 +345,9 @@ void drawStandardFileEntry(ShaderFile* fileData) {
 void InspectorUI::drawShaderFileInspector() {
     ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
 
-    FileRegistry::reloadMap();
+    fileRegPtr->reloadMap();
 
-    for (const auto &[fileName, fileData] : FileRegistry::getFiles()) {
+    for (const auto &[fileName, fileData] : fileRegPtr->getFiles()) {
         switch (fileData->state) {
             case RENAME:
                 drawRenameFileEntry(fileData);
@@ -334,10 +375,10 @@ void InspectorUI::drawAddUniformMenu() {
 
     // Build a list of shader names
     std::vector<const char *> shaderChoices;
-    shaderChoices.reserve(ShaderRegistry::getNumberOfPrograms() + 1);
+    shaderChoices.reserve(shaderRegPtr->getNumberOfPrograms() + 1);
     shaderChoices.push_back("");
 
-    auto& shaders = ShaderRegistry::getPrograms();
+    auto& shaders = shaderRegPtr->getPrograms();
     for (auto &[name, shader] : shaders) {
         shaderChoices.push_back(name.c_str());
     }
@@ -365,7 +406,7 @@ void InspectorUI::drawAddUniformMenu() {
         bool validShaderName = shaders.count(newUniformShaderName) >= 1;
         if (validShaderName) {
             uniqueValidUniform =
-                UNIFORM_REGISTRY.containsUniform(newUniformShaderName, newUniformName) &&
+                uniformRegPtr->containsUniform(newUniformShaderName, newUniformName) &&
                 newUniformType != UniformType::NoType;
         }
 
@@ -398,7 +439,7 @@ void InspectorUI::drawAddUniformMenu() {
                 break;
             }
 
-            UNIFORM_REGISTRY.registerUniform(newUniformShaderName, newUniform);
+            uniformRegPtr->registerUniform(newUniformShaderName, newUniform);
             newUniformShaderName = "";
             newUniformName = "";
         } else {
@@ -422,9 +463,9 @@ bool InspectorUI::drawTextInput(std::string *value, const char *label) {
 bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
     bool changed = false;
     std::vector<const char *> shaderChoices;
-    shaderChoices.reserve(ShaderRegistry::getNumberOfPrograms());
+    shaderChoices.reserve(shaderRegPtr->getNumberOfPrograms());
 
-    auto& shaders = ShaderRegistry::getPrograms();
+    auto& shaders = shaderRegPtr->getPrograms();
     for (auto &[name, shader] : shaders) {
         shaderChoices.push_back(name.c_str());
     }
@@ -437,9 +478,9 @@ bool InspectorUI::drawShaderProgramSelector(ObjectShaderSelector& selector) {
     if (!changed) return false;
     
     // add check in case we get more types
-    ShaderProgram& selectedShader = *ShaderRegistry::getProgram(shaderChoices[selector.selection]);
-    ModelCache::setProgram(selector.modelID, selectedShader); 
-    InspectorEngine::refreshUniforms();
+    ShaderProgram& selectedShader = *shaderRegPtr->getProgram(shaderChoices[selector.selection]);
+    modelCachePtr->setProgram(selector.modelID, selectedShader); 
+    inspectorEngPtr->refreshUniforms();
     return true;
 }
 
@@ -540,7 +581,7 @@ void InspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID) {
         }, uniform.value);
 
         if (changed) {
-            InspectorEngine::applyInput(modelID, uniform);
+            inspectorEngPtr->applyInput(modelID, uniform);
         }
 
         if (ImGui::Button("Delete Uniform", ImVec2(100, 20))) {

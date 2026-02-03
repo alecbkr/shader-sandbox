@@ -13,7 +13,7 @@ is for now.
 #ifndef TEXTURE_HPP
 #define TEXTURE_HPP
 
-#include <glad/glad.h>
+#include "platform/GL.hpp"
 #include "TextureType.hpp"
 #include <string>
 

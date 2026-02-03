@@ -2,13 +2,13 @@
 #define HOTRELOADER_HPP
 
 #include <string>
-#include "core/logging/Logger.hpp"
-#include "core/EventDispatcher.hpp"
-#include "core/ShaderRegistry.hpp"
-#include "object/ModelCache.hpp"
-#include "core/EditorEngine.hpp"
-#include "core/InspectorEngine.hpp"
 
+class Logger;
+class EventDispatcher;
+class ShaderRegistry;
+class ModelCache;
+class EditorEngine;
+class InspectorEngine;
 
 class HotReloader{
 public:

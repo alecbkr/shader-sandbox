@@ -26,54 +26,54 @@
 
 bool Application::initialized = false;
 
-void initializeUI() {
+void initializeUI(AppContext& ctx) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
-    Platform::initializeImGui();
+    ctx.platform.initializeImGui();
 
     ImGui_ImplOpenGL3_Init();
 }
 
-void loadPresetAssets() {
-    TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::WATER));
-    TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::FACE));
-    TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::METAL));
-    TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::GRID));
+void loadPresetAssets(AppContext& ctx) {
+    ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::WATER));
+    ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::FACE));
+    ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::METAL));
+    ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::GRID));
     
-    ShaderProgram* texPtr = ShaderRegistry::getProgram("tex");
-    ShaderProgram* colorPtr = ShaderRegistry::getProgram("color");
+    ShaderProgram* texPtr = ctx.shader_registry.getProgram("tex");
+    ShaderProgram* colorPtr = ctx.shader_registry.getProgram("color");
 
-    MeshData& plane = PresetAssets::getPresetMesh(MeshPreset::PLANE);
-    MeshData& cube = PresetAssets::getPresetMesh(MeshPreset::CUBE);
-    MeshData& pyramid = PresetAssets::getPresetMesh(MeshPreset::PYRAMID);
+    MeshData& plane = ctx.preset_assets.getPresetMesh(MeshPreset::PLANE);
+    MeshData& cube = ctx.preset_assets.getPresetMesh(MeshPreset::CUBE);
+    MeshData& pyramid = ctx.preset_assets.getPresetMesh(MeshPreset::PYRAMID);
     
-    unsigned int gridID = ModelCache::createModel(plane.verts, plane.indices, true, false, true);
-    ModelCache::setProgram(gridID, *colorPtr);
-    ModelCache::scaleModel(gridID, glm::vec3(5.0f));
-    // ModelCache::setTexture("grid", PresetAssets::getPresetTexture(TexturePreset::GRID), 0, "baseTex");
+    unsigned int gridID = ctx.model_cache.createModel(plane.verts, plane.indices, true, false, true);
+    ctx.model_cache.setProgram(gridID, *colorPtr);
+    ctx.model_cache.scaleModel(gridID, glm::vec3(5.0f));
+    // ctx.model_cache.setTexture("grid", PresetAssets::getPresetTexture(TexturePreset::GRID), 0, "baseTex");
 
-    unsigned int backpackID = ModelCache::createModel("../assets/models/backpack/backpack.obj");
-    ModelCache::setProgram(backpackID, *texPtr);
+    unsigned int backpackID = ctx.model_cache.createModel("../assets/models/backpack/backpack.obj");
+    ctx.model_cache.setProgram(backpackID, *texPtr);
     
-    unsigned int pyramid0ID = ModelCache::createModel(pyramid.verts, pyramid.indices, true, false, true);
-    ModelCache::setProgram(pyramid0ID, *colorPtr);
+    unsigned int pyramid0ID = ctx.model_cache.createModel(pyramid.verts, pyramid.indices, true, false, true);
+    ctx.model_cache.setProgram(pyramid0ID, *colorPtr);
     
-    ModelCache::translateModel(pyramid0ID, glm::vec3(3.3f, 0.0f, -1.0f));
-    ModelCache::scaleModel(pyramid0ID, glm::vec3(2.0f));
-    ModelCache::rotateModel(pyramid0ID, 23.2f, glm::vec3(0.0f, 1.0f, 0.0f));
+    ctx.model_cache.translateModel(pyramid0ID, glm::vec3(3.3f, 0.0f, -1.0f));
+    ctx.model_cache.scaleModel(pyramid0ID, glm::vec3(2.0f));
+    ctx.model_cache.rotateModel(pyramid0ID, 23.2f, glm::vec3(0.0f, 1.0f, 0.0f));
     
-    unsigned int pyramid1ID = ModelCache::createModel(pyramid.verts, pyramid.indices, true, false, true);
-    ModelCache::setProgram(pyramid1ID, *colorPtr);
-    ModelCache::translateModel(pyramid1ID, glm::vec3(-1.3f, 0.0f, -1.0f));
+    unsigned int pyramid1ID = ctx.model_cache.createModel(pyramid.verts, pyramid.indices, true, false, true);
+    ctx.model_cache.setProgram(pyramid1ID, *colorPtr);
+    ctx.model_cache.translateModel(pyramid1ID, glm::vec3(-1.3f, 0.0f, -1.0f));
 
-    unsigned int cubeID = ModelCache::createModel(cube.verts, cube.indices, true, false, true);
-    ModelCache::setProgram(cubeID, *colorPtr);
-    ModelCache::translateModel(cubeID, glm::vec3(4.0f, 3.0f, -5.0f));
-    ModelCache::scaleModel(cubeID, glm::vec3(1.0, 0.5f, 1.0f));
-    ModelCache::rotateModel(cubeID, 23.2f, glm::vec3(0.5f, 0.5f, 0.5f));
+    unsigned int cubeID = ctx.model_cache.createModel(cube.verts, cube.indices, true, false, true);
+    ctx.model_cache.setProgram(cubeID, *colorPtr);
+    ctx.model_cache.translateModel(cubeID, glm::vec3(4.0f, 3.0f, -5.0f));
+    ctx.model_cache.scaleModel(cubeID, glm::vec3(1.0, 0.5f, 1.0f));
+    ctx.model_cache.rotateModel(cubeID, 23.2f, glm::vec3(0.5f, 0.5f, 0.5f));
 }
 
 bool Application::initialize(AppContext& ctx) {
@@ -97,12 +97,13 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Keybinds were not initialized successfully.");
         return false;
     }
-    if (!ctx.platform.initialize(&ctx.logger, &ctx.ctx_manager, &ctx.keybinds, &ctx.action_registry, ctx.width, ctx.height, ctx.app_title)) {
-        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Platform layer was not initialized successfully.");
+    if (!ctx.inputs.initialize(&ctx.logger)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Input State was not initialized successfully.");
         return false;
     }
-    if (!ctx.inputs.initialize(&ctx.logger, &ctx.platform)) {
-        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Input State was not initialized successfully.");
+    ctx.keybinds.setInputsPtr(&ctx.inputs);
+    if (!ctx.platform.initialize(&ctx.logger, &ctx.ctx_manager, &ctx.keybinds, &ctx.action_registry, &ctx.inputs, ctx.width, ctx.height, ctx.app_title)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Platform layer was not initialized successfully.");
         return false;
     }
     if (!ctx.timer.initialize(&ctx.logger, &ctx.platform)) {
@@ -134,63 +135,71 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Hot Reloader was not initialized successfully.");        
         return false;
     }
-    if (!!ctx.file_registry.initialize(&ctx.logger, &ctx.events)) {
+    if (!ctx.file_registry.initialize(&ctx.logger, &ctx.events, &ctx.platform)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "File Registry was not initialized successfully.");        
         return false;
     }
-    if (!EditorEngine::initialize()) {
-        std::cout << "Editor Engine was not initialized successfully." << std::endl;
+    if (!ctx.editor_engine.initialize(&ctx.logger, &ctx.events, &ctx.model_cache)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Editor Engine was not initialized successfully.");
         return false;
     }
-    if (!PresetAssets::initialize()) {
-        std::cout << "Preset Assets were not initialized successfully." << std::endl;
+    if (!ctx.preset_assets.initialize(&ctx.logger)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Preset Assets were not initialized successfully.");
         return false;
     }
-    loadPresetAssets();
+    if (!ctx.texture_registry.initialize(&ctx.logger)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Texture Registry was not initialized successfully.");
+        return false;
+    }
+    loadPresetAssets(ctx);
     // setup UI
-    initializeUI();
-    if (!ConsoleUI::initialize(Logger::getConsoleSinkPtr())) {
-        std::cout << "ConsoleUI was not initialized successfully." << std::endl;
+    initializeUI(ctx);
+    if (!ctx.console_ui.initialize(&ctx.logger)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Console UI was not initialized successfully.");
         return false;
     }
-    if (!ViewportUI::initialize()) {
-        std::cout << "Viewport UI was not initialized successfully." << std::endl;
+    if (!ctx.viewport_ui.initialize(&ctx.logger, &ctx.platform, &ctx.model_cache, &ctx.timer)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Viewport UI was not initialized successfully.");
         return false;
     }
-    if (!MenuUI::initialize()) {
-        std::cout << "Menu UI was not successfully initialized." << std::endl;
+    if (!ctx.menu_ui.initialize(&ctx.logger, &ctx.events)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Menu UI was not initialized successfully.");
         return false;
     }
-    if (!EditorUI::initialize()) {
-        std::cout << "Editor UI was not successfully initialized." << std::endl;
+    if (!ctx.editor_ui.initialize(&ctx.logger, &ctx.editor_engine)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Editor UI was not initialized successfully.");
+        return false;
+    }
+    if (!ctx.inspector_ui.initialize(&ctx.logger, &ctx.inspector_engine, &ctx.texture_registry, &ctx.shader_registry, &ctx.uniform_registry, &ctx.events, &ctx.model_cache, &ctx.file_registry)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Inspector UI was not initialized successfully.");
         return false;
     }
 
-    Logger::addLog(LogLevel::INFO, "Application Initialization", "Application Layer Initialized.");
+    ctx.logger.addLog(LogLevel::INFO, "Application Initialization", "Application Layer Initialized.");
     Application::initialized = true;
     return true;
 }
 
-void Application::runLoop() {
+void Application::runLoop(AppContext& ctx) {
     if (!Application::initialized) {
         std::cout << "Attempting to run render loop without initializing application layer." << std::endl;
         return;
     }
 
-    while (!Application::shouldClose()) {
+    while (!Application::shouldClose(ctx)) {
         ERRLOG.printClear();
-        AppTimer::update();
-        InputState::beginFrame();
-        Platform::pollEvents();
-        Platform::processInput();
-        HotReloader::update();
-        EventDispatcher::ProcessQueue();
-        Application::renderUI();
-        Platform::swapBuffers();
+        ctx.timer.update();
+        ctx.inputs.beginFrame();
+        ctx.platform.pollEvents();
+        ctx.platform.processInput();
+        ctx.hot_reloader.update();
+        ctx.events.ProcessQueue();
+        Application::renderUI(ctx);
+        ctx.platform.swapBuffers();
     }
 }
 
-void Application::renderUI() {
+void Application::renderUI(AppContext& ctx) {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -200,37 +209,37 @@ void Application::renderUI() {
     ImGui::NewFrame();
 
     // Render UI
-    InspectorUI::render();
-    EditorUI::render();
-    ConsoleUI::render();
-    ViewportUI::render();
-    MenuUI::render();
+    ctx.inspector_ui.render();
+    ctx.editor_ui.render();
+    ctx.console_ui.render();
+    ctx.viewport_ui.render();
+    ctx.menu_ui.render();
 
     // Post Render
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void Application::shutdown() {
+void Application::shutdown(AppContext& ctx) {
     // UI Shutdown
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    for (Editor* editor: EditorEngine::editors) editor->destroy();
+    for (Editor* editor: ctx.editor_engine.editors) editor->destroy();
 }
 
-bool Application::shouldClose() {
+bool Application::shouldClose(AppContext& ctx) {
     if (!initialized) return false;
-    return Platform::shouldClose();
+    return ctx.platform.shouldClose();
 }
 
-void Application::setAppStateControls(AppStateControls state) {
-    if (!initialized) return;
-    Application::appControls = state;
-}
+// void Application::setAppStateControls(AppStateControls state) {
+//     if (!initialized) return;
+//     Application::appControls = state;
+// }
 
-AppStateControls Application::checkAppStateControls() {
-    if (!initialized) return AppStateControls::NO_STATE;
-    return appControls;
-}
+// AppStateControls Application::checkAppStateControls() {
+//     if (!initialized) return AppStateControls::NO_STATE;
+//     return appControls;
+// }

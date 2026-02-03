@@ -1,4 +1,5 @@
 #include "core/ShaderRegistry.hpp"
+#include "core/logging/Logger.hpp"
 
 ShaderRegistry::ShaderRegistry() {
     initialized = false;

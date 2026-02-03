@@ -37,30 +37,30 @@ glm::mat4 Camera::GetViewMatrix() {
     return glm::lookAt(Position, Position + Front, Up);
 }
 
-void Camera::MoveForward() {
-    float velocity = MovementSpeed * AppTimer::getDt();
-    Position += Front * velocity;
-}
-void Camera::MoveBack() {
-    float velocity = MovementSpeed * AppTimer::getDt();
-    Position -= Front * velocity;
-}
-void Camera::MoveLeft() {
-    float velocity = MovementSpeed * AppTimer::getDt();
-    Position -= Right * velocity;
-}
-void Camera::MoveRight() {
-    float velocity = MovementSpeed * AppTimer::getDt();
-    Position += Right * velocity;
-}
-void Camera::MoveUp() {
-    float velocity = MovementSpeed * AppTimer::getDt();
-    Position += WorldUp * velocity;
-}
-void Camera::MoveDown() {
-    float velocity = MovementSpeed * AppTimer::getDt();
-    Position -= WorldUp * velocity;
-}
+// void Camera::MoveForward() {
+//     float velocity = MovementSpeed * AppTimer::getDt();
+//     Position += Front * velocity;
+// }
+// void Camera::MoveBack() {
+//     float velocity = MovementSpeed * AppTimer::getDt();
+//     Position -= Front * velocity;
+// }
+// void Camera::MoveLeft() {
+//     float velocity = MovementSpeed * AppTimer::getDt();
+//     Position -= Right * velocity;
+// }
+// void Camera::MoveRight() {
+//     float velocity = MovementSpeed * AppTimer::getDt();
+//     Position += Right * velocity;
+// }
+// void Camera::MoveUp() {
+//     float velocity = MovementSpeed * AppTimer::getDt();
+//     Position += WorldUp * velocity;
+// }
+// void Camera::MoveDown() {
+//     float velocity = MovementSpeed * AppTimer::getDt();
+//     Position -= WorldUp * velocity;
+// }
 
 void Camera::ProcessKeyboard(Camera_Movement dir, float deltaTime) {
     float velocity = MovementSpeed * deltaTime;

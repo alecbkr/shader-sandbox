@@ -3,8 +3,10 @@
 #include <unordered_map>
 
 #include "EventTypes.hpp"
-#include "EventDispatcher.hpp"
-#include "logging/Logger.hpp"
+
+class Logger;
+class EventDispatcher;
+class Platform;
 
 enum FileState {
     NONE,
@@ -24,7 +26,7 @@ struct ShaderFile {
 class FileRegistry {
 public:
     FileRegistry();
-    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr);
+    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, Platform* _platformPtr);
     void reloadMap();
     std::unordered_map<std::string, ShaderFile *> getFiles();
 
@@ -33,6 +35,7 @@ private:
     bool initialized = false;
     EventDispatcher* eventsPtr = nullptr;
     Logger* loggerPtr = nullptr;
+    Platform* platformPtr = nullptr;
     bool renameFile(const EventPayload& payload);
     bool deleteFile(const EventPayload& payload);
 };

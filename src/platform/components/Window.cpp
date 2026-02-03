@@ -22,7 +22,7 @@ Window::Window(u32 _width, u32 _height, std::string _title) : width(_width), hei
     }
 
     glfwMakeContextCurrent(window);
-    glViewport(0, 0, _width, _height);
+    // glViewport(0, 0, _width, _height);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     isValid = true;

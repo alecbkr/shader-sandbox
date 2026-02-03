@@ -1,16 +1,29 @@
 #include "presets/PresetAssets.hpp"
 #include "object/TextureType.hpp"
+#include "core/logging/Logger.hpp"
 
-MeshData PresetAssets::planeMesh{};
-MeshData PresetAssets::pyramidMesh{};
-MeshData PresetAssets::cubeMesh{};
+PresetAssets::PresetAssets() {
+    initialized = false;
+    loggerPtr = nullptr;
+    planeMesh.verts.clear();
+    planeMesh.indices.clear();
+    pyramidMesh.verts.clear();
+    pyramidMesh.indices.clear();
+    cubeMesh.verts.clear();
+    cubeMesh.indices.clear();
+    waterTex = Texture{"", TEX_DIFFUSE};
+    faceTex = Texture{"", TEX_DIFFUSE};
+    metalTex = Texture{"", TEX_DIFFUSE};
+    gridTex = Texture{"", TEX_DIFFUSE};
+}
 
-Texture PresetAssets::waterTex{"", TEX_DIFFUSE};
-Texture PresetAssets::faceTex{"", TEX_DIFFUSE};
-Texture PresetAssets::metalTex{"", TEX_DIFFUSE};
-Texture PresetAssets::gridTex{"", TEX_DIFFUSE};
+bool PresetAssets::initialize(Logger* _loggerPtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Preset Assets Initialization", "Preset Assets were already initialized.");
+        return false;
+    }
 
-bool PresetAssets::initialize() {
+    loggerPtr = _loggerPtr;
     PresetAssets::planeMesh.verts = {
         -1.0f, 0.0f, -1.0f,  0.0f, 0.0f,
         -1.0f, 0.0f, 1.0f,  1.0f, 0.0f,
@@ -59,7 +72,20 @@ bool PresetAssets::initialize() {
         0,3,7, 0,7,4  // left
     };
 
+    initialized = true;
     return true;
+}
+
+void PresetAssets::shutdown() {
+    if (!initialized) return;
+    loggerPtr = nullptr;
+    planeMesh.verts.clear();
+    planeMesh.indices.clear();
+    pyramidMesh.verts.clear();
+    pyramidMesh.indices.clear();
+    cubeMesh.verts.clear();
+    cubeMesh.indices.clear();
+    initialized = false;
 }
 
 MeshData& PresetAssets::getPresetMesh(MeshPreset preset) {

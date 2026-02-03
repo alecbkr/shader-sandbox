@@ -7,8 +7,8 @@ with the prefix APPTIME.
 */
 #pragma once
 
-#include "core/logging/Logger.hpp"
-#include "platform/Platform.hpp"
+class Logger;
+class Platform;
 
 #define APPTIME AppTimer::getInstance()
 

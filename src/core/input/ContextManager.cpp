@@ -1,4 +1,6 @@
 #include "core/input/ContextManager.hpp"
+#include "core/logging/Logger.hpp"
+#include "core/input/ActionRegistry.hpp"
 
 ContextManager::ContextManager() {
     current_ = ControlCtx::None;

@@ -1,8 +1,7 @@
 #ifndef SHADERPROGRAM_HPP
 #define SHADERPROGRAM_HPP
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include "platform/GL.hpp"
 #include <glm/glm.hpp>
 #include <string>
 

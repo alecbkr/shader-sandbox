@@ -1,4 +1,5 @@
 #include "core/EventDispatcher.hpp"
+#include "core/logging/Logger.hpp"
 
 EventDispatcher::EventDispatcher() {
     initialized = false;

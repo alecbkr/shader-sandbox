@@ -4,7 +4,6 @@
 #include "LogSink.hpp"
 #include "core/logging/ConsoleSink.hpp"
 
-
 enum class LoggerInitialization {
     CONSOLE_FILE_STDOUT = 0, 
     CONSOLE_FILE = 1,

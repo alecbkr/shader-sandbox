@@ -2,9 +2,8 @@
 #include "UniformTypes.hpp"
 #include <unordered_map>
 #include <string>
-#include "core/logging/Logger.hpp"
 
-#define UNIFORM_REGISTRY UniformRegistry::instance()
+class Logger;
 
 class UniformRegistry {
     public:

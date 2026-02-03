@@ -1,5 +1,4 @@
 #include "core/input/InputState.hpp"
-#include "platform/Platform.hpp"
 
 InputState::InputState() {
     initialized = false;
@@ -11,16 +10,14 @@ InputState::InputState() {
     scrollY = 0.0;
     pressedKeys.clear();
     loggerPtr = nullptr;
-    platformPtr = nullptr;
 }
 
-bool InputState::initialize(Logger* _loggerPtr, Platform* _platformPtr) {
+bool InputState::initialize(Logger* _loggerPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Input State Initialization", "Input State was already initialized.");
         return false;
     }
     loggerPtr = _loggerPtr;
-    platformPtr = _platformPtr;
 
     mouseX = 0.0;
     mouseY = 0.0;
@@ -31,7 +28,7 @@ bool InputState::initialize(Logger* _loggerPtr, Platform* _platformPtr) {
     pressedKeys.clear();
     
     beginFrame();
-    platformPtr->initializeInputCallbacks();
+    //platformPtr->initializeInputCallbacks();
 
     initialized = true;
     return true;
@@ -39,7 +36,6 @@ bool InputState::initialize(Logger* _loggerPtr, Platform* _platformPtr) {
 
 void InputState::shutdown() {
     loggerPtr = nullptr;
-    platformPtr = nullptr;
     pressedKeys.clear();
 }
 

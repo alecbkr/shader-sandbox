@@ -3,8 +3,8 @@
 #include <array>
 #include <vector>
 #include <functional>
-#include "core/logging/Logger.hpp"
 
+class Logger;
 using ActionFn = std::function<void()>;
 
 enum class Action {

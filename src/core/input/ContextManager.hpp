@@ -1,8 +1,9 @@
 #pragma once
 
 #include <vector>
-#include "core/logging/Logger.hpp"
-#include "core/input/ActionRegistry.hpp"
+
+class Logger;
+class ActionRegistry;
 
 // Make the ControlCtx a bitmask if more contexts are added
 // Then make the actual application context an enum

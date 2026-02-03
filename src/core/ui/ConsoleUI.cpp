@@ -2,21 +2,28 @@
 #include <algorithm>
 #include <iostream>
 #include "platform/Platform.hpp"
+#include "core/logging/Logger.hpp"
 
-bool ConsoleUI::initialized = false;
-bool ConsoleUI::isAutoScroll = false;
-size_t ConsoleUI::lastLogSize = 0;
-float ConsoleUI::targetWidth = 0.0f;
-float ConsoleUI::targetHeight = 0.0f;
-ImVec2 ConsoleUI::windowPos = ImVec2(0, 0);
+ConsoleUI::ConsoleUI() {
+    targetWidth = 0.0f;
+    targetHeight = 0.0f;
+    windowPos = ImVec2(0, 0);
+    engine = nullptr;
+    logSrc = nullptr;
+    history.clear();
+    isAutoScroll = false;
+    lastLogSize = 0;
+    initialized = false;
+}
 
-std::shared_ptr<ConsoleEngine> ConsoleUI::engine = nullptr;
-std::shared_ptr<ConsoleSink> ConsoleUI::logSrc = nullptr;
-std::vector<std::string> ConsoleUI::history{};
-
-bool ConsoleUI::initialize(std::shared_ptr<ConsoleSink> consoleSink) {
+bool ConsoleUI::initialize(Logger* _loggerPtr) {
+    if (initialized) {
+        _loggerPtr->addLog(LogLevel::WARNING, "Console UI Initialization", "Console UI was already initialized.");
+        return false;
+    }
+    history.clear();
     engine = std::make_shared<ConsoleEngine>();
-    logSrc = consoleSink;
+    logSrc = _loggerPtr->getConsoleSinkPtr();
 
     initialized = true;
     return true;
@@ -67,7 +74,7 @@ void ConsoleUI::readLogs(){
         std::string alert = ""; 
         switch (log.level) {
             case LogLevel::CRITICAL:  alert = "[CRITICAL: " + log.src + "] ";   break; 
-            case LogLevel::ERROR:     alert += "[ERROR: " + log.src + "] "  ;   break; 
+            case LogLevel::LOG_ERROR:     alert += "[ERROR: " + log.src + "] "  ;   break; 
             case LogLevel::WARNING:   alert += "[WARNING: " + log.src + "] ";   break; 
             case LogLevel::INFO:      alert += "[INFO: " + log.src + "] ";      break; 
             default:                  alert += "[ANOMALY: " + log.src + "] ";   break; 

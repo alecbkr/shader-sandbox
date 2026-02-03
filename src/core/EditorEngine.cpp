@@ -1,14 +1,23 @@
 #include "EditorEngine.hpp"
-
 #include <fstream>
-
-#include "logging/Logger.hpp"
+#include <filesystem>
+#include "core/logging/Logger.hpp"
 #include "core/EventDispatcher.hpp"
 #include "object/ModelCache.hpp"
 
-
-std::vector<Editor*> EditorEngine::editors{};
-int EditorEngine::activeEditor = -1;
+std::string getFileContents(std::string filename) {
+    std::ifstream in(filename, std::ios::binary);
+    if (in) {
+        std::string contents;
+        in.seekg(0, std::ios::end);
+        contents.resize(in.tellg());
+        in.seekg(0, std::ios::beg);
+        in.read(&contents[0], contents.size());
+        in.close();
+        return(contents);
+    }
+    return "";
+}
 
 Editor::Editor(std::string filePath, std::string fileName, unsigned int modelID) {
     this->filePath = filePath;
@@ -34,7 +43,7 @@ Editor::Editor(std::string filePath, std::string fileName, unsigned int modelID)
     palette[(int)TextEditor::PaletteIndex::Keyword] = 0xffd197d9;
     textEditor.SetPalette(palette);
 
-    std::string content = EditorEngine::getFileContents(filePath);
+    std::string content = getFileContents(filePath);
     this->textEditor.SetText(content);
 }
 
@@ -42,12 +51,43 @@ void Editor::destroy() {
     delete this;
 }
 
-bool EditorEngine::initialize() {
-    EventDispatcher::Subscribe(EventType::OpenFile, spawnEditor);
-    EventDispatcher::Subscribe(EventType::NewFile, spawnEditor);
-    EventDispatcher::Subscribe(EventType::RenameFile, renameEditor);
-    EventDispatcher::Subscribe(EventType::DeleteFile, deleteEditor);
+EditorEngine::EditorEngine() {
+    initialized = false;
+    loggerPtr = nullptr;
+    eventsPtr = nullptr;
+    modelCachePtr = nullptr;
+    editors.clear();
+    activeEditor = 0;
+}
+
+bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Editor Engine Initialization", "Editor Engine was already initialized.");
+        return false;
+    }
+    loggerPtr = _loggerPtr;
+    eventsPtr = _eventsPtr;
+    modelCachePtr = _modelCachePtr;
+    editors.clear();
+    activeEditor = 0;
+
+    eventsPtr->Subscribe(EventType::OpenFile, std::bind(&EditorEngine::spawnEditor, this, std::placeholders::_1));
+    eventsPtr->Subscribe(EventType::NewFile, std::bind(&EditorEngine::spawnEditor, this, std::placeholders::_1));
+    eventsPtr->Subscribe(EventType::RenameFile, std::bind(&EditorEngine::renameEditor, this, std::placeholders::_1));
+    eventsPtr->Subscribe(EventType::DeleteFile, std::bind(&EditorEngine::deleteEditor, this, std::placeholders::_1));
+    
+    initialized = true;
     return true;
+}
+
+void EditorEngine::shutdown() {
+    if (!initialized) return;
+    loggerPtr = nullptr;
+    eventsPtr = nullptr;
+    modelCachePtr = nullptr;
+    editors.clear();
+    activeEditor = 0;
+    initialized = false;
 }
 
 bool EditorEngine::spawnEditor(const EventPayload& payload) {
@@ -55,7 +95,7 @@ bool EditorEngine::spawnEditor(const EventPayload& payload) {
         unsigned int linkedID = data->modelID;
 
         if (linkedID == 0) {
-            for (auto const& [id, model] : ModelCache::modelIDMap) {
+            for (auto const& [id, model] : modelCachePtr->modelIDMap) {
                 if (model->getProgram()) {
                     if (model->getProgram()->fragPath == data->filePath || 
                         model->getProgram()->vertPath == data->filePath) {
@@ -79,10 +119,10 @@ bool EditorEngine::spawnEditor(const EventPayload& payload) {
             editors.push_back(new Editor(filePath, fileName, 0));
             return true;
         } catch (const std::filesystem::filesystem_error& e) {
-            Logger::addLog(LogLevel::ERROR, "EditorEngine::createFile", std::string("Filesystem error: ") + e.what());
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "EditorEngine::createFile", std::string("Filesystem error: ") + e.what());
         }
     } else {
-        Logger::addLog(LogLevel::ERROR, "spawnEditor", "Invalid Payload Type");
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "spawnEditor", "Invalid Payload Type");
     }
 
     return false;
@@ -100,7 +140,7 @@ bool EditorEngine::renameEditor(const EventPayload& payload) {
             }
         }
     } else {
-        Logger::addLog(LogLevel::ERROR, "renameEditor", "Invalid Payload Type");
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "renameEditor", "Invalid Payload Type");
     }
     return false;
 }
@@ -117,23 +157,9 @@ bool EditorEngine::deleteEditor(const EventPayload& payload) {
             }
         }
     } else {
-        Logger::addLog(LogLevel::ERROR, "renameEditor", "Invalid Payload Type");
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "renameEditor", "Invalid Payload Type");
     }
     return false;
-}
-
-std::string EditorEngine::getFileContents(std::string filename) {
-    std::ifstream in(filename, std::ios::binary);
-    if (in) {
-        std::string contents;
-        in.seekg(0, std::ios::end);
-        contents.resize(in.tellg());
-        in.seekg(0, std::ios::beg);
-        in.read(&contents[0], contents.size());
-        in.close();
-        return(contents);
-    }
-    return "";
 }
 
 void EditorEngine::createFile(const std::string& filePath) {

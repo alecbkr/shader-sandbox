@@ -4,8 +4,12 @@
 
 #include "EventTypes.hpp"
 #include "imgui.h"
-#include "ui/EditorUI.hpp"
+//#include "ui/EditorUI.hpp"
 #include "ui/TextEditor.h"
+
+class Logger;
+class EventDispatcher;
+class ModelCache;
 
 struct Editor {
     TextEditor textEditor;
@@ -18,15 +22,19 @@ struct Editor {
 
 class EditorEngine {
 public:
-    static std::vector<Editor*> editors;
-    static int activeEditor;
-    static bool initialize();
-    static std::string getFileContents(std::string filename);
-    static void createFile(const std::string& filePath);
-    static std::string findNextUntitledNumber();
+    EditorEngine();
+    std::vector<Editor*> editors;
+    int activeEditor;
+    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr);
+    void shutdown();
+    void createFile(const std::string& filePath);
+    std::string findNextUntitledNumber();
 private:
-    static bool spawnEditor(const EventPayload& payload);
-    static bool renameEditor(const EventPayload& payload);
-    static bool deleteEditor(const EventPayload& payload);
-    
+    bool initialized = false;
+    Logger* loggerPtr = nullptr;
+    EventDispatcher* eventsPtr = nullptr;
+    ModelCache* modelCachePtr = nullptr;
+    bool spawnEditor(const EventPayload& payload);
+    bool renameEditor(const EventPayload& payload);
+    bool deleteEditor(const EventPayload& payload); 
 };

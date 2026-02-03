@@ -21,14 +21,14 @@ struct ApplicationInitStruct {
 class Application {
 public:
     static bool initialize(AppContext& ctx);
-    static void runLoop();
-    static void renderUI();
-    static void shutdown();
+    static void runLoop(AppContext& ctx);
+    static void renderUI(AppContext& ctx);
+    static void shutdown(AppContext& ctx);
     // static void setAppStateControls(AppStateControls state);
     // static AppStateControls checkAppStateControls();
 
 private:
     static bool initialized;
     // static AppStateControls appControls;
-    static bool shouldClose();
+    static bool shouldClose(AppContext& ctx);
 };

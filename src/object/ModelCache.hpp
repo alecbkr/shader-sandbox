@@ -3,11 +3,12 @@
 #include <vector>
 #include "CustomModel.hpp"
 #include "ImportedModel.hpp"
-#include "core/logging/Logger.hpp"
-#include "core/InspectorEngine.hpp"
-#include "core/EventDispatcher.hpp"
-#include "core/ShaderRegistry.hpp"
-#include "core/UniformRegistry.hpp"
+
+class Logger;
+class InspectorEngine;
+class EventDispatcher;
+class ShaderRegistry;
+class UniformRegistry;
 
 static constexpr unsigned int INVALID_MODEL = UINT_MAX;
 

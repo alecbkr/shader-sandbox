@@ -4,7 +4,8 @@
 #include <unordered_map>
 #include <iostream>
 #include "engine/ShaderProgram.hpp"
-#include "core/logging/Logger.hpp"
+
+class Logger;
 
 class ShaderRegistry {
 public:

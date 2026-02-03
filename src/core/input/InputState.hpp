@@ -6,7 +6,6 @@
 
 #include "platform/components/Keys.hpp"
 #include "core/logging/Logger.hpp"
-#include "platform/Platform.hpp"
 
 class InputState {
 public:
@@ -15,7 +14,7 @@ public:
     std::vector<Key> pressedKeys;
 
     InputState();
-    bool initialize(Logger* _loggerPtr, Platform* _platformPtr);
+    bool initialize(Logger* _loggerPtr);
     void shutdown();
     void beginFrame(); // call before glfwPollEvents()
     bool isDownKey(Key key);
@@ -32,7 +31,6 @@ public:
 private:
     bool initialized = false;
     Logger* loggerPtr = nullptr;
-    Platform* platformPtr = nullptr;
     std::array<uint8_t, KEY_COUNT> down;
     std::array<uint8_t, KEY_COUNT> pressed;
     std::array<uint8_t, KEY_COUNT> released;

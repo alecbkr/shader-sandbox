@@ -2,10 +2,14 @@
 
 #include <memory>
 #include "../engine/Errorlog.hpp"
-#include "core/UniformRegistry.hpp"
 #include "core/UniformTypes.hpp"
 #include <algorithm>
 #include <iostream>
+#include "core/logging/Logger.hpp"
+#include "core/InspectorEngine.hpp"
+#include "core/EventDispatcher.hpp"
+#include "core/ShaderRegistry.hpp"
+#include "core/UniformRegistry.hpp"
 
 ModelCache::ModelCache() {
     initialized = false;
