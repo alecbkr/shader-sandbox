@@ -1,7 +1,7 @@
 #include "ImportedModel.hpp"
 
 #include "ModelImporter.hpp"
-#include "../engine/ErrorLog.hpp"
+#include "../engine/Errorlog.hpp"
 
 
 ImportedModel::ImportedModel(const unsigned int ID, std::string pathname) : Model(ID) {

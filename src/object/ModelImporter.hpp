@@ -7,7 +7,7 @@
 #include <vector>
 #include <memory>
 #include <string>
-#include "../engine/ErrorLog.hpp"
+#include "../engine/Errorlog.hpp"
 #include "MeshAssimp.hpp"
 #include "Vertex.hpp"
 #include "ImportedModel.hpp"

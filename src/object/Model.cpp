@@ -1,6 +1,6 @@
 #include "Model.hpp"
 #include "ModelImporter.hpp"
-#include "../engine/ErrorLog.hpp"
+#include "../engine/Errorlog.hpp"
 
 
 Model::Model(const unsigned int ID) : ID(ID) {
