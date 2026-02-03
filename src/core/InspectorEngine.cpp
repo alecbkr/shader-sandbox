@@ -7,6 +7,7 @@
 #include <vector>
 #include "core/ShaderRegistry.hpp"
 #include "core/UniformTypes.hpp"
+#include "core/logging/Logger.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "object/ModelCache.hpp"
 #include "object/Model.hpp"
@@ -42,6 +43,9 @@ void InspectorEngine::refreshUniforms() {
         if (model->getProgram() != nullptr) {
             const auto& programName = model->getProgram()->name;
             programToObjectList[programName].push_back(modelID);
+        }
+        else {
+            Logger::addLog(LogLevel::WARNING, "refreshUniforms", "object " + std::to_string(modelID) + " does not have a shader!");
         }
     }
 
