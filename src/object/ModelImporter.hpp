@@ -7,10 +7,11 @@
 #include <vector>
 #include <memory>
 #include <string>
-#include "../engine/Errorlog.hpp"
 #include "MeshAssimp.hpp"
 #include "Vertex.hpp"
 #include "ImportedModel.hpp"
+#include "core/logging/LogSink.hpp"
+#include "core/logging/Logger.hpp"
 
 
 struct ImportContext {
@@ -46,7 +47,7 @@ inline bool importModel(std::string path, ImportedModel& model) {
     const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        ERRLOG.logEntry(EL_WARNING, "MODEL_IMPORTER", "Model not found");
+        Logger::addLog(LogLevel::WARNING, "MODEL_IMPORTER", "Model not found");
         return false;
     }
 
@@ -140,7 +141,7 @@ static void processMesh(aiMesh *aimesh, const aiScene *scene, ImportedModel& mod
         loadTextures(material, textures, model, ctx);
 
         if (meshflags.hasUVs == false) {
-            ERRLOG.logEntry(EL_WARNING, "MODEL IMPORT", "Mesh has textures but no texture coordinates");
+            Logger::addLog(LogLevel::WARNING, "MODEL IMPORT", "Mesh has textures but no texture coordinates");
         }
     }
     model.getMeshes().push_back(MeshA(vertices, indices, textures, meshflags));
@@ -157,13 +158,13 @@ static void loadTextures(aiMaterial *mat, std::vector<std::shared_ptr<Texture>>&
         for (unsigned int idx = 0; idx < mat->GetTextureCount(aiType); idx++) {
             aiString aiTex;
             if (mat->GetTexture(aiType, idx, &aiTex) != AI_SUCCESS) {
-                ERRLOG.logEntry(EL_ERROR, "MODEL_IMPORT", "Assimp failed to get texture");
+                Logger::addLog(LogLevel::ERROR, "MODEL_IMPORT", "Assimp failed to get texture");
                 continue;
             }
 
             std::string filepath = ctx.directory + "/" + aiTex.C_Str();
             if (model.getTextures().contains(filepath) == false) {
-                ERRLOG.announce(("building texture: " + filepath).c_str());
+                Logger::addLog(LogLevel::INFO, "loadTextures", "building texture: " + filepath);
                 model.getTextures().try_emplace(filepath, std::make_shared<Texture>(filepath.c_str(), static_cast<TextureType>(type)));
             }
             

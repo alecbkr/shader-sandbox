@@ -3,7 +3,7 @@
 #include "core/EditorEngine.hpp"
 #include "core/InspectorEngine.hpp"
 #include "core/ShaderRegistry.hpp"
-#include "engine/Errorlog.hpp"
+#include "logging/Logger.hpp"
 #include "core/EventDispatcher.hpp"
 #include "object/ModelCache.hpp"
 #include <fstream>
@@ -75,6 +75,10 @@ bool HotReloader::attemptCompile(const std::string &fragShaderPath, const std::s
     ShaderProgram *oldProgram = ShaderRegistry::getProgram(programName);
     std::string vPath = (oldProgram) ? oldProgram->vertPath : "../shaders/default.vert";
 
+    if (programName == "") {
+        Logger::addLog(LogLevel::ERROR, "attemptCompile", "Shader name cannot be empty");
+        return false;
+    }
     ShaderProgram *newProgram = new ShaderProgram(
         vPath.c_str(), 
         fragShaderPath.c_str(),

@@ -1,6 +1,6 @@
 #include "Model.hpp"
 #include "ModelImporter.hpp"
-#include "../engine/Errorlog.hpp"
+#include "core/logging/Logger.hpp"
 
 
 Model::Model(const unsigned int ID) : ID(ID) {
@@ -12,12 +12,12 @@ Model::Model(const unsigned int ID) : ID(ID) {
 void Model::renderModel() {
     
     if (properties.hasMeshes == false) {
-        ERRLOG.logEntry(EL_WARNING, "MODEL", "Render failure, no meshes present");
+        Logger::addLog(LogLevel::WARNING, "MODEL", "Render failure, no meshes present");
         return;
     }
 
     if (properties.hasProgram == false) {
-        ERRLOG.logEntry(EL_WARNING, "MODEL", "Render failure, no shader program present");
+        Logger::addLog(LogLevel::WARNING, "MODEL", "Render failure, no shader program present");
         return;
     }
 

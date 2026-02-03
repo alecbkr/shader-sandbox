@@ -1,6 +1,5 @@
 #include "presets/PresetAssets.hpp"
 #include "object/TextureType.hpp"
-
 MeshData PresetAssets::planeMesh{};
 MeshData PresetAssets::pyramidMesh{};
 MeshData PresetAssets::cubeMesh{};
@@ -10,6 +9,7 @@ Texture PresetAssets::faceTex{"", TEX_DIFFUSE};
 Texture PresetAssets::metalTex{"", TEX_DIFFUSE};
 Texture PresetAssets::gridTex{"", TEX_DIFFUSE};
 
+// We need to define these now, but they need to be initialized AFTER the logger.
 bool PresetAssets::initialize() {
     PresetAssets::planeMesh.verts = {
         -1.0f, 0.0f, -1.0f,  0.0f, 0.0f,
