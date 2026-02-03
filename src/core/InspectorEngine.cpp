@@ -1,6 +1,9 @@
 #include "InspectorEngine.hpp"
+#include "core/logging/LogSink.hpp"
 #include "logging/Logger.hpp"
 #include "core/UniformRegistry.hpp"
+#include <memory>
+#include <string>
 #include <unordered_map>
 #include <sstream>
 #include <iostream>
@@ -40,9 +43,9 @@ void InspectorEngine::refreshUniforms() {
         // separate them so that debugger works.
         const auto& modelID = pair.first;
         const auto& model = pair.second;
-        if (model->getProgram() != nullptr) {
-            const auto& programName = model->getProgram()->name;
-            programToObjectList[programName].push_back(modelID);
+        ShaderProgram* modelProgram = ShaderRegistry::getProgram(model->getProgramID());
+        if (modelProgram != nullptr) {
+            programToObjectList[model->getProgramID()].push_back(modelID);
         }
         else {
             Logger::addLog(LogLevel::WARNING, "refreshUniforms", "object " + std::to_string(modelID) + " does not have a shader!");
@@ -100,22 +103,14 @@ bool InspectorEngine::handleEditShaderProgram(const std::string& vertexFile, con
         InspectorEngine::refreshUniforms();
         return true;
     }
-    ShaderProgram* newProgram = new ShaderProgram(vertexFile.c_str(), fragmentFile.c_str(), programName.c_str());
+
+    // Otherwise, we need to go through this mess.
+    std::unique_ptr<ShaderProgram> newProgram = std::make_unique<ShaderProgram>(vertexFile.c_str(), fragmentFile.c_str(), programName.c_str());
     if (!newProgram->isCompiled()) {
-        if (oldProgram && oldProgram->isCompiled()) {
-            oldProgram->use();
-        } else {
-            glUseProgram(0);
-        }
-        delete newProgram;
         return false;
     }
-    ShaderRegistry::replaceProgram(programName, newProgram);
 
-    if (oldProgram) {
-        oldProgram->kill();
-        delete oldProgram;
-    }
+    ShaderRegistry::replaceProgram(programName, newProgram.release());
 
     InspectorEngine::refreshUniforms();
     return true;
@@ -147,7 +142,7 @@ std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const Sh
             if (typePair != typeMap.end()) {
                 uniform.type = typePair->second;
             } else {
-                // Logger::addLog(LogLevel::WARNING, "parseUniforms", "Invalid Uniform Type: ", word.c_str());
+                // Logger::addLog(LogLevel::WARNING, "parseUniforms", lynvalid Uniform Type: ", word.c_str());
                 Logger::addLog(LogLevel::WARNING, "parseUnifroms", "Invalid Uniform Type: ", word); 
                 continue;
             }
@@ -228,12 +223,17 @@ void InspectorEngine::applyAllUniformsForObject(unsigned int modelID) {
 void InspectorEngine::applyUniform(unsigned int modelID, const Uniform& uniform) {
     if (!ModelCache::modelIDMap.contains(modelID)) {
         // ERRLOG.logEntry(EL_WARNING, "applyUniform", (modelID + " not found in registry").c_str());
-        Logger::addLog(LogLevel::WARNING, "applyUniform", (modelID + " not found in registry")); 
+        Logger::addLog(LogLevel::WARNING, "applyUniform", std::to_string(modelID) + " not found in registry"); 
         return;
     }
     Model& model = *ModelCache::modelIDMap.at(modelID);
-    ShaderProgram* program = ShaderRegistry::getProgram(model.getProgram()->name);
-    applyUniform(*program, uniform);
+    ShaderProgram* modelProgram = ShaderRegistry::getProgram(model.getProgramID());
+    if (modelProgram == nullptr) {
+        Logger::addLog(LogLevel::ERROR, "applyUniform", "model " + std::to_string(modelID) + " has no shader program!");
+        return;
+    }
+
+    applyUniform(*modelProgram, uniform);
 }
 
 void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& uniform) {
@@ -258,13 +258,12 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
     case UniformType::Mat4:
         program.setUniform_mat4float(uniform.name.c_str(), std::get<glm::mat4>(uniform.value));
         break;
-            /*
     case UniformType::Sampler2D: {
+        break; // don't do anything yet
         const InspectorSampler2D& sampler = std::get<InspectorSampler2D>(uniform.value);
         program.setUniform_int(uniform.name.c_str(), sampler.textureUnit);
         break;
     }
-    */
     default:
         // Logger::addLog(LogLevel::WARNING, "applyUniform", "Invalid Uniform Type: ");
         Logger::addLog(LogLevel::WARNING, "applyUniform", "Invalid Uniform Type: " + to_string(uniform.type)); 
@@ -279,18 +278,22 @@ void InspectorEngine::applyInput(unsigned int modelID, const Uniform& uniform) {
 }
 void InspectorEngine::reloadUniforms(unsigned int modelID) {
     Model* targetModel = ModelCache::getModel(modelID);
-    if (!targetModel || !targetModel->getProgram()) return;
 
-    std::string programName = targetModel->getProgram()->name;
-    ShaderProgram* newProgram = ShaderRegistry::getProgram(programName);
-    
-    if (newProgram == nullptr || !newProgram->isCompiled()) return;
+    if (targetModel == nullptr) {
+        Logger::addLog(LogLevel::WARNING, "reloadUnioforms", "model " + std::to_string(modelID) + " does not exist!");
+        return;
+    }
+    ShaderProgram* modelProgram = ShaderRegistry::getProgram(targetModel->getProgramID());
+    if (modelProgram != nullptr || !modelProgram->isCompiled()) {
+        Logger::addLog(LogLevel::WARNING, "reloadUnioforms", "model " + std::to_string(modelID) + " has no shader! or is not compiled");
+        return;
+    }
 
-    auto newUniforms = parseUniforms(*newProgram);
+    auto newUniforms = parseUniforms(*modelProgram);
 
     for (auto& [id, modelPtr] : ModelCache::modelIDMap) {
-        if (modelPtr && modelPtr->getProgram() && modelPtr->getProgram()->name == programName) {
-            modelPtr->setProgram(*newProgram); 
+        if (modelPtr && modelPtr->getProgramID() == modelProgram->name) {
+            modelPtr->setProgramID(modelProgram->name); 
             const auto* existingRegistry = UNIFORM_REGISTRY.tryReadUniforms(id);
             if (existingRegistry) {
                 for (auto& [uName, uData] : newUniforms) {
@@ -301,7 +304,7 @@ void InspectorEngine::reloadUniforms(unsigned int modelID) {
             }
 
             UNIFORM_REGISTRY.insertUniformMap(id, newUniforms);
-            newProgram->use();
+            modelProgram->use();
             applyAllUniformsForObject(id);
         }
     }

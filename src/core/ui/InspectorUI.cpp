@@ -14,11 +14,9 @@
 #include "object/Texture.hpp"
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include "core/FileRegistry.hpp"
-#include "presets/PresetAssets.hpp"
 
 int InspectorUI::height = 400;
 int InspectorUI::width = 400;
@@ -73,8 +71,9 @@ void InspectorUI::render() {
 void InspectorUI::drawUniformInspector() {
     int imGuiID = 0;
     for (auto &[modelID, model] : ModelCache::modelIDMap) {
-        if (model->getProgram() == nullptr) {
-            // show models with no shader...
+        ShaderProgram* modelProgram = ShaderRegistry::getProgram(model->getProgramID());
+        if (modelProgram == nullptr) {
+            // don't show models with no shader...
             continue;
         }
         std::string label = "model " + std::to_string(modelID);
@@ -387,7 +386,8 @@ void InspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, ShaderLink
             fragChoices.push_back(filePath.c_str());
         }
         else {
-            Logger::addLog(LogLevel::WARNING, "drawShaderLinkMenu", "Shader file type " + extension + " not supported, only .vert and .frag");
+            //Logger::addLog(LogLevel::INFO, "drawShaderLinkMenu", "Shader file type " + extension + " not supported, only .vert and .frag");
+            // release this later when we determine shader choices differently
         }
     }
 
@@ -449,7 +449,14 @@ void InspectorUI::initializeMenu(ModelShaderMenu& menu, const std::vector<const 
             continue;
         }
 
-        if (shader->ID == model.getProgram()->ID) {
+        ShaderProgram* modelProgram = ShaderRegistry::getProgram(model.getProgramID());
+        if (modelProgram == nullptr) {
+            menu.selection = 0;
+            menu.initialized = true;
+            return;
+        }
+
+        if (shaderName == modelProgram->name) {
             menu.selection = i;
             menu.initialized = true;
         }
@@ -482,6 +489,7 @@ void InspectorUI::initializeMenu(ModelTextureMenu& menu) {
 void InspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, const std::vector<const char*>& vertChoices, const std::vector<const char*>& geoChoices, const std::vector<const char*>& fragChoices) {
     // for  conciseness, put newSelector logic up here into a separate variable.
     bool changed = false;
+    ShaderLinkMenu oldMenu = menu;
 
     if (ImGui::Combo("Vertex Shader", &menu.vertSelection, vertChoices.data(), (int)vertChoices.size())) { 
         changed = true; 
@@ -504,7 +512,9 @@ void InspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, const std::vector<con
         const std::string vert = vertChoices[menu.vertSelection];
         const std::string frag = fragChoices[menu.fragSelection];
         const std::string& name = menu.shaderName;
-        InspectorEngine::handleEditShaderProgram(vert, frag, name);
+        if (!InspectorEngine::handleEditShaderProgram(vert, frag, name)) {
+            menu = oldMenu;
+        }
     }
 }
 
