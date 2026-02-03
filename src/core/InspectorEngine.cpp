@@ -213,6 +213,7 @@ void InspectorEngine::applyAllUniformsForObject(unsigned int modelID) {
     if (objectUniforms == nullptr) {
         // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", modelID.c_str());
         Logger::addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", std::to_string(modelID)); 
+        return;
     }
 
     for (auto& [uniformName, uniform] : *objectUniforms) {
@@ -272,16 +273,32 @@ void InspectorEngine::applyInput(unsigned int modelID, const Uniform& uniform) {
     UNIFORM_REGISTRY.registerUniform(modelID, uniform);
     applyUniform(modelID, uniform);
 }
-void InspectorEngine::reloadUniforms(const std::string &programName){
-    ShaderProgram *newProgram = ShaderRegistry::getProgram(programName);
-    if (!newProgram || !newProgram->isCompiled()){
-        return;
-    }
-    std::unordered_map<std::string, Uniform> newUniformMap = parseUniforms(*newProgram);
-    for (auto& [modelID, modelPtr] : ModelCache::modelIDMap) {
-        if (modelPtr->getProgram()->name == programName) {
-            UNIFORM_REGISTRY.insertUniformMap(modelID, newUniformMap);
-            applyAllUniformsForObject(modelID);
+void InspectorEngine::reloadUniforms(unsigned int modelID) {
+    Model* targetModel = ModelCache::getModel(modelID);
+    if (!targetModel || !targetModel->getProgram()) return;
+
+    std::string programName = targetModel->getProgram()->name;
+    ShaderProgram* newProgram = ShaderRegistry::getProgram(programName);
+    
+    if (newProgram == nullptr || !newProgram->isCompiled()) return;
+
+    auto newUniforms = parseUniforms(*newProgram);
+
+    for (auto& [id, modelPtr] : ModelCache::modelIDMap) {
+        if (modelPtr && modelPtr->getProgram() && modelPtr->getProgram()->name == programName) {
+            modelPtr->setProgram(*newProgram); 
+            const auto* existingRegistry = UNIFORM_REGISTRY.tryReadUniforms(id);
+            if (existingRegistry) {
+                for (auto& [uName, uData] : newUniforms) {
+                    if (existingRegistry->contains(uName)) {
+                        uData.value = existingRegistry->at(uName).value;
+                    }
+                }
+            }
+
+            UNIFORM_REGISTRY.insertUniformMap(id, newUniforms);
+            newProgram->use();
+            applyAllUniformsForObject(id);
         }
     }
 }

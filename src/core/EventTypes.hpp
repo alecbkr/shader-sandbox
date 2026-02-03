@@ -18,11 +18,11 @@ enum EventType {
     DeleteFile,
 };
 
-struct SaveActiveShaderFilePayload { std::string filePath; std::string programName; };
+struct SaveActiveShaderFilePayload { std::string filePath; unsigned int modelID; };
 struct ReloadShaderPayload { std::string programName; };
 struct WindowResizePayload { int w, h; };
 struct KeyPressedPayload { int key; };
-struct OpenFilePayload { std::string filePath; std::string fileName; };
+struct OpenFilePayload { std::string filePath; std::string fileName; unsigned int modelID; };
 struct RenameFilePayload { std::string oldName, newName; };
 struct DeleteFilePayload { std::string fileName; };
 
@@ -43,8 +43,8 @@ struct Event {
     EventPayload payload;
 };
 
-inline Event MakeSaveActiveShaderFileEvent(std::string filePath, std::string programName) {
-    return { SaveActiveShaderFile, false, SaveActiveShaderFilePayload{filePath, programName} };
+inline Event MakeSaveActiveShaderFileEvent(std::string filePath, unsigned int modelID) {
+    return { SaveActiveShaderFile, false, SaveActiveShaderFilePayload{filePath, modelID} };
 };
 
 inline Event MakeReloadShaderEvent(std::string programName) {
@@ -63,8 +63,8 @@ inline Event MakeQuitAppEvent() {
     return { Quit, false, std::monostate{} };
 };
 
-inline Event OpenFileEvent(std::string filePath, std::string fileName) {
-    return { OpenFile, false, OpenFilePayload{filePath, fileName} };
+inline Event OpenFileEvent(std::string filePath, std::string fileName, unsigned int modelID) {
+    return { OpenFile, false, OpenFilePayload{filePath, fileName, modelID} };
 }
 
 inline Event NewFileEvent() {

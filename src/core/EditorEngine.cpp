@@ -4,32 +4,41 @@
 
 #include "logging/Logger.hpp"
 #include "core/EventDispatcher.hpp"
+#include "object/ModelCache.hpp"
 
 
 std::vector<Editor*> EditorEngine::editors{};
 int EditorEngine::activeEditor = -1;
 
-Editor::Editor(unsigned int bufferSize, std::string filePath, std::string fileName) {
-    this->bufferSize = bufferSize;
-    this->inputTextBuffer = new char[bufferSize];
+Editor::Editor(std::string filePath, std::string fileName, unsigned int modelID) {
     this->filePath = filePath;
     this->fileName = fileName;
+    this->modelID = modelID;
 
-    strcpy(this->inputTextBuffer, EditorEngine::getFileContents(filePath).c_str());
+    auto lang = TextEditor::LanguageDefinition::GLSL();
+    // Will probably need to find the entire list of glsl keywords
+    const char* const glslKeywords[] = {
+        "vec2", "vec3", "vec4", "mat2", "mat3", "mat4", "sampler2D", "samplerCube", 
+        "out", "in", "uniform", "layout"
+    };
 
-    this->lineCount = 1;
+    for (auto& k : glslKeywords)
+        lang.mKeywords.insert(k);
 
-    int i = 0;
-    while (this->inputTextBuffer[i] != '\0') {
-        if (this->inputTextBuffer[i] == '\n') this->lineCount++;
-        i++;
-    }
+    this->textEditor.SetLanguageDefinition(lang);
+    auto palette = TextEditor::GetDarkPalette();
+    this->textEditor.SetShowWhitespaces(false);
 
-    this->previousTextLen = i;
+    // Change palette colors here
+    palette[(int)TextEditor::PaletteIndex::Identifier] = 0xff9cdcfe;
+    palette[(int)TextEditor::PaletteIndex::Keyword] = 0xffd197d9;
+    textEditor.SetPalette(palette);
+
+    std::string content = EditorEngine::getFileContents(filePath);
+    this->textEditor.SetText(content);
 }
 
 void Editor::destroy() {
-    free(inputTextBuffer);
     delete this;
 }
 
@@ -43,18 +52,32 @@ bool EditorEngine::initialize() {
 
 bool EditorEngine::spawnEditor(const EventPayload& payload) {
     if (const auto* data = std::get_if<OpenFilePayload>(&payload)) {
-        if (!data->filePath.empty()) {
-            editors.push_back(new Editor(2056, data->filePath, data->fileName));
-        } else {
-            editors.push_back(new Editor(2056, "../shaders/texture.frag", "texture.frag"));
+        unsigned int linkedID = data->modelID;
+
+        if (linkedID == 0) {
+            for (auto const& [id, model] : ModelCache::modelIDMap) {
+                if (model->getProgram()) {
+                    if (model->getProgram()->fragPath == data->filePath || 
+                        model->getProgram()->vertPath == data->filePath) {
+                        linkedID = id;
+                        break;
+                    }
+                }
+            }
         }
+        if (!data->filePath.empty()) {
+            editors.push_back(new Editor(data->filePath, data->fileName, linkedID));
+        } else {
+            editors.push_back(new Editor("../shaders/tex.frag", "tex.frag", linkedID));
+        }
+        return true;
     } else if (std::get_if<std::monostate>(&payload)) {
         try {
             const std::string fileName = "Untitled " + findNextUntitledNumber();
             const std::string filePath = "../shaders/" + fileName;
             createFile(filePath);
-            editors.push_back(new Editor(2056, filePath, fileName));
-
+            editors.push_back(new Editor(filePath, fileName, 0));
+            return true;
         } catch (const std::filesystem::filesystem_error& e) {
             Logger::addLog(LogLevel::ERROR, "EditorEngine::createFile", std::string("Filesystem error: ") + e.what());
         }
@@ -124,96 +147,4 @@ std::string EditorEngine::findNextUntitledNumber() {
     int i = 0;
     while (std::filesystem::exists("../shaders/Untitled " + std::to_string(i))) i++;
     return std::to_string(i);
-}
-
-int EditorEngine::EditorInputCallback(ImGuiInputTextCallbackData* data) {
-    Editor* editor = static_cast<Editor*>(data->UserData);
-
-    if (data->EventFlag == ImGuiInputTextFlags_CallbackEdit) {
-        updatePropertiesDueToMassDelete(data, editor);
-        matchBrace(data, editor);
-        updateLineCount(data, editor);
-        updatePropertiesDueToMassInsert(data, editor);
-    }
-
-    editor->previousTextLen = data->BufTextLen;
-
-    return 0;
-}
-
-void EditorEngine::updatePropertiesDueToMassDelete(ImGuiInputTextCallbackData* data, Editor* editor) {
-    if (data->BufTextLen < editor->previousTextLen - 1) {
-        int newLineCount = 1;
-        int i = 0;
-        while (data->Buf[i] != '\0') {
-            if (data->Buf[i] == '\n') newLineCount++;
-            i++;
-        }
-
-        editor->lineCount = newLineCount;
-    }
-}
-
-void EditorEngine::updatePropertiesDueToMassInsert(ImGuiInputTextCallbackData* data, Editor* editor) {
-    if (data->BufTextLen > editor->previousTextLen + 1) {
-        int newLineCount = 1;
-        int i = 0;
-        while (data->Buf[i] != '\0') {
-            if (data->Buf[i] == '\n') newLineCount++;
-            i++;
-        }
-
-        editor->lineCount = newLineCount;
-    }
-}
-
-void EditorEngine::matchBrace(ImGuiInputTextCallbackData* data, Editor* editor) {
-    if (data->CursorPos < 2) return;
-
-    bool newLineInserted = data->BufTextLen == editor->previousTextLen + 1 && data->Buf[data->CursorPos - 1] == '\n';
-    bool openBraceExists = data->Buf[data->CursorPos - 2] == '{';
-
-    if (newLineInserted && openBraceExists) {
-        int backIndex = data->CursorPos - 3;
-        std::string tabString;
-        while (backIndex >= 0 && data->Buf[backIndex] != '\n') {
-            if (data->Buf[backIndex] == '\t') {
-                tabString += "\t";
-            }
-            backIndex--;
-        }
-
-        std::string closeBrace = tabString + "\t\n" + tabString + "}";
-
-        data->InsertChars(data->CursorPos, closeBrace.c_str());
-
-        data->CursorPos -= 2 + tabString.length();
-        editor->lineCount+=2;
-    }
-}
-
-void EditorEngine::updateLineCount(ImGuiInputTextCallbackData* data, Editor* editor) {
-    char* previousBuffer = editor->inputTextBuffer;
-
-    if (data->BufTextLen == editor->previousTextLen - 1 && previousBuffer[data->CursorPos] == '\n') {
-        editor->lineCount--;
-    }
-
-    if (data->CursorPos < 1) return;
-
-    if (data->BufTextLen == editor->previousTextLen + 1 && data->Buf[data->CursorPos - 1] == '\n') {
-        int backIndex = data->CursorPos - 2;
-        std::string tabString;
-        while (backIndex >= 0 && data->Buf[backIndex] != '\n') {
-            if (data->Buf[backIndex] == '\t') {
-                tabString += "\t";
-            }
-            backIndex--;
-        }
-
-        data->InsertChars(data->CursorPos, tabString.c_str());
-
-        editor->lineCount++;
-    }
-
 }
