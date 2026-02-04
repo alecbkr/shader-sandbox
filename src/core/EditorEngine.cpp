@@ -1,4 +1,5 @@
 #include "EditorEngine.hpp"
+#include "ShaderRegistry.hpp"
 
 #include <fstream>
 
@@ -56,9 +57,11 @@ bool EditorEngine::spawnEditor(const EventPayload& payload) {
 
         if (linkedID == 0) {
             for (auto const& [id, model] : ModelCache::modelIDMap) {
-                if (model->getProgram()) {
-                    if (model->getProgram()->fragPath == data->filePath || 
-                        model->getProgram()->vertPath == data->filePath) {
+
+                ShaderProgram* modelProgram = ShaderRegistry::getProgram(model->getProgramID());
+                if (modelProgram != nullptr) {
+                    if (modelProgram->fragPath == data->filePath || 
+                        modelProgram->vertPath == data->filePath) {
                         linkedID = id;
                         break;
                     }

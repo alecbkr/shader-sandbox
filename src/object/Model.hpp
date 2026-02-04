@@ -34,7 +34,7 @@ class Model {
         void rotate(float angle, glm::vec3 axis);
 
         // SETTERS
-        void setProgram(ShaderProgram &program);
+        void setProgramID(std::string &programID);
         virtual void setMesh(std::vector<float> vertices, std::vector<unsigned int> indices, bool hasPos, bool hasNorm, bool hasUV);
         virtual void addTexture(std::string pathname);
 
@@ -43,7 +43,7 @@ class Model {
         void setRotation(float angle, glm::vec3 axis);
 
         // GETTERS
-        ShaderProgram* getProgram();
+        std::string getProgramID();
         const int getID();
 
         glm::vec3 getPosition();
@@ -61,7 +61,7 @@ class Model {
         glm::vec3 scale       = glm::vec3(1.0f);
         glm::vec4 rotation    = glm::vec4(0.0f); // raw values for orientation calc
         glm::quat orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-        ShaderProgram *program = nullptr;
+        std::string programID; 
         void calcModelM();
         void bindTextures(MeshA& mesh);
 };

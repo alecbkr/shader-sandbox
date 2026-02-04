@@ -14,11 +14,9 @@ bool HotReloader::initialize() {
     if (const auto* data = std::get_if<SaveActiveShaderFilePayload>(&payload)) {
         
         Model* model = ModelCache::getModel(data->modelID);
-        if (!model || !model->getProgram()) return false;
+        if (!model) return false;
 
-            std::string progName = model->getProgram()->name;
-
-            if (HotReloader::compile(data->filePath, progName)) {
+            if (HotReloader::compile(data->filePath, model->getProgramID())) {
                 InspectorEngine::reloadUniforms(data->modelID); 
                 return true;
             }
