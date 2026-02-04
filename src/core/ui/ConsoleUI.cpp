@@ -110,6 +110,8 @@ const void ConsoleUI::drawMenuBar() {
                 ImGui::MenuItem("Shader", nullptr, &togStates.isShowShader); 
                 ImGui::MenuItem("System", nullptr, &togStates.isShowSystem); 
                 ImGui::MenuItem("Assets", nullptr, &togStates.isShowAssets);
+                ImGui::MenuItem("UI", nullptr, &togStates.isShowUI); 
+                ImGui::MenuItem("Other", nullptr, &togStates.isShowOther);
                 ImGui::PopItemFlag(); 
                 ImGui::EndMenu(); 
             }
@@ -171,6 +173,13 @@ void ConsoleUI::updateSearchAndScroll(const std::deque<LogEntry> &logs, bool& is
             if (log.level == LogLevel::ERROR   && !togStates.isShowError)   return "";
             if (log.level == LogLevel::WARNING && !togStates.isShowWarning) return "";
             if (log.level == LogLevel::INFO    && !togStates.isShowInfo)    return "";
+            if (!togStates.isShowUI) return ""; 
+            if (!togStates.isShowAssets) return ""; 
+            if (!togStates.isShowShader) return ""; 
+            if (!togStates.isShowOther) return "";  
+            if (!togStates.isShowSystem) return ""; 
+            
+
             return ConsoleUI::formatLogString(log); 
         });
     }
@@ -213,6 +222,11 @@ void ConsoleUI::drawSingleLog(const LogEntry& log, int idx, int repeatCount, boo
     if (log.level == LogLevel::ERROR && !togStates.isShowError) return; 
     if (log.level == LogLevel::WARNING && !togStates.isShowWarning) return; 
     if (log.level == LogLevel::INFO && !togStates.isShowInfo) return; 
+    if (log.category == LogCategory::UI && !togStates.isShowUI) return; 
+    if (log.category == LogCategory::ASSETS && !togStates.isShowAssets) return; 
+    if (log.category == LogCategory::SHADER && !togStates.isShowShader) return; 
+    if (log.category == LogCategory::OTHER && !togStates.isShowOther) return;  
+    if (log.category == LogCategory::SYSTEM && !togStates.isShowSystem) return; 
     
     LogStyle style = getLogStyle(log);
     ImGui::PushID(idx);

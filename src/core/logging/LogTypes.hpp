@@ -1,6 +1,7 @@
 #include <string>
 #include <string_view>
-#include <sstream>    
+#include <sstream> 
+#include "LogClassifier.hpp"   
 
 enum class LogLevel {
     CRITICAL = 0, 
@@ -14,6 +15,8 @@ struct LogEntry {
     std::string src;
     std::string msg;
     std::string additional; 
+    LogCategory category; 
+    std::string fileName; 
     int lineNum;       
 };
 

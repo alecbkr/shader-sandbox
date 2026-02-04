@@ -9,7 +9,7 @@
 #include "../logging/Logger.hpp"
 #include "../logging/ConsoleSink.hpp"
 #include "../ConsoleEngine.hpp"
-#include "engine/SearchText.hpp"
+#include "components/SearchText.hpp"
 
 struct ConsoleBtns {
     bool isAutoScroll; 

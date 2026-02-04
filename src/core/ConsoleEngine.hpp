@@ -16,6 +16,7 @@ struct ConsoleActions {
     static const std::string SHOW_SHADER; 
     static const std::string SHOW_SYSTEM; 
     static const std::string SHOW_ASSETS; 
+    static const std::string SHOW_OTHER;
 };
 
 struct ConsoleToggles {
@@ -32,6 +33,8 @@ struct ConsoleToggles {
     bool isShowShader;
     bool isShowSystem;
     bool isShowAssets;
+    bool isShowUI; 
+    bool isShowOther; 
 }; 
 
 class ConsoleEngine {

@@ -1,5 +1,5 @@
 #include "ConsoleEngine.hpp"
-
+#include "logging/Logger.hpp"
 bool ConsoleEngine::initialized = false;
 std::shared_ptr<ConsoleSink> ConsoleEngine::logSrc = nullptr;
 std::unordered_map<std::string, std::function<void()>> ConsoleEngine::btnRegistry;
@@ -15,6 +15,7 @@ const std::string ConsoleActions::SHOW_INFO = "show_info";
 const std::string ConsoleActions::SHOW_SHADER = "show_shader";
 const std::string ConsoleActions::SHOW_SYSTEM = "show_system"; 
 const std::string ConsoleActions::SHOW_ASSETS = "show_assets"; 
+const std::string ConsoleActions::SHOW_OTHER = "show_other"; 
 
 // default toggle settings in the console 
 ConsoleToggles ConsoleEngine::toggles = {
@@ -25,7 +26,9 @@ ConsoleToggles ConsoleEngine::toggles = {
     .isShowInfo = true, 
     .isShowShader = true, 
     .isShowSystem = true,
-    .isShowAssets = true, 
+    .isShowAssets = true,
+    .isShowUI = true, 
+    .isShowOther = true  
 };
 
 bool ConsoleEngine::initialize(std::shared_ptr<ConsoleSink> consoleSink)
@@ -53,7 +56,7 @@ bool ConsoleEngine::initialize(std::shared_ptr<ConsoleSink> consoleSink)
         toggles.isShowInfo = state; 
     });
     // TODO: implement other filters that filter by the log's source 
-
+    Logger::addLog(LogLevel::INFO, "Console Engine", "This is a test message"); 
     initialized = true;
     return true;
 }

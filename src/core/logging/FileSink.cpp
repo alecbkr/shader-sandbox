@@ -47,7 +47,8 @@ void FileSink::addLog(const LogEntry& entry) {
     auto now = std::chrono::system_clock::now(); 
     std::string timestamp = std::format("{:%Y-%m-%d %H:%M:%SZ}", now); 
 
-    std::string newLog = std::format("[{}] [{}{}] {}{}\n", 
+    std::string newLog = std::format("'{}' [{}] [{}{}] {}{}\n", 
+        entry.fileName, 
         timestamp, 
         alert.str(), 
         entry.src, 
