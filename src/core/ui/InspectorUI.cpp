@@ -136,10 +136,8 @@ void InspectorUI::drawObjectsInspector() {
                 drawModelOrientationInput(model.get());
                 ImGui::TreePop();
             }
-            if (ImGui::TreeNode("mesh")) {
-                ImGui::TreePop();
-            }
             if (ImGui::TreeNode("textures")) {
+                // Can't do this yet...
                 if (!textureMenu.initialized) {
                     //initializeMenu(textureMenu);
                 }
@@ -616,7 +614,7 @@ bool InspectorUI::drawUniformInputValue(glm::vec3* value, Uniform* uniform) {
     bool changed = false;
     bool useColorPicker = false;
     if (uniform != nullptr) {
-        ImGui::Checkbox("Use Color Picker", &uniform->useAlternateEditor);
+        changed |= ImGui::Checkbox("Use Color Picker", &uniform->useAlternateEditor);
         useColorPicker = uniform->useAlternateEditor;
     }
 
@@ -686,14 +684,84 @@ bool InspectorUI:: drawUniformInputValue(InspectorSampler2D* value, Uniform* uni
     return drawUniformInputValue(&value->textureUnit);
 }
 
+bool InspectorUI::drawUniformInputValue(UniformFunction* value, Uniform* uniform) {
+    // For now we only support references. This will be a bigger system later
+    value->initialized = false;
+    bool changed = false;
+    std::vector<std::string> modelNames;
+    std::vector<const char* > modelChoices{""};
+    std::vector<unsigned int> modelIDs{0};
+    modelNames.reserve(ModelCache::modelIDMap.size());
+    modelChoices.reserve(ModelCache::modelIDMap.size() + 1);
+    modelIDs.reserve(ModelCache::modelIDMap.size() + 1);
+    int i = 0;
+    for (auto& [modelID, model] : ModelCache::modelIDMap) {
+        modelNames.push_back(std::to_string(modelID));
+        modelChoices.push_back(modelNames[i].c_str());
+        modelIDs.push_back(modelID);
+        i++;
+    }
+    
+    changed |= ImGui::Combo("Models", &value->modelSelection, modelChoices.data(), modelChoices.size());
+
+    if (value->modelSelection == 0) {
+        return changed;
+    }
+
+    value->referencedModelID = modelIDs[value->modelSelection];
+    const auto modelUniforms = UNIFORM_REGISTRY.tryReadUniforms(value->referencedModelID);
+    if (modelUniforms == nullptr) {
+        Logger::addLog(LogLevel::ERROR, "drawUniformInputValue", "modelID " + std::to_string(value->referencedModelID) + " not found in Uniform Registry!");
+        return false;
+    }
+
+    std::vector<const char*> uniformChoices{""}; 
+    for (auto& [uniformName, uniform] : *modelUniforms) {
+        uniformChoices.push_back(uniformName.c_str());
+    }
+
+    changed |= ImGui::Combo("Uniforms", &value->uniformSelection, uniformChoices.data(), uniformChoices.size());
+
+    if (value->uniformSelection > 0) {
+        // add input validation here!
+        value->referencedUniformName = uniformChoices[value->uniformSelection];
+        value->initialized = true;
+    }
+
+    return changed;
+}
+
 void InspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID) {
     if (ImGui::TreeNode(uniform.name.c_str())) {
         bool changed = false;
+        bool changedFunctionBox = false;
+
+        changedFunctionBox |= ImGui::Checkbox("Use Function", &uniform.isFunction);
+
+        if (changedFunctionBox) {
+            // new function
+            Logger::addLog(LogLevel::INFO, "hi", "clicked button");
+            if (uniform.isFunction) {
+                uniform.isFunction = true;
+                uniform.value = UniformFunction{
+                    .modelSelection = 0,
+                    .uniformSelection = 0,
+                    .returnType = uniform.type
+                };
+                uniform.type = UniformType::Function;
+            }
+            else {
+                uniform.isFunction = false;
+                uniform.type = std::get<UniformFunction>(uniform.value).returnType;
+                uniform.value = InspectorEngine::getDefaultValue(uniform.type);
+            }
+        }
+
         std::visit([&](auto& val){
             changed = drawUniformInputValue(&val, &uniform);
         }, uniform.value);
 
-        if (changed) {
+        if (changed || changedFunctionBox) {
             InspectorEngine::applyInput(modelID, uniform);
         }
 

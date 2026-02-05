@@ -62,6 +62,7 @@ class InspectorUI {
     static bool drawUniformInputValue(glm::mat4* value, Uniform* uniform = nullptr);
     static bool drawUniformInputValue(glm::quat* value, Uniform* uniform = nullptr);
     static bool drawUniformInputValue(InspectorSampler2D* value, Uniform* uniform = nullptr);
+    static bool drawUniformInputValue(UniformFunction* value, Uniform* uniform);
     static void drawUniformInput(Uniform& uniform, const std::string& objectName);
     static void drawUniformInput(Uniform& uniform, unsigned int modelID);
     static bool drawModelPositionInput(Model* model);

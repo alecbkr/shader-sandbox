@@ -154,7 +154,6 @@ std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const Sh
                 uniform.name.pop_back();
             }
 
-            uniform.ref.shaderName = program.name;
             programUniforms[uniform.name] = uniform;
             std::cout << "Read " << uniform.name << std::endl;
         }
@@ -187,6 +186,34 @@ void InspectorEngine::assignDefaultValue(Uniform& uniform) {
         Logger::addLog(LogLevel::WARNING, "assignDefaultValue", "Invalid Uniform Type, making it an int"); 
         uniform.type = UniformType::Int;
         uniform.value = 0;
+        break;
+    }
+}
+
+UniformValue InspectorEngine::getDefaultValue(UniformType type) {
+    switch (type) {
+    case UniformType::Int:
+        return 0;
+        break;
+    case UniformType::Float:
+        return 0.0f;
+        break;
+    case UniformType::Vec3:
+        return glm::vec3(0.0f);
+        break;
+    case UniformType::Vec4:
+        return glm::vec4(0.0f);
+        break;
+    case UniformType::Mat4:
+        return glm::mat4(0.0f);
+        break;
+    case UniformType::Sampler2D:
+        return 0; // Default to texture unit 0
+        break;
+    default:
+        // Logger::addLog(LogLevel::WARNING, "assignDefaultValue", "Invalid Uniform Type, making it an int");
+        Logger::addLog(LogLevel::WARNING, "getDefaultValue", "Invalid Uniform Type, making it an int"); 
+        return 0;
         break;
     }
 }
@@ -264,6 +291,24 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
         program.setUniform_int(uniform.name.c_str(), sampler.textureUnit);
         break;
     }
+    case UniformType::Function: {
+        // Get info from the reference and then apply it to this uniform.
+        // Add input validation here!!!
+        const UniformFunction& function = std::get<UniformFunction>(uniform.value);
+        if (!function.initialized) {
+            // No need to log this, we'll show it in the UI.
+            return;
+        }
+        const Uniform* referencedUniform = UNIFORM_REGISTRY.tryReadUniform(function.referencedModelID, function.referencedUniformName); 
+        if (referencedUniform == nullptr) {
+            Logger::addLog(LogLevel::ERROR, "applyUniform: Function, ", "referenced uniform for " + std::to_string(function.referencedModelID) + ": " + function.referencedUniformName + "does not exist!");
+            return;
+        }
+        Uniform copy = *referencedUniform;
+        copy.name = uniform.name;
+        applyUniform(program, copy);
+        break;
+    }
     default:
         // Logger::addLog(LogLevel::WARNING, "applyUniform", "Invalid Uniform Type: ");
         Logger::addLog(LogLevel::WARNING, "applyUniform", "Invalid Uniform Type: " + to_string(uniform.type)); 
@@ -280,12 +325,12 @@ void InspectorEngine::reloadUniforms(unsigned int modelID) {
     Model* targetModel = ModelCache::getModel(modelID);
 
     if (targetModel == nullptr) {
-        Logger::addLog(LogLevel::WARNING, "reloadUnioforms", "model " + std::to_string(modelID) + " does not exist!");
+        Logger::addLog(LogLevel::WARNING, "reloadUniforms", "model " + std::to_string(modelID) + " does not exist!");
         return;
     }
     ShaderProgram* modelProgram = ShaderRegistry::getProgram(targetModel->getProgramID());
     if (modelProgram == nullptr || !modelProgram->isCompiled()) {
-        Logger::addLog(LogLevel::WARNING, "reloadUnioforms", "model " + std::to_string(modelID) + " has no shader! or is not compiled");
+        Logger::addLog(LogLevel::WARNING, "reloadUniforms", "model " + std::to_string(modelID) + " has no shader! or is not compiled");
         return;
     }
 
