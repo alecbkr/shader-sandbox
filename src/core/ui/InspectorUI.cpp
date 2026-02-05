@@ -696,6 +696,10 @@ bool InspectorUI::drawUniformInputValue(UniformFunction* value, Uniform* uniform
     modelIDs.reserve(ModelCache::modelIDMap.size() + 1);
     int i = 0;
     for (auto& [modelID, model] : ModelCache::modelIDMap) {
+        // avoid circular references
+        if (modelID == uniform->modelID) {
+            continue;
+        }
         modelNames.push_back(std::to_string(modelID));
         modelChoices.push_back(modelNames[i].c_str());
         modelIDs.push_back(modelID);
@@ -704,6 +708,9 @@ bool InspectorUI::drawUniformInputValue(UniformFunction* value, Uniform* uniform
     
     changed |= ImGui::Combo("Models", &value->modelSelection, modelChoices.data(), modelChoices.size());
 
+    if (changed) {
+        value->uniformSelection = 0;
+    }
     if (value->modelSelection == 0) {
         return changed;
     }
@@ -717,6 +724,9 @@ bool InspectorUI::drawUniformInputValue(UniformFunction* value, Uniform* uniform
 
     std::vector<const char*> uniformChoices{""}; 
     for (auto& [uniformName, uniform] : *modelUniforms) {
+        if (uniform.type != value->returnType) {
+            continue;
+        }
         uniformChoices.push_back(uniformName.c_str());
     }
 
@@ -732,6 +742,8 @@ bool InspectorUI::drawUniformInputValue(UniformFunction* value, Uniform* uniform
 }
 
 void InspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID) {
+    // It should be noted, uniform is always a COPY of the value from uniform registry
+    // so if we want changes to last they must be applied with applyInput
     if (ImGui::TreeNode(uniform.name.c_str())) {
         bool changed = false;
         bool changedFunctionBox = false;
@@ -740,19 +752,16 @@ void InspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID) {
 
         if (changedFunctionBox) {
             // new function
-            Logger::addLog(LogLevel::INFO, "hi", "clicked button");
             if (uniform.isFunction) {
                 uniform.isFunction = true;
                 uniform.value = UniformFunction{
-                    .modelSelection = 0,
-                    .uniformSelection = 0,
-                    .returnType = uniform.type
+                    .modelSelection = 0, .uniformSelection = 0,
+                    .returnType = uniform.type,
+                    .initialized = false,
                 };
-                uniform.type = UniformType::Function;
             }
             else {
                 uniform.isFunction = false;
-                uniform.type = std::get<UniformFunction>(uniform.value).returnType;
                 uniform.value = InspectorEngine::getDefaultValue(uniform.type);
             }
         }

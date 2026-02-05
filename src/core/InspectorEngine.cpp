@@ -1,5 +1,6 @@
 #include "InspectorEngine.hpp"
 #include "core/logging/LogSink.hpp"
+#include "engine/Errorlog.hpp"
 #include "logging/Logger.hpp"
 #include "core/UniformRegistry.hpp"
 #include <memory>
@@ -7,6 +8,7 @@
 #include <unordered_map>
 #include <sstream>
 #include <iostream>
+#include <unordered_set>
 #include <vector>
 #include "core/ShaderRegistry.hpp"
 #include "core/UniformTypes.hpp"
@@ -179,7 +181,7 @@ void InspectorEngine::assignDefaultValue(Uniform& uniform) {
         uniform.value = glm::mat4(0.0f);
         break;
     case UniformType::Sampler2D:
-        uniform.value = 0; // Default to texture unit 0
+        uniform.value = InspectorSampler2D{.textureUnit = 0}; // Default to texture unit 0
         break;
     default:
         // Logger::addLog(LogLevel::WARNING, "assignDefaultValue", "Invalid Uniform Type, making it an int");
@@ -208,7 +210,7 @@ UniformValue InspectorEngine::getDefaultValue(UniformType type) {
         return glm::mat4(0.0f);
         break;
     case UniformType::Sampler2D:
-        return 0; // Default to texture unit 0
+        return InspectorSampler2D{.textureUnit = 0}; // Default to texture unit 0
         break;
     default:
         // Logger::addLog(LogLevel::WARNING, "assignDefaultValue", "Invalid Uniform Type, making it an int");
@@ -265,20 +267,32 @@ void InspectorEngine::applyUniform(unsigned int modelID, const Uniform& uniform)
 
 void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& uniform) {
     program.use();
+
+    // Get info from the reference and then apply it to this uniform.
+    // Add input validation here!!!
+    // Also, at some point, we're going to want a memo so we don't do link list traversal if things haven't changed
+    if (uniform.isFunction) {
+
+        const UniformFunction* function = std::get_if<UniformFunction>(&uniform.value);
+        if (function == nullptr) {
+            Logger::addLog(LogLevel::ERROR, "applyUniform", "isFunction is set but uniform: " + uniform.name + " does not have a function value!");
+            return;
+        }
+        applyFunction(program, uniform, *function);
+        return;
+    }
+
     switch (uniform.type)
     {
     case UniformType::Int:
         program.setUniform_int(uniform.name.c_str(), std::get<int>(uniform.value));
         break;
-
     case UniformType::Float:
         program.setUniform_float(uniform.name.c_str(), std::get<float>(uniform.value));
         break;
-
     case UniformType::Vec3:
         program.setUniform_vec3float(uniform.name.c_str(), std::get<glm::vec3>(uniform.value));
         break;
-
     case UniformType::Vec4:
         program.setUniform_vec4float(uniform.name.c_str(), std::get<glm::vec4>(uniform.value));
         break;
@@ -291,29 +305,82 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
         program.setUniform_int(uniform.name.c_str(), sampler.textureUnit);
         break;
     }
-    case UniformType::Function: {
-        // Get info from the reference and then apply it to this uniform.
-        // Add input validation here!!!
-        const UniformFunction& function = std::get<UniformFunction>(uniform.value);
-        if (!function.initialized) {
-            // No need to log this, we'll show it in the UI.
-            return;
-        }
-        const Uniform* referencedUniform = UNIFORM_REGISTRY.tryReadUniform(function.referencedModelID, function.referencedUniformName); 
-        if (referencedUniform == nullptr) {
-            Logger::addLog(LogLevel::ERROR, "applyUniform: Function, ", "referenced uniform for " + std::to_string(function.referencedModelID) + ": " + function.referencedUniformName + "does not exist!");
-            return;
-        }
-        Uniform copy = *referencedUniform;
-        copy.name = uniform.name;
-        applyUniform(program, copy);
-        break;
-    }
     default:
         // Logger::addLog(LogLevel::WARNING, "applyUniform", "Invalid Uniform Type: ");
         Logger::addLog(LogLevel::WARNING, "applyUniform", "Invalid Uniform Type: " + to_string(uniform.type)); 
         break;
     }
+    return;
+}
+
+void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& uniform, const UniformFunction& function) {
+    // Going to have to rework this once we get more functions
+    // If at any point we run into an invalid function, we should use a default value as to not break the rest of the program.
+    bool validFunction = false;
+
+    // Traverse function like a graph. Will need to implement some kind of DFS or something eventually to avoid slowness
+    std::unordered_set<unsigned int> modelIDs;
+    UniformFunction currentFunction = function;
+    Uniform currentUniform = uniform;
+    Uniform finalValue;
+    while (currentUniform.isFunction) {
+        modelIDs.insert(currentUniform.modelID);
+        if (!currentFunction.initialized) {
+            break;
+        }
+
+        if (currentFunction.returnType != currentUniform.type) {
+            Logger::addLog(LogLevel::ERROR, "applyFunction", 
+                        "return type mismatch: function returns " + to_string(currentFunction.returnType) 
+                        + ", uniform expects " + to_string(currentUniform.type));
+            break;
+        }
+        if (modelIDs.contains(currentFunction.referencedModelID)) {
+            Logger::addLog(LogLevel::ERROR, "applyFunction", 
+                        "function references same model (ID " + std::to_string(currentFunction.referencedModelID) + "), would create circular reference");
+            break;
+        }
+
+        const Uniform* referencedUniform = UNIFORM_REGISTRY.tryReadUniform(currentFunction.referencedModelID, currentFunction.referencedUniformName); 
+        if (referencedUniform == nullptr) {
+            Logger::addLog(LogLevel::ERROR, "applyUniform: Function, ", "referenced uniform for " + std::to_string(currentFunction.referencedModelID) + ": " + currentFunction.referencedUniformName + "does not exist!");
+            break;
+        }
+
+        // This is the only successful path
+        if (!referencedUniform->isFunction) {
+            if (referencedUniform->type != currentFunction.returnType) {
+                Logger::addLog(LogLevel::ERROR, "applyFunction", 
+                            "reference type mismatch: referenced uniform has type " + to_string(referencedUniform->type) 
+                            + ", uniform expects " + to_string(currentUniform.type));
+                break;
+            }
+            finalValue = *referencedUniform;
+            finalValue.name = uniform.name;
+
+            validFunction = true;
+            break;
+        }
+
+        const UniformFunction* referencedFunction = std::get_if<UniformFunction>(&referencedUniform->value);
+        if (referencedFunction == nullptr) {
+            Logger::addLog(LogLevel::ERROR, "applyUniform", "isFunction is set but uniform: " + uniform.name + " does not have a function value!");
+            break;
+        }
+        
+        currentFunction = *referencedFunction;
+        currentUniform = *referencedUniform;
+    }
+
+    // in case of an invalid function, we need to just assign it a default value not to break things.
+    if (!validFunction) {
+        finalValue = uniform;
+        finalValue.isFunction = false;
+        finalValue.type = function.returnType;
+        finalValue.value = getDefaultValue(finalValue.type);
+    }
+
+    applyUniform(program, finalValue);
 }
 
 // Include this along with setUniform because setUniform is used for other stuff.

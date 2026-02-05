@@ -13,7 +13,6 @@ enum class UniformType {
     Vec4,
     Mat4,
     Sampler2D,
-    Function 
 };
 
 inline std::string to_string(UniformType type) {
@@ -25,7 +24,6 @@ inline std::string to_string(UniformType type) {
         case UniformType::Vec4:       return "Vec4";
         case UniformType::Mat4:       return "Mat4";
         case UniformType::Sampler2D:  return "Sampler2D";
-        case UniformType::Function: return "Function";
     }
     return "Unknown(string for this type not added yet!";
 }
@@ -35,9 +33,8 @@ struct InspectorSampler2D {
 };
 
 struct UniformFunction {
-    int modelSelection;
-    int uniformSelection;
-    unsigned int modelID;
+    int modelSelection = 0; 
+    int uniformSelection = 0;
     unsigned int referencedModelID;
     std::string referencedUniformName;
     UniformType returnType;
@@ -50,9 +47,9 @@ struct Uniform {
     std::string name;
     UniformType type;
     UniformValue value;
+    unsigned int modelID; // set automatically when you register the uniform
     bool isFunction = false;
     bool isReadOnly = false;
-    // This setting is for the color picker, etc.
-    bool useAlternateEditor = false;
+    bool useAlternateEditor = false; // This setting is for the color picker, etc.
 };
 

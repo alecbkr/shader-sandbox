@@ -21,6 +21,7 @@ public:
 private:
     static void applyUniform(unsigned int modelID, const Uniform& uniform);
     static void applyUniform(ShaderProgram& program, const Uniform& uniform);
+    static void applyFunction(ShaderProgram& program, const Uniform& uniform, const UniformFunction& function);
     static const std::unordered_map<std::string, UniformType> typeMap; // Kept private
     static std::unordered_map<std::string, Uniform> parseUniforms(const ShaderProgram& program);
 };
