@@ -2,12 +2,7 @@
 #include <iostream>
 #include <chrono>
 #include <format>
-
-struct LogFileInfo {
-    std::filesystem::path path; 
-    uintmax_t size; 
-    std::filesystem::file_time_type lastWritten; 
-}; 
+#include <algorithm>
 
 FileSink::FileSink(const std::filesystem::path &log_dir) : log_dir(log_dir), logIdx(findNextLogIndex()) {
     if(!std::filesystem::is_directory(log_dir)) {
@@ -66,10 +61,14 @@ void FileSink::rotateLogFile(){
 
     logIdx++; 
 
+    if (logIdx >= MAX_LOG_AMOUNT) {
+        logIdx = 0; 
+    }
+
     std::string filename = "log_" + std::to_string(logIdx) + ".txt"; 
     currLogFilePath = log_dir / filename; 
 
-    activeLogFile.open(currLogFilePath, std::ios::out | std::ios::app);
+    activeLogFile.open(currLogFilePath, std::ios::out | std::ios::trunc);
 
     clearOldLog(); 
 }
@@ -119,17 +118,18 @@ void FileSink::clearOldLog(){
         if(log.is_regular_file()) {
             std::string fileName = log.path().filename().string(); 
             LogFileInfo newFileInfo{log.path(), log.file_size(), log.last_write_time()}; 
-
             logs.push_back(newFileInfo); 
             totalLogSize += log.file_size(); 
-
-
         }
     }
 
     if(totalLogSize < MAX_LOGS_SIZE) {
         return;  
     }
+
+    std::sort (logs.begin(), logs.end(), [](const LogFileInfo& a, const LogFileInfo& b) {
+        return a.lastWritten < b.lastWritten; 
+    });
 
     // iterate through the logs vector to determine oldest log and remove one or more oldest log files
     for(const LogFileInfo &log : logs) {

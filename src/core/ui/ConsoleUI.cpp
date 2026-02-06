@@ -24,7 +24,7 @@ bool ConsoleUI::initialize() {
     initialized = true;
     return true;
 }
-
+ 
 // change this to draw the entire componenet 
 const void ConsoleUI::render() {
     if (!initialized) return;
