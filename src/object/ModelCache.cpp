@@ -1,14 +1,13 @@
 #include "ModelCache.hpp"
 
 #include <memory>
-#include "../engine/Errorlog.hpp"
 #include "core/InspectorEngine.hpp"
 #include "core/UniformRegistry.hpp"
-#include "core/UniformTypes.hpp"
 #include "core/EventDispatcher.hpp"
 #include "core/ShaderRegistry.hpp"
 #include <algorithm>
-#include <iostream>
+#include <string>
+#include "core/logging/Logger.hpp"
 
 std::unordered_map<unsigned int, std::unique_ptr<Model>> ModelCache::modelIDMap;
 std::vector<std::unique_ptr<Model>> ModelCache::modelCache; 
@@ -20,16 +19,14 @@ bool ModelCache::initialize() {
         
         if (const auto* data = std::get_if<ReloadShaderPayload>(&payload)) {
             
-            ShaderProgram* newProg = ShaderRegistry::getProgram(data->programName);
-            if (newProg) {
-                for (auto& [ID, model] : modelIDMap) {
-                    if (model->getProgram()->name == data->programName) {
-                        model->setProgram(*newProg);
-                    }
+            std::string programName = data->programName;
+            for (auto& [ID, model] : modelIDMap) {
+                if (model->getProgramID() == programName) {
+                    model->setProgramID(programName);
                 }
-                reorderByProgram();
-                return true;
             }
+            reorderByProgram();
+            return true;
         }
         return false;
     });
@@ -45,7 +42,7 @@ unsigned int ModelCache::createModel(
 ) {
 
     if (modelIDMap.contains(nextModelID)) {
-        ERRLOG.logEntry(EL_ERROR, "MODEL_CACHE", "createModel failed, ID already in use", nextModelID);
+        Logger::addLog(LogLevel::ERROR, "MODEL_CACHE", "createModel failed, ID already in use", std::to_string(nextModelID));
         return INVALID_MODEL;
     }
     
@@ -63,7 +60,7 @@ unsigned int ModelCache::createModel(
 unsigned int ModelCache::createModel(std::string pathname) {
 
     if (modelIDMap.contains(nextModelID)) {
-        ERRLOG.logEntry(EL_ERROR, "MODEL_CACHE", "createModel failed, ID already in use", nextModelID);
+        Logger::addLog(LogLevel::ERROR, "MODEL_CACHE", "createModel failed, ID already in use", std::to_string(nextModelID));
         return INVALID_MODEL;
     }
 
@@ -79,7 +76,7 @@ unsigned int ModelCache::createModel(std::string pathname) {
 void ModelCache::translateModel(unsigned int ID, glm::vec3 pos) {
     Model* model = getModel(ID);
     if (model == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Model ID not found:", ID);
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(ID));
         return;
     }
     model->translate(pos);
@@ -89,7 +86,7 @@ void ModelCache::translateModel(unsigned int ID, glm::vec3 pos) {
 void ModelCache::scaleModel(unsigned int ID, glm::vec3 scale) {
     Model* model = getModel(ID);
     if (model == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Model ID not found:", ID);
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(ID));
         return;
     }
     model->rescale(scale);
@@ -99,7 +96,7 @@ void ModelCache::scaleModel(unsigned int ID, glm::vec3 scale) {
 void ModelCache::rotateModel(unsigned int ID, float angle, glm::vec3 axis) {
     Model* model = getModel(ID);
     if (model == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Model ID not found:", ID);
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(ID));
         return;
     }
     model->rotate(angle, axis);
@@ -109,7 +106,7 @@ void ModelCache::rotateModel(unsigned int ID, float angle, glm::vec3 axis) {
 void ModelCache::setTexture(unsigned int ID, std::string pathname, std::string uniformName) {
     Model* model = getModel(ID);
     if (model == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Model ID not found:", ID);
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(ID));
         return;
     }
 
@@ -120,11 +117,11 @@ void ModelCache::setTexture(unsigned int ID, std::string pathname, std::string u
 void ModelCache::setProgram(unsigned int ID, ShaderProgram &program) {
     Model* model = getModel(ID);
     if (model == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Model ID not found:", ID);
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(ID));
         return;
     }
 
-    model->setProgram(program);
+    model->setProgramID(program.name);
     reorderByProgram();
 }
 
@@ -132,11 +129,15 @@ void ModelCache::setProgram(unsigned int ID, ShaderProgram &program) {
 void ModelCache::renderModel(unsigned int ID, glm::mat4 perspective, glm::mat4 view) {
     Model* model = getModel(ID);
     if (model == nullptr) {
-        ERRLOG.logEntry(EL_WARNING, "OBJECT CACHE", "Model ID not found:", ID);
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(ID));
         return;
     }
 
-    ShaderProgram* currProgram = model->getProgram();
+    ShaderProgram* currProgram = ShaderRegistry::getProgram(model->getProgramID());
+    if (currProgram == nullptr) {
+        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Shader ID not found:", model->getProgramID());
+        return;
+    }
     currProgram->use();
     currProgram->setUniform_mat4float("projection", perspective);
     currProgram->setUniform_mat4float("view", view);
@@ -148,44 +149,30 @@ void ModelCache::renderModel(unsigned int ID, glm::mat4 perspective, glm::mat4 v
 void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view) {
     ShaderProgram *currProgram = nullptr;
     for (auto& currModel : modelCache) {
-        if (currModel->getProgram() == nullptr) continue;
+        ShaderProgram* modelProgram = ShaderRegistry::getProgram(currModel->getProgramID());
+        if (modelProgram == nullptr) continue;
 
-        if (currProgram == nullptr || currProgram->ID != currModel.get()->getProgram()->ID) {
-            currProgram = currModel.get()->getProgram();
+        if (currProgram == nullptr || currProgram->ID != modelProgram->ID) {
+            currProgram = modelProgram;
             currProgram->use();
         }
         
+        UNIFORM_REGISTRY.registerUniform(currModel->ID, {"projection", UniformType::Mat4, perspective});
+        UNIFORM_REGISTRY.registerUniform(currModel->ID, {"view", UniformType::Mat4, view});
+        UNIFORM_REGISTRY.registerUniform(currModel->ID, {"model", UniformType::Mat4, currModel->modelM});
 
-        Uniform uPerspective{
-            .name = "projection",
-            .type = UniformType::Mat4,
-            .value = perspective
-        };
-        Uniform uView{
-            .name = "view",
-            .type = UniformType::Mat4,
-            .value = view
-        };
-        Uniform uModel{
-            .name = "model",
-            .type = UniformType::Mat4,
-            .value = currModel->modelM
-        };
-        UNIFORM_REGISTRY.registerUniform(currModel->ID, uPerspective);
-        UNIFORM_REGISTRY.registerUniform(currModel->ID, uView);
-        UNIFORM_REGISTRY.registerUniform(currModel->ID, uModel);
         InspectorEngine::applyAllUniformsForObject(currModel->ID); //TODO InspectorEngine
-        currProgram->setUniform_mat4float("projection", perspective);
-        currProgram->setUniform_mat4float("view", view);
-        currProgram->setUniform_mat4float("model", currModel->modelM);
-        currModel.get()->renderModel();
+        currModel->renderModel();
     }
 }
 
 
 void ModelCache::printOrder() {
     for (auto& model : modelCache) {
-        std::cout << model->getProgram()->ID << std::endl;
+        
+        ShaderProgram* modelProgram = ShaderRegistry::getProgram(model->getProgramID());
+        if (modelProgram == nullptr) continue;
+        std::cout << modelProgram->ID << std::endl;
     }
 }
 
@@ -210,8 +197,8 @@ void ModelCache::reorderByProgram() {
         [](const std::unique_ptr<Model>& a, 
         const std::unique_ptr<Model>& b) 
     {  
-        auto* progA = a->getProgram();
-        auto* progB = b->getProgram();
+        auto* progA = ShaderRegistry::getProgram(a->getProgramID());
+        auto* progB = ShaderRegistry::getProgram(b->getProgramID());
     
         // Both null equal
         if (!progA && !progB)

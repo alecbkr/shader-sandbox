@@ -1,7 +1,7 @@
 #include "ShaderProgram.hpp"
-
 #include "GetFileContents.hpp"
-#include "../core/logging/Logger.hpp"
+#include "core/logging/LogSink.hpp"
+#include "core/logging/Logger.hpp"
 
 
 ShaderProgram::ShaderProgram(const char *vertShader_path, const char *fragShader_path, const char *name) : name(name) {
@@ -13,12 +13,16 @@ ShaderProgram::ShaderProgram(const char *vertShader_path, const char *fragShader
 
     if (vertShader_code == "" || fragShader_code == "") {
         if (vertShader_code == "") {
-            Logger::addLog(LogLevel::CRITICAL, "VERTEX SHADER", "failed to get code from path:", vertShader_path); 
+            Logger::addLog(LogLevel::CRITICAL, "VERTEX SHADER", "failed to get code from path:", vertShader_path);
         }
 
         if (fragShader_code == "") {
-            Logger::addLog(LogLevel::CRITICAL, "FRAGMENT SHADER", "failed to get code from path:", fragShader_path); 
+            Logger::addLog(LogLevel::CRITICAL, "FRAGMENT SHADER", "failed to get code from path:", fragShader_path);
         }
+        return;
+    }
+    if (this->name == "") {
+        Logger::addLog(LogLevel::CRITICAL, "ShaderProgram::ShaderProgram", "ShaderProgram created with empty name! Program will crash soon");
         return;
     }
     const char *vertShader_src = vertShader_code.c_str();
@@ -39,14 +43,16 @@ ShaderProgram::ShaderProgram(const char *vertShader_path, const char *fragShader
     if (!success) {
         char infoLog[512];
         glGetShaderInfoLog(vertShader, 512, NULL, infoLog);
-        Logger::addLog(LogLevel::CRITICAL, "VERTEX SHADER", "Compilation error:\n", infoLog); 
+        Logger::addLog(LogLevel::ERROR, "VERTEX SHADER", "Compilation error:\n", infoLog);
+        return;
     }
 
     glGetShaderiv(fragShader, GL_COMPILE_STATUS, &success);
     if (!success) {
         char infoLog[512];
         glGetShaderInfoLog(fragShader, 512, NULL, infoLog);
-        Logger::addLog(LogLevel::CRITICAL, "FRAGMENT SHADER", "Compilation error:\n", infoLog); 
+        Logger::addLog(LogLevel::ERROR, "FRAGMENT SHADER", "Compilation error:\n", infoLog);
+        return;
     }
 
     ID = glCreateProgram();
@@ -59,7 +65,8 @@ ShaderProgram::ShaderProgram(const char *vertShader_path, const char *fragShader
     if (!success) {
         char infoLog[512];
         glGetProgramInfoLog(ID, 512, NULL, infoLog);
-        Logger::addLog(LogLevel::CRITICAL, "SHADER LINK", infoLog); 
+        Logger::addLog(LogLevel::ERROR, "SHADER LINK", infoLog);
+        return;
     }
 
     if (success){
@@ -67,7 +74,7 @@ ShaderProgram::ShaderProgram(const char *vertShader_path, const char *fragShader
     } else {
         char infoLog[512];
         glGetProgramInfoLog(ID, 512, NULL, infoLog);
-        Logger::addLog(LogLevel::CRITICAL, "Shader Link Error: \n", infoLog); 
+        Logger::addLog(LogLevel::ERROR, "Shader Link Error:\n", infoLog);
         glDeleteProgram(ID);
         this->ID = 0;
         this->m_compiled = false;
@@ -97,7 +104,7 @@ void ShaderProgram::setUniform_int(const char *uniformName, int val) {
     if (ID == 0) return;
     GLint loc = glGetUniformLocation(ID, uniformName);
     if (loc == -1) {
-        Logger::addLog(LogLevel::WARNING, "SHADER UNIFORM: Int", "Location not found for:", uniformName); 
+        Logger::addLog(LogLevel::WARNING, "SHADER UNIFORM: Int", "Location not found for:", uniformName);
         return;
     }
     glUniform1i(loc, val);
@@ -119,7 +126,7 @@ void ShaderProgram::setUniform_vec3int(const char *uniformName, int xVal, int yV
     if (ID == 0) return;
     GLint loc = glGetUniformLocation(ID, uniformName);
     if (loc == -1) {
-        Logger::addLog(LogLevel::WARNING,"SHADER UNIFORM: Vec3int", "Location not found for:", uniformName); 
+        Logger::addLog(LogLevel::WARNING, "SHADER UNIFORM: Vec3int", "Location not found for:", uniformName);
         return;
     }
     glUniform3i(loc, xVal, yVal, zVal);
@@ -152,7 +159,7 @@ void ShaderProgram::setUniform_vec3float(const char *uniformName, glm::fvec3 val
     if (ID == 0) return;
     GLint loc = glGetUniformLocation(ID, uniformName);
     if (loc == -1) {
-        Logger::addLog(LogLevel::WARNING, "SHADER UNIFORM: Vec3float", "Location not found for:", uniformName); 
+        Logger::addLog(LogLevel::WARNING, "SHADER UNIFORM: Vec3float", "Location not found for:", uniformName);
         return;
     }
     glUniform3f(loc, vals.x, vals.y, vals.z);
@@ -162,7 +169,7 @@ void ShaderProgram::setUniform_vec4float(const char *uniformName, glm::fvec4 val
     if (ID == 0) return;
     GLint loc = glGetUniformLocation(ID, uniformName);
     if (loc == -1) {
-        Logger::addLog(LogLevel::WARNING, "SHADER UNIFORM: Vec3float", "Location not found for:", uniformName); 
+        Logger::addLog(LogLevel::WARNING, "SHADER UNIFORM: Vec3float", "Location not found for:", uniformName);
         return;
     }
     glUniform3f(loc, vals.x, vals.y, vals.z);
@@ -183,7 +190,7 @@ glm::vec3 ShaderProgram::getUniform_vec3float(const char* uniformName) {
     if (ID == 0) return glm::vec3(0);
     GLint loc = glGetUniformLocation(ID, uniformName);
     if (loc == -1) {
-        Logger::addLog(LogLevel::WARNING,  "SHADER UNIFORM: Vec3float", "Location not found for:", uniformName); 
+        Logger::addLog(LogLevel::WARNING, "SHADER UNIFORM: Vec3float", "Location not found for:", uniformName);
         return glm::vec3(0);
     }
 

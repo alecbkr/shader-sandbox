@@ -1,11 +1,11 @@
 #include "TextureRegistry.hpp"
-#include "logging/Logger.hpp"
+#include "core/logging/Logger.hpp"
 
 std::vector<const Texture*> TextureRegistry::textures;
 
 const Texture* TextureRegistry::tryReadTexture(int index) {
     if ((long long unsigned int)index < textures.size() && index > -1) {
-        Logger::addLog(LogLevel::WARNING, "eraseTexture", "invalid index!"); 
+        Logger::addLog(LogLevel::WARNING, "eraseTexture", "invalid index!");
         return textures.at(index);
     }
     else return nullptr;
@@ -21,7 +21,7 @@ void TextureRegistry::registerTexture(Texture* texture) {
 
 void TextureRegistry::eraseTexture(int index) {
     if ((long long unsigned int)index < textures.size() && index > -1) {
-        Logger::addLog(LogLevel::WARNING, "eraseTexture", "invalid index!"); 
+        Logger::addLog(LogLevel::WARNING, "eraseTexture", "invalid index!");
     }
     textures.erase(textures.begin() + index);
 }

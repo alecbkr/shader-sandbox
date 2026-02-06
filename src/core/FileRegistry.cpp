@@ -9,11 +9,12 @@
 std::unordered_map<std::string, ShaderFile*> FileRegistry::files;
 bool FileRegistry::initialized = false;
 
-ShaderFile::ShaderFile(std::string filePath, std::string fileName) {
+ShaderFile::ShaderFile(std::string filePath, std::string fileName, std::string extension) {
     this->state = NONE;
     this->filePath = filePath;
     this->fileName = fileName;
     this->renameBuffer = fileName;
+    this->extension = extension;
 }
 
 bool FileRegistry::initialize() {
@@ -30,8 +31,9 @@ void FileRegistry::reloadMap() {
     for (const auto & dirEntry : std::filesystem::directory_iterator("../shaders/")) {
         std::string filePath = dirEntry.path().string();
         std::string fileName = dirEntry.path().filename().string();
+        std::string fileExtension = dirEntry.path().extension().string();
         if (!tempMap.contains(fileName)) {
-            ShaderFile* shaderFile = new ShaderFile(filePath, fileName);
+            ShaderFile* shaderFile = new ShaderFile(filePath, fileName, fileExtension);
 
             if (files.contains(fileName)) {
                 shaderFile->state = files.at(fileName)->state;

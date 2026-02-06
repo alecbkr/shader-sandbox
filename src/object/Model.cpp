@@ -1,6 +1,8 @@
 #include "Model.hpp"
 #include "ModelImporter.hpp"
-#include "../engine/ErrorLog.hpp"
+#include "core/ShaderRegistry.hpp"
+#include "core/logging/Logger.hpp"
+#include "engine/ShaderProgram.hpp"
 
 
 Model::Model(const unsigned int ID) : ID(ID) {
@@ -10,14 +12,14 @@ Model::Model(const unsigned int ID) : ID(ID) {
 
 // -----FUNCTIONALITY
 void Model::renderModel() {
-    
+    ShaderProgram* program = ShaderRegistry::getProgram(programID); 
     if (properties.hasMeshes == false) {
-        ERRLOG.logEntry(EL_WARNING, "MODEL", "Render failure, no meshes present");
+        Logger::addLog(LogLevel::WARNING, "MODEL", "Render failure, no meshes present");
         return;
     }
 
     if (properties.hasProgram == false) {
-        ERRLOG.logEntry(EL_WARNING, "MODEL", "Render failure, no shader program present");
+        Logger::addLog(LogLevel::WARNING, "MODEL", "Render failure, no shader program present");
         return;
     }
 
@@ -60,8 +62,8 @@ void Model::rotate(float angle, glm::vec3 axis) {
 
 
 // -----SETTERS
-void Model::setProgram(ShaderProgram &program) {
-    this->program = &program;
+void Model::setProgramID(std::string& programID) {
+    this->programID = programID;
     properties.hasProgram = true;
 }
 
@@ -104,8 +106,8 @@ void Model::calcModelM() {
 }
 
 
-ShaderProgram* Model::getProgram() {
-    return program;
+std::string Model::getProgramID() {
+    return programID;
 }
 
 

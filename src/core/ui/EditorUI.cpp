@@ -15,36 +15,7 @@ float EditorUI::targetHeight = 0.0f;
 ImVec2 EditorUI::windowPos = ImVec2(0, 0);
 
 void renderEditor(Editor* editor) {
-    ImGuiTableFlags lineNumberFlags = ImGuiTableFlags_BordersInnerV;
-    ImGuiInputTextFlags textBoxFlags = ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_CallbackEdit;
-
-    if (ImGui::BeginTable("##LineNumContainer", 2, lineNumberFlags, ImVec2(-1, -1))) {
-        ImGui::TableSetupColumn("##LineNumberColumn", ImGuiTableColumnFlags_WidthFixed, ((int)std::log10((float) editor->lineCount) + 1)*6);
-        ImGui::TableSetupColumn("##EditorColumn", ImGuiTableColumnFlags_WidthStretch);
-
-        ImGui::TableNextRow();
-        ImGui::TableSetColumnIndex(0);
-
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ImGui::GetStyle().ItemSpacing.x, 0.0f));
-        for (int i = 1; i <= editor->lineCount; i++) {
-            ImGui::Text(std::to_string(i).c_str());
-        }
-        ImGui::PopStyleVar();
-
-        ImGui::TableSetColumnIndex(1);
-        ImGui::InputTextMultiline(
-            "##EditorTextBox",
-            editor->inputTextBuffer,
-            editor->bufferSize,
-            ImVec2(-1, ImGui::GetContentRegionAvail().y + editor->lineCount*13),
-            textBoxFlags,
-            EditorEngine::EditorInputCallback,
-            editor
-        );
-
-        ImGui::EndTable();
-    }
+    editor->textEditor.Render("ShaderEditor");
 }
 
 void EditorUI::render() {
