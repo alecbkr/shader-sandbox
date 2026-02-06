@@ -1,12 +1,28 @@
 #include "UniformRegistry.hpp"
 #include "engine/Errorlog.hpp"
+#include "core/logging/Logger.hpp"
 
 
-UniformRegistry::UniformRegistry() {}
+UniformRegistry::UniformRegistry() {
+    initialized = false;
+    uniforms.clear();
+}
 
-UniformRegistry& UniformRegistry::instance() {
-    static UniformRegistry inst;
-    return inst;
+bool UniformRegistry::initialize(Logger* _loggerPtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Uniform Registry Initialization", "Uniform Registry was already initialized.");
+        return false;
+    }
+    loggerPtr = _loggerPtr;
+    uniforms.clear();
+    initialized = true;
+    return true;
+}
+
+void UniformRegistry::shutdown() {
+    loggerPtr = nullptr;
+    uniforms.clear();
+    initialized = false;
 }
 
 /*

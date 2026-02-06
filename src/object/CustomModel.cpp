@@ -1,12 +1,12 @@
 #include "CustomModel.hpp"
-#include "../engine/Errorlog.hpp"
 
+#include "core/logging/Logger.hpp"
 
-CustomModel::CustomModel(const unsigned int ID) : Model(ID) {
+CustomModel::CustomModel(const unsigned int ID, ShaderRegistry* shaderRegPtr, Logger* _loggerPtr)
+    : Model(ID, shaderRegPtr, _loggerPtr), loggerPtr(_loggerPtr) {
     all_meshes.push_back(MeshA());
     meshptr = &all_meshes.back();
 }
-
 
 void CustomModel::setMesh(std::vector<float> raw_vertices, std::vector<unsigned int> indices, bool hasPos, bool hasNorm, bool hasUV) {
     meshptr->unloadFromGPU();
@@ -17,7 +17,7 @@ void CustomModel::setMesh(std::vector<float> raw_vertices, std::vector<unsigned 
     rowstride += 2*hasUV;
 
     if (raw_vertices.size() % rowstride != 0) {
-        ERRLOG.logEntry(EL_ERROR, "MODEL_ADDMESH", "passed vertex data is wrong");
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODEL_ADDMESH", "passed vertex data is wrong");
         return;
     }
 

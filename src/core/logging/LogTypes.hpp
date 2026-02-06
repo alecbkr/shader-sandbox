@@ -4,7 +4,7 @@
 
 enum class LogLevel {
     CRITICAL = 0, 
-    ERROR = 1,
+    LOG_ERROR = 1,
     WARNING = 2,
     INFO = 3
 }; 

@@ -10,6 +10,9 @@
 #include "MeshAssimp.hpp"
 #include "Texture.hpp"
 
+class ShaderRegistry;
+class Logger;
+
 class Model {
     private:
         struct ModelFlags {
@@ -20,10 +23,13 @@ class Model {
 
     public:
         const unsigned int ID;
+        ShaderRegistry* shaderRegPtr = nullptr;
+        Logger* loggerPtr = nullptr;
         std::string name; // PLACEHOLDER does not do anything rn
         glm::mat4 modelM = glm::mat4(1.0f);
-        
-        Model(const unsigned int ID);
+    
+        Model() = delete;
+        Model(const unsigned int ID, ShaderRegistry* _shaderRegPtr, Logger* _loggerPtr);
         // FUNCTIONALITY
         void renderModel();
         void unloadModel();

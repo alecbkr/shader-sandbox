@@ -1,5 +1,5 @@
 #include "platform/components/Keys.hpp"
-#include <GLFW/glfw3.h>
+#include "platform/GL.hpp"
 
 Key translateGlfwKey(int glfwKey) {
     switch (glfwKey) {

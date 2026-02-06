@@ -3,13 +3,19 @@
 #include "imgui/imgui.h"
 #include "core/MenuEngine.hpp"
 
+class Logger;
+class EventDispatcher;
+
 class MenuUI {
 public:
-    static bool initialize();
-    static void render();
+    MenuUI();
+    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr);
+    void render();
 
 private:
-    static bool initialized;
-    static void drawMenuBar();
-    static void drawMenuItem(const MenuItem& item);
+    bool initialized = false;
+    Logger* loggerPtr = nullptr;
+    EventDispatcher* eventsPtr = nullptr;
+    void drawMenuBar();
+    void drawMenuItem(const MenuItem& item);
 };
