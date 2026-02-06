@@ -14,26 +14,23 @@ namespace {
     constexpr std::array rules = {
         CategoryRule{ "Shader", LogCategory::SHADER}, 
         CategoryRule{ "Render", LogCategory::SHADER}, 
+        CategoryRule { "Uniform", LogCategory::SHADER},
 
+        CategoryRule{ "application/", LogCategory::SYSTEM},
+        CategoryRule{ "input/", LogCategory::SYSTEM},
         CategoryRule{ "logging/", LogCategory::SYSTEM},
-
-        // these two might be redundant 
-        CategoryRule{ "Sink", LogCategory::SYSTEM},
-        CategoryRule{ "Logger", LogCategory::SYSTEM},
-
+        CategoryRule{ "Engine", LogCategory::SYSTEM}, 
+        CategoryRule { "Event", LogCategory::SYSTEM}, 
+        CategoryRule { "File", LogCategory::SYSTEM},
         CategoryRule{ "Timer", LogCategory::SYSTEM},
         CategoryRule{ "Event", LogCategory::SYSTEM},
         CategoryRule{ "Camera", LogCategory::SYSTEM},
-        CategoryRule{ "HotReload", LogCategory::SYSTEM},
-        CategoryRule{ "Application", LogCategory::SYSTEM},
+        CategoryRule{ "HotReloader", LogCategory::SYSTEM},
+        CategoryRule { "engine/", LogCategory::SYSTEM},
 
-        CategoryRule{"ui/", LogCategory::UI}, 
-         CategoryRule{"Window/", LogCategory::UI}, 
+        CategoryRule{"ui/", LogCategory::UI},
 
-        CategoryRule{"Texture", LogCategory::ASSETS}, 
-        CategoryRule{"Registry", LogCategory::ASSETS}, 
-        CategoryRule{"File", LogCategory::ASSETS}, 
-        CategoryRule{"Uniform", LogCategory::ASSETS}, 
+        CategoryRule{"object/", LogCategory::ASSETS},
     }; 
 }
 
