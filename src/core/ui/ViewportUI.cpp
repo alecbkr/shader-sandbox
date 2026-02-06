@@ -95,7 +95,7 @@ bool ViewportUI::initialize(Logger* _loggerPtr, Platform* _platformPtr, ModelCac
 
     glEnable(GL_DEPTH_TEST);
 
-    ViewportUI::camPtr = std::make_unique<Camera>();
+    ViewportUI::camPtr = std::make_unique<Camera>(timerPtr);
 
     ViewportUI::targetWidth = TARGET_WIDTH;
     ViewportUI::targetHeight = TARGET_HEIGHT;

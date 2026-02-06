@@ -16,6 +16,7 @@ bool ContextManager::initialize(Logger* _loggerPtr, ActionRegistry* _actionRegis
     }
 
     loggerPtr = _loggerPtr;
+    current_ = ControlCtx::Editor;
 
     _actionRegistryPtr->bind(Action::SwitchControlContext, [&]{ toggleCtx(); });
 

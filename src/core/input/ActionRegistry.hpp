@@ -13,7 +13,7 @@ enum class Action {
     CameraBack,
     CameraLeft,
     CameraRight,
-    CamearUp,
+    CameraUp,
     CameraDown,
     SwitchControlContext,
     SaveActiveShaderFile,

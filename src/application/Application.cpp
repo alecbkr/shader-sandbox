@@ -27,6 +27,24 @@
 
 bool Application::initialized = false;
 
+bool addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI* viewportUIPtr, ContextManager* contextManagerPtr, EventDispatcher* eventsPtr) {
+    if (!actionRegPtr) return false;
+    if (!viewportUIPtr) return false;
+    if (!contextManagerPtr) return false;
+    if (!eventsPtr) return false;
+    actionRegPtr->bind(Action::CameraForward, [viewportUIPtr]() { viewportUIPtr->getCamera()->MoveForward(); });
+    actionRegPtr->bind(Action::CameraBack, [viewportUIPtr]() { viewportUIPtr->getCamera()->MoveBack(); });
+    actionRegPtr->bind(Action::CameraLeft, [viewportUIPtr]() { viewportUIPtr->getCamera()->MoveLeft(); });
+    actionRegPtr->bind(Action::CameraRight, [viewportUIPtr]() { viewportUIPtr->getCamera()->MoveRight(); });
+    actionRegPtr->bind(Action::CameraUp, [viewportUIPtr]() { viewportUIPtr->getCamera()->MoveUp(); });
+    actionRegPtr->bind(Action::CameraDown, [viewportUIPtr]() { viewportUIPtr->getCamera()->MoveDown(); });
+    actionRegPtr->bind(Action::SwitchControlContext, [contextManagerPtr]() { contextManagerPtr->toggleCtx(); });
+    actionRegPtr->bind(Action::SaveActiveShaderFile, [eventsPtr]() { eventsPtr->TriggerEvent({ EventType::SaveActiveShaderFile, false, std::monostate{} }); });
+    actionRegPtr->bind(Action::SaveProject, [eventsPtr]() { eventsPtr->TriggerEvent({ EventType::SaveProject, false, std::monostate{} }); });
+    actionRegPtr->bind(Action::QuitApplication, [eventsPtr]() { eventsPtr->TriggerEvent({ EventType::Quit, false, std::monostate{} }); });
+    return true;
+}
+
 void initializeUI(AppContext& ctx) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -177,6 +195,11 @@ bool Application::initialize(AppContext& ctx) {
     }
     if (!ctx.inspector_ui.initialize(&ctx.logger, &ctx.inspector_engine, &ctx.texture_registry, &ctx.shader_registry, &ctx.uniform_registry, &ctx.events, &ctx.model_cache, &ctx.file_registry)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Inspector UI was not initialized successfully.");
+        return false;
+    }
+
+    if (!addDefaultActionBinds(&ctx.action_registry, &ctx.viewport_ui, &ctx.ctx_manager, &ctx.events)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Default actions were not bound correctly.");
         return false;
     }
 

@@ -16,8 +16,7 @@ const float ZOOM = 45.0f;
 // Camera( float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)),
 //  MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
 
-Camera::Camera() {
-
+Camera::Camera(AppTimer* _timerPtr) : timerPtr(_timerPtr) {
 
     Position = glm::vec3(0.0f, 2.0f, 2.0f);
     WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -37,30 +36,30 @@ glm::mat4 Camera::GetViewMatrix() {
     return glm::lookAt(Position, Position + Front, Up);
 }
 
-// void Camera::MoveForward() {
-//     float velocity = MovementSpeed * AppTimer::getDt();
-//     Position += Front * velocity;
-// }
-// void Camera::MoveBack() {
-//     float velocity = MovementSpeed * AppTimer::getDt();
-//     Position -= Front * velocity;
-// }
-// void Camera::MoveLeft() {
-//     float velocity = MovementSpeed * AppTimer::getDt();
-//     Position -= Right * velocity;
-// }
-// void Camera::MoveRight() {
-//     float velocity = MovementSpeed * AppTimer::getDt();
-//     Position += Right * velocity;
-// }
-// void Camera::MoveUp() {
-//     float velocity = MovementSpeed * AppTimer::getDt();
-//     Position += WorldUp * velocity;
-// }
-// void Camera::MoveDown() {
-//     float velocity = MovementSpeed * AppTimer::getDt();
-//     Position -= WorldUp * velocity;
-// }
+void Camera::MoveForward() {
+    float velocity = MovementSpeed * timerPtr->getDt();
+    Position += Front * velocity;
+}
+void Camera::MoveBack() {
+    float velocity = MovementSpeed * timerPtr->getDt();
+    Position -= Front * velocity;
+}
+void Camera::MoveLeft() {
+    float velocity = MovementSpeed * timerPtr->getDt();
+    Position -= Right * velocity;
+}
+void Camera::MoveRight() {
+    float velocity = MovementSpeed * timerPtr->getDt();
+    Position += Right * velocity;
+}
+void Camera::MoveUp() {
+    float velocity = MovementSpeed * timerPtr->getDt();
+    Position += WorldUp * velocity;
+}
+void Camera::MoveDown() {
+    float velocity = MovementSpeed * timerPtr->getDt();
+    Position -= WorldUp * velocity;
+}
 
 void Camera::ProcessKeyboard(Camera_Movement dir, float deltaTime) {
     float velocity = MovementSpeed * deltaTime;

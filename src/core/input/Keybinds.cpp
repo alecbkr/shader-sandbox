@@ -40,7 +40,7 @@ bool Keybinds::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ac
     addBinding(makeBinding(Action::SaveActiveShaderFile, KeyCombo{Key::LeftCtrl, Key::S}, ControlCtx::Editor));
     addBinding(makeBinding(Action::SaveProject, KeyCombo{Key::LeftAlt, Key::S}, ControlCtx::Editor));
     addBinding(makeBinding(Action::SwitchControlContext, KeyCombo{Key::F2}, ControlCtx::EditorCamera));
-    addBinding(makeBinding(Action::CamearUp, KeyCombo{Key::Space}, ControlCtx::Camera, Trigger::Down));
+    addBinding(makeBinding(Action::CameraUp, KeyCombo{Key::Space}, ControlCtx::Camera, Trigger::Down));
     addBinding(makeBinding(Action::CameraDown, KeyCombo{Key::LeftCtrl}, ControlCtx::Camera, Trigger::Down));
     addBinding(makeBinding(Action::CameraLeft, KeyCombo{Key::A}, ControlCtx::Camera, Trigger::Down));
     addBinding(makeBinding(Action::CameraRight, KeyCombo{Key::D}, ControlCtx::Camera, Trigger::Down));

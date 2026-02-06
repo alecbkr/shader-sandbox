@@ -19,7 +19,7 @@ public:
     Camera* getCamera();
     ~ViewportUI();
     
-    private:
+private:
     bool initialized = false;
     bool initPos = true;
     GLuint fbo = 0, rbo = 0, viewportTex = 0;

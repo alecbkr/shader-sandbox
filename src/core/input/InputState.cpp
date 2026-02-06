@@ -8,6 +8,15 @@ InputState::InputState() {
     mouseDeltaY = 0.0;
     scrollX = 0.0;
     scrollY = 0.0;
+
+    down.fill(0);
+    pressed.fill(0);
+    released.fill(0);
+
+    mouseDown.fill(0);
+    mousePressed.fill(0);
+    mouseReleased.fill(0);
+
     pressedKeys.clear();
     loggerPtr = nullptr;
 }
@@ -25,6 +34,15 @@ bool InputState::initialize(Logger* _loggerPtr) {
     mouseDeltaY = 0.0;
     scrollX = 0.0;
     scrollY = 0.0;
+
+    down.fill(0);
+    pressed.fill(0);
+    released.fill(0);
+
+    mouseDown.fill(0);
+    mousePressed.fill(0);
+    mouseReleased.fill(0);
+
     pressedKeys.clear();
     
     beginFrame();
