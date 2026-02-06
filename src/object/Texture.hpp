@@ -9,14 +9,13 @@ Honestly, it might make more sense to include this in the engine dir, but whatev
 is for now.
 */
 
-
-#ifndef TEXTURE_HPP
-#define TEXTURE_HPP
+#pragma once
 
 #include "platform/GL.hpp"
 #include "TextureType.hpp"
 #include <string>
 
+class Logger;
 
 class Texture {
     
@@ -24,11 +23,12 @@ class Texture {
         mutable GLuint ID;
         std::string path;
         unsigned char* pixels;
+        Logger* loggerPtr;
         
         int width;
         int height;
         GLenum format;
-        Texture(const char *texture_path, TextureType type);
+        Texture(const char *texture_path, TextureType type, Logger* _loggerPtr);
         // ~Texture();
         void bind(int texNum);
         void unbind(int texNum);
@@ -42,5 +42,3 @@ class Texture {
         void loadToGPU();
         void unloadFromGPU();
 };
-
-#endif

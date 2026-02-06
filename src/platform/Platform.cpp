@@ -82,6 +82,12 @@ bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ke
 
     glViewport(0, 0, _width, _height);
 
+    #ifdef __linux__
+        // Disable vsync on linux because it can cause issues when shader sandbox window is minimized.
+        Logger::addLog(LogLevel::INFO, "Platform::initialize", "Need to add a feature to disable/enable vsync");
+        glfwSwapInterval(0);
+    #endif
+
     Platform::initialized = true;
     return true;
 }

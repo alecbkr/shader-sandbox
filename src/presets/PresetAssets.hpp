@@ -1,9 +1,11 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 #include "object/Texture.hpp"
 
 class Logger;
+class Platform;
 
 enum class MeshPreset {
     PLANE,
@@ -26,7 +28,7 @@ struct MeshData {
 class PresetAssets {
 public:
     PresetAssets();
-    bool initialize(Logger* _loggerPtr);
+    bool initialize(Logger* _loggerPtr, Platform* _platformPtr);
     void shutdown();
     MeshData& getPresetMesh(MeshPreset preset);
     Texture& getPresetTexture(TexturePreset preset);
@@ -37,8 +39,8 @@ private:
     MeshData pyramidMesh;
     MeshData cubeMesh;
 
-    Texture waterTex = Texture{"", TEX_DIFFUSE};
-    Texture faceTex = Texture{"", TEX_DIFFUSE};
-    Texture metalTex = Texture{"", TEX_DIFFUSE};
-    Texture gridTex = Texture{"", TEX_DIFFUSE};
+    Texture waterTex = Texture{"", TEX_DIFFUSE, nullptr};
+    Texture faceTex = Texture{"", TEX_DIFFUSE, nullptr};
+    Texture metalTex = Texture{"", TEX_DIFFUSE, nullptr};
+    Texture gridTex = Texture{"", TEX_DIFFUSE, nullptr};
 };

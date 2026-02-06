@@ -21,6 +21,7 @@ public:
     void setUniform(unsigned int modelID, const std::string& uniformName, UniformValue value);
     void applyInput(unsigned int modelID, const Uniform& uniform);
     void reloadUniforms(unsigned int modelID);
+    bool handleEditShaderProgram(const std::string& vertex_file, const std::string& fragment_file, const std::string& programName);
 
 private:
     static const std::unordered_map<std::string, UniformType> typeMap; // Kept private

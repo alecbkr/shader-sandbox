@@ -9,13 +9,14 @@ class InspectorEngine;
 class EventDispatcher;
 class ShaderRegistry;
 class UniformRegistry;
+class ModelImporter;
 
 static constexpr unsigned int INVALID_MODEL = UINT_MAX;
 
 class ModelCache {
 public:
     ModelCache();
-    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr);
+    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, ModelImporter* _modelImporterPtr);
     void shutdown();
     unsigned int createModel(std::vector<float>, std::vector<unsigned int>, 
                                                     bool hasPos, bool hasNorms, bool hasUVs);
@@ -50,6 +51,7 @@ private:
     EventDispatcher* eventsPtr = nullptr;
     ShaderRegistry* shaderRegPtr = nullptr;
     UniformRegistry* uniformRegPtr = nullptr;
+    ModelImporter* modelImporterPtr = nullptr;
     unsigned int nextModelID = 0;
     void reorderByProgram();
     std::vector<std::unique_ptr<Model>> modelCache; 

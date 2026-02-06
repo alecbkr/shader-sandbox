@@ -4,6 +4,7 @@
 #include "core/logging/Logger.hpp"
 #include "core/EventDispatcher.hpp"
 #include "object/ModelCache.hpp"
+#include "core/ShaderRegistry.hpp"
 
 std::string getFileContents(std::string filename) {
     std::ifstream in(filename, std::ios::binary);
@@ -56,11 +57,12 @@ EditorEngine::EditorEngine() {
     loggerPtr = nullptr;
     eventsPtr = nullptr;
     modelCachePtr = nullptr;
+    shaderRegPtr = nullptr;
     editors.clear();
     activeEditor = 0;
 }
 
-bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr) {
+bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, ShaderRegistry* _shaderRegPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Editor Engine Initialization", "Editor Engine was already initialized.");
         return false;
@@ -68,6 +70,7 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
     loggerPtr = _loggerPtr;
     eventsPtr = _eventsPtr;
     modelCachePtr = _modelCachePtr;
+    shaderRegPtr = _shaderRegPtr;
     editors.clear();
     activeEditor = 0;
 
@@ -96,9 +99,11 @@ bool EditorEngine::spawnEditor(const EventPayload& payload) {
 
         if (linkedID == 0) {
             for (auto const& [id, model] : modelCachePtr->modelIDMap) {
-                if (model->getProgram()) {
-                    if (model->getProgram()->fragPath == data->filePath || 
-                        model->getProgram()->vertPath == data->filePath) {
+
+                ShaderProgram* modelProgram = shaderRegPtr->getProgram(model->getProgramID());
+                if (modelProgram != nullptr) {
+                    if (modelProgram->fragPath == data->filePath || 
+                        modelProgram->vertPath == data->filePath) {
                         linkedID = id;
                         break;
                     }

@@ -1,6 +1,5 @@
 #include "UniformRegistry.hpp"
 #include "engine/Errorlog.hpp"
-#include <iostream>
 #include "core/logging/Logger.hpp"
 
 
@@ -43,7 +42,6 @@ Uniform UniformRegistry::getUniform(std::string shaderProgramName, std::string u
     auto& programUniforms = programPair->second;
     
     auto uniformPair = programUniforms.find(uniformName);
-    if (uniformPair == programUniforms.end()) {
         std::cout << "Set Uniform: No uniform with that name found in Inspector Engine uniforms" << std::endl;
         return;
     }

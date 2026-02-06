@@ -23,6 +23,7 @@
 #include "core/ui/MenuUI.hpp"
 #include "core/ui/EditorUI.hpp"
 #include "core/ui/InspectorUI.hpp"
+#include "object/ModelImporter.hpp"
 
 struct AppContext {
     AppContext(u32 _width, u32 _height, const char* _app_title)
@@ -49,6 +50,7 @@ struct AppContext {
     EditorEngine editor_engine;
     PresetAssets preset_assets;
     TextureRegistry texture_registry;
+    ModelImporter model_importer;
     ConsoleUI console_ui;
     ViewportUI viewport_ui;
     MenuUI menu_ui;

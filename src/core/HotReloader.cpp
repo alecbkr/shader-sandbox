@@ -36,11 +36,9 @@ bool HotReloader::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, Sh
     if (const auto* data = std::get_if<SaveActiveShaderFilePayload>(&payload)) {
         
         Model* model = modelCachePtr->getModel(data->modelID);
-        if (!model || !model->getProgram()) return false;
+        if (!model) return false;
 
-            std::string progName = model->getProgram()->name;
-
-            if (compile(data->filePath, progName)) {
+            if (HotReloader::compile(data->filePath, model->getProgramID())) {
                 inspectorEngPtr->reloadUniforms(data->modelID); 
                 return true;
             }
@@ -110,10 +108,15 @@ bool HotReloader::attemptCompile(const std::string &fragShaderPath, const std::s
     ShaderProgram *oldProgram = shaderRegPtr->getProgram(programName);
     std::string vPath = (oldProgram) ? oldProgram->vertPath : "../shaders/default.vert";
 
+    if (programName == "") {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "attemptCompile", "Shader name cannot be empty");
+        return false;
+    }
     ShaderProgram *newProgram = new ShaderProgram(
         vPath.c_str(), 
         fragShaderPath.c_str(),
-        programName.c_str()
+        programName.c_str(),
+        loggerPtr
     );
 
     if (!newProgram->isCompiled()) {

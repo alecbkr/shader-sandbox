@@ -1,6 +1,7 @@
 #include "presets/PresetAssets.hpp"
 #include "object/TextureType.hpp"
 #include "core/logging/Logger.hpp"
+#include "platform/Platform.hpp"
 
 PresetAssets::PresetAssets() {
     initialized = false;
@@ -11,19 +12,25 @@ PresetAssets::PresetAssets() {
     pyramidMesh.indices.clear();
     cubeMesh.verts.clear();
     cubeMesh.indices.clear();
-    waterTex = Texture{"", TEX_DIFFUSE};
-    faceTex = Texture{"", TEX_DIFFUSE};
-    metalTex = Texture{"", TEX_DIFFUSE};
-    gridTex = Texture{"", TEX_DIFFUSE};
+    waterTex = Texture{"", TEX_DIFFUSE, nullptr};
+    faceTex = Texture{"", TEX_DIFFUSE, nullptr};
+    metalTex = Texture{"", TEX_DIFFUSE, nullptr};
+    gridTex = Texture{"", TEX_DIFFUSE, nullptr};
 }
 
-bool PresetAssets::initialize(Logger* _loggerPtr) {
+bool PresetAssets::initialize(Logger* _loggerPtr, Platform* _platformPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Preset Assets Initialization", "Preset Assets were already initialized.");
         return false;
     }
 
     loggerPtr = _loggerPtr;
+
+    waterTex = Texture{(_platformPtr->getExeDir() / ".." / "assets/textures/water.png").string().c_str(), TEX_DIFFUSE, loggerPtr};
+    faceTex = Texture{(_platformPtr->getExeDir() / ".." / "assets/textures/bigface.jpg").string().c_str(), TEX_DIFFUSE, loggerPtr};
+    metalTex = Texture{(_platformPtr->getExeDir() / ".." / "assets/textures/rim.png").string().c_str(), TEX_DIFFUSE, loggerPtr};
+    gridTex = Texture{(_platformPtr->getExeDir() / ".." / "assets/textures/grid.png").string().c_str(), TEX_DIFFUSE, loggerPtr};
+
     PresetAssets::planeMesh.verts = {
         -1.0f, 0.0f, -1.0f,  0.0f, 0.0f,
         -1.0f, 0.0f, 1.0f,  1.0f, 0.0f,

@@ -2,6 +2,7 @@
 #include "platform/Platform.hpp"
 #include "core/ShaderRegistry.hpp"
 #include <iostream>
+#include "core/InspectorEngine.hpp"
 #include "core/ui/InspectorUI.hpp"
 #include "core/ui/EditorUI.hpp"
 #include "core/ui/ConsoleUI.hpp"
@@ -122,7 +123,11 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Uniform Registry was not initialized successfully.");        
         return false;
     }
-    if (!ctx.model_cache.initialize(&ctx.logger, &ctx.events, &ctx.shader_registry, &ctx.uniform_registry)) {
+    if (!ctx.model_importer.initialize(&ctx.logger)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Importer was not initialized successfully.");
+        return false;
+    }
+    if (!ctx.model_cache.initialize(&ctx.logger, &ctx.events, &ctx.shader_registry, &ctx.uniform_registry, &ctx.model_importer)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");        
         return false;
     }
@@ -139,11 +144,11 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "File Registry was not initialized successfully.");        
         return false;
     }
-    if (!ctx.editor_engine.initialize(&ctx.logger, &ctx.events, &ctx.model_cache)) {
+    if (!ctx.editor_engine.initialize(&ctx.logger, &ctx.events, &ctx.model_cache, &ctx.shader_registry)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Editor Engine was not initialized successfully.");
         return false;
     }
-    if (!ctx.preset_assets.initialize(&ctx.logger)) {
+    if (!ctx.preset_assets.initialize(&ctx.logger, &ctx.platform)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Preset Assets were not initialized successfully.");
         return false;
     }
