@@ -118,8 +118,96 @@ bool InspectorEngine::handleEditShaderProgram(const std::string& vertexFile, con
     return true;
 }
 
+std::vector<std::string> InspectorEngine::tokenizeShaderCode(const ShaderProgram& program) {
+    // Cursor wrote this, it seemed good and caught a lot of stuff I wouldn't have first try.
+    std::string source = program.vertShader_code + "\n" + program.fragShader_code;
+    std::vector<std::string> tokens;
+    tokens.reserve(source.size() / 4u); 
+
+    enum { Normal, LineComment, BlockComment, DoubleQuotedString, SingleQuotedString } state = Normal;
+    std::string currentToken;
+
+    for (size_t i = 0; i < source.size(); ) {
+        char currentChar = source[i];
+        char nextChar = (i + 1 < source.size()) ? source[i + 1] : '\0';
+
+        switch (state) {
+        case Normal: {
+            if (std::isspace(static_cast<unsigned char>(currentChar))) {
+                i++;
+                continue;
+            }
+            if (currentChar == '/' && nextChar == '/') { state = LineComment; i += 2; continue; }
+            if (currentChar == '/' && nextChar == '*') { state = BlockComment; i += 2; continue; }
+            if (currentChar == '"') { state = DoubleQuotedString; i++; continue; }
+            if (currentChar == '\'') { state = SingleQuotedString; i++; continue; }
+
+            if (std::isalpha(static_cast<unsigned char>(currentChar)) || currentChar == '_') {
+                currentToken.clear();
+                while (i < source.size() && (std::isalnum(static_cast<unsigned char>(source[i])) || source[i] == '_'))
+                    currentToken += source[i++];
+                tokens.push_back(currentToken);
+                continue;
+            }
+            if (std::isdigit(static_cast<unsigned char>(currentChar)) || (currentChar == '.' && i + 1 < source.size() && std::isdigit(static_cast<unsigned char>(source[i + 1])))) {
+                currentToken.clear();
+                while (i < source.size() && (std::isdigit(static_cast<unsigned char>(source[i])) || source[i] == '.' || source[i] == 'e' || source[i] == 'E' || source[i] == '-' || source[i] == '+'))
+                    currentToken += source[i++];
+                tokens.push_back(currentToken);
+                continue;
+            }
+            if (currentChar == ';' || currentChar == ',' || currentChar == '[' || currentChar == ']' || currentChar == '{' || currentChar == '}' || currentChar == '(' || currentChar == ')') {
+                tokens.push_back(std::string(1, currentChar));
+                i++;
+                continue;
+            }
+            i++;
+            break;
+        } case LineComment: {
+            if (currentChar == '\n') state = Normal;
+            i++;
+            break;
+        } case BlockComment: {
+            if (currentChar == '*' && nextChar == '/') { state = Normal; i += 2; continue; }
+            i++;
+            break;
+        } case DoubleQuotedString: case SingleQuotedString: {
+            if (currentChar == '\\') { i += 2; continue; }
+            if ((state == DoubleQuotedString && currentChar == '"') || (state == SingleQuotedString && currentChar == '\'')) state = Normal;
+            i++;
+            break;
+        }
+        }
+    }
+
+    return tokens;
+}
+
 std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const ShaderProgram& program) {
     std::unordered_map<std::string, Uniform> programUniforms;
+
+    /*
+    std::vector<std::string> tokens = tokenizeShaderCode(program);
+    enum { SearchingForUniform, JustReadUniform, JustReadType, JustReadName, JustReadSemiColon, JustReadComma } state = SearchingForUniform;
+    for (int i = 0; i < tokens.size(); i++) {
+        std::string& token = tokens[i];
+        switch (state) {
+            case SearchingForUniform: {
+                if (token == "uniform") {
+                    state = JustReadUniform;
+                    continue;
+                }
+                break;
+            }
+            case JustReadUniform: {
+                auto typePair = typeMap.find(token);
+                if (typePair == typeMap.end()) {
+                    Logger::addLog(LogLevel::WARNING, "parseUnifroms", "Invalid Uniform Type: ", word); 
+                    continue;
+                }
+            }
+        }
+    }*/
 
     std::string line;
     for (size_t i = 0; i < 2; i++) {
@@ -134,30 +222,35 @@ std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const Sh
             line_ss >> word; // first word of the line (test for "uniform")
 
             bool isUniformLine = word == "uniform";
-            if (!isUniformLine) continue; // not a uniform line
+            if (!isUniformLine) continue; 
+            // At this point, we're reading a line with one or more uniform definitions.
 
             // Determine the type of uniform
-            Uniform uniform;
             line_ss >> word; // second word of the line (look for type of uniform)
 
             auto typePair = typeMap.find(word);
-            if (typePair != typeMap.end()) {
-                uniform.type = typePair->second;
-            } else {
-                // Logger::addLog(LogLevel::WARNING, "parseUniforms", lynvalid Uniform Type: ", word.c_str());
+            if (typePair == typeMap.end()) {
                 Logger::addLog(LogLevel::WARNING, "parseUnifroms", "Invalid Uniform Type: ", word); 
                 continue;
             }
-            assignDefaultValue(uniform);
+            // Start assigning values.
+            std::string uniformName;
 
             // Assign the uniform name
-            line_ss >> uniform.name; // third word of the line (uniform's name)
-            if (!uniform.name.empty() && uniform.name.back() == ';') {
-                uniform.name.pop_back();
-            }
+            line_ss >> uniformName; // third word of the line (uniform's name)
+            while (!uniformName.empty()) {
+                Uniform uniform;
+                uniform.type = typePair->second;
+                assignDefaultValue(uniform);
+                if (uniformName.back() == ';') {
+                    uniformName.pop_back();
+                }
 
-            programUniforms[uniform.name] = uniform;
-            std::cout << "Read " << uniform.name << std::endl;
+                uniform.name = uniformName;
+                programUniforms[uniform.name] = uniform;
+                line_ss >> uniformName; // read next word
+
+            }
         }
     }
     return programUniforms;

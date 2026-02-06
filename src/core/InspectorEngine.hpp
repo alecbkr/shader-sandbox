@@ -19,6 +19,7 @@ public:
     static UniformValue getDefaultValue(UniformType type);
 
 private:
+    static std::vector<std::string> tokenizeShaderCode(const ShaderProgram& program);
     static void applyUniform(unsigned int modelID, const Uniform& uniform);
     static void applyUniform(ShaderProgram& program, const Uniform& uniform);
     static void applyFunction(ShaderProgram& program, const Uniform& uniform, const UniformFunction& function);
