@@ -32,6 +32,25 @@ static const ImVec4 LOG_COLORS[] = {
                                             // Anomaly (light gray)
 }; 
 
+struct LogSelection {
+    int startIdx = -1; 
+    int endIdx = -1; 
+    bool active = false; 
+
+    void clear () {
+        startIdx = -1; 
+        endIdx = -1; 
+        active = false; 
+    }
+    // handles the ragging of the cursor 
+    std::pair <int, int> getRange() const {
+        if (startIdx == -1 || endIdx == -1) {
+            return {-1, -1};
+        }
+        return { std::min(startIdx, endIdx), std::max(startIdx, endIdx)}; 
+    }
+};
+
 // Adapted from imgui_demo.cpp
 class ConsoleUI {
 public: 
@@ -44,8 +63,6 @@ public:
         ImVec4 color; 
     }; 
 
-    // static std::shared_ptr<ConsoleEngine> engine; 
-    // static std::shared_ptr<ConsoleSink> logSrc; 
 private:
     static float targetWidth;
     static float targetHeight;
@@ -53,12 +70,10 @@ private:
     
     static std::shared_ptr<ConsoleEngine> engine; 
     static std::shared_ptr<ConsoleSink> logSrc; 
-
-    static std::vector<std::string> history; 
-
-    static std::vector<std::string> selectedLogIndices; 
-    static int selectionStart; 
-    static int selectionEnd; 
+    // static int selectionStart; 
+    // static int selectionEnd; 
+    static LogSelection selection; 
+    static std::vector<int> filteredIndices; 
 
     static bool initialized;
     static ConsoleToggles &togStates; 
@@ -66,12 +81,15 @@ private:
     static size_t lastLogSize; 
     static void drawLogs(); 
     static const void drawMenuBar(); 
-    static void updateSearchAndScroll(const std::deque<LogEntry> &logs, bool& isScroll); 
+    static void updateSearchAndScroll(const std::deque<LogEntry> &logs); 
     static int getCollapseCount(const std::deque<LogEntry> &logs, int currIdx);
-    static void drawSingleLog(const LogEntry& log, int index, int repeatCount, bool& isScroll);
+
+    static void drawSingleLog(const LogEntry& log, int unfilteredIdx, int filteredIdx, int repeatCount);
 
     // Allows for users to copy their logs from the console (because of the way ImGui renders text I had to do this)
-    static void copyLogsToClipboard(); 
+    // static void copyLogsToClipboard(); 
+    static void copySelectedLogs(); 
+
     static LogStyle getLogStyle(const LogEntry& log); 
     static std::string formatLogString(const LogEntry& log); 
 }; 
