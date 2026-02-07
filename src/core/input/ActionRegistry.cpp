@@ -1,17 +1,6 @@
 #include "core/input/ActionRegistry.hpp"
 #include "core/logging/Logger.hpp"
 
-// void cameraForwardCB() { ViewportUI::getCamera()->MoveForward(); } // Move camera forward
-// void cameraBackCB() { ViewportUI::getCamera()->MoveBack(); } // Move camera back
-// void cameraLeftCB() { ViewportUI::getCamera()->MoveLeft(); } // Move camera left
-// void cameraRightCB() { ViewportUI::getCamera()->MoveRight(); } // Move camera right
-// void cameraUpCB() { ViewportUI::getCamera()->MoveUp(); } // Move camera up
-// void cameraDownCB() { ViewportUI::getCamera()->MoveDown(); } // Move camera down
-// void switchControlCtxCB() { ContextManager::toggleCtx(); }
-// void saveActiveShaderFileCB() { EventDispatcher::TriggerEvent({ EventType::SaveActiveShaderFile, false, std::monostate{} }); }
-// void saveProjectCB() { EventDispatcher::TriggerEvent({ EventType::SaveProject, false, std::monostate{} }); }
-// void quitApplicationCB() { EventDispatcher::TriggerEvent({ EventType::Quit, false, std::monostate{} }); }
-
 ActionRegistry::ActionRegistry() {
     initialized = false;
     actionsToProcess.clear();
@@ -26,19 +15,10 @@ bool ActionRegistry::initialize(Logger* _loggerPtr) {
 
     loggerPtr = _loggerPtr;
 
-    bind(Action::None, [&]{
-        loggerPtr->addLog(LogLevel::WARNING, "Action::None Callback", "The placeholder action 'None' was called.");
+    auto* log = loggerPtr;
+    bind(Action::None, [log] {
+        log->addLog(LogLevel::WARNING, "Action::None Callback", "The placeholder action 'None' was called.");
     });
-    // bind(Action::CameraForward, cameraForwardCB);
-    // bind(Action::CameraBack, cameraBackCB);
-    // bind(Action::CameraLeft, cameraLeftCB);
-    // bind(Action::CameraRight, cameraRightCB);
-    // bind(Action::CamearUp, cameraUpCB);
-    // bind(Action::CameraDown, cameraDownCB);
-    // bind(Action::SwitchControlContext, switchControlCtxCB);
-    // bind(Action::SaveActiveShaderFile, saveActiveShaderFileCB);
-    // bind(Action::SaveProject, saveProjectCB);
-    // bind(Action::QuitApplication, quitApplicationCB);
 
     initialized = true;
     return true;

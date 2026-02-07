@@ -31,7 +31,7 @@ add_subdirectory(lib/assimp)
 # ---------------------------------------------------------
 # RECURSIVE SOURCE COLLECTION
 # ---------------------------------------------------------
-file(GLOB_RECURSE SRC_CPP "${CMAKE_SOURCE_DIR}/src/*.cpp")
+file(GLOB_RECURSE ENGINE_CPP "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
 set(IMGUI_SRC
     ${CMAKE_SOURCE_DIR}/lib/imgui/imgui.cpp
@@ -46,20 +46,17 @@ set(STB_SRC ${CMAKE_SOURCE_DIR}/lib/stb/stb_image.cpp)
 set(SRC_C   ${CMAKE_SOURCE_DIR}/lib/glad/glad.c)
 
 # ---------------------------------------------------------
-# EXECUTABLE
+# ENGINE LIB (linked by sandbox + tests)
 # ---------------------------------------------------------
-set(WINDOWS_RESOURCES)
-
-add_executable(sandbox
-    ${SRC_CPP}
+add_library(sandbox_engine STATIC
+    ${ENGINE_CPP}
     ${SRC_C}
     ${IMGUI_SRC}
     ${STB_SRC}
     ${ASSIMP_SRC}
 )
 
-# Normal C/C++ include dirs (won't affect RC anymore)
-target_include_directories(sandbox PRIVATE
+target_include_directories(sandbox_engine PUBLIC
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/glm
     ${CMAKE_SOURCE_DIR}/include/glad
@@ -69,30 +66,18 @@ target_include_directories(sandbox PRIVATE
     ${CMAKE_SOURCE_DIR}/lib/glfw/include
 )
 
-# ---- Windows RC in its own target (no include dirs passed to windres) ----
-if (WIN32)
-    add_library(sandbox_rc OBJECT ${CMAKE_SOURCE_DIR}/src/app.rc)
-    set_target_properties(sandbox_rc PROPERTIES LINKER_LANGUAGE C)
-
-    # Add the compiled .obj from the rc target into the exe
-    target_sources(sandbox PRIVATE $<TARGET_OBJECTS:sandbox_rc>)
-endif()
-
-# ---------------------------------------------------------
-# LINK GLFW AND SYSTEM LIBS
-# ---------------------------------------------------------
-target_link_libraries(sandbox glfw assimp)
+target_link_libraries(sandbox_engine PUBLIC glfw assimp)
 
 if (WIN32)
-    target_link_libraries(sandbox
+    target_link_libraries(sandbox_engine PUBLIC
         opengl32
         gdi32
         user32
         shell32
         winmm
     )
-elseif(APPLE)
-    target_link_libraries(sandbox
+elseif (APPLE)
+    target_link_libraries(sandbox_engine PUBLIC
         "-framework Cocoa"
         "-framework IOKit"
         "-framework CoreFoundation"
@@ -100,8 +85,7 @@ elseif(APPLE)
         "-framework OpenGL"
     )
 else()
-    # Linux / Unix
-    target_link_libraries(sandbox
+    target_link_libraries(sandbox_engine PUBLIC
         GL
         X11
         pthread
@@ -110,23 +94,34 @@ else()
 endif()
 
 # ---------------------------------------------------------
-# TEST TARGET (Catch2 amalgamated)
+# APP EXECUTABLE
 # ---------------------------------------------------------
+add_executable(sandbox)
+
+# ---- Windows RC in its own target (no include dirs passed to windres) ----
+if (WIN32)
+    add_library(sandbox_rc OBJECT ${CMAKE_SOURCE_DIR}/src/app.rc)
+    set_target_properties(sandbox_rc PROPERTIES LINKER_LANGUAGE C)
+    target_sources(sandbox PRIVATE $<TARGET_OBJECTS:sandbox_rc>)
+endif()
+
+target_link_libraries(sandbox PRIVATE sandbox_engine)
+
+# ---------------------------------------------------------
+# TEST EXECUTABLE (Catch2 amalgamated)
+# ---------------------------------------------------------
+file(GLOB_RECURSE TEST_CPP "${CMAKE_SOURCE_DIR}/tests/*.cpp")
+
 add_executable(sandbox_tests
-    ${CMAKE_SOURCE_DIR}/tests/test_main.cpp
+    ${TEST_CPP}
     ${CMAKE_SOURCE_DIR}/include/catch2/catch_amalgamated.cpp
 )
 
-# Catch2 header path: include/catch2/catch_amalgamated.hpp
 target_include_directories(sandbox_tests PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src
 )
 
-# Keep tests lightweight by default:
-# - If your tests only touch core logic, you probably don't need to link glfw/assimp/opengl.
-# - If you DO include code that pulls those symbols in, uncomment the next line(s).
-# target_link_libraries(sandbox_tests PRIVATE glfw assimp)
+target_link_libraries(sandbox_tests PRIVATE sandbox_engine)
 
-# Register with CTest so `ctest` works
 add_test(NAME sandbox_tests COMMAND sandbox_tests)
