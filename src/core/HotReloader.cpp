@@ -108,11 +108,12 @@ bool HotReloader::attemptCompile(const std::string &fragShaderPath, const std::s
     ShaderProgram *oldProgram = shaderRegPtr->getProgram(programName);
     std::string vPath = (oldProgram) ? oldProgram->vertPath : "../shaders/default.vert";
 
-    if (programName == "") {
+    if (programName.empty()) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "attemptCompile", "Shader name cannot be empty");
         return false;
     }
-    ShaderProgram *newProgram = new ShaderProgram(
+
+    auto newProgram = std::make_unique<ShaderProgram>(
         vPath.c_str(), 
         fragShaderPath.c_str(),
         programName.c_str(),
@@ -125,11 +126,10 @@ bool HotReloader::attemptCompile(const std::string &fragShaderPath, const std::s
         } else {
             glUseProgram(0);
         }
-        delete newProgram;
         return false;
     }
 
-    shaderRegPtr->replaceProgram(programName, newProgram);
+    shaderRegPtr->replaceProgram(programName, std::move(newProgram));
     return true;
 }
 

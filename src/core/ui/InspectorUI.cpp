@@ -195,7 +195,7 @@ void InspectorUI::drawObjectsInspector() {
             if (ImGui::TreeNode("shader program")) {
                 std::vector<const char *> shaderChoices;
                 shaderChoices.reserve(shaderRegPtr->getNumberOfPrograms());
-                auto& shaders = shaderRegPtr->getPrograms();
+                const auto& shaders = shaderRegPtr->getPrograms();
                 for (auto &[name, shader] : shaders) {
                     shaderChoices.push_back(name.c_str());
                 }
@@ -267,7 +267,7 @@ static const std::vector<float> gridPlane_verts {
         1,2,6, 1,6,5, // right
         0,3,7, 0,7,4  // left
     };
-    std::unordered_map<std::string, ShaderProgram*>& programs = shaderRegPtr->getPrograms();
+    const auto& programs = shaderRegPtr->getPrograms();
     if (programs.empty()) return;
 
     // just grab a random shader program it really does not matter
