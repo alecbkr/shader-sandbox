@@ -118,10 +118,13 @@ void ConsoleUI::drawLogs() {
         ImGui::SetScrollHereY(1.0f); 
     }
 
+    // incase fonts prevent us from using the selection logic 
     if (isCurrentFontMonospace()) {
         drawLogsManualSelection(); 
     } else {
+        Logger::addLog(LogLevel::WARNING,"ConsoleUI", "Font is not a monospace font rendering line selection"); 
         // ImGui optimization that prevents drawing each log per frame and only the ones that are visible on the window 
+        float lineHeight = std::max(1.0f, ImGui::GetTextLineHeight()); 
         ImGuiListClipper clipper; 
         clipper.Begin(filteredIndices.size()); 
 
@@ -133,9 +136,14 @@ void ConsoleUI::drawLogs() {
                 drawSingleLog(log, unfilteredIdx, filteredIdx, repeatCount);
             }
         }
+
+        if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered()) {
+            selection.clear(); 
+        }
     }
 }
 
+// TODO: Might make this a ui component so that we could use it anywhere else we may need it 
 void ConsoleUI::drawLogsManualSelection () {
     const auto& logs = ConsoleEngine::getLogs(); 
     auto drawList = ImGui::GetWindowDrawList(); 
@@ -145,14 +153,17 @@ void ConsoleUI::drawLogsManualSelection () {
     ImVec2 screenPos = ImGui::GetCursorScreenPos(); 
     float scrollY = ImGui::GetScrollY(); 
     float contentWidth = ImGui::GetContentRegionAvail().x; 
+    float totalHeight = (float)filteredIndices.size() * lineHeight; 
 
-    if (ImGui::IsWindowHovered()) {
+    ImGui::InvisibleButton("##LogCanvas", ImVec2(contentWidth, totalHeight)); 
+
+    if (ImGui::IsWindowHovered() || ImGui::IsItemActive()) {
         ImVec2 mouse = ImGui::GetMousePos(); 
-        float relY = mouse.y - screenPos.y + scrollY; 
-        int hoverRow = (int)std::floor(relY / lineHeight); 
+        float relX = mouse.x - screenPos.x; 
+        float relY = mouse.y - screenPos.y + scrollY;
 
-        float relX = mouse.y - screenPos.y + scrollY; 
-        int hoverCol = (int)std::floor(relY / charWidth); 
+        int hoverRow = (int)(relY / lineHeight); 
+        int hoverCol = (int)(relX / charWidth); 
 
         if (hoverRow < 0) hoverRow = 0; 
         if (hoverRow >= filteredIndices.size()) hoverRow = (int)filteredIndices.size() - 1;
@@ -169,7 +180,7 @@ void ConsoleUI::drawLogsManualSelection () {
         }
 
         // cursor dragging logic
-        if (ImGui::IsMouseDown(0) && selection.active) {
+        else if (ImGui::IsMouseDown(0) && selection.active) {
             selection.endIdx = hoverRow; 
             selection.endCol = hoverCol; 
             selection.isCharMode = true; 
@@ -177,7 +188,7 @@ void ConsoleUI::drawLogsManualSelection () {
     }
 
     ImGuiListClipper clipper; 
-    clipper.Begin(filteredIndices.size()); 
+    clipper.Begin(filteredIndices.size(), lineHeight); 
 
     int selStartRow = std::min(selection.startIdx, selection.endIdx); 
     int selEndRow = std::max(selection.startIdx, selection.endIdx); 
@@ -191,14 +202,13 @@ void ConsoleUI::drawLogsManualSelection () {
             if (repeatCount > 0) {
                 text += " (" + std::to_string(repeatCount + 1) + ")"; 
             }
-            float lineY = screenPos.y + (i * lineHeight) - scrollY; 
+            float lineY = screenPos.y + (i * lineHeight); 
 
             // draw selection highlighting 
             if (selection.active && i >= selStartRow && i <= selEndRow) {
                 float hlStart = 0.0f; 
                 float hlEnd = contentWidth; 
 
-                // single line selection
                 if (selStartRow == selEndRow) {
                     int sCol = std::min(selection.startCol, selection.endCol); 
                     int eCol = std::max(selection.startCol, selection.endCol); 
@@ -212,22 +222,16 @@ void ConsoleUI::drawLogsManualSelection () {
                     hlStart = sCol * charWidth; 
                 }
 
-                // bottom of line selection
                 else if (i == selEndRow) {
                     int eCol = (selection.startIdx < selection.endIdx) ? selection.endCol : selection.startCol; 
                     hlEnd = (eCol + 1) * charWidth; 
-                } else {
-                    hlStart = 0.0f; 
-                    hlEnd = contentWidth; 
                 }
 
-                if (hlEnd > hlStart){
-                    drawList->AddRectFilled(
-                        ImVec2(screenPos.x + hlStart, lineY), 
-                        ImVec2(screenPos.x + hlEnd, lineY + lineHeight), 
-                        IM_COL32(0, 120, 215, 128)
-                    ); 
-                }
+                drawList->AddRectFilled(
+                    ImVec2(screenPos.x + hlStart, lineY), 
+                    ImVec2(screenPos.x + hlEnd, lineY + lineHeight), 
+                    IM_COL32(0, 120, 215, 128)
+                ); 
             }
 
             // draw the text 
@@ -236,9 +240,9 @@ void ConsoleUI::drawLogsManualSelection () {
             ImGui::TextColored(style.color, "%s", text.c_str());
         }
     }
-
-    ImGui::SetCursorScreenPos(screenPos);
-    ImGui::Dummy(ImVec2(contentWidth, filteredIndices.size() * lineHeight));
+    // Create a dummy item so that ImGui is able to detect how tall the content is 
+    // ImGui::SetCursorScreenPos(screenPos);
+    // ImGui::Dummy(ImVec2(contentWidth, filteredIndices.size() * lineHeight));
 }
 
 const void ConsoleUI::drawMenuBar() {      
@@ -392,7 +396,6 @@ void ConsoleUI::drawSingleLog(const LogEntry& log, int unfilteredIdx, int filter
     bool isSelected = (selection.active && filteredIdx >= selMin && filteredIdx <= selMax);
 
     if (ImGui::Selectable("##row", isSelected, ImGuiSelectableFlags_SpanAvailWidth)) {
-        selection.isCharMode = false; 
         if (ImGui::GetIO().KeyShift) {
             if (selection.startIdx == -1) {
                 selection.startIdx = filteredIdx; 
@@ -507,11 +510,6 @@ std::string ConsoleUI::formatLogString(const LogEntry& log) {
 }
 
 void ConsoleUI::copySelectedLogs() {
-    if (selection.isCharMode && isCurrentFontMonospace()) {
-        copyManualSelection();
-        return; 
-    }
-
     if (!selection.active) return; 
 
     auto [start, end] = selection.getRange(); 
