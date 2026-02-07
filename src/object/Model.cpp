@@ -5,21 +5,20 @@
 #include "engine/ShaderProgram.hpp"
 
 
-Model::Model(const unsigned int ID) : ID(ID) {
-
-}
+Model::Model(const unsigned int ID, ShaderRegistry* _shaderRegPtr, Logger* _loggerPtr)
+    : ID(ID), shaderRegPtr(_shaderRegPtr), loggerPtr(_loggerPtr) {}
 
 
 // -----FUNCTIONALITY
 void Model::renderModel() {
-    ShaderProgram* program = ShaderRegistry::getProgram(programID); 
+    ShaderProgram* program = shaderRegPtr->getProgram(programID); 
     if (properties.hasMeshes == false) {
-        Logger::addLog(LogLevel::WARNING, "MODEL", "Render failure, no meshes present");
+        loggerPtr->addLog(LogLevel::WARNING, "MODEL", "Render failure, no meshes present");
         return;
     }
 
     if (properties.hasProgram == false) {
-        Logger::addLog(LogLevel::WARNING, "MODEL", "Render failure, no shader program present");
+        loggerPtr->addLog(LogLevel::WARNING, "MODEL", "Render failure, no shader program present");
         return;
     }
 

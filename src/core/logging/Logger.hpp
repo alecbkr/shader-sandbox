@@ -4,7 +4,6 @@
 #include "LogSink.hpp"
 #include "core/logging/ConsoleSink.hpp"
 
-
 enum class LoggerInitialization {
     CONSOLE_FILE_STDOUT = 0, 
     CONSOLE_FILE = 1,
@@ -14,16 +13,16 @@ enum class LoggerInitialization {
 
 class Logger {
 public: 
-    Logger() = delete; 
+    Logger();
 
-    static bool initialize(LoggerInitialization initSetting);
-    static void addLog(LogLevel level, std::string src, std::string msg, std::string additional = "", int lineNum = -1); 
-    static void addSink(std::shared_ptr<LogSink> sink); 
-    static void removeSink(std::shared_ptr<LogSink> sink);
-    static std::shared_ptr<ConsoleSink> getConsoleSinkPtr();
+    bool initialize();
+    void addLog(LogLevel level, std::string src, std::string msg, std::string additional = "", int lineNum = -1); 
+    void addSink(std::shared_ptr<LogSink> sink); 
+    void removeSink(std::shared_ptr<LogSink> sink);
+    std::shared_ptr<ConsoleSink> getConsoleSinkPtr();
     
 private:
-    static std::vector<std::shared_ptr<LogSink>> sinks;
-    static std::shared_ptr<ConsoleSink> consoleSinkPtr;
-    static bool initialized;
+    std::vector<std::shared_ptr<LogSink>> sinks;
+    std::shared_ptr<ConsoleSink> consoleSinkPtr = nullptr;
+    bool initialized = false;
 }; 

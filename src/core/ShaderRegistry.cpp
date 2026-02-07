@@ -1,12 +1,20 @@
 #include "core/ShaderRegistry.hpp"
-#include "core/logging/LogSink.hpp"
 #include "core/logging/Logger.hpp"
-#include "engine/ShaderProgram.hpp"
 
-std::unordered_map<std::string, ShaderProgram *> ShaderRegistry::programs;
-bool ShaderRegistry::initialized = false;
+ShaderRegistry::ShaderRegistry() {
+    initialized = false;
+    loggerPtr = nullptr;
+    programs.clear();
+}
 
-bool ShaderRegistry::initialize() {
+bool ShaderRegistry::initialize(Logger* _loggerPtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Shader Registry", "Shader Registry was already initialized.");
+        return false;
+    }
+
+    programs.clear();
+
     if (!registerProgram("../shaders/tex.vert", "../shaders/tex.frag", "tex")) {
         return false;
     };
@@ -14,16 +22,25 @@ bool ShaderRegistry::initialize() {
         return false;
     }
 
-    ShaderRegistry::initialized = true;
+    loggerPtr = _loggerPtr;
+
+    initialized = true;
     return true;
+}
+
+void ShaderRegistry::shutdown() {
+    if (!initialized) return;
+    loggerPtr = nullptr;
+    programs.clear();
+    initialized = false;
 }
 
 bool ShaderRegistry::registerProgram(const std::string& vertex_file, const std::string& fragment_file, const std::string& programName) {
     if (programName == "") {
-        Logger::addLog(LogLevel::WARNING, "registerProgram", "Shader name cannot be empty");
+        loggerPtr->addLog(LogLevel::WARNING, "registerProgram", "Shader name cannot be empty");
         return false;
     }
-    ShaderProgram *newProgram = new ShaderProgram(vertex_file.c_str(), fragment_file.c_str(), programName.c_str());
+    ShaderProgram *newProgram = new ShaderProgram(vertex_file.c_str(), fragment_file.c_str(), programName.c_str(), loggerPtr);
     auto [it, inserted] = programs.emplace(programName, newProgram);
     //auto [it, inserted] = programs.emplace( programName, ShaderProgram(vertex_file.c_str(), fragment_file.c_str(), programName.c_str()));
 

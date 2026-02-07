@@ -4,6 +4,7 @@
 #include <imgui/imgui_impl_opengl3.h>
 #include "object/Model.hpp"
 #include "core/UniformTypes.hpp"
+8#include "core/FileRegistry.hpp"
 
 struct ModelShaderMenu {
     unsigned int modelID; //std::string objectName;
@@ -27,45 +28,66 @@ struct ShaderLinkMenu {
     bool initialized;
 };
 
-class InspectorUI {
-    public:
-    static void render();
-  
-    private:
-    static int height;
-    static int width;
-    static std::vector<std::string> uniformNamesToDelete;
-    static std::string newUniformName;
-    static std::string newUniformShaderName;
-    static UniformType newUniformType;
-    static std::unordered_map<unsigned int, ModelShaderMenu> modelShaderMenus;
-    static std::unordered_map<unsigned int, ModelTextureMenu> modelTextureMenus;
-    static std::unordered_map<std::string, ShaderLinkMenu> shaderLinkMenus;
+class Logger;
+class InspectorEngine;
+class TextureRegistry;
+class ShaderRegistry;
+class UniformRegistry;
+class EventDispatcher;
+class ModelCache;
 
-    static void drawUniformInspector();
-    static void drawObjectsInspector();
-    static void drawAssetsInspector();
-    static void drawShaderFileInspector();
-    static void drawAddObjectMenu();
-    static void drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus);
-    static void drawShaderLinkMenu(ShaderLinkMenu& menu, const std::vector<const char*>& vertChoices, const std::vector<const char*>& geoChoices, const std::vector<const char*>& fragChoices);
-    static void initializeMenu(ShaderLinkMenu& menu, const std::vector<const char*>& vertChoices, const std::vector<const char*>& geoChoices, const std::vector<const char*>& fragChoices);
-    static void initializeMenu(ModelShaderMenu& menu, const std::vector<const char*>& shaderChoices);
-    static void initializeMenu(ModelTextureMenu& menu);
-    static bool drawShaderProgramMenu(ModelShaderMenu& selector, const std::vector<const char*>& shaderChoices);
-    static bool drawTextureMenu(ModelTextureMenu& selector);
-    static bool drawTextInput(std::string *value, const char *label);
-    static bool drawUniformInputValue(int* value, Uniform* uniform = nullptr);
-    static bool drawUniformInputValue(float* value, Uniform* uniform = nullptr);
-    static bool drawUniformInputValue(glm::vec3* value, Uniform* uniform = nullptr);
-    static bool drawUniformInputValue(glm::vec4* value, Uniform* uniform = nullptr);
-    static bool drawUniformInputValue(glm::mat4* value, Uniform* uniform = nullptr);
-    static bool drawUniformInputValue(glm::quat* value, Uniform* uniform = nullptr);
-    static bool drawUniformInputValue(InspectorSampler2D* value, Uniform* uniform = nullptr);
-    static bool drawUniformInputValue(UniformFunction* value, Uniform* uniform);
-    static void drawUniformInput(Uniform& uniform, const std::string& objectName);
-    static void drawUniformInput(Uniform& uniform, unsigned int modelID);
-    static bool drawModelPositionInput(Model* model);
-    static bool drawModelScaleInput(Model* model);
-    static bool drawModelOrientationInput(Model* model);
+class InspectorUI {
+public:
+    InspectorUI();
+    bool initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr);
+    void shutdown();
+    void render();
+  
+private:
+    bool intitialized = false;
+    Logger* loggerPtr = nullptr;
+    InspectorEngine* inspectorEngPtr = nullptr;
+    TextureRegistry* textureRegPtr = nullptr;
+    ShaderRegistry* shaderRegPtr = nullptr;
+    UniformRegistry* uniformRegPtr = nullptr;
+    EventDispatcher* eventsPtr = nullptr;
+    ModelCache* modelCachePtr = nullptr;
+    FileRegistry* fileRegPtr = nullptr;
+    int height = 0;
+    int width = 0;
+    std::string newUniformName;
+    std::string newUniformShaderName;
+    UniformType newUniformType = UniformType::NoType;
+    std::unordered_map<unsigned int, ModelShaderMenu> modelShaderMenus;
+    std::unordered_map<unsigned int, ModelTextureMenu> modelTextureMenus;
+    std::unordered_map<std::string, ShaderLinkMenu> shaderLinkMenus;
+
+    void drawUniformInspector();
+    void drawObjectsInspector();
+    void drawAssetsInspector();
+    void drawRenameFileEntry(ShaderFile* fileData);
+    void drawDeleteFileEntity(ShaderFile* fileData);
+    void drawStandardFileEntry(ShaderFile* fileData);
+    void drawShaderFileInspector();
+    void drawAddObjectMenu();
+    void drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus);
+    void drawShaderLinkMenu(ShaderLinkMenu& menu, const std::vector<const char*>& vertChoices, const std::vector<const char*>& geoChoices, const std::vector<const char*>& fragChoices);
+    void initializeMenu(ShaderLinkMenu& menu, const std::vector<const char*>& vertChoices, const std::vector<const char*>& geoChoices, const std::vector<const char*>& fragChoices);
+    void initializeMenu(ModelShaderMenu& menu, const std::vector<const char*>& shaderChoices);
+    void initializeMenu(ModelTextureMenu& menu);
+    bool drawShaderProgramMenu(ModelShaderMenu& selector, const std::vector<const char*>& shaderChoices);
+    bool drawTextureMenu(ModelTextureMenu& selector);
+    bool drawTextInput(std::string *value, const char *label);
+    bool drawUniformInputValue(int* value, Uniform* uniform = nullptr);
+    bool drawUniformInputValue(float* value, Uniform* uniform = nullptr);
+    bool drawUniformInputValue(glm::vec3* value, Uniform* uniform = nullptr);
+    bool drawUniformInputValue(glm::vec4* value, Uniform* uniform = nullptr);
+    bool drawUniformInputValue(glm::mat4* value, Uniform* uniform = nullptr);
+    bool drawUniformInputValue(glm::quat* value, Uniform* uniform = nullptr);
+    bool drawUniformInputValue(InspectorSampler2D* value, Uniform* uniform = nullptr);
+    void drawUniformInput(Uniform& uniform, const std::string& objectName);
+    void drawUniformInput(Uniform& uniform, unsigned int modelID);
+    bool drawModelPositionInput(Model* model);
+    bool drawModelScaleInput(Model* model);
+    bool drawModelOrientationInput(Model* model);
 };

@@ -1,14 +1,14 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
-// ENGINE
 #include "application/Application.hpp"
 
+#define START_WIDTH 960
+#define START_HEIGHT 540
+#define APPLICATION_TITLE "Shader Sandbox"
+
 int main() {
-    if (!Application::initialize({1920, 1080, "Shader Sandbox", LoggerInitialization::CONSOLE_FILE_STDOUT})) {
+    AppContext ctx = AppContext(START_WIDTH, START_HEIGHT, APPLICATION_TITLE);
+    if (!Application::initialize(ctx)) {
         return 1;
     }
-    Application::runLoop();
+    Application::runLoop(ctx);
     return 0;
 }
-

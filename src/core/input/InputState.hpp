@@ -5,40 +5,45 @@
 #include <cstdint>
 
 #include "platform/components/Keys.hpp"
+#include "core/logging/Logger.hpp"
 
 class InputState {
 public:
     static constexpr int KEY_COUNT = keyIndex(Key::Count);
     static constexpr int MOUSE_COUNT = buttonIndex(MouseButton::Count);
-    static std::vector<Key> pressedKeys;
+    std::vector<Key> pressedKeys;
 
-    static bool initialize();
-    static void beginFrame(); // call before glfwPollEvents()
-    static bool isDownKey(Key key);
-    static bool wasPressed(Key key);
-    static bool wasReleased(Key key);
-    static bool isDownMouse(MouseButton button);
-    static bool wasPressedMouse(MouseButton button);
-    static bool wasReleasedMouse(MouseButton button);
-    static void onKey(int _key, int action);
-    static void onMouseButton(int _button, int action);
-    static void onCursorPos(double x, double y);
-    static void onScroll(double xoff, double yoff);
+    InputState();
+    bool initialize(Logger* _loggerPtr);
+    void shutdown();
+    void beginFrame(); // call before glfwPollEvents()
+    bool isDownKey(Key key);
+    bool wasPressed(Key key);
+    bool wasReleased(Key key);
+    bool isDownMouse(MouseButton button);
+    bool wasPressedMouse(MouseButton button);
+    bool wasReleasedMouse(MouseButton button);
+    void onKey(int _key, int action);
+    void onMouseButton(int _button, int action);
+    void onCursorPos(double x, double y);
+    void onScroll(double xoff, double yoff);
 
 private:
-    static std::array<uint8_t, KEY_COUNT> down;
-    static std::array<uint8_t, KEY_COUNT> pressed;
-    static std::array<uint8_t, KEY_COUNT> released;
+    bool initialized = false;
+    Logger* loggerPtr = nullptr;
+    std::array<uint8_t, KEY_COUNT> down;
+    std::array<uint8_t, KEY_COUNT> pressed;
+    std::array<uint8_t, KEY_COUNT> released;
 
-    static std::array<uint8_t, MOUSE_COUNT> mouseDown;
-    static std::array<uint8_t, MOUSE_COUNT> mousePressed;
-    static std::array<uint8_t, MOUSE_COUNT> mouseReleased;
+    std::array<uint8_t, MOUSE_COUNT> mouseDown;
+    std::array<uint8_t, MOUSE_COUNT> mousePressed;
+    std::array<uint8_t, MOUSE_COUNT> mouseReleased;
 
-    static double mouseX;
-    static double mouseY;
-    static double mouseDeltaX;
-    static double mouseDeltaY;
+    double mouseX = 0.0;
+    double mouseY = 0.0;
+    double mouseDeltaX = 0.0;
+    double mouseDeltaY = 0.0;
     
-    static double scrollX;
-    static double scrollY;
+    double scrollX = 0.0;
+    double scrollY = 0.0;
 };

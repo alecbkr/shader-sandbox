@@ -8,6 +8,8 @@
 #include "../logging/ConsoleSink.hpp"
 #include "../ConsoleEngine.hpp"
 
+class Logger;
+
 // Lookup table for textcolors for each log 
 static const ImVec4 LOG_COLORS[] = {
     ImVec4(1.0f, 0.0f, 0.0f, 1.0f),         // Critical (Deep Red) 
@@ -19,30 +21,31 @@ static const ImVec4 LOG_COLORS[] = {
 // Adapted from imgui_demo.cpp
 class ConsoleUI {
 public: 
-    static bool initialize(std::shared_ptr<ConsoleSink> consoleSink);
-    static const void render();
+    ConsoleUI();
+    bool initialize(Logger* _loggerPtr);
+    const void render();
      
 private:
-    static float targetWidth;
-    static float targetHeight;
-    static ImVec2 windowPos;
+    float targetWidth = 0.0f;
+    float targetHeight = 0.0f;
+    ImVec2 windowPos = ImVec2(0, 0);
     
-    static std::shared_ptr<ConsoleEngine> engine; 
-    static std::shared_ptr<ConsoleSink> logSrc; 
+    std::shared_ptr<ConsoleEngine> engine = nullptr; 
+    std::shared_ptr<ConsoleSink> logSrc = nullptr;
 
     // char inputBuf[256]; 
-    static std::vector<std::string> history; 
+    std::vector<std::string> history; 
     // int historyPos; 
 
-    static bool isAutoScroll; 
+    bool isAutoScroll = false; 
     // bool isFocused = true;      // only take in input when the user is using the widget 
-    static size_t lastLogSize; 
+    size_t lastLogSize = 0; 
 
-    static bool initialized;
+    bool initialized = false;
     
-    static const void drawConsole(); 
-    static void readLogs(); 
-    static const void drawMenuBar(); 
+    const void drawConsole(); 
+    void readLogs(); 
+    const void drawMenuBar(); 
 
     // const void handleInputHistory(); // User input to go through logs in console 
     const void executeCommand(); 

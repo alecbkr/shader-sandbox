@@ -1,39 +1,46 @@
 #include "core/input/ActionRegistry.hpp"
 #include "core/logging/Logger.hpp"
-#include "core/EventDispatcher.hpp"
-#include "core/input/ContextManager.hpp"
-#include "core/ui/ViewportUI.hpp"
 
-std::array<ActionFn, (std::size_t)Action::Count> ActionRegistry::actions{};
-std::vector<Action> ActionRegistry::actionsToProcess{};
+// void cameraForwardCB() { ViewportUI::getCamera()->MoveForward(); } // Move camera forward
+// void cameraBackCB() { ViewportUI::getCamera()->MoveBack(); } // Move camera back
+// void cameraLeftCB() { ViewportUI::getCamera()->MoveLeft(); } // Move camera left
+// void cameraRightCB() { ViewportUI::getCamera()->MoveRight(); } // Move camera right
+// void cameraUpCB() { ViewportUI::getCamera()->MoveUp(); } // Move camera up
+// void cameraDownCB() { ViewportUI::getCamera()->MoveDown(); } // Move camera down
+// void switchControlCtxCB() { ContextManager::toggleCtx(); }
+// void saveActiveShaderFileCB() { EventDispatcher::TriggerEvent({ EventType::SaveActiveShaderFile, false, std::monostate{} }); }
+// void saveProjectCB() { EventDispatcher::TriggerEvent({ EventType::SaveProject, false, std::monostate{} }); }
+// void quitApplicationCB() { EventDispatcher::TriggerEvent({ EventType::Quit, false, std::monostate{} }); }
 
-void noneCB() {
-    Logger::addLog(LogLevel::WARNING, "Action::None Callback", "The placeholder action 'None' was called. This means there is a keybind that was pressed that is bound to an empty action.");
+ActionRegistry::ActionRegistry() {
+    initialized = false;
+    actionsToProcess.clear();
+    loggerPtr = nullptr;
 }
 
-void cameraForwardCB() { ViewportUI::getCamera()->MoveForward(); } // Move camera forward
-void cameraBackCB() { ViewportUI::getCamera()->MoveBack(); } // Move camera back
-void cameraLeftCB() { ViewportUI::getCamera()->MoveLeft(); } // Move camera left
-void cameraRightCB() { ViewportUI::getCamera()->MoveRight(); } // Move camera right
-void cameraUpCB() { ViewportUI::getCamera()->MoveUp(); } // Move camera up
-void cameraDownCB() { ViewportUI::getCamera()->MoveDown(); } // Move camera down
-void switchControlCtxCB() { ContextManager::toggleCtx(); }
-void saveActiveShaderFileCB() { EventDispatcher::TriggerEvent({ EventType::SaveActiveShaderFile, false, std::monostate{} }); }
-void saveProjectCB() { EventDispatcher::TriggerEvent({ EventType::SaveProject, false, std::monostate{} }); }
-void quitApplicationCB() { EventDispatcher::TriggerEvent({ EventType::Quit, false, std::monostate{} }); }
+bool ActionRegistry::initialize(Logger* _loggerPtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Action Registry Initialization", "Action Registry was already initialized.");
+        return false;
+    }
 
-bool ActionRegistry::initialize() {
-    bind(Action::None, noneCB);
-    bind(Action::CameraForward, cameraForwardCB);
-    bind(Action::CameraBack, cameraBackCB);
-    bind(Action::CameraLeft, cameraLeftCB);
-    bind(Action::CameraRight, cameraRightCB);
-    bind(Action::CamearUp, cameraUpCB);
-    bind(Action::CameraDown, cameraDownCB);
-    bind(Action::SwitchControlContext, switchControlCtxCB);
-    bind(Action::SaveActiveShaderFile, saveActiveShaderFileCB);
-    bind(Action::SaveProject, saveProjectCB);
-    bind(Action::QuitApplication, quitApplicationCB);
+    loggerPtr = _loggerPtr;
+
+    bind(Action::None, [&]{
+        loggerPtr->addLog(LogLevel::WARNING, "Action::None Callback", "The placeholder action 'None' was called.");
+    });
+    // bind(Action::CameraForward, cameraForwardCB);
+    // bind(Action::CameraBack, cameraBackCB);
+    // bind(Action::CameraLeft, cameraLeftCB);
+    // bind(Action::CameraRight, cameraRightCB);
+    // bind(Action::CamearUp, cameraUpCB);
+    // bind(Action::CameraDown, cameraDownCB);
+    // bind(Action::SwitchControlContext, switchControlCtxCB);
+    // bind(Action::SaveActiveShaderFile, saveActiveShaderFileCB);
+    // bind(Action::SaveProject, saveProjectCB);
+    // bind(Action::QuitApplication, quitApplicationCB);
+
+    initialized = true;
     return true;
 }
 
@@ -54,6 +61,5 @@ void ActionRegistry::processActionsForFrame() {
 }
 
 void ActionRegistry::addActionToProcess(Action action) {
-    // Logger::addLog(LogLevel::INFO, "Action Registry", "An action was recorded.");
     ActionRegistry::actionsToProcess.push_back(action);
 }

@@ -1,7 +1,6 @@
 #include "core/ui/MenuUI.hpp"
+#include "core/logging/Logger.hpp"
 #include "core/EventDispatcher.hpp"
-
-bool MenuUI::initialized = false;
 
 bool testMenuUIQuit(const EventPayload& payload) {
     printf("Testing Quit\n");
@@ -13,10 +12,23 @@ bool testMenuUISave(const EventPayload& payload) {
     return true;
 }
 
-bool MenuUI::initialize() {
-    EventDispatcher::Subscribe(EventType::SaveActiveShaderFile, testMenuUISave);
-    EventDispatcher::Subscribe(EventType::Quit, testMenuUIQuit);
-    MenuUI::initialized = true;
+MenuUI::MenuUI() {
+    initialized = false;
+    loggerPtr = nullptr;
+    eventsPtr = nullptr;
+}
+
+bool MenuUI::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Menu UI Initialization", "Menu UI was already initialized.");
+        return false;
+    }
+    loggerPtr = _loggerPtr;
+    eventsPtr = _eventsPtr;
+
+    eventsPtr->Subscribe(EventType::SaveActiveShaderFile, testMenuUISave);
+    eventsPtr->Subscribe(EventType::Quit, testMenuUIQuit);
+    initialized = true;
     return true;
 }
 
@@ -49,7 +61,7 @@ void MenuUI::drawMenuItem(const MenuItem& item) {
             ImGui::Separator();
         } else {
             if (ImGui::MenuItem(item.name.data(), item.shortcut.data())) {
-                EventDispatcher::TriggerEvent(Event{ item.eventType, false, std::monostate{} });
+                eventsPtr->TriggerEvent(Event{ item.eventType, false, std::monostate{} });
             }
         }
     }
