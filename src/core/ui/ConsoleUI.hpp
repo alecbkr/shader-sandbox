@@ -35,12 +35,18 @@ static const ImVec4 LOG_COLORS[] = {
 struct LogSelection {
     int startIdx = -1; 
     int endIdx = -1; 
+
+    int startCol = 0; 
+    int endCol = 0; 
+
     bool active = false; 
+    bool isCharMode = false;    // if true select chars from the line if false select full lines
 
     void clear () {
         startIdx = -1; 
         endIdx = -1; 
         active = false; 
+        isCharMode = false; 
     }
     // handles the ragging of the cursor 
     std::pair <int, int> getRange() const {
@@ -92,4 +98,8 @@ private:
 
     static LogStyle getLogStyle(const LogEntry& log); 
     static std::string formatLogString(const LogEntry& log); 
+
+    static void drawLogsManualSelection(); 
+    static void copyManualSelection(); 
+    static bool isCurrentFontMonospace();     
 }; 
