@@ -21,10 +21,9 @@ Keybinds::Keybinds() {
     ctxManagerPtr = nullptr;
     actionRegPtr = nullptr;
     inputsPtr = nullptr;
-    inputStateInitialized = false;
 }
 
-bool Keybinds::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, ActionRegistry* _actionRegPtr) {
+bool Keybinds::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, ActionRegistry* _actionRegPtr, InputState* _inputsPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Keybinds Initialization", "Keybinds have already been initialzied.");
         return false;
@@ -32,8 +31,7 @@ bool Keybinds::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ac
     loggerPtr = _loggerPtr;
     ctxManagerPtr = _ctxManagerPtr;
     actionRegPtr = _actionRegPtr;
-    inputsPtr = nullptr;
-    inputStateInitialized = false;
+    inputsPtr = _inputsPtr;
     bindings_.clear();
 
     addBinding(makeBinding(Action::QuitApplication, KeyCombo{Key::LeftAlt, Key::F4}, ControlCtx::Editor));
@@ -60,19 +58,6 @@ void Keybinds::shutdown() {
     inputsPtr = nullptr;
     bindings_.clear();
     initialized = false;
-    inputStateInitialized = false;
-}
-
-void Keybinds::setInputsPtr(InputState* _inputsPtr) {
-    if (inputStateInitialized) {
-        if (initialized) {
-            loggerPtr->addLog(LogLevel::WARNING, "Keybinds Set Input State Pointer", "Input State Pointer was already set.");
-        }
-        return;
-    }
-
-    inputsPtr = _inputsPtr;
-    inputStateInitialized = true;
 }
 
 Binding Keybinds::makeBinding(Action action, KeyCombo combo, ControlCtx ctx, Trigger trigger, bool enabled) {
@@ -96,7 +81,6 @@ const std::vector<Binding>& Keybinds::bindings() {
 }
 
 bool Keybinds::comboDown(const KeyCombo& combo) {
-    if (!inputStateInitialized) return false;
     if (combo.keys.empty()) return false;
     for (Key key : combo.keys) {
         if (!inputsPtr->isDownKey(key)) return false;
@@ -105,7 +89,6 @@ bool Keybinds::comboDown(const KeyCombo& combo) {
 }
 
 bool Keybinds::comboPressedThisFrame(const KeyCombo& combo) {
-    if (!inputStateInitialized) return false;
     if (!comboDown(combo)) return false;
 
     for (Key key : combo.keys) {

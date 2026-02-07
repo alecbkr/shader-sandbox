@@ -50,13 +50,12 @@ TEST_CASE("Platform: initialize window + callbacks (integration, may skip)", "[p
 
     ContextManager ctx;
     REQUIRE(ctx.initialize(&logger, &actions));
-
-    Keybinds keybinds;
-    REQUIRE(keybinds.initialize(&logger, &ctx, &actions));
-
+    
     InputState input;
     REQUIRE(input.initialize(&logger));
-    keybinds.setInputsPtr(&input);
+
+    Keybinds keybinds;
+    REQUIRE(keybinds.initialize(&logger, &ctx, &actions, &input));
 
     Platform p;
 

@@ -112,15 +112,14 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Context Manager was not initialized successfully.");
         return false;
     }
-    if (!ctx.keybinds.initialize(&ctx.logger, &ctx.ctx_manager, &ctx.action_registry)) {
-        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Keybinds were not initialized successfully.");
-        return false;
-    }
     if (!ctx.inputs.initialize(&ctx.logger)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Input State was not initialized successfully.");
         return false;
     }
-    ctx.keybinds.setInputsPtr(&ctx.inputs);
+    if (!ctx.keybinds.initialize(&ctx.logger, &ctx.ctx_manager, &ctx.action_registry, &ctx.inputs)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Keybinds were not initialized successfully.");
+        return false;
+    }
     if (!ctx.platform.initialize(&ctx.logger, &ctx.ctx_manager, &ctx.keybinds, &ctx.action_registry, &ctx.inputs, ctx.width, ctx.height, ctx.app_title)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Platform layer was not initialized successfully.");
         return false;
