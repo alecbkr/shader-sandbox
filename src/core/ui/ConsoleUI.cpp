@@ -237,12 +237,14 @@ void ConsoleUI::drawLogsManualSelection () {
             // draw the text 
             ImGui::SetCursorScreenPos(ImVec2(screenPos.x, lineY));
             LogStyle style = getLogStyle(log);
-            ImGui::TextColored(style.color, "%s", text.c_str());
+            
+            // ImGui::TextColored(style.color, "%s", text.c_str());
+            ImGui::TextColored(style.color, "%s", style.prefix.c_str()); 
+            ImGui::SameLine(); 
+            ImGui::Text("%s%s", log.msg.c_str(), log.additional.c_str());
+        
         }
     }
-    // Create a dummy item so that ImGui is able to detect how tall the content is 
-    // ImGui::SetCursorScreenPos(screenPos);
-    // ImGui::Dummy(ImVec2(contentWidth, filteredIndices.size() * lineHeight));
 }
 
 const void ConsoleUI::drawMenuBar() {      
