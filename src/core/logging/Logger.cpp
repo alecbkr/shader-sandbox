@@ -66,9 +66,11 @@ void Logger::addLog(LogLevel level, std::string src, std::string msg, std::strin
         sink->addLog(entry); 
     }
 
-    if(level == LogLevel::CRITICAL) {
-        exit(1); 
-    }
+    // TODO: This code shouldn't live in the logger. We can add a flag in the logger like "hadCritialError" and check for that every frame
+    // but the logger shouldn't be able to shut down the whole application, this will stip deconstructors and not allow us to shutdown gracefully.
+    // if(level == LogLevel::CRITICAL) {
+    //     exit(1); 
+    // }
 }
 
 std::shared_ptr<ConsoleSink> Logger::getConsoleSinkPtr() {
