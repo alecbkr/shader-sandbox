@@ -239,7 +239,7 @@ TEST_CASE("Keybinds EditorCamera bindings work regardless of context (F2)", "[ke
     int switchCalls = 0;
     actions.bind(Action::SwitchControlContext, [&] { switchCalls++; });
 
-    // Press F2 in Editor context
+    // ---- Frame 1: press F2 in Editor ----
     input.beginFrame();
     pressKey(input, Key::F2);
 
@@ -247,7 +247,10 @@ TEST_CASE("Keybinds EditorCamera bindings work regardless of context (F2)", "[ke
     actions.processActionsForFrame();
     REQUIRE(switchCalls == 1);
 
-    // Press F2 in Camera context
+    // Release so we can press again next frame
+    releaseKey(input, Key::F2);
+
+    // ---- Frame 2: press F2 in Camera ----
     input.beginFrame();
     pressKey(input, Key::F2);
 

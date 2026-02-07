@@ -30,7 +30,7 @@ public:
     void initializeInputCallbacks();
     void setWindowIcon();
     double getTime();
-    std::filesystem::path getExeDir();
+    std::filesystem::path getExeDir() const;
 
 private:
     bool initialized = false;
