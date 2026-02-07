@@ -7,6 +7,8 @@ with the prefix APPTIME.
 */
 #pragma once
 
+#include <functional>
+
 class Logger;
 class Platform;
 
@@ -16,6 +18,7 @@ class AppTimer {
 public:
     AppTimer();
     bool initialize(Logger* _loggerPtr, Platform* _platformPtr);
+    bool initialize(Logger* _loggerPtr, std::function<double()> timeFn);
     void update();
     float getDt();
     float getFPS();
@@ -30,4 +33,5 @@ private:
     float fps = 0.0f;
     Logger* loggerPtr;
     Platform* platformPtr;
+    std::function<double()> nowFn;
 };
