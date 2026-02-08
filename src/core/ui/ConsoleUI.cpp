@@ -76,9 +76,9 @@ const void ConsoleUI::render() {
                 } 
 
                 // clear selection logic 
-                // if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered()) {
-                //     selection.clear();
-                // }
+                if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered()) {
+                    selection.clear();
+                }
             }
             ImGui::EndChild(); 
 
@@ -97,20 +97,18 @@ void ConsoleUI::drawLogs() {
     filteredIndices.reserve(logs.size()); 
 
     const LogEntry* lastLog = nullptr; 
-
     for (int i = 0; i < logs.size(); ++i) {    
         const auto& log = logs[i];
         
         if (log.level == LogLevel::ERROR && !togStates.isShowError) continue; 
-        else if (log.level == LogLevel::WARNING && !togStates.isShowWarning) continue; 
-        else if (log.level == LogLevel::INFO && !togStates.isShowInfo) continue; 
-        else if (log.category == LogCategory::UI && !togStates.isShowUI) continue; 
-        else if (log.category == LogCategory::ASSETS && !togStates.isShowAssets) continue; 
-        else if (log.category == LogCategory::SHADER && !togStates.isShowShader) continue; 
-        else if (log.category == LogCategory::OTHER && !togStates.isShowOther) continue;  
-        else if (log.category == LogCategory::SYSTEM && !togStates.isShowSystem) continue; 
+        if (log.level == LogLevel::WARNING && !togStates.isShowWarning) continue; 
+        if (log.level == LogLevel::INFO && !togStates.isShowInfo) continue; 
+        if (log.category == LogCategory::UI && !togStates.isShowUI) continue; 
+        if (log.category == LogCategory::ASSETS && !togStates.isShowAssets) continue; 
+        if (log.category == LogCategory::SHADER && !togStates.isShowShader) continue; 
+        if (log.category == LogCategory::OTHER && !togStates.isShowOther) continue;  
+        if (log.category == LogCategory::SYSTEM && !togStates.isShowSystem) continue; 
         
-        // apply the collapse log logic
         if (togStates.isCollapsedLogs && lastLog) {
             bool isDuplicate = ( log.msg == lastLog->msg && 
                                  log.level == lastLog->level &&
@@ -122,18 +120,16 @@ void ConsoleUI::drawLogs() {
         lastLog = &log; 
     }
 
-    if (isNewLog && togStates.isAutoScroll) {
-        ImGui::SetScrollHereY(1.0f); 
-    }
+    TextSelectorLayout layout;
 
-    if (TextSelector::Begin("##LogList", (int)filteredIndices.size(), selection)) {
+    if (TextSelector::Begin("##LogList", (int)filteredIndices.size(), selection, layout)) {
         
         if (isNewLog && togStates.isAutoScroll) {
             ImGui::SetScrollHereY(1.0f); 
         }
-        
+
         ImGuiListClipper clipper;
-        clipper.Begin(filteredIndices.size(), TextSelector::GetLineHeight());
+        clipper.Begin(filteredIndices.size(), layout.lineHeight);
 
         while (clipper.Step()) {
             for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i) {
@@ -144,7 +140,7 @@ void ConsoleUI::drawLogs() {
                 std::string fullText = formatLogString(log);
                 if (repeatCount > 0) fullText += " (" + std::to_string(repeatCount + 1) + ")";
 
-                TextSelector::Text(fullText, i, [&]() {
+                TextSelector::Text(i, fullText, selection, layout, [&]() {
                     LogStyle style = getLogStyle(log);
                     
                     ImGui::TextColored(style.color, "%s", style.prefix.c_str());
@@ -166,6 +162,9 @@ void ConsoleUI::drawLogs() {
         TextSelector::End();
     }
 
+    if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered()) {
+        selection.clear();
+    }
 }
 
 const void ConsoleUI::drawMenuBar() {      
@@ -339,11 +338,15 @@ std::string ConsoleUI::formatLogString(const LogEntry& log) {
 }
 
 void ConsoleUI::copySelectedLogs() {
-if (!selection.isActive) return; 
+    if (!selection.isActive) return; 
 
     const auto& logs = ConsoleEngine::getLogs();
     
+    // Use the helper to fetch lines based on the filtered indices
     TextSelector::copyText(selection, (int)filteredIndices.size(), [&](int idx) -> std::string {
+        // Ensure index is valid
+        if (idx < 0 || idx >= filteredIndices.size()) return "";
+
         int unfilteredIdx = filteredIndices[idx];
         const auto& log = logs[unfilteredIdx];
         

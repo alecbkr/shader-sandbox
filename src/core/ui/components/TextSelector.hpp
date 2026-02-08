@@ -1,49 +1,53 @@
 #pragma once 
 #include "imgui.h"
-#include <algorithm>
-#include <cmath> 
 #include <string>
 #include <functional>
+#include <vector>
 
-// This only works if the text is monospaced however, the font that we use should already be monospaced.
+enum class SelectionMode {
+    Normal,
+    Word,
+    Line
+};
 
-// stores information about dragging the cursor with the text boxes
 struct TextSelectionCtx {
+    SelectionMode mode = SelectionMode::Normal;
     bool isActive = false; 
-    bool isCharMode = false; 
-
-    int startRow= -1; 
+    bool isCharMode = false; // true = select chars, false = select full line
+    int startRow = -1; 
     int endRow = -1; 
-
     int startCol = 0; 
     int endCol = 0; 
 
     void clear() {
         isActive = false; 
-        isCharMode = false; // true for selecting individual sections of text and false for selecting whole line
-        startRow = -1; 
-        endRow = -1; 
-        startCol = 0; 
-        endCol = 0; 
+        SelectionMode mode = SelectionMode::Normal;
+        startRow = -1; endRow = -1; 
+        startCol = 0; endCol = 0; 
     }
 }; 
 
-
+struct TextSelectorLayout {
+    ImVec2 origin; 
+    float lineHeight; 
+    float charWidth; 
+    float maxWidth; 
+    ImU32 highlightColor; 
+};
 
 // ImGui extension that I made to spawn ImGui::Text that we can select and copy the contents of 
+
 class TextSelector {
-    public:
-    static bool Begin(const char* id, int totalRows, TextSelectionCtx& ctx, ImU32 highlightCol = IM_COL32(0, 120, 215, 100));
-    static void Text(const std::string& text, int rowIndex, std::function<void()> customDraw); 
+public:
+    static bool Begin(const char* id, int totalRows, TextSelectionCtx& ctx, TextSelectorLayout& layout);
+    static void Text(int rowIndex, const std::string& lineContent, const TextSelectionCtx& ctx, const TextSelectorLayout& layout, std::function<void()> drawCallback);
     static void End(); 
-    static float GetLineHeight(); 
-    static void copyText(const TextSelectionCtx& ctx, int totalRows, std::function<std::string(int)> fetchLine); 
-    static std::string getSelectedText(const TextSelectionCtx& ctx, int totalRows, std::function<std::string(int)> fetchLine); 
-    private:
+    static void copyText(const TextSelectionCtx& ctx, int totalRows, std::function<std::string(int)> fetchLine);
+    
+private:
+    static void handleInput(int totalRows, TextSelectionCtx& ctx, const TextSelectorLayout& layout);
+    static void getWordUnderCursor(const std::string& text, int col, int& outStart, int& outEnd);
     static bool isWhiteSpace(char c); 
     static bool isDelimeter(char c); 
     static bool isToken(char c); 
-    static void handleMouseClicks(TextSelectionCtx& ctx, int row, int col, const std::string& lineText); 
-    static void getWordUnderCursor(const std::string& text, int col, int& outStart, int& outEnd); 
-    static bool isFontMonospace(); 
 };
