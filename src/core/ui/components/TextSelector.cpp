@@ -2,6 +2,7 @@
 #include <cctype>
 #include <limits>
 #include <iostream>
+#include <sstream>
 
 static struct TextSelectorState {
     TextSelectionCtx* userCtx = nullptr; 
@@ -18,7 +19,10 @@ static struct TextSelectorState {
 } txtState;
 
 bool TextSelector::Begin(const char* id, int totalRows, TextSelectionCtx& ctx, ImU32 highlightCol) {
-    if (!isFontMonospace()) return false; 
+    if (!isFontMonospace()) {
+        std::cout << "Warning: Font is not monospaced" << std::endl;
+        return false;
+    } 
 
     txtState.userCtx = &ctx; 
     txtState.lineHeight = std::max(1.0f, ImGui::GetTextLineHeight()); 
@@ -26,12 +30,15 @@ bool TextSelector::Begin(const char* id, int totalRows, TextSelectionCtx& ctx, I
     txtState.maxWidth = ImGui::GetContentRegionAvail().x; 
     txtState.isPendingWordSelect = false; 
 
-    // draw the invisible "hitbox" that we use to select from 
+    // draw the invisible hitbox that we use to select from 
     float totalHeight = (float)totalRows *txtState.lineHeight; 
+
+    ImGui::SetNextItemAllowOverlap(); 
     ImGui::InvisibleButton(id, ImVec2(txtState.maxWidth, totalHeight)); 
 
-    // capture the screen pos of the content area 
-    txtState.origin = ImGui::GetItemRectMin(); 
+    ImGui::SetNextItemAllowOverlap(); 
+    txtState.origin = ImGui::GetItemRectMin();          // capture the screen pos of the content area 
+    ImGui::SetCursorScreenPos(txtState.origin); 
 
     // handle mouse clicks 
     if (ImGui::IsItemHovered() || ImGui::IsItemActive()) {
@@ -101,8 +108,13 @@ void TextSelector::Text(const std::string& text, int rowIndex, std::function<voi
 
     // draw the selection highlight around the text 
     if (txtState.userCtx->isActive) {
-        int relMin = std::min(txtState.userCtx->startRow, txtState.userCtx->endRow); 
-        int relMax = std::max(txtState.userCtx->startRow, txtState.userCtx->endRow); 
+        int rowStart = txtState.userCtx->startRow;
+        int rowEnd = txtState.userCtx->endRow;
+        int colStart = txtState.userCtx->startCol;
+        int colEnd = txtState.userCtx->endCol;
+
+        int relMin = std::min(rowStart, rowEnd);
+        int relMax = std::max(rowStart, rowEnd);
 
         if (rowIndex >= relMin && rowIndex <= relMax) {
             float hlStart, hlEnd = 0.0f; 
@@ -166,6 +178,74 @@ void TextSelector::End() {
 
 float TextSelector::GetLineHeight() {
     return std::max(1.0f, ImGui::GetTextLineHeight());
+}
+
+void TextSelector::copyText(const TextSelectionCtx& ctx, int totalRows, std::function<std::string(int)> fetchLine) {
+    std::string clipText = getSelectedText(ctx, totalRows, fetchLine); 
+
+    if (!clipText.empty()) {
+        ImGui::SetClipboardText(clipText.c_str()); 
+    }
+}
+
+std::string TextSelector::getSelectedText(const TextSelectionCtx& ctx, int totalRows, std::function<std::string(int)> fetchLine) {
+    if (!ctx.isActive) return ""; 
+
+    int rowStart = ctx.startRow; 
+    int rowEnd = ctx.endRow; 
+    int colStart = ctx.startCol; 
+    int colEnd = ctx.endCol; 
+
+    if (rowStart > rowEnd) {
+        std::swap(rowStart, rowEnd); 
+        std::swap(colStart, colEnd); 
+    }
+
+    std::stringstream ss; 
+
+    for (int i = rowStart; i <= rowEnd; ++i) {
+        std::string line = fetchLine(i); 
+        int len = (int)line.length(); 
+
+        int subStart = 0; 
+        int subLen = len; 
+
+        // single line
+        if (i == rowStart && i == rowEnd) {
+            int colMin = std::min(colStart, colEnd); 
+            int colMax = std::max(colStart, colEnd); 
+
+            subStart = std::clamp(colMin, 0, len); 
+            int subEnd = std::clamp(colMax + 1, 0, len); 
+            subLen = subEnd - subStart; 
+        }
+
+        // top row
+        else if (i == rowStart) {
+            subStart = std::clamp(colStart, 0, len); 
+            subLen = len - subStart; 
+        }
+
+        // bottom row
+        else if (i == rowEnd) {
+            subStart = 0; 
+            int subEnd = std::clamp(colEnd + 1, 0, len);
+            subLen = subEnd; 
+        } 
+
+        else {
+            subStart = 0; 
+            subLen = len; 
+        }
+
+        if (subLen > 0) 
+            ss << line.substr(subStart, subLen); 
+
+        if (i != rowEnd) 
+            ss << '\n'; 
+    }
+
+    return ss.str();
 }
 
 // selection based on mouse clicks (e.g. two to select a string and three to select the entire line)

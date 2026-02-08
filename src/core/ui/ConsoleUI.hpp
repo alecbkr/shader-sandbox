@@ -10,54 +10,8 @@
 #include "../logging/ConsoleSink.hpp"
 #include "../ConsoleEngine.hpp"
 #include "components/SearchText.hpp"
+#include "components/TextSelector.hpp"
 
-struct ConsoleBtns {
-    bool isAutoScroll; 
-    bool isCollapsedLogs; 
-    bool isShowErrors; 
-    bool isShowWarning; 
-    bool isShowInfo; 
-    // Filters/ShowSources menu 
-    bool isShowShader; 
-    bool isShowSystem; 
-    bool isShowAssets;
-};
-
-// Lookup table for textcolors for each log 
-static const ImVec4 LOG_COLORS[] = {
-    ImVec4(1.0f, 0.0f, 0.0f, 1.0f),         // Critical (Deep Red) 
-    ImVec4(1.0f, 0.4f, 0.4f, 1.0f),         // Error (lighter red)
-    ImVec4(1.0f, 0.1f, 0.5f, 1.0f),         // Warning (Magenta)
-    ImVec4(0.4f, 1.0f, 0.4f, 1.0f)          // Info (Light Green)
-                                            // Anomaly (light gray)
-}; 
-
-struct LogSelection {
-    int startIdx = -1; 
-    int endIdx = -1; 
-
-    int startCol = 0; 
-    int endCol = 0; 
-
-    bool active = false; 
-    bool isCharMode = false;    // if true select chars from the line if false select full lines
-
-    void clear () {
-        startIdx = -1; 
-        endIdx = -1; 
-        active = false; 
-        isCharMode = false; 
-    }
-    // handles the ragging of the cursor 
-    std::pair <int, int> getRange() const {
-        if (startIdx == -1 || endIdx == -1) {
-            return {-1, -1};
-        }
-        return { std::min(startIdx, endIdx), std::max(startIdx, endIdx)}; 
-    }
-};
-
-// Adapted from imgui_demo.cpp
 class ConsoleUI {
 public: 
     static bool initialize();
@@ -70,36 +24,25 @@ public:
     }; 
 
 private:
+static bool initialized;
     static float targetWidth;
     static float targetHeight;
     static ImVec2 windowPos;
     
     static std::shared_ptr<ConsoleEngine> engine; 
     static std::shared_ptr<ConsoleSink> logSrc; 
-    // static int selectionStart; 
-    // static int selectionEnd; 
-    static LogSelection selection; 
-    static std::vector<int> filteredIndices; 
-
-    static bool initialized;
     static ConsoleToggles &togStates; 
 
+    static TextSelectionCtx selection; 
+    static std::vector<int> filteredIndices; 
     static size_t lastLogSize; 
+
     static void drawLogs(); 
     static const void drawMenuBar(); 
     static void updateSearchAndScroll(const std::deque<LogEntry> &logs); 
     static int getCollapseCount(const std::deque<LogEntry> &logs, int currIdx);
 
-    static void drawSingleLog(const LogEntry& log, int unfilteredIdx, int filteredIdx, int repeatCount);
-
-    // Allows for users to copy their logs from the console (because of the way ImGui renders text I had to do this)
-    // static void copyLogsToClipboard(); 
     static void copySelectedLogs(); 
-
     static LogStyle getLogStyle(const LogEntry& log); 
-    static std::string formatLogString(const LogEntry& log); 
-
-    static void drawLogsManualSelection(); 
-    static void copyManualSelection(); 
-    static bool isCurrentFontMonospace();     
+    static std::string formatLogString(const LogEntry& log);  
 }; 

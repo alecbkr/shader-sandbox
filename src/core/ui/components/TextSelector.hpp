@@ -20,19 +20,15 @@ struct TextSelectionCtx {
 
     void clear() {
         isActive = false; 
-        isCharMode = false; 
+        isCharMode = false; // true for selecting individual sections of text and false for selecting whole line
         startRow = -1; 
         endRow = -1; 
         startCol = 0; 
         endCol = 0; 
     }
-
-    // helper to handle dragging the cursor upwards 
-    std::pair<int, int> getRange() const {
-        if (startRow <= endRow) 
-            return {startRow, endRow};
-    }
 }; 
+
+
 
 // ImGui extension that I made to spawn ImGui::Text that we can select and copy the contents of 
 class TextSelector {
@@ -41,8 +37,8 @@ class TextSelector {
     static void Text(const std::string& text, int rowIndex, std::function<void()> customDraw); 
     static void End(); 
     static float GetLineHeight(); 
-    static void copyText(); 
-    static std::string getSelectedText(); 
+    static void copyText(const TextSelectionCtx& ctx, int totalRows, std::function<std::string(int)> fetchLine); 
+    static std::string getSelectedText(const TextSelectionCtx& ctx, int totalRows, std::function<std::string(int)> fetchLine); 
     private:
     static bool isWhiteSpace(char c); 
     static bool isDelimeter(char c); 

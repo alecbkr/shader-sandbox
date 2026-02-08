@@ -1,5 +1,4 @@
 #include "ConsoleUI.hpp"
-#include "platform/Platform.hpp"
 #include <string>
 #include <iostream>
 #include <algorithm>
@@ -12,12 +11,19 @@ size_t ConsoleUI::lastLogSize = 0;
 float ConsoleUI::targetWidth = 0.0f;
 float ConsoleUI::targetHeight = 0.0f;
 ImVec2 ConsoleUI::windowPos = ImVec2(0, 0);
-// int ConsoleUI::selectionStart = -1; 
-// int ConsoleUI::selectionEnd = -1;
 SearchText ConsoleUI::searcher; 
 ConsoleToggles& ConsoleUI::togStates = ConsoleEngine::getToggles();
-LogSelection ConsoleUI::selection; 
+TextSelectionCtx ConsoleUI::selection; 
 std::vector<int> ConsoleUI::filteredIndices; 
+
+// Lookup table for textcolors for each log 
+static const ImVec4 LOG_COLORS[] = {
+    ImVec4(1.0f, 0.0f, 0.0f, 1.0f),         // Critical (Deep Red) 
+    ImVec4(1.0f, 0.4f, 0.4f, 1.0f),         // Error (lighter red)
+    ImVec4(1.0f, 0.1f, 0.5f, 1.0f),         // Warning (Magenta)
+    ImVec4(0.4f, 1.0f, 0.4f, 1.0f)          // Info (Light Green)
+                                            // Anomaly (light gray)
+}; 
 
 bool ConsoleUI::initialize() {
     searcher.setSearchFlag(SearchUIFlags::ADVANCED); 
@@ -49,6 +55,7 @@ const void ConsoleUI::render() {
     if(ImGui::Begin("Console", nullptr, flags)) {  
         ConsoleUI::drawMenuBar();
         {
+
             ImGui::BeginChild("ShowLogs", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.95f), true);
             ConsoleUI::drawLogs(); 
 
@@ -60,17 +67,18 @@ const void ConsoleUI::render() {
 
                 // select all
                 if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_A)) {
-                    selection.startIdx = 0; 
-                    selection.endIdx = (int)filteredIndices.size() - 1; 
-                    selection.active = true; 
+                    selection.startRow = 0; 
+                    selection.endRow = (int)filteredIndices.size() - 1; 
+                    selection.isActive = true; 
+                    selection.isCharMode = true; 
                     selection.startCol = 0; 
                     selection.endCol = std::numeric_limits<int>::max(); 
                 } 
 
                 // clear selection logic 
-                if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered()) {
-                    selection.clear();
-                }
+                // if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered()) {
+                //     selection.clear();
+                // }
             }
             ImGui::EndChild(); 
 
@@ -118,133 +126,46 @@ void ConsoleUI::drawLogs() {
         ImGui::SetScrollHereY(1.0f); 
     }
 
-    // incase fonts prevent us from using the selection logic 
-    if (isCurrentFontMonospace()) {
-        drawLogsManualSelection(); 
-    } else {
-        Logger::addLog(LogLevel::WARNING,"ConsoleUI", "Font is not a monospace font rendering line selection"); 
-        // ImGui optimization that prevents drawing each log per frame and only the ones that are visible on the window 
-        float lineHeight = std::max(1.0f, ImGui::GetTextLineHeight()); 
-        ImGuiListClipper clipper; 
-        clipper.Begin(filteredIndices.size()); 
+    if (TextSelector::Begin("##LogList", (int)filteredIndices.size(), selection)) {
+        
+        if (isNewLog && togStates.isAutoScroll) {
+            ImGui::SetScrollHereY(1.0f); 
+        }
+        
+        ImGuiListClipper clipper;
+        clipper.Begin(filteredIndices.size(), TextSelector::GetLineHeight());
 
         while (clipper.Step()) {
-            for (int filteredIdx = clipper.DisplayStart; filteredIdx < clipper.DisplayEnd; filteredIdx++) {
-                int unfilteredIdx = filteredIndices[filteredIdx]; 
-                const auto& log = logs[unfilteredIdx]; 
-                int repeatCount = getCollapseCount(logs, unfilteredIdx); 
-                drawSingleLog(log, unfilteredIdx, filteredIdx, repeatCount);
+            for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i) {
+                int unfilteredIdx = filteredIndices[i];
+                const auto& log = logs[unfilteredIdx];
+                int repeatCount = getCollapseCount(logs, unfilteredIdx);
+                
+                std::string fullText = formatLogString(log);
+                if (repeatCount > 0) fullText += " (" + std::to_string(repeatCount + 1) + ")";
+
+                TextSelector::Text(fullText, i, [&]() {
+                    LogStyle style = getLogStyle(log);
+                    
+                    ImGui::TextColored(style.color, "%s", style.prefix.c_str());
+                    ImGui::SameLine(0, 0);
+                    
+                    if (log.additional.empty()) {
+                        ImGui::TextUnformatted(log.msg.c_str());
+                    } else {
+                        ImGui::Text("%s %s", log.msg.c_str(), log.additional.c_str());
+                    }
+
+                    if (repeatCount > 0) {
+                        ImGui::SameLine();
+                        ImGui::TextDisabled("(%d)", repeatCount + 1);
+                    }
+                });
             }
         }
-
-        if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered()) {
-            selection.clear(); 
-        }
-    }
-}
-
-// TODO: Might make this a ui component so that we could use it anywhere else we may need it 
-void ConsoleUI::drawLogsManualSelection () {
-    const auto& logs = ConsoleEngine::getLogs(); 
-    auto drawList = ImGui::GetWindowDrawList(); 
-
-    float lineHeight = ImGui::GetTextLineHeight(); 
-    float charWidth = ImGui::CalcTextSize("A").x; 
-    ImVec2 screenPos = ImGui::GetCursorScreenPos(); 
-    float scrollY = ImGui::GetScrollY(); 
-    float contentWidth = ImGui::GetContentRegionAvail().x; 
-    float totalHeight = (float)filteredIndices.size() * lineHeight; 
-
-    ImGui::InvisibleButton("##LogCanvas", ImVec2(contentWidth, totalHeight)); 
-
-    if (ImGui::IsWindowHovered() || ImGui::IsItemActive()) {
-        ImVec2 mouse = ImGui::GetMousePos(); 
-        float relX = mouse.x - screenPos.x; 
-        float relY = mouse.y - screenPos.y + scrollY;
-
-        int hoverRow = (int)(relY / lineHeight); 
-        int hoverCol = (int)(relX / charWidth); 
-
-        if (hoverRow < 0) hoverRow = 0; 
-        if (hoverRow >= filteredIndices.size()) hoverRow = (int)filteredIndices.size() - 1;
-        if (hoverCol < 0) hoverCol = 0; 
-
-        // clicking logic 
-        if (ImGui::IsMouseClicked(0)) {
-            selection.startIdx = hoverRow; 
-            selection.endIdx = hoverRow; 
-            selection.startCol = hoverCol; 
-            selection.endCol = hoverCol; 
-            selection.active = true; 
-            selection.isCharMode = true; 
-        }
-
-        // cursor dragging logic
-        else if (ImGui::IsMouseDown(0) && selection.active) {
-            selection.endIdx = hoverRow; 
-            selection.endCol = hoverCol; 
-            selection.isCharMode = true; 
-        }
+        TextSelector::End();
     }
 
-    ImGuiListClipper clipper; 
-    clipper.Begin(filteredIndices.size(), lineHeight); 
-
-    int selStartRow = std::min(selection.startIdx, selection.endIdx); 
-    int selEndRow = std::max(selection.startIdx, selection.endIdx); 
-
-    while (clipper.Step()) {
-        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i) {
-            int unfilteredIdx = filteredIndices[i]; 
-            const auto& log = logs[unfilteredIdx]; 
-            std::string text = formatLogString(log); 
-            int repeatCount = getCollapseCount(logs, unfilteredIdx);
-            if (repeatCount > 0) {
-                text += " (" + std::to_string(repeatCount + 1) + ")"; 
-            }
-            float lineY = screenPos.y + (i * lineHeight); 
-
-            // draw selection highlighting 
-            if (selection.active && i >= selStartRow && i <= selEndRow) {
-                float hlStart = 0.0f; 
-                float hlEnd = contentWidth; 
-
-                if (selStartRow == selEndRow) {
-                    int sCol = std::min(selection.startCol, selection.endCol); 
-                    int eCol = std::max(selection.startCol, selection.endCol); 
-                    hlStart = sCol * charWidth; 
-                    hlEnd = (eCol + 1) * charWidth; 
-                }
-
-                // Top line of multi-selection
-                else if (i == selStartRow) {
-                    int sCol = (selection.startIdx < selection.endIdx) ? selection.startCol : selection.endCol; 
-                    hlStart = sCol * charWidth; 
-                }
-
-                else if (i == selEndRow) {
-                    int eCol = (selection.startIdx < selection.endIdx) ? selection.endCol : selection.startCol; 
-                    hlEnd = (eCol + 1) * charWidth; 
-                }
-
-                drawList->AddRectFilled(
-                    ImVec2(screenPos.x + hlStart, lineY), 
-                    ImVec2(screenPos.x + hlEnd, lineY + lineHeight), 
-                    IM_COL32(0, 120, 215, 128)
-                ); 
-            }
-
-            // draw the text 
-            ImGui::SetCursorScreenPos(ImVec2(screenPos.x, lineY));
-            LogStyle style = getLogStyle(log);
-            
-            // ImGui::TextColored(style.color, "%s", text.c_str());
-            ImGui::TextColored(style.color, "%s", style.prefix.c_str()); 
-            ImGui::SameLine(); 
-            ImGui::Text("%s%s", log.msg.c_str(), log.additional.c_str());
-        
-        }
-    }
 }
 
 const void ConsoleUI::drawMenuBar() {      
@@ -335,7 +256,8 @@ void ConsoleUI::updateSearchAndScroll(const std::deque<LogEntry> &logs) {
             if(togStates.isCollapsedLogs && lastLog) {
                 if (log.msg == lastLog ->msg && log.level == lastLog->level && 
                     log.src == lastLog->src && log.additional == lastLog->additional) {
-                    isDuplicate = true;
+                    
+                        isDuplicate = true;
             }
         }
 
@@ -388,101 +310,6 @@ int ConsoleUI::getCollapseCount(const std::deque<LogEntry> &logs, int currIdx) {
     return count;
 }
 
-void ConsoleUI::drawSingleLog(const LogEntry& log, int unfilteredIdx, int filteredIdx, int repeatCount) {    
-    LogStyle style = getLogStyle(log);
-    ImGui::PushID(filteredIdx);
-    ImVec2 screenPos = ImGui::GetCursorScreenPos();
-
-    // selection logic 
-    auto [selMin, selMax] = selection.getRange();
-    bool isSelected = (selection.active && filteredIdx >= selMin && filteredIdx <= selMax);
-
-    if (ImGui::Selectable("##row", isSelected, ImGuiSelectableFlags_SpanAvailWidth)) {
-        if (ImGui::GetIO().KeyShift) {
-            if (selection.startIdx == -1) {
-                selection.startIdx = filteredIdx; 
-            }
-            selection.endIdx = filteredIdx; 
-        } else {
-            selection.startIdx = filteredIdx; 
-            selection.endIdx = filteredIdx; 
-            selection.active = true; 
-        }
-    }
-
-    // cursor dragging logic 
-    if (ImGui::IsItemHovered() && ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-        if (selection.active) selection.endIdx = filteredIdx; 
-    }
-
-    // render the ctx menu to copy the logs
-    if (ImGui::BeginPopupContextItem()) {
-        if (ImGui::MenuItem("Copy")) {
-            if (!isSelected) {
-                selection.startIdx = filteredIdx; 
-                selection.endIdx = filteredIdx; 
-                selection.active = true; 
-            }
-            copySelectedLogs(); 
-        }
-        ImGui::EndPopup(); 
-    }
-
-    // search highlight logic 
-    int matchIndxToCheck = unfilteredIdx; 
-
-    if (repeatCount > 0 && searcher.hasMatches()) {
-        const auto& activeMatch = searcher.getActiveMatch(); 
-        if (activeMatch.itemIdx > unfilteredIdx && activeMatch.itemIdx <= (unfilteredIdx + repeatCount)) {
-            matchIndxToCheck = activeMatch.itemIdx; 
-        }
-    }
-
-    // matches the input string with strings in the source and highlights them if they match 
-    if (searcher.isItemActiveMatch(matchIndxToCheck)) {
-        if (searcher.checkAndClearScrollRequest()) {
-            ImGui::SetScrollHereY(0.5f); 
-        }
-
-        const auto& match = searcher.getActiveMatch(); 
-        std::string fullText = formatLogString(log); 
-
-
-        if (match.charIdx + match.length <= fullText.size()) {
-            std::string textBefore = fullText.substr(0, match.charIdx);
-            std::string textMatch = fullText.substr(match.charIdx, match.length);
-
-            float offsetX = ImGui::CalcTextSize(textBefore.c_str()).x;
-            float width = ImGui::CalcTextSize(textMatch.c_str()).x;
-
-            ImGui::GetWindowDrawList()->AddRectFilled(
-                ImVec2(screenPos.x + offsetX, screenPos.y),
-                ImVec2(screenPos.x + offsetX + width, screenPos.y + ImGui::GetTextLineHeight()),
-                IM_COL32(200, 200, 200, 100)
-            );
-        }
-    }
-
-    ImGui::SetCursorScreenPos(screenPos); 
-    ImGui::TextColored(style.color, "%s", style.prefix.c_str());
-    ImGui::SameLine(0, 0);
-    
-    if (log.additional.empty()) {
-        ImGui::TextUnformatted(log.msg.c_str());
-    } else {
-        std::string fullMsg = log.msg + " " + log.additional;
-        ImGui::TextUnformatted(fullMsg.c_str());
-    }
-
-    // 6. Draw Collapse Counter
-    if (repeatCount > 0) {
-        ImGui::SameLine();
-        ImGui::TextDisabled("(%d)", repeatCount + 1);
-    }
-
-    ImGui::PopID();
-}
-
 ConsoleUI::LogStyle ConsoleUI::getLogStyle(const LogEntry& log) {
     LogStyle style; 
     switch (log.level) {
@@ -512,69 +339,20 @@ std::string ConsoleUI::formatLogString(const LogEntry& log) {
 }
 
 void ConsoleUI::copySelectedLogs() {
-    if (!selection.active) return; 
+if (!selection.isActive) return; 
 
-    auto [start, end] = selection.getRange(); 
-    const auto& logs = ConsoleEngine::getLogs(); 
-    std::string clipText; 
-    clipText.reserve((end - start + 1) * 128); 
-
-    for (int i = start; i <= end; ++i) {
-        if (i < 0 || i >= filteredIndices.size()) continue;
-        int unfilteredIdx = filteredIndices[i];
-        clipText += formatLogString(logs[unfilteredIdx]) + '\n'; 
-    }
-
-    if (!clipText.empty()) {
-        ImGui::SetClipboardText(clipText.c_str()); 
-        Logger::addLog(LogLevel::INFO, "ConsoleUI", "Copied Text"); 
-    }
-}
-
-//  The selection logic for selecting indivual chars is dependent on this. 
-bool ConsoleUI::isCurrentFontMonospace() {
-    // use the widest and largest chars available  
-    float widthW = ImGui::CalcTextSize("W").x; 
-    float widthi = ImGui::CalcTextSize("i").x; 
-    return std::abs(widthW - widthi) < 0.001f; 
-}
-
-void ConsoleUI::copyManualSelection() {
-    if (!selection.active) return;
     const auto& logs = ConsoleEngine::getLogs();
-    std::string clipText;
+    
+    TextSelector::copyText(selection, (int)filteredIndices.size(), [&](int idx) -> std::string {
+        int unfilteredIdx = filteredIndices[idx];
+        const auto& log = logs[unfilteredIdx];
+        
+        std::string text = formatLogString(log);
+        int repeatCount = getCollapseCount(logs, unfilteredIdx);
+        if (repeatCount > 0) text += " (" + std::to_string(repeatCount + 1) + ")";
+        
+        return text;
+    });
 
-    int startRow = selection.startIdx;
-    int endRow = selection.endIdx;
-    int startCol = selection.startCol;
-    int endCol = selection.endCol;
-
-    // Standardize direction
-    if (startRow > endRow) { std::swap(startRow, endRow); std::swap(startCol, endCol); }
-    if (startRow == endRow && startCol > endCol) { std::swap(startCol, endCol); }
-
-    for (int i = startRow; i <= endRow; ++i) {
-        if (i < 0 || i >= filteredIndices.size()) continue;
-
-        std::string line = formatLogString(logs[filteredIndices[i]]);
-        int repeatCount = getCollapseCount(logs, filteredIndices[i]);
-        if(repeatCount > 0) line += " (" + std::to_string(repeatCount+1) + ")";
-
-        int subStart = 0;
-        int subLen = line.length();
-
-        if (i == startRow) {
-            subStart = std::clamp(startCol, 0, (int)line.length());
-            subLen -= subStart;
-        }
-        if (i == endRow) {
-            int effEnd = std::clamp(endCol + 1, 0, (int)line.length());
-            subLen = effEnd - subStart;
-        }
-
-        if (subLen > 0) clipText += line.substr(subStart, subLen);
-        if (i != endRow) clipText += "\n";
-    }
-
-    if (!clipText.empty()) ImGui::SetClipboardText(clipText.c_str());
+    Logger::addLog(LogLevel::INFO, "ConsoleUI", "Copied Text");
 }
