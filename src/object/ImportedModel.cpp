@@ -4,7 +4,7 @@
 #include "core/logging/LogSink.hpp"
 
 
-ImportedModel::ImportedModel(const unsigned int ID, std::string pathname) : Model(ID) {
+ImportedModel::ImportedModel(const unsigned int ID, std::string pathname) : Model(ID, T_MODEL) {
     
     if (importModel(pathname, *this) == false) {
         Logger::addLog(LogLevel::ERROR, "MODEL", "Model import failed, returned false");

@@ -8,12 +8,19 @@ out vec4 FragColor;
 // VARIABLES
 vec3 gridColor = vec3(0.2);
 float gridScale = 1.0f;
-float fadeStart = 5.0;
-float fadeEnd = 20.0;
+
 
 void main() {
 
-    float fragDistance = distance(cameraPos, worldPos);
+    // HEIGHT FADE
+    float height = abs(cameraPos.y);
+    float heightFactor = clamp(height / 10.0, 0.0, 1.0);
+
+    float fadeStart = mix(5.0, 20.0, heightFactor);
+    float fadeEnd = mix(20.0, 45.0, heightFactor);
+
+    // DISTANCE FADE
+    float fragDistance = length(cameraPos.xz - worldPos.xz);
     float fade = 1.0 - smoothstep(fadeStart, fadeEnd, fragDistance);
     if (fade < 0.01) {
         discard;

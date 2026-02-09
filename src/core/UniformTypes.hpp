@@ -13,6 +13,7 @@ enum class UniformType {
     Vec4,
     Mat4,
     Sampler2D,
+    SamplerCube,
     UniformRef
 };
 
@@ -25,6 +26,7 @@ inline std::string to_string(UniformType type) {
         case UniformType::Vec4:       return "Vec4";
         case UniformType::Mat4:       return "Mat4";
         case UniformType::Sampler2D:  return "Sampler2D";
+        case UniformType::SamplerCube: return "SamplerCube";
         case UniformType::UniformRef: return "UniformRef";
     }
     return "Unknown(string for this type not added yet!";

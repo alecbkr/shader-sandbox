@@ -21,7 +21,8 @@ const std::unordered_map<std::string, UniformType> InspectorEngine::typeMap = {
     {"int", UniformType::Int},
     {"float", UniformType::Float},
     {"mat4", UniformType::Mat4},
-    {"sampler2D", UniformType::Sampler2D}
+    {"sampler2D", UniformType::Sampler2D},
+    {"samplerCube", UniformType::SamplerCube}
 };
 
 bool InspectorEngine::initialize() {

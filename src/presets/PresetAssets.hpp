@@ -26,7 +26,7 @@ class PresetAssets {
 public:
     static bool initialize();
     static MeshData& getPresetMesh(MeshPreset preset);
-    static Texture& getPresetTexture(TexturePreset preset);
+    // static Texture& getPresetTexture(TexturePreset preset);
 private:
     static MeshData planeMesh;
     static MeshData pyramidMesh;

@@ -24,8 +24,9 @@
 #include "core/input/Keybinds.hpp"
 #include "engine/AppTimer.hpp"
 
-
+// TEMP
 #include "engine/Errorlog.hpp"
+#include "object/CubeMap.hpp"
 
 bool Application::initialized = false;
 AppStateControls Application::appControls = AppStateControls::NO_STATE;
@@ -43,28 +44,28 @@ void initializeUI() {
 }
 
 void loadPresetAssets() {
-    TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::WATER));
-    TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::FACE));
-    TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::METAL));
-    TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::GRID));
+    // TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::WATER));
+    // TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::FACE));
+    // TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::METAL));
+    // TextureRegistry::registerTexture(&PresetAssets::getPresetTexture(TexturePreset::GRID));
     
     ShaderProgram* texPtr = ShaderRegistry::getProgram("tex");
     ShaderProgram* colorPtr = ShaderRegistry::getProgram("color");
     ShaderProgram* gridplanePtr = ShaderRegistry::getProgram("gridplane");
+    ShaderProgram* skyboxPtr = ShaderRegistry::getProgram("skybox");
 
     MeshData& plane = PresetAssets::getPresetMesh(MeshPreset::PLANE);
     MeshData& cube = PresetAssets::getPresetMesh(MeshPreset::CUBE);
     MeshData& pyramid = PresetAssets::getPresetMesh(MeshPreset::PYRAMID);
+
+    //SKYBOX ID = 0
+    unsigned int skyboxID = ModelCache::createSkybox("../assets/textures/skybox");
+    ModelCache::setProgram(skyboxID, *skyboxPtr);
     
+    //GRIDPLANE ID = 1
     unsigned int gridID = ModelCache::createModel(plane.verts, plane.indices, true, false, true);
     ModelCache::setProgram(gridID, *gridplanePtr);
     ModelCache::scaleModel(gridID, glm::vec3(50.0f));
-    // ModelCache::setTexture("grid", PresetAssets::getPresetTexture(TexturePreset::GRID), 0, "baseTex");
-
-
-    unsigned int jewcubeID = ModelCache::createModel(cube.verts, cube.indices, true, false, true);
-    ModelCache::translateModel(jewcubeID, glm::vec3(0.5f, 0.5f, 0.5f));
-    ModelCache::setProgram(jewcubeID, *colorPtr);
 
     // unsigned int backpackID = ModelCache::createModel("../assets/models/backpack/backpack.obj");
     // ModelCache::setProgram(backpackID, *texPtr);

@@ -1,0 +1,17 @@
+#pragma once
+
+#include <string>
+#include <vector>
+#include "Texture.hpp"
+#include "TextureType.hpp"
+#include <glad/glad.h>
+
+class CubeMap : public Texture{
+    public:
+        std::vector<std::string> cubemap_paths;
+        CubeMap(std::string cubemap_dir);
+        void bind(unsigned int texNum);
+
+    private:
+        void loadToGPU();
+};

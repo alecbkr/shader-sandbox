@@ -13,7 +13,11 @@ bool ShaderRegistry::initialize() {
     if (!registerProgram("../shaders/color.vert", "../shaders/color.frag", "color")) {
         return false;
     }
-    if (!registerProgram("../shaders/gridplane.vert", "../shaders/gridplane.frag", "gridplane")) {
+    if (!registerProgram("../shaders/scene/gridplane.vert", "../shaders/scene/gridplane.frag", "gridplane")) {
+        return false;
+    }
+
+    if (!registerProgram("../shaders/scene/skybox.vert", "../shaders/scene/skybox.frag", "skybox")) {
         return false;
     }
 

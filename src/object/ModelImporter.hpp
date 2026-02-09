@@ -12,6 +12,7 @@
 #include "ImportedModel.hpp"
 #include "core/logging/LogSink.hpp"
 #include "core/logging/Logger.hpp"
+#include "Texture2D.hpp"
 
 
 struct ImportContext {
@@ -165,7 +166,12 @@ static void loadTextures(aiMaterial *mat, std::vector<std::shared_ptr<Texture>>&
             std::string filepath = ctx.directory + "/" + aiTex.C_Str();
             if (model.getTextures().contains(filepath) == false) {
                 Logger::addLog(LogLevel::INFO, "loadTextures", "building texture: " + filepath);
-                model.getTextures().try_emplace(filepath, std::make_shared<Texture>(filepath.c_str(), static_cast<TextureType>(type)));
+                model.getTextures().try_emplace(
+                    filepath, std::static_pointer_cast<Texture>(
+                        std::make_shared<Texture2D>(filepath, static_cast<TextureType>(type)
+                        )
+                    )
+                );
             }
             
             

@@ -4,10 +4,10 @@ MeshData PresetAssets::planeMesh{};
 MeshData PresetAssets::pyramidMesh{};
 MeshData PresetAssets::cubeMesh{};
 
-Texture PresetAssets::waterTex{"", TEX_DIFFUSE};
-Texture PresetAssets::faceTex{"", TEX_DIFFUSE};
-Texture PresetAssets::metalTex{"", TEX_DIFFUSE};
-Texture PresetAssets::gridTex{"", TEX_DIFFUSE};
+// Texture PresetAssets::waterTex{"", TEX_DIFFUSE};
+// Texture PresetAssets::faceTex{"", TEX_DIFFUSE};
+// Texture PresetAssets::metalTex{"", TEX_DIFFUSE};
+// Texture PresetAssets::gridTex{"", TEX_DIFFUSE};
 
 // We need to define these now, but they need to be initialized AFTER the logger.
 bool PresetAssets::initialize() {
@@ -75,18 +75,18 @@ MeshData& PresetAssets::getPresetMesh(MeshPreset preset) {
     }
 }
 
-Texture& PresetAssets::getPresetTexture(TexturePreset preset) {
-    switch (preset) {
-        case TexturePreset::WATER:
-            return PresetAssets::waterTex;
+// Texture& PresetAssets::getPresetTexture(TexturePreset preset) {
+//     switch (preset) {
+//         case TexturePreset::WATER:
+//             return PresetAssets::waterTex;
         
-        case TexturePreset::FACE:
-            return PresetAssets::faceTex;
+//         case TexturePreset::FACE:
+//             return PresetAssets::faceTex;
         
-        case TexturePreset::METAL:
-            return PresetAssets::metalTex;
+//         case TexturePreset::METAL:
+//             return PresetAssets::metalTex;
         
-        case TexturePreset::GRID:
-            return PresetAssets::gridTex;
-    }
-}
+//         case TexturePreset::GRID:
+//             return PresetAssets::gridTex;
+//     }
+// }

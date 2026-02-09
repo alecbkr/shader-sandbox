@@ -1,8 +1,9 @@
 #include "CustomModel.hpp"
 #include "../engine/Errorlog.hpp"
+#include "CubeMap.hpp"
 
 
-CustomModel::CustomModel(const unsigned int ID) : Model(ID) {
+CustomModel::CustomModel(const unsigned int ID, ModelType type) : Model(ID, type) {
     all_meshes.push_back(MeshA());
     meshptr = &all_meshes.back();
 }
@@ -66,4 +67,11 @@ void CustomModel::setMesh(std::vector<float> raw_vertices, std::vector<unsigned 
 
 void CustomModel::addTexture(std::string filepath) {
 
+}
+
+
+void CustomModel::addCubeMap(std::string cubemap_dir) {
+    meshptr->textures.push_back(std::make_shared<CubeMap>(cubemap_dir));
+    properties.hasTextures = true;
+    meshptr->meshflags.hasTextures = true;
 }

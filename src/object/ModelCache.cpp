@@ -8,9 +8,11 @@
 #include <algorithm>
 #include <string>
 #include "core/logging/Logger.hpp"
+#include "../presets/PresetAssets.hpp"
+#include "ModelTypes.hpp"
 
 std::unordered_map<unsigned int, std::unique_ptr<Model>> ModelCache::modelIDMap;
-std::vector<std::unique_ptr<Model>> ModelCache::modelCache; 
+std::vector<Model*> ModelCache::modelCache; 
 unsigned int ModelCache::nextModelID = 0;
 
 
@@ -46,12 +48,13 @@ unsigned int ModelCache::createModel(
         return INVALID_MODEL;
     }
     
-    std::unique_ptr<CustomModel> customModel = std::make_unique<CustomModel>(nextModelID);
+    std::unique_ptr<CustomModel> customModel = std::make_unique<CustomModel>(nextModelID, T_MODEL);
     customModel->setMesh(vertices, indices, hasPos, hasNorms, hasUVs);
     Model* rawPointer = customModel.get();
 
-    modelCache.push_back(std::move(customModel));
-    modelIDMap.emplace(nextModelID, rawPointer);
+    modelIDMap.emplace(nextModelID, std::move(customModel));
+    modelCache.push_back(rawPointer);
+    
     nextModelID++;
     return rawPointer->ID;
 }
@@ -63,11 +66,25 @@ unsigned int ModelCache::createModel(std::string pathname) {
         Logger::addLog(LogLevel::ERROR, "MODEL_CACHE", "createModel failed, ID already in use", std::to_string(nextModelID));
         return INVALID_MODEL;
     }
-
     std::unique_ptr<ImportedModel> importedModel = std::make_unique<ImportedModel>(nextModelID, pathname);
     Model* rawPointer = importedModel.get();
-    modelCache.push_back(std::move(importedModel));
-    modelIDMap.emplace(nextModelID, rawPointer);
+    modelIDMap.emplace(nextModelID, std::move(importedModel));
+    modelCache.push_back(rawPointer);
+   
+    nextModelID++;
+    return rawPointer->ID;
+}
+
+
+unsigned int ModelCache::createSkybox(std::string cubemapDir) {
+    MeshData cube = PresetAssets::getPresetMesh(MeshPreset::CUBE);
+    std::unique_ptr<CustomModel> cubeModel = std::make_unique<CustomModel>(nextModelID, T_SKYBOX);
+    Model* rawPointer = cubeModel.get();
+
+    cubeModel->setMesh(cube.verts, cube.indices, true, false, true);
+    cubeModel->addCubeMap(cubemapDir);
+    modelIDMap.emplace(nextModelID, std::move(cubeModel));
+    modelCache.push_back(rawPointer);
     nextModelID++;
     return rawPointer->ID;
 }
@@ -109,7 +126,6 @@ void ModelCache::setTexture(unsigned int ID, std::string pathname, std::string u
         Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(ID));
         return;
     }
-
     model->addTexture(pathname);
 }
 
@@ -138,10 +154,20 @@ void ModelCache::renderModel(unsigned int ID, glm::mat4 perspective, glm::mat4 v
         Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Shader ID not found:", model->getProgramID());
         return;
     }
+
     currProgram->use();
-    currProgram->setUniform_mat4float("projection", perspective);
-    currProgram->setUniform_mat4float("view", view);
-    currProgram->setUniform_mat4float("model", model->modelM);
+    switch (model->type) {
+        case T_MODEL:
+            currProgram->setUniform_mat4float("projection", perspective);
+            currProgram->setUniform_mat4float("view", view);
+            currProgram->setUniform_mat4float("model", model->modelM);
+            break;
+        
+        case T_SKYBOX:
+            currProgram->setUniform_mat4float("projection", perspective);
+            currProgram->setUniform_mat4float("view", glm::mat4(glm::mat3(view)));
+            break;
+    }
     model->renderModel();
 }
 
@@ -157,17 +183,19 @@ void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camP
             currProgram->use();
         }
 
-        // Temp handling for anything that takes camera pos
-        if (currModel->getID() == 0 /*gridplane*/) {
-            currProgram->setUniform_vec3float("cameraPos", camPos);
+        switch (currModel->type) {
+            case T_MODEL:
+                UNIFORM_REGISTRY.registerUniform(currModel->ID, {"projection", UniformType::Mat4, perspective});
+                UNIFORM_REGISTRY.registerUniform(currModel->ID, {"view", UniformType::Mat4, view});
+                UNIFORM_REGISTRY.registerUniform(currModel->ID, {"model", UniformType::Mat4, currModel->modelM});
+                UNIFORM_REGISTRY.registerUniform(currModel->ID, {"cameraPos", UniformType::Vec3, camPos});
+                break;
+            
+            case T_SKYBOX:
+                UNIFORM_REGISTRY.registerUniform(currModel->ID, {"projection", UniformType::Mat4, perspective});
+                UNIFORM_REGISTRY.registerUniform(currModel->ID, {"view", UniformType::Mat4, glm::mat4(glm::mat3(view))});
+                break;
         }
-
-        
-        UNIFORM_REGISTRY.registerUniform(currModel->ID, {"projection", UniformType::Mat4, perspective});
-        UNIFORM_REGISTRY.registerUniform(currModel->ID, {"view", UniformType::Mat4, view});
-        UNIFORM_REGISTRY.registerUniform(currModel->ID, {"model", UniformType::Mat4, currModel->modelM});
-
-
         InspectorEngine::applyAllUniformsForObject(currModel->ID); //TODO InspectorEngine
         currModel->renderModel();
     }
@@ -176,7 +204,6 @@ void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camP
 
 void ModelCache::printOrder() {
     for (auto& model : modelCache) {
-        
         ShaderProgram* modelProgram = ShaderRegistry::getProgram(model->getProgramID());
         if (modelProgram == nullptr) continue;
         std::cout << modelProgram->ID << std::endl;
@@ -185,7 +212,6 @@ void ModelCache::printOrder() {
 
 
 Model* ModelCache::getModel(unsigned int ID) {
-    
     auto it = modelIDMap.find(ID);
     if (it == modelIDMap.end())
         return nullptr;
@@ -201,8 +227,7 @@ int ModelCache::getNumberOfModels() {
 
 void ModelCache::reorderByProgram() {
     std::sort(modelCache.begin(), modelCache.end(),
-        [](const std::unique_ptr<Model>& a, 
-        const std::unique_ptr<Model>& b) 
+        [](const Model* a, const Model* b) 
     {  
         auto* progA = ShaderRegistry::getProgram(a->getProgramID());
         auto* progB = ShaderRegistry::getProgram(b->getProgramID());

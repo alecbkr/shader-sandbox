@@ -9,6 +9,7 @@
 #include "../engine/ShaderProgram.hpp"
 #include "MeshAssimp.hpp"
 #include "Texture.hpp"
+#include "ModelTypes.hpp"
 
 class Model {
     private:
@@ -20,10 +21,12 @@ class Model {
 
     public:
         const unsigned int ID;
+
         std::string name; // PLACEHOLDER does not do anything rn
+        const ModelType type;
         glm::mat4 modelM = glm::mat4(1.0f);
-        
-        Model(const unsigned int ID);
+
+        Model(const unsigned int ID, ModelType type);
         // FUNCTIONALITY
         void renderModel();
         void unloadModel();
@@ -43,7 +46,7 @@ class Model {
         void setRotation(float angle, glm::vec3 axis);
 
         // GETTERS
-        std::string getProgramID();
+        std::string getProgramID() const;
         const int getID();
 
         glm::vec3 getPosition();

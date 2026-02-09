@@ -5,7 +5,7 @@
 #include "engine/ShaderProgram.hpp"
 
 
-Model::Model(const unsigned int ID) : ID(ID) {
+Model::Model(const unsigned int ID, ModelType type) : ID(ID), type(type){
 
 }
 
@@ -107,7 +107,7 @@ void Model::calcModelM() {
 }
 
 
-std::string Model::getProgramID() {
+std::string Model::getProgramID() const {
     return programID;
 }
 
@@ -133,8 +133,9 @@ glm::vec4 Model::getRotation() {
 
 
 void Model::bindTextures(MeshA& mesh) {
+    
     if (mesh.meshflags.hasTextures == false) return;
-
+    
     for (auto& texture : mesh.textures) {
         //TODO needs to go through uniform handler and grab the uniform Sampler2Ds to properly bind textures
         //placeholder starts
@@ -143,6 +144,8 @@ void Model::bindTextures(MeshA& mesh) {
                 texture->bind(0);
                 // program->setUniform_int("base", 0);
                 break;
+            case TEX_CUBEMAP:
+                texture->bind(0);
 
             case TEX_SPECULAR:
                 break;

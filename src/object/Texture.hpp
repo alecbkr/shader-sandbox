@@ -16,31 +16,31 @@ is for now.
 #include <glad/glad.h>
 #include "TextureType.hpp"
 #include <string>
+#include <vector>
 
 
 class Texture {
     
     public:
-        mutable GLuint ID;
+        mutable GLuint ID = 0;
         std::string path;
-        unsigned char* pixels;
         
-        int width;
-        int height;
-        GLenum format;
-        Texture(const char *texture_path, TextureType type);
+        Texture(std::string texture_path, TextureType type);
         // ~Texture();
-        void bind(int texNum);
-        void unbind(int texNum);
+        virtual void bind(unsigned int texNum) = 0;
+        void unbind();
         bool isValid() const;
         TextureType getType();
+
+    protected:
+        TextureType type = TEX_UNDEFINED;
+        unsigned int texNum;
+        bool valid = false;
+        bool isInitialized = false;
+        bool isLoadedInGPU = false;
     
     private:
-        TextureType type = TEX_UNDEFINED;
-        bool valid = false;
-        bool isLoadedInGPU = false;
-        void loadToGPU();
-        void unloadFromGPU();
+        
 };
 
 #endif

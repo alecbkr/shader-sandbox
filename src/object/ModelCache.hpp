@@ -14,6 +14,7 @@ class ModelCache {
         static unsigned int createModel(std::vector<float>, std::vector<unsigned int>, 
                                                         bool hasPos, bool hasNorms, bool hasUVs);
         static unsigned int createModel(std::string pathname);
+        static unsigned int createSkybox(std::string cubemap_dir);
         
         static void setTexture(unsigned int ID, std::string pathname, std::string uniformName);
         static void setProgram(unsigned int ID, ShaderProgram& program);
@@ -26,17 +27,14 @@ class ModelCache {
         static void renderAll(glm::mat4 projection, glm::mat4 view, glm::vec3 camPos);
 
         static int getNumberOfModels();
+        static Model* getModel(unsigned int ID);
         
         static std::unordered_map<unsigned int, std::unique_ptr<Model>> modelIDMap; 
-        
-        static Model* getModel(unsigned int ID);
-
         // DEBUG
         static void printOrder();
 
     private:
         static unsigned int nextModelID;
         static void reorderByProgram();
-        static std::vector<std::unique_ptr<Model>> modelCache; 
-        
+        static std::vector<Model*> modelCache; 
 };
