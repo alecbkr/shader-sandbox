@@ -38,9 +38,8 @@ struct Binding {
 class Keybinds {
 public:
     Keybinds();
-    bool initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, ActionRegistry* actionRegPtr);
+    bool initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, ActionRegistry* _actionRegPtr, InputState* _inputsPtr);
     void shutdown();
-    void setInputsPtr(InputState* _inputsPtr);
     Binding makeBinding(Action action, KeyCombo combo, ControlCtx ctx, Trigger trigger = Trigger::Pressed, bool enabled = true);
     void setBindings(const std::vector<Binding>& b);
     void addBinding(const Binding& b);
@@ -52,7 +51,6 @@ public:
 
 private:
     bool initialized = false;
-    bool inputStateInitialized = false;
     std::vector<Binding> bindings_;
     Logger* loggerPtr = nullptr;
     ContextManager* ctxManagerPtr = nullptr;

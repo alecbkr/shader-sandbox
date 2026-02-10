@@ -1,5 +1,4 @@
 #include "UniformRegistry.hpp"
-#include "engine/Errorlog.hpp"
 #include "core/logging/Logger.hpp"
 
 
@@ -52,7 +51,8 @@ Uniform UniformRegistry::getUniform(std::string shaderProgramName, std::string u
 const Uniform* UniformRegistry::tryReadUniform(unsigned int modelID, const std::string& uniformName) const {
     const auto& programPair = uniforms.find(modelID);
     if (programPair == uniforms.end()) {
-        Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniform:", "no object found with ID", static_cast<int>(modelID));
+        // this function should be documented properly so that it is known when returning nullptr it means a uniform wasnt found or doesnt exist
+        // a more proper fix for this is to return an enum with the proper statuses. (ie. Uniform::NOT_FOUND) or something like this
         return nullptr;
     }
 
@@ -60,12 +60,13 @@ const Uniform* UniformRegistry::tryReadUniform(unsigned int modelID, const std::
     
     const auto uniformPair = programUniforms.find(uniformName);
     if (uniformPair == programUniforms.end()) {
-        Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniform", "No object found in Uniform Registry with ID ", modelID);
+        // see previous comment
         return nullptr;
     }
 
     return &uniformPair->second;
 }
+
 bool UniformRegistry::containsObject(unsigned int modelID) {
     return uniforms.contains(modelID);
 }
@@ -89,7 +90,8 @@ bool UniformRegistry::containsUniform(unsigned int modelID, const std::string& u
 // returns nullptr if uniform doesn't exist
 const std::unordered_map<std::string, Uniform>* UniformRegistry::tryReadUniforms(unsigned int modelID) const {
     if (uniforms.count(modelID) <= 0) {
-        Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniforms", "No object found in Uniform Registry with ID", modelID );
+        // this function should be documented properly so that it is known when returning nullptr it means uniforms werent found or dont exist
+        // a more proper fix for this is to return an enum with the proper statuses. (ie. Uniform::NOT_FOUND) or something like this
         return nullptr;
     }
 
@@ -108,15 +110,8 @@ void UniformRegistry::insertUniformMap(unsigned int modelID, const std::unordere
 }
 
 void UniformRegistry::eraseUniform(unsigned int modelID, const std::string& uniformName) {
-    if (uniforms.count(modelID) <= 0) {
-        Errorlog::getInstance().logEntry(EL_WARNING, "eraseUniform", "No object found in Uniform Registry with ID ", modelID);
-        return;
-    }
-    
-    if (uniforms.at(modelID).count(uniformName) <= 0) {
-        Errorlog::getInstance().logEntry(EL_WARNING, "eraseUniform", ("No uniform with name " + uniformName + " found in Uniform Registry").c_str());
-        return;
-    }
+    if (uniforms.count(modelID) <= 0) return;
+    if (uniforms.at(modelID).count(uniformName) <= 0) return;
     uniforms.at(modelID).erase(uniformName);
 }
 
