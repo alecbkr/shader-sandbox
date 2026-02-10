@@ -27,6 +27,10 @@ public:
     void onMouseButton(int _button, int action);
     void onCursorPos(double x, double y);
     void onScroll(double xoff, double yoff);
+    double getMouseDeltaX() const;
+    double getMouseDeltaY() const;
+    double getScrollX() const;
+    double getScrollY() const;
 
 private:
     bool initialized = false;

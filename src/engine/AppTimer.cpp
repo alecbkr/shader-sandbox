@@ -21,6 +21,19 @@ bool AppTimer::initialize(Logger* _loggerPtr, Platform* _platformPtr) {
     }
     loggerPtr = _loggerPtr;
     platformPtr = _platformPtr;
+    nowFn = [this]() { return platformPtr->getTime(); };
+    initialized = true;
+    return true;
+}
+
+bool AppTimer::initialize(Logger* _loggerPtr, std::function<double()> timeFn) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "App Timer Initialize", "App Timer has already been initialized.");
+        return false;
+    }
+    loggerPtr = _loggerPtr;
+    platformPtr = nullptr;
+    nowFn = std::move(timeFn);
 
     initialized = true;
     return true;
@@ -29,7 +42,7 @@ bool AppTimer::initialize(Logger* _loggerPtr, Platform* _platformPtr) {
 void AppTimer::update() {
     if (!initialized) return;
     lastFrameTime = currTime;
-    currTime = platformPtr->getTime();
+    currTime = nowFn ? nowFn() : 0.0;
     deltaTime = currTime - lastFrameTime;
 }
 

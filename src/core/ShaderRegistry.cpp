@@ -5,79 +5,82 @@ ShaderRegistry::ShaderRegistry() {
     initialized = false;
     loggerPtr = nullptr;
     programs.clear();
+    factory_ = [](const char* v, const char* f, const char* n, Logger* l) {
+        return new ShaderProgram(v, f, n, l);
+    };
 }
 
-bool ShaderRegistry::initialize(Logger* _loggerPtr) {
+bool ShaderRegistry::initialize(Logger* _loggerPtr, bool registerDefaults) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Shader Registry", "Shader Registry was already initialized.");
         return false;
     }
 
+    loggerPtr = _loggerPtr;
     programs.clear();
 
-    if (!registerProgram("../shaders/tex.vert", "../shaders/tex.frag", "tex")) {
-        return false;
-    };
-    if (!registerProgram("../shaders/color.vert", "../shaders/color.frag", "color")) {
-        return false;
+    if (registerDefaults) {
+        if (!registerProgram("../shaders/tex.vert", "../shaders/tex.frag", "tex")) return false;
+        if (!registerProgram("../shaders/color.vert", "../shaders/color.frag", "color")) return false;
     }
-
-    loggerPtr = _loggerPtr;
 
     initialized = true;
     return true;
 }
 
+
 void ShaderRegistry::shutdown() {
     if (!initialized) return;
-    loggerPtr = nullptr;
     programs.clear();
+    loggerPtr = nullptr;
     initialized = false;
 }
 
+
 bool ShaderRegistry::registerProgram(const std::string& vertex_file, const std::string& fragment_file, const std::string& programName) {
-    if (programName == "") {
-        loggerPtr->addLog(LogLevel::WARNING, "registerProgram", "Shader name cannot be empty");
+    if (programName.empty()) {
+        if (loggerPtr) loggerPtr->addLog(LogLevel::WARNING, "registerProgram", "Shader name cannot be empty");
         return false;
     }
-    ShaderProgram *newProgram = new ShaderProgram(vertex_file.c_str(), fragment_file.c_str(), programName.c_str(), loggerPtr);
-    auto [it, inserted] = programs.emplace(programName, newProgram);
-    //auto [it, inserted] = programs.emplace( programName, ShaderProgram(vertex_file.c_str(), fragment_file.c_str(), programName.c_str()));
 
-    if (!inserted) {
-        std::cerr << "ShaderRegistry::registerProgram: program '" << programName << "' already exists\n";
-        delete newProgram;
+    if(programs.contains(programName)) {
+        if (loggerPtr) loggerPtr->addLog(LogLevel::WARNING, "Shader Registry registerProgram", "Program '" + programName + "' already exists.");
+        return false;
     }
 
-    return inserted;
+    programs.emplace(
+        programName,
+        std::unique_ptr<ShaderProgram>(
+            factory_(vertex_file.c_str(), fragment_file.c_str(), programName.c_str(), loggerPtr)
+        )
+    );
+
+    return true;
 }
 
-ShaderProgram* ShaderRegistry::getProgram(const std::string& programName) {
-    if (!ShaderRegistry::initialized) return nullptr;
-    auto programPair = programs.find(programName);
-    if (programPair == programs.end()) {
-        return nullptr;
-    }
-
-    //return &programPair->second;
-    return programPair->second;
-}
-
-void ShaderRegistry::replaceProgram(const std::string &programName, ShaderProgram *newProgram) {
+ShaderProgram* ShaderRegistry::getProgram(const std::string& programName) const {
+    if (!initialized) return nullptr;
+    
     auto it = programs.find(programName);
-    if (it != programs.end()) {
-        ShaderProgram* oldProg = it->second;
-        it->second = newProgram;
-        delete oldProg; 
-    } else {
-        programs[programName] = newProgram;
-    }
+    if (it == programs.end()) return nullptr;
+
+    return it->second.get();
 }
 
-std::unordered_map<std::string, ShaderProgram*>& ShaderRegistry::getPrograms() {
+void ShaderRegistry::replaceProgram(const std::string &programName, std::unique_ptr<ShaderProgram> newProgram) {
+    if (!newProgram) return;
+
+    programs[programName] = std::move(newProgram);
+}
+
+const std::unordered_map<std::string, std::unique_ptr<ShaderProgram>>& ShaderRegistry::getPrograms() const {
     return programs;
 }
 
-size_t ShaderRegistry::getNumberOfPrograms() {
+size_t ShaderRegistry::getNumberOfPrograms() const {
     return programs.size();
+}
+
+void ShaderRegistry::setFactory(ShaderFactoryFn fn) {
+    factory_ = std::move(fn);
 }

@@ -84,7 +84,7 @@ bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ke
 
     #ifdef __linux__
         // Disable vsync on linux because it can cause issues when shader sandbox window is minimized.
-        Logger::addLog(LogLevel::INFO, "Platform::initialize", "Need to add a feature to disable/enable vsync");
+        loggerPtr->addLog(LogLevel::INFO, "Platform::initialize", "Need to add a feature to disable/enable vsync");
         glfwSwapInterval(0);
     #endif
 
@@ -151,7 +151,7 @@ void Platform::initializeInputCallbacks() {
     });
 }
 
-std::filesystem::path Platform::getExeDir() {
+std::filesystem::path Platform::getExeDir() const {
 #if defined(_WIN32)
 
     wchar_t buffer[MAX_PATH];

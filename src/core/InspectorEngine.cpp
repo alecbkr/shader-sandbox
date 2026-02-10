@@ -63,7 +63,7 @@ void InspectorEngine::shutdown() {
 }
 
 void InspectorEngine::refreshUniforms() {
-    auto& programs = shaderRegPtr->getPrograms();
+    const auto& programs = shaderRegPtr->getPrograms();
     
     // NOTE: this will break if we do any multithreading with the program list.
     // Please be careful.
@@ -132,18 +132,16 @@ bool InspectorEngine::handleEditShaderProgram(const std::string& vertexFile, con
     
     // Simple path, just register the new program
     if (oldProgram == nullptr) {
-        shaderRegPtr->registerProgram(vertexFile, fragmentFile , programName);
+        if (!shaderRegPtr->registerProgram(vertexFile, fragmentFile , programName)) return false;
         InspectorEngine::refreshUniforms();
         return true;
     }
 
     // Otherwise, we need to go through this mess.
-    std::unique_ptr<ShaderProgram> newProgram = std::make_unique<ShaderProgram>(vertexFile.c_str(), fragmentFile.c_str(), programName.c_str(), loggerPtr);
-    if (!newProgram->isCompiled()) {
-        return false;
-    }
+    auto newProgram = std::make_unique<ShaderProgram>(vertexFile.c_str(), fragmentFile.c_str(), programName.c_str(), loggerPtr);
+    if (!newProgram->isCompiled()) return false;
 
-    shaderRegPtr->replaceProgram(programName, newProgram.release());
+    shaderRegPtr->replaceProgram(programName, std::move(newProgram));
 
     InspectorEngine::refreshUniforms();
     return true;

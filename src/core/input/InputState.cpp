@@ -138,3 +138,19 @@ void InputState::onScroll(double xoff, double yoff) {
     scrollX += xoff;
     scrollY += yoff;
 }
+
+double InputState::getMouseDeltaX() const {
+    return initialized ? mouseDeltaX : 0.0;
+}
+
+double InputState::getMouseDeltaY() const {
+    return initialized ? mouseDeltaY : 0.0;
+}
+
+double InputState::getScrollX() const {
+    return initialized ? scrollX : 0.0;
+}
+
+double InputState::getScrollY() const {
+    return initialized ? scrollY : 0.0;
+}
