@@ -2,7 +2,6 @@
 
 #include <filesystem>
 
-#include "core/logging/LogSink.hpp"
 #include "core/logging/Logger.hpp"
 #include "core/InspectorEngine.hpp"
 #include "core/ShaderRegistry.hpp"
@@ -194,7 +193,7 @@ void InspectorUI::drawObjectsInspector() {
             if (ImGui::TreeNode("shader program")) {
                 std::vector<const char *> shaderChoices;
                 shaderChoices.reserve(shaderRegPtr->getNumberOfPrograms());
-                const auto& shaders = shaderRegPtr->getPrograms();
+                auto& shaders = shaderRegPtr->getPrograms();
                 for (auto &[name, shader] : shaders) {
                     shaderChoices.push_back(name.c_str());
                 }
@@ -266,7 +265,7 @@ static const std::vector<float> gridPlane_verts {
         1,2,6, 1,6,5, // right
         0,3,7, 0,7,4  // left
     };
-    const auto& programs = shaderRegPtr->getPrograms();
+    std::unordered_map<std::string, ShaderProgram*>& programs = shaderRegPtr->getPrograms();
     if (programs.empty()) return;
 
     // just grab a random shader program it really does not matter
@@ -731,27 +730,18 @@ bool InspectorUI:: drawUniformInputValue(InspectorSampler2D* value, Uniform* uni
     return drawUniformInputValue(&value->textureUnit);
 }
 
-bool InspectorUI::drawUniformInputValue(InspectorReference* value, Uniform* uniform) {
+bool InspectorUI::drawUniformInputValue(UniformFunction* value, Uniform* uniform) {
     // For now we only support references. This will be a bigger system later
     value->initialized = false;
-    value->useCamaraData = false;
     bool changed = false;
     std::vector<std::string> modelNames;
     std::vector<const char* > modelChoices{""};
     std::vector<unsigned int> modelIDs{0};
-    modelNames.reserve(modelCachePtr->modelIDMap.size());
-    modelChoices.reserve(modelCachePtr->modelIDMap.size() + 1);
-    modelIDs.reserve(modelCachePtr->modelIDMap.size() + 1);
-    
-    std::optional<std::vector<std::string>> worldData = getWorldData(uniform->type);
-
-    // let them disable world data in case world data is on when it shouldn't be.
-    if (worldData || value->useWorldData) {
-        changed |= ImGui::Checkbox("Use World Data?", &value->useWorldData);
-    }
-
+    modelNames.reserve(ModelCache::modelIDMap.size());
+    modelChoices.reserve(ModelCache::modelIDMap.size() + 1);
+    modelIDs.reserve(ModelCache::modelIDMap.size() + 1);
     int i = 0;
-    for (auto& [modelID, model] : modelCachePtr->modelIDMap) {
+    for (auto& [modelID, model] : ModelCache::modelIDMap) {
         // avoid circular references
         if (modelID == uniform->modelID) {
             continue;
@@ -761,11 +751,6 @@ bool InspectorUI::drawUniformInputValue(InspectorReference* value, Uniform* unif
         modelIDs.push_back(modelID);
         i++;
     }
-
-    if (value->useWorldData) {
-        modelChoices.push_back("camera");    
-    }
-
     
     changed |= ImGui::Combo("Models", &value->modelSelection, modelChoices.data(), modelChoices.size());
 
@@ -776,36 +761,19 @@ bool InspectorUI::drawUniformInputValue(InspectorReference* value, Uniform* unif
         return changed;
     }
 
-    if (std::string(modelChoices[value->modelSelection]) == "camera") {
-        value->useCamaraData = true;
-    }
-    else {
-        value->referencedModelID = modelIDs[value->modelSelection];
+    value->referencedModelID = modelIDs[value->modelSelection];
+    const auto modelUniforms = UNIFORM_REGISTRY.tryReadUniforms(value->referencedModelID);
+    if (modelUniforms == nullptr) {
+        Logger::addLog(LogLevel::ERROR, "drawUniformInputValue", "modelID " + std::to_string(value->referencedModelID) + " not found in Uniform Registry!");
+        return false;
     }
 
     std::vector<const char*> uniformChoices{""}; 
-
-    if (!value->useWorldData) {
-        const auto modelUniforms = uniformRegPtr->tryReadUniforms(value->referencedModelID);
-        if (modelUniforms == nullptr) {
-            loggerPtr->addLog(LogLevel::LOG_ERROR, "drawUniformInputValue", "modelID " + std::to_string(value->referencedModelID) + " not found in Uniform Registry!");
-            return false;
+    for (auto& [uniformName, uniform] : *modelUniforms) {
+        if (uniform.type != value->returnType) {
+            continue;
         }
-
-        for (auto& [uniformName, uniform] : *modelUniforms) {
-            if (uniform.type != value->returnType) {
-                continue;
-            }
-            uniformChoices.push_back(uniformName.c_str());
-        }
-    }
-    else {
-        if (!worldData) {
-            loggerPtr->addLog(LogLevel::LOG_ERROR, "drawUniformInputValue", "world data is not enabled for this type");
-        }
-        for (const std::string& worldDataStr : worldData.value()) {
-            uniformChoices.push_back(worldDataStr.c_str());
-        }
+        uniformChoices.push_back(uniformName.c_str());
     }
 
     changed |= ImGui::Combo("Uniforms", &value->uniformSelection, uniformChoices.data(), uniformChoices.size());
@@ -832,7 +800,7 @@ void InspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID) {
             // new function
             if (uniform.isFunction) {
                 uniform.isFunction = true;
-                uniform.value = InspectorReference{
+                uniform.value = UniformFunction{
                     .modelSelection = 0, .uniformSelection = 0,
                     .returnType = uniform.type,
                     .initialized = false,
@@ -840,7 +808,7 @@ void InspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID) {
             }
             else {
                 uniform.isFunction = false;
-                uniform.value = inspectorEngPtr->getDefaultValue(uniform.type);
+                uniform.value = InspectorEngine::getDefaultValue(uniform.type);
             }
         }
 
@@ -848,8 +816,13 @@ void InspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID) {
             changed = drawUniformInputValue(&val, &uniform);
         }, uniform.value);
 
+<<<<<<< HEAD
         if (changed || changedFunctionBox) {
+            InspectorEngine::applyInput(modelID, uniform);
+=======
+        if (changed) {
             inspectorEngPtr->applyInput(modelID, uniform);
+>>>>>>> main
         }
 
         /*

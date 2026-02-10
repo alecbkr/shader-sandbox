@@ -1,4 +1,5 @@
 #include "application/Application.hpp"
+#include "core/logging/Logger.hpp"
 
 #define START_WIDTH 960
 #define START_HEIGHT 540
