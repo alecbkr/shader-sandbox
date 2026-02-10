@@ -6,6 +6,7 @@
 
 #include "TextEditor.h"
 
+#include "EditorUI.hpp"
 #include "imgui.h"
 
 // TODO
@@ -1011,6 +1012,10 @@ void TextEditor::Render()
 			// Render colorized text
 			auto prevColor = line.empty() ? mPalette[(int)PaletteIndex::Default] : GetGlyphColor(line[0]);
 			ImVec2 bufferOffset;
+
+			if (EditorUI::searcher.isItemActiveMatch(lineNo)) {
+				EditorUI::drawActiveFind(GetTextLines()[lineNo], textScreenPos);
+			}
 
 			for (int i = 0; i < line.size();)
 			{

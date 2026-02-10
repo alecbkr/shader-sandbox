@@ -1,4 +1,7 @@
 #include "EditorEngine.hpp"
+
+#include <filesystem>
+
 #include "ShaderRegistry.hpp"
 
 #include <fstream>
