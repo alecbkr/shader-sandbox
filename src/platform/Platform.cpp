@@ -8,7 +8,6 @@
 #include "core/input/ActionRegistry.hpp"
 #include "core/input/InputState.hpp"
 #include "application/AppContext.hpp"
-#include <sstream>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -95,9 +94,6 @@ bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ke
     
     setWindowIcon();
     setContextCurrent(*windowPtr);
-    std::stringstream ss;
-    ss << "posX: " << ctxPtr->posX << ", posY: " << ctxPtr->posY;
-    loggerPtr->addLog(LogLevel::INFO, "TEST", ss.str());
     glfwSetWindowPos(windowPtr->getGLFWWindow(), ctxPtr->posX, ctxPtr->posY);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
