@@ -49,22 +49,22 @@ void Platform::setWindowIcon() {
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 
-    auto* ctx = static_cast<AppContext*>(glfwGetWindowUserPointer(window));
-    if (!ctx) return;
+    auto* settings = static_cast<AppSettings*>(glfwGetWindowUserPointer(window));
+    if (!settings) return;
 
-    ctx->settings.width = static_cast<u32>(width);
-    ctx->settings.height = static_cast<u32>(height);
+    settings->width = static_cast<u32>(width);
+    settings->height = static_cast<u32>(height);
 }
 
 void window_position_callback(GLFWwindow* window, int xpos, int ypos) {
-    auto* ctx = static_cast<AppContext*>(glfwGetWindowUserPointer(window));
-    if (!ctx) return;
+    auto* settings = static_cast<AppSettings*>(glfwGetWindowUserPointer(window));
+    if (!settings) return;
 
-    ctx->settings.posX = xpos;
-    ctx->settings.posY = ypos;
+    settings->posX = xpos;
+    settings->posY = ypos;
 }
 
-bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Keybinds* _keybindsPtr, ActionRegistry* _actionRegPtr, InputState* _inputsPtr, const char* _app_title, AppContext* ctxPtr) {
+bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Keybinds* _keybindsPtr, ActionRegistry* _actionRegPtr, InputState* _inputsPtr, const char* _app_title, AppSettings* settingsPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Platform Initialization", "The platform layer is already initialized.");
         return false;
@@ -82,7 +82,7 @@ bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ke
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
     bool windowIsValid;
-    windowPtr = Window::createWindow(ctxPtr->settings.width, ctxPtr->settings.height, _app_title, windowIsValid);
+    windowPtr = Window::createWindow(settingsPtr->width, settingsPtr->height, _app_title, windowIsValid);
     if (!windowIsValid) {
         loggerPtr->addLog(LogLevel::CRITICAL, "Platform Window Creation", "Failed to create window.");
         return false;
@@ -94,16 +94,16 @@ bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ke
     
     setWindowIcon();
     setContextCurrent(*windowPtr);
-    glfwSetWindowPos(windowPtr->getGLFWWindow(), ctxPtr->settings.posX, ctxPtr->settings.posY);
+    glfwSetWindowPos(windowPtr->getGLFWWindow(), settingsPtr->posX, settingsPtr->posY);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         loggerPtr->addLog(LogLevel::CRITICAL, "Platform GLAD Initialization", "Failed to initialize GLAD.");
         return false;
     }
 
-    glViewport(0, 0, ctxPtr->settings.width, ctxPtr->settings.height);
+    glViewport(0, 0, settingsPtr->width, settingsPtr->height);
 
-    glfwSetWindowUserPointer(windowPtr->getGLFWWindow(), ctxPtr);
+    glfwSetWindowUserPointer(windowPtr->getGLFWWindow(), settingsPtr);
     glfwSetFramebufferSizeCallback(windowPtr->getGLFWWindow(), framebuffer_size_callback);
     glfwSetWindowPosCallback(windowPtr->getGLFWWindow(), window_position_callback);
 

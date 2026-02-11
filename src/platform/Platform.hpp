@@ -21,7 +21,7 @@ struct PlatformInitStruct {
 class Platform {
 public:
     Platform();
-    bool initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Keybinds* _keybindsPtr, ActionRegistry* _actionRegistryPtr, InputState* _inputsPtr, const char* _app_title, AppContext* ctxPtr);
+    bool initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Keybinds* _keybindsPtr, ActionRegistry* _actionRegistryPtr, InputState* _inputsPtr, const char* _app_title, AppSettings* settingsPtr);
     bool shouldClose();
     void swapBuffers();
     void pollEvents();
