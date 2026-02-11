@@ -6,13 +6,13 @@
 int main(int argc, char** argv) {
     AppContext ctx = AppContext(APPLICATION_TITLE);
 
-    ctx.userConfigDir = Paths::getUserConfigDir(APPLICATION_TITLE);
-    ctx.settingsPath = ctx.userConfigDir / "settings.json";
-    AppSettings::load(ctx);
+    ctx.settings.userConfigDir = Paths::getUserConfigDir(APPLICATION_TITLE);
+    ctx.settings.settingsPath = ctx.settings.userConfigDir / "settings.json";
+    SettingsLoader::load(ctx.settings);
 
     if (!Application::initialize(ctx)) return 1;
     Application::runLoop(ctx);
 
-    AppSettings::save(ctx);
+    SettingsLoader::save(ctx.settings);
     return 0;
 }

@@ -27,25 +27,32 @@
 #include "core/ui/EditorUI.hpp"
 #include "core/ui/InspectorUI.hpp"
 #include "object/ModelImporter.hpp"
-#include "persistence/AppSettings.hpp"
+#include "persistence/SettingsLoader.hpp"
 
-struct Project;
+struct Project {
+    const char* project_title;
+    std::filesystem::path projectRoot;
+    std::filesystem::path projectShadersDir;
+};
 
-struct AppContext {
-    AppContext(const char* _app_title) : app_title(_app_title) {};
+struct AppSettings {
+    std::filesystem::path userConfigDir;
+    std::filesystem::path settingsPath;
 
     u32 width = 960;
     u32 height = 540;
     u32 posX = 100;
     u32 posY = 100;
+};
+
+struct AppContext {
+    AppContext(const char* _app_title) : app_title(_app_title) {};
+
     const char* app_title;
+    
+    AppSettings settings;
 
-    std::filesystem::path userConfigDir; // OS config directory (where we store user preferences and settings)
-    std::filesystem::path settingsPath; // userConfigDir/settings.json (complete path to the settings)
-
-    //std::optional<Project> project; // loaded project (or none)
-    std::filesystem::path projectRoot; // loaded project's root directory
-    std::filesystem::path projectShadersDir; // loaded project's shader directory
+    std::optional<Project> project; // loaded project (or none)
 
     Logger logger;
     ActionRegistry action_registry;

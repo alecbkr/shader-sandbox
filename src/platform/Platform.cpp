@@ -52,16 +52,16 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     auto* ctx = static_cast<AppContext*>(glfwGetWindowUserPointer(window));
     if (!ctx) return;
 
-    ctx->width = static_cast<u32>(width);
-    ctx->height = static_cast<u32>(height);
+    ctx->settings.width = static_cast<u32>(width);
+    ctx->settings.height = static_cast<u32>(height);
 }
 
 void window_position_callback(GLFWwindow* window, int xpos, int ypos) {
     auto* ctx = static_cast<AppContext*>(glfwGetWindowUserPointer(window));
     if (!ctx) return;
 
-    ctx->posX = xpos;
-    ctx->posY = ypos;
+    ctx->settings.posX = xpos;
+    ctx->settings.posY = ypos;
 }
 
 bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Keybinds* _keybindsPtr, ActionRegistry* _actionRegPtr, InputState* _inputsPtr, const char* _app_title, AppContext* ctxPtr) {
@@ -82,7 +82,7 @@ bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ke
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
     bool windowIsValid;
-    windowPtr = Window::createWindow(ctxPtr->width, ctxPtr->height, _app_title, windowIsValid);
+    windowPtr = Window::createWindow(ctxPtr->settings.width, ctxPtr->settings.height, _app_title, windowIsValid);
     if (!windowIsValid) {
         loggerPtr->addLog(LogLevel::CRITICAL, "Platform Window Creation", "Failed to create window.");
         return false;
@@ -94,14 +94,14 @@ bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ke
     
     setWindowIcon();
     setContextCurrent(*windowPtr);
-    glfwSetWindowPos(windowPtr->getGLFWWindow(), ctxPtr->posX, ctxPtr->posY);
+    glfwSetWindowPos(windowPtr->getGLFWWindow(), ctxPtr->settings.posX, ctxPtr->settings.posY);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         loggerPtr->addLog(LogLevel::CRITICAL, "Platform GLAD Initialization", "Failed to initialize GLAD.");
         return false;
     }
 
-    glViewport(0, 0, ctxPtr->width, ctxPtr->height);
+    glViewport(0, 0, ctxPtr->settings.width, ctxPtr->settings.height);
 
     glfwSetWindowUserPointer(windowPtr->getGLFWWindow(), ctxPtr);
     glfwSetFramebufferSizeCallback(windowPtr->getGLFWWindow(), framebuffer_size_callback);

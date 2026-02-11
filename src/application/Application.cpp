@@ -263,8 +263,8 @@ bool Application::shouldClose(AppContext& ctx) {
 }
 
 void Application::windowResize(AppContext& ctx, u32 _width, u32 _height) {
-    ctx.width = _width;
-    ctx.height = _height;
+    ctx.settings.width = _width;
+    ctx.settings.height = _height;
 }
 
 // void Application::setAppStateControls(AppStateControls state) {
