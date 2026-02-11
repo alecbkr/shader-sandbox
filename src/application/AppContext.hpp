@@ -1,7 +1,6 @@
 #pragma once
 
 #include <filesystem>
-#include <optional>
 #include <types.hpp>
 #include "core/logging/Logger.hpp"
 #include "core/input/ActionRegistry.hpp"
@@ -27,12 +26,12 @@
 #include "core/ui/EditorUI.hpp"
 #include "core/ui/InspectorUI.hpp"
 #include "object/ModelImporter.hpp"
-#include "persistence/SettingsLoader.hpp"
 
 struct Project {
-    const char* project_title;
+    std::string projectTitle;
     std::filesystem::path projectRoot;
     std::filesystem::path projectShadersDir;
+    std::filesystem::path projectJSON;
 };
 
 struct AppSettings {
@@ -51,8 +50,7 @@ struct AppContext {
     const char* app_title;
     
     AppSettings settings;
-
-    std::optional<Project> project; // loaded project (or none)
+    Project project; // loaded project (or none)
 
     Logger logger;
     ActionRegistry action_registry;

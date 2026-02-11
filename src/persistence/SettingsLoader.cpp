@@ -10,14 +10,10 @@ using json = nlohmann::json;
 int SettingsLoader::version = 1;
 
 bool SettingsLoader::load(AppSettings& settings) {
-    if (!std::filesystem::exists(settings.settingsPath)) {
-        return false;
-    }
+    if (!std::filesystem::exists(settings.settingsPath)) return false;
 
     std::ifstream in(settings.settingsPath);
-    if (!in.is_open()) {
-        return false;
-    }
+    if (!in.is_open()) return false;
 
     try {
         json j;
@@ -29,7 +25,6 @@ bool SettingsLoader::load(AppSettings& settings) {
         settings.posX = j.value("windowPositionX", settings.posX);
         settings.posY = j.value("windowPositionY", settings.posY);
     } catch (...) {
-        // malformed JSON -> fall back to defaults
         return false;
     }
 
