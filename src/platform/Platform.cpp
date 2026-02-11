@@ -7,6 +7,8 @@
 #include "core/input/Keybinds.hpp"
 #include "core/input/ActionRegistry.hpp"
 #include "core/input/InputState.hpp"
+#include "application/AppContext.hpp"
+#include <sstream>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -45,7 +47,25 @@ void Platform::setWindowIcon() {
     stbi_image_free(pixels);
 }
 
-bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Keybinds* _keybindsPtr, ActionRegistry* _actionRegPtr, InputState* _inputsPtr, u32 _width, u32 _height, const char* _app_title) {
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
+
+    auto* ctx = static_cast<AppContext*>(glfwGetWindowUserPointer(window));
+    if (!ctx) return;
+
+    ctx->width = static_cast<u32>(width);
+    ctx->height = static_cast<u32>(height);
+}
+
+void window_position_callback(GLFWwindow* window, int xpos, int ypos) {
+    auto* ctx = static_cast<AppContext*>(glfwGetWindowUserPointer(window));
+    if (!ctx) return;
+
+    ctx->posX = xpos;
+    ctx->posY = ypos;
+}
+
+bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Keybinds* _keybindsPtr, ActionRegistry* _actionRegPtr, InputState* _inputsPtr, const char* _app_title, AppContext* ctxPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Platform Initialization", "The platform layer is already initialized.");
         return false;
@@ -63,24 +83,33 @@ bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ke
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
     bool windowIsValid;
-    windowPtr = Window::createWindow(_width, _height, _app_title, windowIsValid);
+    windowPtr = Window::createWindow(ctxPtr->width, ctxPtr->height, _app_title, windowIsValid);
     if (!windowIsValid) {
         loggerPtr->addLog(LogLevel::CRITICAL, "Platform Window Creation", "Failed to create window.");
         return false;
     }
 
+    
     glfwSetWindowUserPointer(windowPtr->getGLFWWindow(), inputsPtr);
     initializeInputCallbacks();
-
+    
     setWindowIcon();
     setContextCurrent(*windowPtr);
+    std::stringstream ss;
+    ss << "posX: " << ctxPtr->posX << ", posY: " << ctxPtr->posY;
+    loggerPtr->addLog(LogLevel::INFO, "TEST", ss.str());
+    glfwSetWindowPos(windowPtr->getGLFWWindow(), ctxPtr->posX, ctxPtr->posY);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         loggerPtr->addLog(LogLevel::CRITICAL, "Platform GLAD Initialization", "Failed to initialize GLAD.");
         return false;
     }
 
-    glViewport(0, 0, _width, _height);
+    glViewport(0, 0, ctxPtr->width, ctxPtr->height);
+
+    glfwSetWindowUserPointer(windowPtr->getGLFWWindow(), ctxPtr);
+    glfwSetFramebufferSizeCallback(windowPtr->getGLFWWindow(), framebuffer_size_callback);
+    glfwSetWindowPosCallback(windowPtr->getGLFWWindow(), window_position_callback);
 
     #ifdef __linux__
         // Disable vsync on linux because it can cause issues when shader sandbox window is minimized.
@@ -171,4 +200,8 @@ std::filesystem::path Platform::getExeDir() const {
 
     // Fallback (should rarely happen)
     return std::filesystem::current_path();
+}
+
+void Platform::terminate(){
+    glfwTerminate();
 }

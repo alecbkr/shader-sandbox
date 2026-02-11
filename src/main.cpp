@@ -1,14 +1,18 @@
 #include "application/Application.hpp"
+#include "persistence/Paths.hpp"
 
-#define START_WIDTH 960
-#define START_HEIGHT 540
-#define APPLICATION_TITLE "Shader Sandbox"
+#define APPLICATION_TITLE "Prism"
 
-int main() {
-    AppContext ctx = AppContext(START_WIDTH, START_HEIGHT, APPLICATION_TITLE);
-    if (!Application::initialize(ctx)) {
-        return 1;
-    }
+int main(int argc, char** argv) {
+    AppContext ctx = AppContext(APPLICATION_TITLE);
+
+    ctx.userConfigDir = Paths::getUserConfigDir(APPLICATION_TITLE);
+    ctx.settingsPath = ctx.userConfigDir / "settings.json";
+    AppSettings::load(ctx);
+
+    if (!Application::initialize(ctx)) return 1;
     Application::runLoop(ctx);
+
+    AppSettings::save(ctx);
     return 0;
 }

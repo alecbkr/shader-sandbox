@@ -120,7 +120,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Keybinds were not initialized successfully.");
         return false;
     }
-    if (!ctx.platform.initialize(&ctx.logger, &ctx.ctx_manager, &ctx.keybinds, &ctx.action_registry, &ctx.inputs, ctx.width, ctx.height, ctx.app_title)) {
+    if (!ctx.platform.initialize(&ctx.logger, &ctx.ctx_manager, &ctx.keybinds, &ctx.action_registry, &ctx.inputs, ctx.app_title, &ctx)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Platform layer was not initialized successfully.");
         return false;
     }
@@ -224,6 +224,7 @@ void Application::runLoop(AppContext& ctx) {
         Application::renderUI(ctx);
         ctx.platform.swapBuffers();
     }
+    ctx.platform.terminate();
 }
 
 void Application::renderUI(AppContext& ctx) {
@@ -259,6 +260,11 @@ void Application::shutdown(AppContext& ctx) {
 bool Application::shouldClose(AppContext& ctx) {
     if (!initialized) return false;
     return ctx.platform.shouldClose();
+}
+
+void Application::windowResize(AppContext& ctx, u32 _width, u32 _height) {
+    ctx.width = _width;
+    ctx.height = _height;
 }
 
 // void Application::setAppStateControls(AppStateControls state) {

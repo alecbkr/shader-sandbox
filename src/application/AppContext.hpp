@@ -1,4 +1,7 @@
 #pragma once
+
+#include <filesystem>
+#include <optional>
 #include <types.hpp>
 #include "core/logging/Logger.hpp"
 #include "core/input/ActionRegistry.hpp"
@@ -24,14 +27,25 @@
 #include "core/ui/EditorUI.hpp"
 #include "core/ui/InspectorUI.hpp"
 #include "object/ModelImporter.hpp"
+#include "persistence/AppSettings.hpp"
+
+struct Project;
 
 struct AppContext {
-    AppContext(u32 _width, u32 _height, const char* _app_title)
-        : width(_width), height(_height), app_title(_app_title) {};
+    AppContext(const char* _app_title) : app_title(_app_title) {};
 
-    u32 width;
-    u32 height;
+    u32 width = 960;
+    u32 height = 540;
+    u32 posX = 100;
+    u32 posY = 100;
     const char* app_title;
+
+    std::filesystem::path userConfigDir; // OS config directory (where we store user preferences and settings)
+    std::filesystem::path settingsPath; // userConfigDir/settings.json (complete path to the settings)
+
+    //std::optional<Project> project; // loaded project (or none)
+    std::filesystem::path projectRoot; // loaded project's root directory
+    std::filesystem::path projectShadersDir; // loaded project's shader directory
 
     Logger logger;
     ActionRegistry action_registry;

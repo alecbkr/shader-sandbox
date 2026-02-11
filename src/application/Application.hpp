@@ -26,7 +26,7 @@ public:
     static void shutdown(AppContext& ctx);
     // static void setAppStateControls(AppStateControls state);
     // static AppStateControls checkAppStateControls();
-
+    static void windowResize(AppContext& ctx, u32 width, u32 height);
 private:
     static bool initialized;
     // static AppStateControls appControls;

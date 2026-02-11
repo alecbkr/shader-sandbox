@@ -308,7 +308,7 @@ void InspectorUI::drawRenameFileEntry(ShaderFile* fileData) {
     bool buttonSumitted = ImGui::Button(("OK##" + fileData->fileName).c_str());
 
     if ((keyboardSubmitted || buttonSumitted) && !fileData->renameBuffer.empty()) {
-        eventsPtr->TriggerEvent(Event { RenameFile, false, RenameFilePayload {fileData->fileName, fileData->renameBuffer} });
+        eventsPtr->TriggerEvent(Event { EventType::RenameFile, false, RenameFilePayload {fileData->fileName, fileData->renameBuffer} });
     }
 
     ImGui::SameLine();
@@ -325,7 +325,7 @@ void InspectorUI::drawDeleteFileEntity(ShaderFile* fileData) {
     ImGui::SameLine();
 
     if (ImGui::Button(("DELETE##" + fileData->fileName).c_str())) {
-        eventsPtr->TriggerEvent(Event { DeleteFile, false, DeleteFilePayload { fileData->fileName } });
+        eventsPtr->TriggerEvent(Event { EventType::DeleteFile, false, DeleteFilePayload { fileData->fileName } });
     }
 
     ImGui::SameLine();
@@ -353,7 +353,7 @@ void InspectorUI::drawStandardFileEntry(ShaderFile* fileData) {
         if (ImGui::IsMouseDoubleClicked(0)) {
             eventsPtr->TriggerEvent(
                 Event{
-                    OpenFile,
+                    EventType::OpenFile,
                     false,
                     OpenFilePayload{ fileData->filePath, fileData->fileName }
                 }
