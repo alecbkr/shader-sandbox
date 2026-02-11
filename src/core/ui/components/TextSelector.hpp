@@ -12,6 +12,7 @@ enum class SelectionMode {
 
 struct TextSelectionCtx {
     SelectionMode mode = SelectionMode::Normal;
+    bool wordRecalc; 
     bool isActive = false; 
     bool isCharMode = false; // true = select chars, false = select full line
     int startRow = -1; 
@@ -21,7 +22,8 @@ struct TextSelectionCtx {
 
     void clear() {
         isActive = false; 
-        SelectionMode mode = SelectionMode::Normal;
+        mode = SelectionMode::Normal;
+        wordRecalc = false; 
         startRow = -1; endRow = -1; 
         startCol = 0; endCol = 0; 
     }

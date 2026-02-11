@@ -4,20 +4,6 @@
 #include <iostream>
 #include <sstream>
 
-static struct TextSelectorState {
-    TextSelectionCtx* userCtx = nullptr; 
-
-    ImVec2 origin; 
-    float lineHeight; 
-    float charWidth; 
-    float maxWidth; 
-    ImU32 highlightColor; 
-
-    bool isPendingWordSelect = false; 
-    int hoveredRow = -1; 
-    int hoveredCol = -1; 
-} txtState;
-
 bool TextSelector::Begin(const char* id, int totalRows, TextSelectionCtx& ctx, TextSelectorLayout& layout) {
     layout.lineHeight = std::max(1.0f, ImGui::GetTextLineHeight());
     layout.charWidth = ImGui::CalcTextSize("A").x; 
@@ -35,58 +21,20 @@ bool TextSelector::Begin(const char* id, int totalRows, TextSelectionCtx& ctx, T
         ImGui::SetMouseCursor(ImGuiMouseCursor_TextInput);
         handleInput(totalRows, ctx, layout);
     }
-
-    // handle mouse clicks 
-    if (ImGui::IsMouseClicked(0)) {
-        int clicks = ImGui::GetMouseClickedCount(0); 
-        ctx.isActive = true; 
-        ctx.startRow = txtState.hoveredRow; 
-        ctx.endRow = txtState.hoveredRow; 
-
-      
-            if (clicks == 3) {
-                ctx.mode = SelectionMode::Line;
-                ctx.startCol = 0;
-                ctx.endCol = std::numeric_limits<int>::max(); 
-            }
-
-            else if (clicks == 2) {
-                ctx.mode = SelectionMode::Word;
-                txtState.isPendingWordSelect = true;
-            }
-            else {
-                ctx.mode = SelectionMode::Normal;
-                ctx.startCol = txtState.hoveredCol; 
-                ctx.endCol = txtState.hoveredCol; 
-            }
-    }    
-    
-    else if (ImGui::IsMouseClicked(0) && ctx.isActive) {
-        ctx.endRow = txtState.hoveredRow; 
-
-        if (ctx.mode == SelectionMode::Line) {
-            ctx.startCol = 0; 
-            ctx.endCol = std::numeric_limits<int>::max(); 
-        }
-
-        else if (ctx.mode == SelectionMode::Word) {
-            if (txtState.hoveredCol != ctx.startCol) {
-                ctx.mode = SelectionMode::Normal; 
-                ctx.endCol = txtState.hoveredCol; 
-            }
-        }
-
-        else {
-            ctx.endCol = txtState.hoveredCol; 
-        }
-    }
-
     return true;
 }
 
-void TextSelector::Text(int rowIndex, const std::string& lineContent, const TextSelectionCtx& ctx, const TextSelectorLayout& layout, std::function<void()> drawCallback) {
-    
-    float lineY = layout.origin.y + (rowIndex * layout.lineHeight);
+void TextSelector::Text(int rowIdx, const std::string& lineContent, const TextSelectionCtx& ctx, const TextSelectorLayout& layout, std::function<void()> drawCallback) {
+    if (ctx.isActive && ctx.wordRecalc && rowIdx == ctx.startRow) {
+        TextSelectionCtx& tmpCtx = const_cast<TextSelectionCtx&>(ctx);
+        int start, end; 
+        getWordUnderCursor(lineContent, tmpCtx.startCol, start, end); 
+        tmpCtx.startCol = start; 
+        tmpCtx.endCol = end; 
+        tmpCtx.wordRecalc = false; 
+    }
+
+    float lineY = layout.origin.y + (rowIdx * layout.lineHeight);
     ImGui::SetCursorScreenPos(ImVec2(layout.origin.x, lineY));
 
     // handles drawing the highlight around the text 
@@ -94,7 +42,7 @@ void TextSelector::Text(int rowIndex, const std::string& lineContent, const Text
         int rMin = std::min(ctx.startRow, ctx.endRow);
         int rMax = std::max(ctx.startRow, ctx.endRow);
 
-        if (rowIndex >= rMin && rowIndex <= rMax) {
+        if (rowIdx >= rMin && rowIdx <= rMax) {
             float hlStart = 0.0f;
             float hlEnd = layout.maxWidth;
 
@@ -111,10 +59,10 @@ void TextSelector::Text(int rowIndex, const std::string& lineContent, const Text
                     hlStart = cStart * layout.charWidth;
                     hlEnd = cEnd * layout.charWidth; 
                                        
-                } else if (rowIndex == rMin) { 
+                } else if (rowIdx == rMin) { 
                     int activeCol = (ctx.startRow < ctx.endRow) ? ctx.startCol : ctx.endCol;
                     hlStart = activeCol * layout.charWidth;
-                } else if (rowIndex == rMax) { 
+                } else if (rowIdx == rMax) { 
                     int activeCol = (ctx.startRow < ctx.endRow) ? ctx.endCol : ctx.startCol;
                     hlEnd = activeCol * layout.charWidth; 
                 }
@@ -159,11 +107,11 @@ void TextSelector::handleInput(int totalRows, TextSelectionCtx& ctx, const TextS
 
         if (clicks == 3) { 
             ctx.startCol = 0; 
-            ctx.endCol = 10000; 
+            ctx.endCol = std::numeric_limits<int>::max(); 
         } else if (clicks == 2) { 
             ctx.startCol = col; ctx.endCol = col; 
         } else { 
-            ctx.startCol = col; ctx.endCol = col;
+             ctx.startCol = col; ctx.endCol = col;
         }
     } 
 

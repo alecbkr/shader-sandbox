@@ -167,6 +167,7 @@ void ConsoleUI::drawLogs() {
     }
 }
 
+
 const void ConsoleUI::drawMenuBar() {      
     if(ImGui::BeginMenuBar()) {
 
