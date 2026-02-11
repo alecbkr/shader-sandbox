@@ -15,7 +15,7 @@ enum class LoggerInitialization {
 
 class Logger {
 public: 
-    Logger() = delete; 
+    Logger(); 
 
     bool initialize();
     void addLog(LogLevel level, std::string src, std::string msg, std::string additional = "", int lineNum = -1,  const std::source_location& file_location = std::source_location::current());

@@ -7,25 +7,15 @@
 #include <memory>
 #include <deque>
 
-#include "../logging/Logger.hpp"
 #include "../logging/ConsoleSink.hpp"
 #include "../ConsoleEngine.hpp"
 #include "components/SearchText.hpp"
 
 class Logger;
 
-// Lookup table for text colors for each log level
-const ImVec4 LOG_COLORS[] = {
-    ImVec4(1.0f, 0.0f, 0.0f, 1.0f),         // Critical (Deep Red) 
-    ImVec4(1.0f, 0.4f, 0.4f, 1.0f),         // Error (lighter red)
-    ImVec4(1.0f, 0.1f, 0.5f, 1.0f),         // Warning (Magenta)
-    ImVec4(0.4f, 1.0f, 0.4f, 1.0f)          // Info (Light Green)
-                                            // Anomaly (light gray)
-}; 
-
 class ConsoleUI {
 public: 
-    ConsoleUI() = default;
+    ConsoleUI();
     bool initialize(Logger* _loggerPtr);
     void render();
 
