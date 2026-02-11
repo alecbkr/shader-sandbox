@@ -1,16 +1,28 @@
-#include "platform/Platform.hpp"
-#include <iostream>
-#include <GLFW/glfw3.h>
+#include "platform/GL.hpp"
 #include <imgui/imgui_impl_glfw.h>
 #include <stb_image.h>
-//#include "core/input/InputState.hpp"
-#include "core/input/Keybinds.hpp"
-#include "core/input/ContextManager.hpp"
-#include "core/logging/LogSink.hpp"
+#include "platform/Platform.hpp"
 #include "core/logging/Logger.hpp"
+#include "core/input/ContextManager.hpp"
+#include "core/input/Keybinds.hpp"
+#include "core/input/ActionRegistry.hpp"
+#include "core/input/InputState.hpp"
 
-bool Platform::initialized = false;
-std::unique_ptr<Window> Platform::windowPtr = nullptr;
+#if defined(_WIN32)
+#include <windows.h>
+#elif defined(__linux__)
+#include <unistd.h>
+#endif
+
+Platform::Platform() {
+    initialized = false;
+    windowPtr = nullptr;
+    loggerPtr = nullptr;
+    ctxManagerPtr = nullptr;
+    keybindsPtr = nullptr;
+    actionRegPtr = nullptr;
+    inputsPtr = nullptr;
+}
 
 void setContextCurrent(Window& window) {
     window.setContextCurrent();
@@ -21,7 +33,7 @@ void Platform::setWindowIcon() {
     stbi_set_flip_vertically_on_load(false);
     unsigned char* pixels = stbi_load("../assets/icon.png", &w, &h, &channels, 4);
     if (!pixels) {
-        std::cout << "stbi didnt load the window icon" << std::endl;
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "Platform Set Window Icon", "stbi didn't load the window icon.");
         return;
     }
     GLFWimage img;
@@ -29,16 +41,21 @@ void Platform::setWindowIcon() {
     img.height = h;
     img.pixels = pixels;
 
-    glfwSetWindowIcon(Platform::windowPtr->getGLFWWindow(), 1, &img);
+    glfwSetWindowIcon(windowPtr->getGLFWWindow(), 1, &img);
     stbi_image_free(pixels);
 }
 
-bool Platform::initialize(const PlatformInitStruct& initStruct) {
-    if (Platform::initialized) {
-        // TODO: use logger
-        std::cout << "Platform layer is already initialized." << std::endl;    
+bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Keybinds* _keybindsPtr, ActionRegistry* _actionRegPtr, InputState* _inputsPtr, u32 _width, u32 _height, const char* _app_title) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Platform Initialization", "The platform layer is already initialized.");
         return false;
     }
+
+    loggerPtr = _loggerPtr;
+    ctxManagerPtr = _ctxManagerPtr;
+    keybindsPtr = _keybindsPtr;
+    actionRegPtr = _actionRegPtr;
+    inputsPtr = _inputsPtr;
     
     if (!glfwInit()) return false;
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -46,19 +63,28 @@ bool Platform::initialize(const PlatformInitStruct& initStruct) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
     bool windowIsValid;
-    Platform::windowPtr = Window::createWindow(initStruct.width, initStruct.height, initStruct.title, windowIsValid);
-    if (!windowIsValid) return false;
+    windowPtr = Window::createWindow(_width, _height, _app_title, windowIsValid);
+    if (!windowIsValid) {
+        loggerPtr->addLog(LogLevel::CRITICAL, "Platform Window Creation", "Failed to create window.");
+        return false;
+    }
+
+    glfwSetWindowUserPointer(windowPtr->getGLFWWindow(), inputsPtr);
+    initializeInputCallbacks();
+
     setWindowIcon();
-    setContextCurrent(*Platform::windowPtr);
+    setContextCurrent(*windowPtr);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cout << "Failed to initialize GLAD" << std::endl;
+        loggerPtr->addLog(LogLevel::CRITICAL, "Platform GLAD Initialization", "Failed to initialize GLAD.");
         return false;
-    } 
+    }
+
+    glViewport(0, 0, _width, _height);
 
     #ifdef __linux__
         // Disable vsync on linux because it can cause issues when shader sandbox window is minimized.
-        Logger::addLog(LogLevel::INFO, "Platform::initialize", "Need to add a feature to disable/enable vsync");
+        loggerPtr->addLog(LogLevel::INFO, "Platform::initialize", "Need to add a feature to disable/enable vsync");
         glfwSwapInterval(0);
     #endif
 
@@ -67,20 +93,24 @@ bool Platform::initialize(const PlatformInitStruct& initStruct) {
 }
 
 bool Platform::shouldClose() {
+    if (!initialized) return true;
     return windowPtr->shouldClose();
 }
 
 void Platform::swapBuffers() {
+    if (!initialized) return;
     windowPtr->swapBuffers();
 }
 
 void Platform::pollEvents() {
+    if (!initialized) return;
     glfwPollEvents();
 }
 
 void Platform::processInput() {
-    Keybinds::gatherActionsForFrame(ContextManager::current());
-    ActionRegistry::processActionsForFrame();
+    if (!initialized) return;
+    keybindsPtr->gatherActionsForFrame(ctxManagerPtr->current());
+    actionRegPtr->processActionsForFrame();
 }
 
 void Platform::initializeImGui() {
@@ -88,17 +118,57 @@ void Platform::initializeImGui() {
 }
 
 Window& Platform::getWindow() {
-    if (!initialized) Logger::addLog(LogLevel::WARNING, "Platform::getWindow()", "Attempting to return the application's window before initialization.");
-    return *Platform::windowPtr;
+    // TODO: change call sites of this function and have it return a nullptr if not initialized and return a window* if it is
+    assert(initialized && "Platform not initialized");
+    return *windowPtr;
 }
 
-void keyCallback(GLFWwindow*, int key, int, int action, int) { InputState::onKey(key, action); }
-void mouseCallback(GLFWwindow*, int button, int action, int) { InputState::onMouseButton(button, action); }
-void cursorCallback(GLFWwindow*, double x, double y) { InputState::onCursorPos(x, y); }
-void scrollCallback(GLFWwindow*, double x, double y) { InputState::onScroll(x, y); }
+double Platform::getTime() {
+    return glfwGetTime();
+}
+
 void Platform::initializeInputCallbacks() {
-    glfwSetKeyCallback(windowPtr->getGLFWWindow(), keyCallback);
-    glfwSetMouseButtonCallback(windowPtr->getGLFWWindow(), mouseCallback);
-    glfwSetCursorPosCallback(windowPtr->getGLFWWindow(), cursorCallback);
-    glfwSetScrollCallback(windowPtr->getGLFWWindow(), scrollCallback);
+    GLFWwindow* w = windowPtr->getGLFWWindow();
+
+    glfwSetKeyCallback(w, [](GLFWwindow* w, int key, int scancode, int action, int mods) {
+        auto* in = static_cast<InputState*>(glfwGetWindowUserPointer(w));
+        if (in) in->onKey(key, action);
+    });
+
+    glfwSetMouseButtonCallback(w, [](GLFWwindow* w, int button, int action, int mods) {
+        auto* in = static_cast<InputState*>(glfwGetWindowUserPointer(w));
+        if (in) in->onMouseButton(button, action);
+    });
+
+    glfwSetCursorPosCallback(w, [](GLFWwindow* w, double x, double y) {
+        auto* in = static_cast<InputState*>(glfwGetWindowUserPointer(w));
+        if (in) in->onCursorPos(x, y);
+    });
+
+    glfwSetScrollCallback(w, [](GLFWwindow* w, double x, double y) {
+        auto* in = static_cast<InputState*>(glfwGetWindowUserPointer(w));
+        if (in) in->onScroll(x, y);
+    });
+}
+
+std::filesystem::path Platform::getExeDir() const {
+#if defined(_WIN32)
+
+    wchar_t buffer[MAX_PATH];
+    GetModuleFileNameW(nullptr, buffer, MAX_PATH);
+    return std::filesystem::path(buffer).parent_path();
+
+#elif defined(__linux__)
+
+    char buffer[1024];
+    ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
+    if (len != -1) {
+        buffer[len] = '\0';
+        return std::filesystem::path(buffer).parent_path();
+    }
+
+#endif
+
+    // Fallback (should rarely happen)
+    return std::filesystem::current_path();
 }

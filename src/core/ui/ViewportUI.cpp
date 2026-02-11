@@ -1,5 +1,6 @@
 #include "ViewportUI.hpp"
 
+#include "core/logging/Logger.hpp"
 #include "engine/InputHandler.hpp"
 #include "engine/Errorlog.hpp"
 #include "engine/AppTimer.hpp"
@@ -8,31 +9,42 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "platform/Platform.hpp"
 
-
-bool ViewportUI::initialized = false;
-bool ViewportUI::initPos = true;
-GLuint ViewportUI::fbo = 0;
-GLuint ViewportUI::rbo = 0;
-GLuint ViewportUI::viewportTex = 0;
-ImVec2 ViewportUI::dimensions = ImVec2(0, 0);
-ImVec2 ViewportUI::prevDimensions = ImVec2(0, 0);
-ImVec2 ViewportUI::pos = ImVec2(0, 0);
-std::unique_ptr<Camera> ViewportUI::camPtr = nullptr;
-float ViewportUI::targetWidth = 0.0f;
-float ViewportUI::targetHeight = 0.0f;
-ImVec2 ViewportUI::windowPos = ImVec2(0, 0);
-
 #define TARGET_WIDTH 0.4f
 #define TARGET_HEIGHT 1.0f
 #define START_X 0;
 #define START_Y 0;
 
-bool ViewportUI::initialize() {
-    if (ViewportUI::initialized) {
+ViewportUI::ViewportUI() {
+    initialized = false;
+    initPos = true;
+    fbo = 0;
+    rbo = 0;
+    viewportTex = 0;
+    dimensions = ImVec2(0, 0);
+    prevDimensions = ImVec2(0, 0);
+    pos = ImVec2(0, 0);
+    camPtr = nullptr;
+    loggerPtr = nullptr;
+    platformPtr = nullptr;
+    modelCachePtr = nullptr;
+    timerPtr = nullptr;
+}
+
+bool ViewportUI::initialize(Logger* _loggerPtr, Platform* _platformPtr, ModelCache* _modelCachePtr, AppTimer* _timerPtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Viewport UI Initialization", "Viewport UI was already initialized.");
         return false;
     }
-    dimensions = ImVec2(Platform::getWindow().width / 2, Platform::getWindow().height / 2);
-    pos = ImVec2(Platform::getWindow().width / 2 - Platform::getWindow().width * 0.25f, Platform::getWindow().height / 2 - Platform::getWindow().height * 0.25f);
+    loggerPtr = _loggerPtr;
+    platformPtr = _platformPtr;
+    modelCachePtr = _modelCachePtr;
+    timerPtr = _timerPtr;
+
+    u32 width_ = platformPtr->getWindow().width;
+    u32 height_ = platformPtr->getWindow().height;
+
+    dimensions = ImVec2(width_ / 2, height_ / 2);
+    pos = ImVec2(width_ / 2 - width_ * 0.25f, height_ / 2 - height_ * 0.25f);
 
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -83,7 +95,7 @@ bool ViewportUI::initialize() {
 
     glEnable(GL_DEPTH_TEST);
 
-    ViewportUI::camPtr = std::make_unique<Camera>();
+    ViewportUI::camPtr = std::make_unique<Camera>(timerPtr);
 
     ViewportUI::targetWidth = TARGET_WIDTH;
     ViewportUI::targetHeight = TARGET_HEIGHT;
@@ -105,7 +117,7 @@ void ViewportUI::render() {
 
     glm::mat4 perspective = glm::perspective(glm::radians(45.0f), ViewportUI::getAspect(), 0.1f, 100.0f);
     glm::mat4 view = camPtr->GetViewMatrix();
-    ModelCache::renderAll(perspective, view);
+    modelCachePtr->renderAll(perspective, view);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
     ViewportUI::draw();
@@ -180,7 +192,7 @@ void ViewportUI::draw() {
     );
 
     // FPS overlay
-    std::string fps = "FPS: " + std::to_string(AppTimer::getFPS());
+    std::string fps = "FPS: " + std::to_string(timerPtr->getFPS());
     ImGui::GetWindowDrawList()->AddText(
         ImVec2(pos.x + 20, pos.y + 40),
         IM_COL32(255, 255, 255, 255),

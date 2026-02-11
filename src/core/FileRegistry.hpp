@@ -4,6 +4,10 @@
 
 #include "EventTypes.hpp"
 
+class Logger;
+class EventDispatcher;
+class Platform;
+
 enum FileState {
     NONE,
     RENAME,
@@ -22,14 +26,18 @@ struct ShaderFile {
 
 class FileRegistry {
 public:
-    static bool initialize();
-    static void reloadMap();
-    static std::unordered_map<std::string, ShaderFile *> getFiles();
+    FileRegistry();
+    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, Platform* _platformPtr);
+    void reloadMap();
+    std::unordered_map<std::string, ShaderFile *> getFiles();
 
 private:
-    static std::unordered_map<std::string, ShaderFile*> files;
-    static bool initialized;
-    static bool renameFile(const EventPayload& payload);
-    static bool deleteFile(const EventPayload& payload);
+    std::unordered_map<std::string, ShaderFile*> files;
+    bool initialized = false;
+    EventDispatcher* eventsPtr = nullptr;
+    Logger* loggerPtr = nullptr;
+    Platform* platformPtr = nullptr;
+    bool renameFile(const EventPayload& payload);
+    bool deleteFile(const EventPayload& payload);
 };
 

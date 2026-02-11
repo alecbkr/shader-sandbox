@@ -1,16 +1,36 @@
 #include "presets/PresetAssets.hpp"
 #include "object/TextureType.hpp"
-MeshData PresetAssets::planeMesh{};
-MeshData PresetAssets::pyramidMesh{};
-MeshData PresetAssets::cubeMesh{};
+#include "core/logging/Logger.hpp"
+#include "platform/Platform.hpp"
 
-Texture PresetAssets::waterTex{"", TEX_DIFFUSE};
-Texture PresetAssets::faceTex{"", TEX_DIFFUSE};
-Texture PresetAssets::metalTex{"", TEX_DIFFUSE};
-Texture PresetAssets::gridTex{"", TEX_DIFFUSE};
+PresetAssets::PresetAssets() {
+    initialized = false;
+    loggerPtr = nullptr;
+    planeMesh.verts.clear();
+    planeMesh.indices.clear();
+    pyramidMesh.verts.clear();
+    pyramidMesh.indices.clear();
+    cubeMesh.verts.clear();
+    cubeMesh.indices.clear();
+    waterTex = Texture{"", TEX_DIFFUSE, nullptr};
+    faceTex = Texture{"", TEX_DIFFUSE, nullptr};
+    metalTex = Texture{"", TEX_DIFFUSE, nullptr};
+    gridTex = Texture{"", TEX_DIFFUSE, nullptr};
+}
 
-// We need to define these now, but they need to be initialized AFTER the logger.
-bool PresetAssets::initialize() {
+bool PresetAssets::initialize(Logger* _loggerPtr, Platform* _platformPtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Preset Assets Initialization", "Preset Assets were already initialized.");
+        return false;
+    }
+
+    loggerPtr = _loggerPtr;
+
+    waterTex = Texture{(_platformPtr->getExeDir() / ".." / "assets/textures/water.png").string().c_str(), TEX_DIFFUSE, loggerPtr};
+    faceTex = Texture{(_platformPtr->getExeDir() / ".." / "assets/textures/bigface.jpg").string().c_str(), TEX_DIFFUSE, loggerPtr};
+    metalTex = Texture{(_platformPtr->getExeDir() / ".." / "assets/textures/rim.png").string().c_str(), TEX_DIFFUSE, loggerPtr};
+    gridTex = Texture{(_platformPtr->getExeDir() / ".." / "assets/textures/grid.png").string().c_str(), TEX_DIFFUSE, loggerPtr};
+
     PresetAssets::planeMesh.verts = {
         -1.0f, 0.0f, -1.0f,  0.0f, 0.0f,
         -1.0f, 0.0f, 1.0f,  1.0f, 0.0f,
@@ -59,7 +79,20 @@ bool PresetAssets::initialize() {
         0,3,7, 0,7,4  // left
     };
 
+    initialized = true;
     return true;
+}
+
+void PresetAssets::shutdown() {
+    if (!initialized) return;
+    loggerPtr = nullptr;
+    planeMesh.verts.clear();
+    planeMesh.indices.clear();
+    pyramidMesh.verts.clear();
+    pyramidMesh.indices.clear();
+    cubeMesh.verts.clear();
+    cubeMesh.indices.clear();
+    initialized = false;
 }
 
 MeshData& PresetAssets::getPresetMesh(MeshPreset preset) {

@@ -2,14 +2,21 @@
 #include "../object/Texture.hpp"
 #include <vector>
 
+class Logger;
+
 class TextureRegistry {
 public:
-    static const Texture* tryReadTexture(int index); // return false if we didn't find it.
-    static void registerTexture(Texture* texture);
-    static void eraseTexture(int index);
-    static const std::vector<const Texture*>& readTextures();
+    TextureRegistry();
+    bool initialize(Logger* _loggerPtr);
+    void shutdown();
+    const Texture* tryReadTexture(int index); // return false if we didn't find it.
+    void registerTexture(Texture* texture);
+    void eraseTexture(int index);
+    const std::vector<const Texture*>& readTextures();
 
 private:
-    static std::vector<const Texture*> textures;
+    bool initialized = false;
+    Logger* loggerPtr = nullptr;
+    std::vector<const Texture*> textures;
 };
 

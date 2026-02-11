@@ -1,85 +1,57 @@
 #include "ConsoleEngine.hpp"
 #include "logging/Logger.hpp"
-bool ConsoleEngine::initialized = false;
-std::shared_ptr<ConsoleSink> ConsoleEngine::logSrc = nullptr;
-std::unordered_map<std::string, std::function<void()>> ConsoleEngine::btnRegistry;
-std::unordered_map<std::string, std::function<void(bool)>> ConsoleEngine::toggleRegistry; 
 
-// each name for each action for the toggles/buttons in the console 
-const std::string ConsoleActions::CLEAR = "clear"; 
-const std::string ConsoleActions::AUTO_SCROLL = "autoscroll"; 
-const std::string ConsoleActions::COLLAPSE_LOGS = "collapse_logs"; 
-const std::string ConsoleActions::SHOW_ERRORS = "show_errors"; 
-const std::string ConsoleActions::SHOW_WARNINGS = "show_warnings"; 
-const std::string ConsoleActions::SHOW_INFO = "show_info";
-const std::string ConsoleActions::SHOW_SHADER = "show_shader";
-const std::string ConsoleActions::SHOW_SYSTEM = "show_system"; 
-const std::string ConsoleActions::SHOW_ASSETS = "show_assets"; 
-const std::string ConsoleActions::SHOW_OTHER = "show_other"; 
+bool ConsoleEngine::initialize(Logger* _loggerPtr) {
+    if (initialized) {
+        _loggerPtr->addLog(LogLevel::WARNING, "Console UI Initialization", "Console UI was already initialized.");
+        return false;
+    }
 
-// default toggle settings in the console 
-ConsoleToggles ConsoleEngine::toggles = {
-    .isAutoScroll = true, 
-    .isCollapsedLogs = false, 
-    .isShowError = true, 
-    .isShowWarning = true, 
-    .isShowInfo = true, 
-    .isShowShader = true, 
-    .isShowSystem = true,
-    .isShowAssets = true,
-    .isShowUI = true, 
-    .isShowOther = true  
-};
-
-bool ConsoleEngine::initialize(std::shared_ptr<ConsoleSink> consoleSink)
-{
-    logSrc = consoleSink;
+    logSrc = _loggerPtr->getConsoleSinkPtr();
 
     // Register Buttons 
-    registerButton(ConsoleActions::CLEAR, [](){logSrc->clearLogs();}); 
+    registerButton(ConsoleActions::CLEAR, [this](){
+        if (logSrc) logSrc->clearLogs();
+    }); 
 
     // Register Toggles 
-    registerToggle(ConsoleActions::AUTO_SCROLL, [](bool state) {
+    registerToggle(ConsoleActions::AUTO_SCROLL, [this](bool state) {
         toggles.isAutoScroll = state; 
     });
-    registerToggle(ConsoleActions::COLLAPSE_LOGS, [](bool state) {
+    registerToggle(ConsoleActions::COLLAPSE_LOGS, [this](bool state) {
         toggles.isCollapsedLogs = state; 
     });
-
-    registerToggle(ConsoleActions::SHOW_ERRORS, [](bool state) {
+    registerToggle(ConsoleActions::SHOW_ERRORS, [this](bool state) {
         toggles.isShowError = state; 
     }); 
-    registerToggle(ConsoleActions::SHOW_WARNINGS, [](bool state) {
+    registerToggle(ConsoleActions::SHOW_WARNINGS, [this](bool state) {
         toggles.isShowWarning = state; 
     });
-    registerToggle(ConsoleActions::SHOW_INFO, [](bool state) {
+    registerToggle(ConsoleActions::SHOW_INFO, [this](bool state) {
         toggles.isShowInfo = state; 
     });
     // TODO: implement other filters that filter by the log's source 
-    Logger::addLog(LogLevel::INFO, "Console Engine", "This is a test message"); 
+    
     initialized = true;
     return true;
 }
 
 // updates the action registry given a new name and action
-void ConsoleEngine::registerButton(const std::string &name, std::function<void()> callbackFn)
-{
-    btnRegistry[name] = callbackFn; 
+void ConsoleEngine::registerButton(std::string_view name, std::function<void()> callbackFn) {
+    btnRegistry[name] = std::move(callbackFn); 
 }
 
-void ConsoleEngine::registerToggle(const std::string &name, std::function<void(bool)> callbackFn) {
-toggleRegistry[name] = callbackFn; 
+void ConsoleEngine::registerToggle(std::string_view name, std::function<void(bool)> callbackFn) {
+    toggleRegistry[name] = std::move(callbackFn); 
 }
 
-const std::deque<LogEntry> &ConsoleEngine::getLogs()
-{
+const std::deque<LogEntry>& ConsoleEngine::getLogs() const {
     return logSrc->getLogs();
 }
 
-void ConsoleEngine::executeBtnAction(const std::string &name)
-{
-    if(btnRegistry.count(name)) {
-        btnRegistry[name](); 
+void ConsoleEngine::executeBtnAction(std::string_view name) {
+    if (auto it = btnRegistry.find(name); it != btnRegistry.end()) {
+        it->second(); 
     }
 }
 
