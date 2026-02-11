@@ -2,17 +2,20 @@
 #include "core/logging/FileSink.hpp"
 #include "core/logging/StdoutSink.hpp"
 
-std::shared_ptr<ConsoleSink> Logger::consoleSinkPtr = nullptr;
+#define DEFAULT_SINKS LoggerInitialization::CONSOLE_FILE_STDOUT
 
-std::vector<std::shared_ptr<LogSink>> Logger::sinks;
-bool Logger::initialized = false;
-LogLevel Logger::abortWhen = LogLevel::CRITICAL; 
+Logger::Logger() {
+    sinks.clear();
+    consoleSinkPtr = nullptr;
+    initialized = false;
+    abortWhen = LogLevel::CRITICAL;
+}
 
-bool Logger::initialize(LoggerInitialization initSetting){
+bool Logger::initialize(){
     Logger::consoleSinkPtr = std::make_shared<ConsoleSink>();
     Logger::addSink(consoleSinkPtr);
 
-    switch (initSetting) {
+    switch (DEFAULT_SINKS) {
         case LoggerInitialization::CONSOLE_FILE_STDOUT:
             Logger::addSink(std::make_shared<FileSink>());
             Logger::addSink(std::make_shared<StdoutSink>());
@@ -52,11 +55,11 @@ void Logger::addLog(LogLevel level, std::string src, std::string msg, std::strin
         return;
     };
 
-    // TODO: maybe explore using a config.hpp.in later to set compiler definitions using cmake instead of hard-coding 
-    constexpr std::string_view project_path = "shader-sandbox/"; 
+    // TODO: maybe explore using a config.hpp.in later to set compiler definitions using cmake instead of hard-coding
+    constexpr std::string_view project_path = "shader-sandbox/";
     std::string fName(toRelativePath(file_location.file_name(), project_path));
-    LogCategory category = LogClassifier::categorize(file_location); 
-    // std::string cat_str = LogClassifier::categoryToString(category); 
+    LogCategory category = LogClassifier::categorize(file_location);
+    // std::string cat_str = LogClassifier::categoryToString(category);
 
     LogEntry entry; 
     entry.level = level; 
@@ -64,18 +67,20 @@ void Logger::addLog(LogLevel level, std::string src, std::string msg, std::strin
     entry.msg = msg; 
     entry.additional = additional; 
     entry.category = category;
-    entry.fileName = fName; 
-    entry.lineNum = lineNum; 
+    entry.fileName = fName;
+    entry.lineNum = lineNum;
 
 
-    // dispatch logs to included sinks 
+    // dispatch logs to included sinks
     for(auto& sink : sinks) {
         sink->addLog(entry); 
     }
 
-    if(level == abortWhen){
-        exit(1); 
-    }
+    // TODO: This code shouldn't live in the logger. We can add a flag in the logger like "hadCritialError" and check for that every frame
+    // but the logger shouldn't be able to shut down the whole application, this will stip deconstructors and not allow us to shutdown gracefully.
+    // if(level == abortWhen){
+    //     exit(1);
+    // }
 }
 
 std::shared_ptr<ConsoleSink> Logger::getConsoleSinkPtr() {
@@ -83,13 +88,13 @@ std::shared_ptr<ConsoleSink> Logger::getConsoleSinkPtr() {
     return Logger::consoleSinkPtr;
 }
 
-// helper that strips the root path to get the relative path of the file 
+// helper that strips the root path to get the relative path of the file
 constexpr std::string_view Logger::toRelativePath(const char* path, std::string_view prefix) {
-    std::string_view view(path); 
-    size_t pos = view.find(prefix); 
-    
+    std::string_view view(path);
+    size_t pos = view.find(prefix);
+
     if (pos != std::string_view::npos) {
-        return view.substr(pos + prefix.size()); 
+        return view.substr(pos + prefix.size());
     }
-    return view; 
+    return view;
 }

@@ -5,6 +5,7 @@
 #include <memory>
 #include <functional>
 #include "logging/ConsoleSink.hpp"
+#include "logging/Logger.hpp"
 
 struct ConsoleActions {
     static const std::string CLEAR;
@@ -51,7 +52,7 @@ class ConsoleEngine {
     //     static constexpr const char* SHOW_WARN   = "show_warnings";
     // }; 
     
-    static bool initialize(std::shared_ptr<ConsoleSink> consoleSink); 
+    static bool initialize(Logger* _loggerPtr);
     // I set up like this to try and make adding and parsing through some sort of config file easier 
     static void registerButton(const std::string& name, std::function<void()> callbackFn); 
     static void registerToggle(const std::string& name, std::function<void(bool)> callbackFn); 

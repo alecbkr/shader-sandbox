@@ -3,11 +3,13 @@
 #include <cstdint>
 #include <vector>
 #include <algorithm>
-
-#include "platform/components/Keys.hpp"
 #include "core/input/ActionRegistry.hpp"
-#include "core/input/InputState.hpp"
 #include "core/input/ContextManager.hpp"
+#include "platform/components/Keys.hpp"
+//#include "core/input/InputState.hpp"
+
+class Logger;
+class InputState;
 
 enum class Trigger : uint8_t {
     Pressed,
@@ -35,16 +37,23 @@ struct Binding {
 
 class Keybinds {
 public:
-    static bool initialize();
-    static Binding makeBinding(Action action, KeyCombo combo, ControlCtx ctx, Trigger trigger = Trigger::Pressed, bool enabled = true);
-    static void setBindings(const std::vector<Binding>& b);
-    static void addBinding(const Binding& b);
-    static void clear();
-    static const std::vector<Binding>& bindings();
-    static bool comboDown(const KeyCombo& combo);
-    static bool comboPressedThisFrame(const KeyCombo& combo);
-    static void gatherActionsForFrame(ControlCtx context);
+    Keybinds();
+    bool initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, ActionRegistry* _actionRegPtr, InputState* _inputsPtr);
+    void shutdown();
+    Binding makeBinding(Action action, KeyCombo combo, ControlCtx ctx, Trigger trigger = Trigger::Pressed, bool enabled = true);
+    void setBindings(const std::vector<Binding>& b);
+    void addBinding(const Binding& b);
+    void clear();
+    const std::vector<Binding>& bindings();
+    bool comboDown(const KeyCombo& combo);
+    bool comboPressedThisFrame(const KeyCombo& combo);
+    void gatherActionsForFrame(ControlCtx context);
 
 private:
-    static std::vector<Binding> bindings_;
+    bool initialized = false;
+    std::vector<Binding> bindings_;
+    Logger* loggerPtr = nullptr;
+    ContextManager* ctxManagerPtr = nullptr;
+    ActionRegistry* actionRegPtr = nullptr;
+    InputState* inputsPtr = nullptr;
 };

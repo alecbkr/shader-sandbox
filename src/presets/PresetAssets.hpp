@@ -4,6 +4,9 @@
 #include <vector>
 #include "object/Texture.hpp"
 
+class Logger;
+class Platform;
+
 enum class MeshPreset {
     PLANE,
     CUBE,
@@ -24,16 +27,20 @@ struct MeshData {
 
 class PresetAssets {
 public:
-    static bool initialize();
-    static MeshData& getPresetMesh(MeshPreset preset);
-    static Texture& getPresetTexture(TexturePreset preset);
+    PresetAssets();
+    bool initialize(Logger* _loggerPtr, Platform* _platformPtr);
+    void shutdown();
+    MeshData& getPresetMesh(MeshPreset preset);
+    Texture& getPresetTexture(TexturePreset preset);
 private:
-    static MeshData planeMesh;
-    static MeshData pyramidMesh;
-    static MeshData cubeMesh;
+    bool initialized = false;
+    Logger* loggerPtr = nullptr;
+    MeshData planeMesh;
+    MeshData pyramidMesh;
+    MeshData cubeMesh;
 
-    static Texture waterTex;
-    static Texture faceTex;
-    static Texture metalTex;
-    static Texture gridTex;
+    Texture waterTex = Texture{"", TEX_DIFFUSE, nullptr};
+    Texture faceTex = Texture{"", TEX_DIFFUSE, nullptr};
+    Texture metalTex = Texture{"", TEX_DIFFUSE, nullptr};
+    Texture gridTex = Texture{"", TEX_DIFFUSE, nullptr};
 };

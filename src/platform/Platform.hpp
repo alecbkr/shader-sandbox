@@ -1,8 +1,15 @@
 #pragma once
 
-#include <glad/glad.h>
+#include <types.hpp>
 #include <memory>
+#include <filesystem>
 #include "platform/components/Window.hpp"
+
+class Logger;
+class ContextManager;
+class Keybinds;
+class ActionRegistry;
+class InputState;
 
 struct PlatformInitStruct {
     u32 width;
@@ -12,17 +19,25 @@ struct PlatformInitStruct {
 
 class Platform {
 public:
-    static bool initialize(const PlatformInitStruct& initStruct);
-    static bool shouldClose();
-    static void swapBuffers();
-    static void pollEvents();
-    static void processInput();
-    static void initializeImGui();
-    static Window& getWindow();
-    static void initializeInputCallbacks();
-    static void setWindowIcon();
+    Platform();
+    bool initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Keybinds* _keybindsPtr, ActionRegistry* _actionRegistryPtr, InputState* _inputsPtr, u32 _width, u32 _height, const char* _app_title);
+    bool shouldClose();
+    void swapBuffers();
+    void pollEvents();
+    void processInput();
+    void initializeImGui();
+    Window& getWindow();
+    void initializeInputCallbacks();
+    void setWindowIcon();
+    double getTime();
+    std::filesystem::path getExeDir() const;
 
 private:
-    static bool initialized;
-    static std::unique_ptr<Window> windowPtr;
+    bool initialized = false;
+    std::unique_ptr<Window> windowPtr = nullptr;
+    Logger* loggerPtr = nullptr;
+    ContextManager* ctxManagerPtr = nullptr;
+    Keybinds* keybindsPtr = nullptr;
+    ActionRegistry* actionRegPtr = nullptr;
+    InputState* inputsPtr = nullptr;
 };

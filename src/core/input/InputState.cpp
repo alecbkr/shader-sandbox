@@ -1,28 +1,60 @@
 #include "core/input/InputState.hpp"
-#include "platform/Platform.hpp"
 
-std::array<uint8_t, InputState::KEY_COUNT> InputState::down{};
-std::array<uint8_t, InputState::KEY_COUNT> InputState::pressed{};
-std::array<uint8_t, InputState::KEY_COUNT> InputState::released{};
+InputState::InputState() {
+    initialized = false;
+    mouseX = 0.0;
+    mouseY = 0.0;
+    mouseDeltaX = 0.0;
+    mouseDeltaY = 0.0;
+    scrollX = 0.0;
+    scrollY = 0.0;
 
-std::vector<Key> InputState::pressedKeys{};
+    down.fill(0);
+    pressed.fill(0);
+    released.fill(0);
 
-std::array<uint8_t, InputState::MOUSE_COUNT> InputState::mouseDown{};
-std::array<uint8_t, InputState::MOUSE_COUNT> InputState::mousePressed{};
-std::array<uint8_t, InputState::MOUSE_COUNT> InputState::mouseReleased{};
+    mouseDown.fill(0);
+    mousePressed.fill(0);
+    mouseReleased.fill(0);
 
-double InputState::mouseX = 0.0;
-double InputState::mouseY = 0.0;
-double InputState::mouseDeltaX = 0.0;
-double InputState::mouseDeltaY = 0.0;
+    pressedKeys.clear();
+    loggerPtr = nullptr;
+}
 
-double InputState::scrollX = 0.0;
-double InputState::scrollY = 0.0;
+bool InputState::initialize(Logger* _loggerPtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Input State Initialization", "Input State was already initialized.");
+        return false;
+    }
+    loggerPtr = _loggerPtr;
 
-bool InputState::initialize() {
-    InputState::beginFrame();
-    Platform::initializeInputCallbacks();
+    mouseX = 0.0;
+    mouseY = 0.0;
+    mouseDeltaX = 0.0;
+    mouseDeltaY = 0.0;
+    scrollX = 0.0;
+    scrollY = 0.0;
+
+    down.fill(0);
+    pressed.fill(0);
+    released.fill(0);
+
+    mouseDown.fill(0);
+    mousePressed.fill(0);
+    mouseReleased.fill(0);
+
+    pressedKeys.clear();
+    
+    beginFrame();
+    //platformPtr->initializeInputCallbacks();
+
+    initialized = true;
     return true;
+}
+
+void InputState::shutdown() {
+    loggerPtr = nullptr;
+    pressedKeys.clear();
 }
 
 void InputState::beginFrame() { // call before glfwPollEvents()
@@ -105,4 +137,20 @@ void InputState::onCursorPos(double x, double y) {
 void InputState::onScroll(double xoff, double yoff) {
     scrollX += xoff;
     scrollY += yoff;
+}
+
+double InputState::getMouseDeltaX() const {
+    return initialized ? mouseDeltaX : 0.0;
+}
+
+double InputState::getMouseDeltaY() const {
+    return initialized ? mouseDeltaY : 0.0;
+}
+
+double InputState::getScrollX() const {
+    return initialized ? scrollX : 0.0;
+}
+
+double InputState::getScrollY() const {
+    return initialized ? scrollY : 0.0;
 }

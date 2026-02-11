@@ -1,18 +1,28 @@
 #pragma once
 
+#include <core/input/ContextManager.hpp>
+
 #include "components/SearchText.hpp"
 #include "core/EditorEngine.hpp"
 
+class EditorEngine;
+class Logger;
+
 class EditorUI {
 public:
-    static void render();
-    static bool initialize();
+    EditorUI();
+    void render();
+    bool initialize(Logger* _loggerPtr, EditorEngine* _editorEngPtr, ContextManager* _contextManagerPtr);
     static void drawActiveFind(std::string activeLine, ImVec2 textPos);
     static SearchText searcher;
-
 private:
-    static float targetWidth;
-    static float targetHeight;
-    static ImVec2 windowPos;
-    static bool findBar;
+    void renderEditor(Editor* editor);
+    bool initialized = false;
+    Logger* loggerPtr = nullptr;
+    EditorEngine* editorEngPtr = nullptr;
+    ContextManager* contextManagerPtr = nullptr;
+    float targetWidth = 0.0f;
+    float targetHeight = 0.0f;
+    ImVec2 windowPos = ImVec2(0, 0);
+    bool findBar;
 };

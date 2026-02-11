@@ -1,17 +1,16 @@
 #include "Texture.hpp"
 #include <stb/stb_image.h>
 #include <string>
-#include "core/logging/LogSink.hpp"
 #include "core/logging/Logger.hpp"
 
 
-Texture::Texture(const char *texture_path, TextureType type) {
+Texture::Texture(const char *texture_path, TextureType type, Logger* _loggerPtr) : loggerPtr(_loggerPtr) {
     stbi_set_flip_vertically_on_load(true);
 
     int channelCnt;
     pixels = stbi_load(texture_path, &width, &height, &channelCnt, 0);
     if (pixels == nullptr) {
-        Logger::addLog(LogLevel::ERROR, "TEXTURE", "Could not find texture from path:",  texture_path);
+        if (loggerPtr) loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURE", "Could not find texture from path:",  texture_path);
         valid = false;
         return;
     }
@@ -21,7 +20,7 @@ Texture::Texture(const char *texture_path, TextureType type) {
         case 3: format = GL_RGB;  break;
         case 4: format = GL_RGBA; break;
         default: 
-            Logger::addLog(LogLevel::ERROR, "TEXTURE", "Format could not be determined");
+            if (loggerPtr) loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURE", "Format could not be determined");
             valid = false;
             return;
     }
@@ -56,7 +55,7 @@ bool Texture::isValid() const {
 
 void Texture::loadToGPU() {
     if (valid == false) {
-        Logger::addLog(LogLevel::WARNING, "TEXTURE", "Can't send uninitialized texture to GPU");
+        loggerPtr->addLog(LogLevel::WARNING, "TEXTURE", "Can't send uninitialized texture to GPU");
         return;
     } 
 

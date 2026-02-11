@@ -1,11 +1,28 @@
 #include "core/input/ContextManager.hpp"
+#include "core/logging/Logger.hpp"
+#include "core/input/ActionRegistry.hpp"
 
-ControlCtx ContextManager::current_ = ControlCtx::None;
-std::vector<ControlCtx> ContextManager::stack_{};
+ContextManager::ContextManager() {
+    current_ = ControlCtx::None;
+    stack_.clear();
+    loggerPtr = nullptr;
+    initialized = false;
+}
 
-bool ContextManager::initialize() {
+bool ContextManager::initialize(Logger* _loggerPtr, ActionRegistry* _actionRegistryPtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Context Manager Initialize", "Context Manager is already initialized.");
+        return false;
+    }
+
+    loggerPtr = _loggerPtr;
+    current_ = ControlCtx::Editor;
+
+    _actionRegistryPtr->bind(Action::SwitchControlContext, [&]{ toggleCtx(); });
+
     ContextManager::push(ControlCtx::Editor);
     ContextManager::clearStack();
+    initialized = true;
     return true;
 }
 

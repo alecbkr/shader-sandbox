@@ -12,66 +12,72 @@
 #include "components/SearchText.hpp"
 
 struct ConsoleBtns {
-    bool isAutoScroll; 
-    bool isCollapsedLogs; 
-    bool isShowErrors; 
-    bool isShowWarning; 
-    bool isShowInfo; 
-    // Filters/ShowSources menu 
-    bool isShowShader; 
-    bool isShowSystem; 
+    bool isAutoScroll;
+    bool isCollapsedLogs;
+    bool isShowErrors;
+    bool isShowWarning;
+    bool isShowInfo;
+    // Filters/ShowSources menu
+    bool isShowShader;
+    bool isShowSystem;
     bool isShowAssets;
 };
 
-// Lookup table for textcolors for each log 
+class Logger;
+
+// Lookup table for textcolors for each log
 static const ImVec4 LOG_COLORS[] = {
     ImVec4(1.0f, 0.0f, 0.0f, 1.0f),         // Critical (Deep Red) 
     ImVec4(1.0f, 0.4f, 0.4f, 1.0f),         // Error (lighter red)
     ImVec4(1.0f, 0.1f, 0.5f, 1.0f),         // Warning (Magenta)
     ImVec4(0.4f, 1.0f, 0.4f, 1.0f)          // Info (Light Green)
                                             // Anomaly (light gray)
-}; 
+};
 
 // Adapted from imgui_demo.cpp
 class ConsoleUI {
 public: 
-    static bool initialize();
-    static const void render();
+    ConsoleUI();
+    bool initialize(Logger* _loggerPtr);
+    const void render();
     static SearchText searcher;
      
     struct LogStyle {
-        std::string prefix; 
-        ImVec4 color; 
-    }; 
+        std::string prefix;
+        ImVec4 color;
+    };
 
-    // static std::shared_ptr<ConsoleEngine> engine; 
-    // static std::shared_ptr<ConsoleSink> logSrc; 
+    // static std::shared_ptr<ConsoleEngine> engine;
+    // static std::shared_ptr<ConsoleSink> logSrc;
 private:
-    static float targetWidth;
-    static float targetHeight;
-    static ImVec2 windowPos;
+    float targetWidth = 0.0f;
+    float targetHeight = 0.0f;
+    ImVec2 windowPos = ImVec2(0, 0);
     
-    static std::shared_ptr<ConsoleEngine> engine; 
-    static std::shared_ptr<ConsoleSink> logSrc; 
+    std::shared_ptr<ConsoleEngine> engine = nullptr;
+    std::shared_ptr<ConsoleSink> logSrc = nullptr;
 
-    static std::vector<std::string> history; 
+    // char inputBuf[256]; 
+    std::vector<std::string> history;
+    // int historyPos; 
 
-    static std::vector<std::string> selectedLogIndices; 
-    static int selectionStart; 
-    static int selectionEnd; 
+    std::vector<std::string> selectedLogIndices;
+    int selectionStart;
+    int selectionEnd;
 
-    static bool initialized;
-    static ConsoleToggles &togStates; 
+    bool initialized = false;
+    ConsoleToggles &togStates;
+    Logger *loggerPtr = nullptr;
 
-    static size_t lastLogSize; 
-    static void drawLogs(); 
-    static const void drawMenuBar(); 
-    static void updateSearchAndScroll(const std::deque<LogEntry> &logs, bool& isScroll); 
-    static int getCollapseCount(const std::deque<LogEntry> &logs, int currIdx);
-    static void drawSingleLog(const LogEntry& log, int index, int repeatCount, bool& isScroll);
+    size_t lastLogSize = 0;
+    void drawLogs();
+    const void drawMenuBar();
+    void updateSearchAndScroll(const std::deque<LogEntry> &logs, bool& isScroll);
+    int getCollapseCount(const std::deque<LogEntry> &logs, int currIdx);
+    void drawSingleLog(const LogEntry& log, int index, int repeatCount, bool& isScroll);
 
     // Allows for users to copy their logs from the console (because of the way ImGui renders text I had to do this)
-    static void copyLogsToClipboard(); 
-    static LogStyle getLogStyle(const LogEntry& log); 
-    static std::string formatLogString(const LogEntry& log); 
+    void copyLogsToClipboard();
+    LogStyle getLogStyle(const LogEntry& log);
+    std::string formatLogString(const LogEntry& log);
 }; 
