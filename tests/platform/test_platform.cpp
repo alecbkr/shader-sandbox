@@ -63,7 +63,7 @@ TEST_CASE("Platform: initialize window + callbacks (integration, may skip)", "[p
 
     // Try to init. If this environment can't create a window / GL context,
     // don't fail the whole suite — skip this test.
-    const bool ok = p.initialize(&logger, &ctx, &keybinds, &actions, &input, "sandbox_tests", &app);
+    const bool ok = p.initialize(&logger, &ctx, &keybinds, &actions, &input, "sandbox_tests", &app.settings);
     if (!ok) {
         SKIP("Platform initialize failed (likely headless/graphics unavailable in this environment).");
     }

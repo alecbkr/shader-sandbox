@@ -11,6 +11,7 @@ class Keybinds;
 class ActionRegistry;
 class InputState;
 class AppContext;
+struct AppSettings;
 
 struct PlatformInitStruct {
     u32 width;
