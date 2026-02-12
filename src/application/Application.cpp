@@ -24,8 +24,16 @@
 #include "core/input/Keybinds.hpp"
 #include "engine/AppTimer.hpp"
 #include "engine/Errorlog.hpp"
+#include "persistence/ProjectLoader.hpp"
 
 bool Application::initialized = false;
+
+void subscribeMenuButtons(AppContext& ctx) {
+    ctx.events.Subscribe(EventType::SaveProject, [&ctx](const EventPayload&) -> bool {
+        ProjectLoader::save(ctx.project);
+        return false;
+    });
+}
 
 bool addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI* viewportUIPtr, ContextManager* contextManagerPtr, EventDispatcher* eventsPtr) {
     if (!actionRegPtr) return false;
@@ -174,7 +182,7 @@ bool Application::initialize(AppContext& ctx) {
         return false;
     }
     loadPresetAssets(ctx);
-    // setup UI
+    subscribeMenuButtons(ctx);
     initializeUI(ctx);
     if (!ctx.console_ui.initialize(&ctx.logger)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Console UI was not initialized successfully.");
