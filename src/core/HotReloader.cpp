@@ -1,4 +1,5 @@
 #include "core/HotReloader.hpp"
+#include "core/logging/LogSink.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "engine/Errorlog.hpp"
 #include <fstream>
@@ -67,6 +68,10 @@ void HotReloader::update() {
         if (activeIdx != -1) {
             auto* active = editorEngPtr->editors[activeIdx];
             
+            if (active == nullptr) {
+                loggerPtr->addLog(LogLevel::LOG_ERROR, "HotReloader::update", "editor is null?");
+                return;
+            }
             std::ofstream out(active->filePath, std::ios::binary);
             out << active->textEditor.GetText();
             out.close();

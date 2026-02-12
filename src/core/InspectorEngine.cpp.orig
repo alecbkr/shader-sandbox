@@ -1,7 +1,6 @@
 #include "InspectorEngine.hpp"
+<<<<<<< HEAD
 #include "core/logging/LogSink.hpp"
-#include "core/ui/ViewportUI.hpp"
-#include "engine/Camera.hpp"
 #include "engine/Errorlog.hpp"
 #include "logging/Logger.hpp"
 #include "core/UniformRegistry.hpp"
@@ -11,6 +10,13 @@
 #include <sstream>
 #include <iostream>
 #include <unordered_set>
+=======
+#include <unordered_map>
+#include <sstream>
+#include <iostream>
+#include <memory>
+#include <string>
+>>>>>>> main
 #include <vector>
 #include "core/UniformTypes.hpp"
 #include "core/logging/Logger.hpp"
@@ -22,6 +28,15 @@
 #include "core/UniformRegistry.hpp"
 #include "object/ModelCache.hpp"
 
+const std::unordered_map<std::string, UniformType> InspectorEngine::typeMap = {
+    {"vec3", UniformType::Vec3},
+    {"vec4", UniformType::Vec4},
+    {"int", UniformType::Int},
+    {"float", UniformType::Float},
+    {"mat4", UniformType::Mat4},
+    {"sampler2D", UniformType::Sampler2D}
+};
+
 InspectorEngine::InspectorEngine() {
     initialized = false;
     loggerPtr = nullptr;
@@ -30,7 +45,7 @@ InspectorEngine::InspectorEngine() {
     modelCachePtr = nullptr;
 }
 
-bool InspectorEngine::initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, ModelCache* _modelCachePtr, ViewportUI* _viewportUIPtr) {
+bool InspectorEngine::initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, ModelCache* _modelCachePtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Inspector Engine Initialization", "Inspector Engine was already initialized.");
         return false;
@@ -40,7 +55,6 @@ bool InspectorEngine::initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegP
     shaderRegPtr = _shaderRegPtr;
     uniformRegPtr = _uniformRegPtr;
     modelCachePtr = _modelCachePtr;
-    viewportUIPtr = _viewportUIPtr;
     
     refreshUniforms();
 
@@ -57,7 +71,7 @@ void InspectorEngine::shutdown() {
 }
 
 void InspectorEngine::refreshUniforms() {
-    const auto& programs = shaderRegPtr->getPrograms();
+    auto& programs = shaderRegPtr->getPrograms();
     
     // NOTE: this will break if we do any multithreading with the program list.
     // Please be careful.
@@ -126,16 +140,18 @@ bool InspectorEngine::handleEditShaderProgram(const std::string& vertexFile, con
     
     // Simple path, just register the new program
     if (oldProgram == nullptr) {
-        if (!shaderRegPtr->registerProgram(vertexFile, fragmentFile , programName)) return false;
+        shaderRegPtr->registerProgram(vertexFile, fragmentFile , programName);
         InspectorEngine::refreshUniforms();
         return true;
     }
 
     // Otherwise, we need to go through this mess.
-    auto newProgram = std::make_unique<ShaderProgram>(vertexFile.c_str(), fragmentFile.c_str(), programName.c_str(), loggerPtr);
-    if (!newProgram->isCompiled()) return false;
+    std::unique_ptr<ShaderProgram> newProgram = std::make_unique<ShaderProgram>(vertexFile.c_str(), fragmentFile.c_str(), programName.c_str(), loggerPtr);
+    if (!newProgram->isCompiled()) {
+        return false;
+    }
 
-    shaderRegPtr->replaceProgram(programName, std::move(newProgram));
+    shaderRegPtr->replaceProgram(programName, newProgram.release());
 
     InspectorEngine::refreshUniforms();
     return true;
@@ -208,46 +224,81 @@ std::vector<std::string> InspectorEngine::tokenizeShaderCode(const ShaderProgram
 
 std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const ShaderProgram& program) {
     std::unordered_map<std::string, Uniform> programUniforms;
-    if (!program.isCompiled()) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "parseUniforms", "should not be parsing an invalid shader program!");
-        return programUniforms;
-    }
-    // This code assumes the shader file is valid, and thus doesn't check syntax
 
+    /*
     std::vector<std::string> tokens = tokenizeShaderCode(program);
-    std::unordered_set<std::string> structNames;
-    Uniform currentUniform;
-    
-    enum class LT { Searching, Uniform, StructName, Type, UniformName, SemiColon, Comma, Struct };
-    LT lastToken = LT::Searching;
+    enum { SearchingForUniform, JustReadUniform, JustReadType, JustReadName, JustReadSemiColon, JustReadComma } state = SearchingForUniform;
     for (int i = 0; i < tokens.size(); i++) {
         std::string& token = tokens[i];
-        switch (lastToken) {
-            case LT::Searching: {
+        switch (state) {
+            case SearchingForUniform: {
                 if (token == "uniform") {
-                    lastToken = LT::Uniform;
-                }
-                break;
-            }
-            case LT::Uniform: {
-                if (structNames.contains(token))
-                auto typePair = typeMap.find(token);
-                if (typePair == typeMap.end()) {
-                    loggerPtr->addLog(LogLevel::WARNING, "parseUnifoms", "Invalid Uniform Type: ", token); 
+                    state = JustReadUniform;
                     continue;
                 }
-                currentUniform.type = typePair->second;
                 break;
             }
-            case LT::Type: {
-                
+            case JustReadUniform: {
+                auto typePair = typeMap.find(token);
+                if (typePair == typeMap.end()) {
+                    Logger::addLog(LogLevel::WARNING, "parseUnifroms", "Invalid Uniform Type: ", word); 
+                    continue;
+                }
             }
-            case LT::Struct: {
+        }
+    }*/
+
+    std::string line;
+    for (size_t i = 0; i < 2; i++) {
+        std::stringstream sourceCode = i == 0 ?
+            std::stringstream(program.vertShader_code) :
+            std::stringstream(program.fragShader_code);
+        
+        while (std::getline(sourceCode, line)) {
+            // Figure out if line is a uniform line
+            std::istringstream line_ss(line);
+            std::string word;
+            line_ss >> word; // first word of the line (test for "uniform")
+
+            bool isUniformLine = word == "uniform";
+            if (!isUniformLine) continue; 
+            // At this point, we're reading a line with one or more uniform definitions.
+
+            // Determine the type of uniform
+            line_ss >> word; // second word of the line (look for type of uniform)
+
+            auto typePair = typeMap.find(word);
+<<<<<<< HEAD
+            if (typePair == typeMap.end()) {
+                Logger::addLog(LogLevel::WARNING, "parseUnifroms", "Invalid Uniform Type: ", word); 
+=======
+            if (typePair != typeMap.end()) {
+                uniform.type = typePair->second;
+            } else {
+                loggerPtr->addLog(LogLevel::WARNING, "parseUnifroms", "Invalid Uniform Type: ", word); 
+>>>>>>> main
+                continue;
+            }
+            // Start assigning values.
+            std::string uniformName;
+
+            // Assign the uniform name
+            line_ss >> uniformName; // third word of the line (uniform's name)
+            while (!uniformName.empty()) {
+                Uniform uniform;
+                uniform.type = typePair->second;
+                assignDefaultValue(uniform);
+                if (uniformName.back() == ';') {
+                    uniformName.pop_back();
+                }
+
+                uniform.name = uniformName;
+                programUniforms[uniform.name] = uniform;
+                line_ss >> uniformName; // read next word
 
             }
         }
     }
-
     return programUniforms;
 }
 
@@ -301,7 +352,7 @@ UniformValue InspectorEngine::getDefaultValue(UniformType type) {
         break;
     default:
         // Logger::addLog(LogLevel::WARNING, "assignDefaultValue", "Invalid Uniform Type, making it an int");
-        loggerPtr->addLog(LogLevel::WARNING, "getDefaultValue", "Invalid Uniform Type, making it an int"); 
+        Logger::addLog(LogLevel::WARNING, "getDefaultValue", "Invalid Uniform Type, making it an int"); 
         return 0;
         break;
     }
@@ -359,9 +410,9 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
     // Also, at some point, we're going to want a memo so we don't do link list traversal if things haven't changed
     if (uniform.isFunction) {
 
-        const InspectorReference* function = std::get_if<InspectorReference>(&uniform.value);
+        const UniformFunction* function = std::get_if<UniformFunction>(&uniform.value);
         if (function == nullptr) {
-            loggerPtr->addLog(LogLevel::LOG_ERROR, "applyUniform", "isFunction is set but uniform: " + uniform.name + " does not have a function value!");
+            Logger::addLog(LogLevel::ERROR, "applyUniform", "isFunction is set but uniform: " + uniform.name + " does not have a function value!");
             return;
         }
         applyFunction(program, uniform, *function);
@@ -398,17 +449,16 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
     return;
 }
 
-void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& uniform, const InspectorReference& function) {
+void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& uniform, const UniformFunction& function) {
     // Going to have to rework this once we get more functions
     // If at any point we run into an invalid function, we should use a default value as to not break the rest of the program.
     bool validFunction = false;
 
     // Traverse function like a graph. Will need to implement some kind of DFS or something eventually to avoid slowness
     std::unordered_set<unsigned int> modelIDs;
-    InspectorReference currentFunction = function;
+    UniformFunction currentFunction = function;
     Uniform currentUniform = uniform;
     Uniform finalValue;
-
     while (currentUniform.isFunction) {
         modelIDs.insert(currentUniform.modelID);
         if (!currentFunction.initialized) {
@@ -416,98 +466,27 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
         }
 
         if (currentFunction.returnType != currentUniform.type) {
-            loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", 
+            Logger::addLog(LogLevel::ERROR, "applyFunction", 
                         "return type mismatch: function returns " + to_string(currentFunction.returnType) 
                         + ", uniform expects " + to_string(currentUniform.type));
             break;
         }
-
-        if (currentFunction.useWorldData) {
-            // need a better way of doing this...
-            if (currentFunction.useCamaraData) {
-                switch (currentFunction.returnType) {
-                case UniformType::Vec3: {
-                    const Camera* const cam = viewportUIPtr->getCamera();
-                    if (cam == nullptr) {
-                        loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", "camera is null!");
-                        continue;
-                    }
-                    if (function.referencedUniformName == "position") {
-                        finalValue = uniform;
-                        finalValue.name = uniform.name;
-                        finalValue.isFunction = false;
-                        finalValue.value = cam->Position;
-                        validFunction = true;
-                    }
-                    break;
-                }
-                case UniformType::Vec4: {
-                    break;
-                }
-                default: 
-                    loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", "This type " + to_string(function.returnType) + " does not support world Data!");
-                    break;
-                }
-                break;
-            }
-            Model* referencedModel = modelCachePtr->getModel(function.referencedModelID);
-            if (referencedModel == nullptr) {
-                loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", "referenced model does not exist!");
-                break;
-            }
-
-            switch (function.returnType) {
-            case UniformType::Vec3: {
-                if (function.referencedUniformName == "position") {
-                    finalValue = uniform;
-                    finalValue.name = uniform.name;
-                    finalValue.isFunction = false;
-                    finalValue.value = referencedModel->getPosition();
-                    validFunction = true;
-                }
-                else if (function.referencedUniformName == "scale") {
-                    finalValue = uniform;
-                    finalValue.name = uniform.name;
-                    finalValue.isFunction = false;
-                    finalValue.value = referencedModel->getScale();
-                    validFunction = true;
-                }
-                break;
-            }
-            case UniformType::Vec4: {
-                if (function.referencedUniformName == "orientation") {
-                    finalValue = uniform;
-                    finalValue.name = uniform.name;
-                    finalValue.isFunction = false;
-                    finalValue.value = referencedModel->getRotation();
-                    validFunction = true;
-                }
-                break;
-            }
-            default: 
-                loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", "This type " + to_string(function.returnType) + " does not support world Data!");
-                break;
-            }
-
-            break;
-        }
-
         if (modelIDs.contains(currentFunction.referencedModelID)) {
-            loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", 
+            Logger::addLog(LogLevel::ERROR, "applyFunction", 
                         "function references same model (ID " + std::to_string(currentFunction.referencedModelID) + "), would create circular reference");
             break;
         }
 
-        const Uniform* referencedUniform = uniformRegPtr->tryReadUniform(currentFunction.referencedModelID, currentFunction.referencedUniformName); 
+        const Uniform* referencedUniform = UNIFORM_REGISTRY.tryReadUniform(currentFunction.referencedModelID, currentFunction.referencedUniformName); 
         if (referencedUniform == nullptr) {
-            loggerPtr->addLog(LogLevel::LOG_ERROR, "applyUniform: Function, ", "referenced uniform for " + std::to_string(currentFunction.referencedModelID) + ": " + currentFunction.referencedUniformName + "does not exist!");
+            Logger::addLog(LogLevel::ERROR, "applyUniform: Function, ", "referenced uniform for " + std::to_string(currentFunction.referencedModelID) + ": " + currentFunction.referencedUniformName + "does not exist!");
             break;
         }
 
         // This is the only successful path
         if (!referencedUniform->isFunction) {
             if (referencedUniform->type != currentFunction.returnType) {
-                loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", 
+                Logger::addLog(LogLevel::ERROR, "applyFunction", 
                             "reference type mismatch: referenced uniform has type " + to_string(referencedUniform->type) 
                             + ", uniform expects " + to_string(currentUniform.type));
                 break;
@@ -519,15 +498,14 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
             break;
         }
 
-        const InspectorReference* referencedFunction = std::get_if<InspectorReference>(&referencedUniform->value);
+        const UniformFunction* referencedFunction = std::get_if<UniformFunction>(&referencedUniform->value);
         if (referencedFunction == nullptr) {
-            loggerPtr->addLog(LogLevel::LOG_ERROR, "applyUniform", "isFunction is set but uniform: " + uniform.name + " does not have a function value!");
+            Logger::addLog(LogLevel::ERROR, "applyUniform", "isFunction is set but uniform: " + uniform.name + " does not have a function value!");
             break;
         }
-
+        
         currentFunction = *referencedFunction;
         currentUniform = *referencedUniform;
-    
     }
 
     // in case of an invalid function, we need to just assign it a default value not to break things.
@@ -550,12 +528,20 @@ void InspectorEngine::reloadUniforms(unsigned int modelID) {
     Model* targetModel = modelCachePtr->getModel(modelID);
 
     if (targetModel == nullptr) {
-        loggerPtr->addLog(LogLevel::WARNING, "reloadUniforms", "model " + std::to_string(modelID) + " does not exist!");
+<<<<<<< HEAD
+        Logger::addLog(LogLevel::WARNING, "reloadUniforms", "model " + std::to_string(modelID) + " does not exist!");
+=======
+        loggerPtr->addLog(LogLevel::WARNING, "reloadUnioforms", "model " + std::to_string(modelID) + " does not exist!");
+>>>>>>> main
         return;
     }
     ShaderProgram* modelProgram = shaderRegPtr->getProgram(targetModel->getProgramID());
     if (modelProgram == nullptr || !modelProgram->isCompiled()) {
-        loggerPtr->addLog(LogLevel::WARNING, "reloadUniforms", "model " + std::to_string(modelID) + " has no shader! or is not compiled");
+<<<<<<< HEAD
+        Logger::addLog(LogLevel::WARNING, "reloadUniforms", "model " + std::to_string(modelID) + " has no shader! or is not compiled");
+=======
+        loggerPtr->addLog(LogLevel::WARNING, "reloadUnioforms", "model " + std::to_string(modelID) + " has no shader! or is not compiled");
+>>>>>>> main
         return;
     }
 

@@ -1,7 +1,9 @@
 #include "application/Application.hpp"
+
 #include "persistence/Paths.hpp"
 #include "persistence/SettingsLoader.hpp"
 #include "persistence/ProjectLoader.hpp"
+
 
 #define APPLICATION_TITLE "PrismTSS"
 
