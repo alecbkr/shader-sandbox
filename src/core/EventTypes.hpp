@@ -34,7 +34,7 @@ using EventPayload = std::variant<
     KeyPressedPayload,
     OpenFilePayload,
     RenameFilePayload,
-    DeleteFilePayload,
+    DeleteFilePayload
 >;
 
 struct Event {

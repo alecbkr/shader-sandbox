@@ -10,10 +10,17 @@ using json = nlohmann::json;
 int ProjectLoader::version = 1;
 
 bool ProjectLoader::load(Project& project) {
-    if (!std::filesystem::exists(project.projectJSON)) return false;
+    if (!std::filesystem::exists(project.projectJSON)) 
+    {
+        std::cerr << "projectJSON does not exist" << std::endl;
+        return false;
+    }
 
     std::ifstream in(project.projectJSON);
-    if (!in.is_open()) return false;
+    if (!in.is_open()) {
+        std::cerr << "Could not open projectJSON" << std::endl;
+        return false;
+    }
 
     try {
         json j;
@@ -22,6 +29,7 @@ bool ProjectLoader::load(Project& project) {
         ProjectLoader::version = j.value("version", 1);
         project.projectTitle = j.value("projectTitle", project.projectTitle);
     } catch (...) {
+        std::cerr << "Error while loading projectJSON" << std::endl;
         return false;
     }
 
