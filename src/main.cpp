@@ -11,11 +11,11 @@ int main(int argc, char** argv) {
     ctx.project.projectRoot = Paths::getProjectRootDir(argc, argv, ctx.project.projectTitle);
     ctx.project.projectShadersDir = ctx.project.projectRoot / "shaders";
     ctx.project.projectJSON = ctx.project.projectRoot / "project.json";
-    if (!ProjectLoader::load(ctx.project)) return 1;
+    ProjectLoader::load(ctx.project);
 
     ctx.settings.userConfigDir = Paths::getUserConfigDir(APPLICATION_TITLE);
     ctx.settings.settingsPath = ctx.settings.userConfigDir / "settings.json";
-    if (!SettingsLoader::load(ctx.settings)) return 1;
+    SettingsLoader::load(ctx.settings);
 
     if (!Application::initialize(ctx)) return 1;
     Application::runLoop(ctx);
