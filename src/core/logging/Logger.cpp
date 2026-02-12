@@ -48,18 +48,27 @@ void Logger::removeSink(std::shared_ptr<LogSink> sink) {
     std::erase(sinks, sink);    
 }
 
-void Logger::addLog(LogLevel level, std::string src, std::string msg, std::string additional, int lineNum) {
+void Logger::addLog(LogLevel level, std::string src, std::string msg, std::string additional, int lineNum, const std::source_location& file_location) {
     if (!initialized) {
         std::cout << "Attempting to add log without initializing the logger!" << std::endl;
         return;
     };
-    
+
+    // TODO: maybe explore using a config.hpp.in later to set compiler definitions using cmake instead of hard-coding 
+    constexpr std::string_view project_path = "shader-sandbox/"; 
+    std::string fName(toRelativePath(file_location.file_name(), project_path));
+    LogCategory category = LogClassifier::categorize(file_location); 
+    // std::string cat_str = LogClassifier::categoryToString(category); 
+
     LogEntry entry; 
     entry.level = level; 
     entry.src = src; 
     entry.msg = msg; 
     entry.additional = additional; 
+    entry.category = category;
+    entry.fileName = fName; 
     entry.lineNum = lineNum; 
+
 
     // dispatch logs to included sinks 
     for(auto& sink : sinks) {
@@ -76,4 +85,15 @@ void Logger::addLog(LogLevel level, std::string src, std::string msg, std::strin
 std::shared_ptr<ConsoleSink> Logger::getConsoleSinkPtr() {
     if (!initialized) return nullptr;
     return Logger::consoleSinkPtr;
+}
+
+// helper that strips the root path to get the relative path of the file 
+constexpr std::string_view Logger::toRelativePath(const char* path, std::string_view prefix) {
+    std::string_view view(path); 
+    size_t pos = view.find(prefix); 
+    
+    if (pos != std::string_view::npos) {
+        return view.substr(pos + prefix.size()); 
+    }
+    return view; 
 }

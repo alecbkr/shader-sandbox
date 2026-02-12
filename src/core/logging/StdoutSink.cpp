@@ -5,9 +5,9 @@ void StdoutSink::addLog(const LogEntry& entry) {
 
     switch (entry.level) {
         case    LogLevel::CRITICAL:  alert << BG_RED << "[CRITICAL: " <<  " ";         break; 
-        case    LogLevel::LOG_ERROR:     alert << TEXT_RED << "[ERROR: " <<  " ";          break; 
+        case    LogLevel::LOG_ERROR:     alert << TEXT_ERROR << "[ERROR: " <<  " ";          break; 
         case    LogLevel::WARNING:   alert << TEXT_WARNING << "[WARNING: " << "";      break; 
-        case    LogLevel::INFO:      alert << "[INFO: ";                               break;
+        case    LogLevel::INFO:      alert << TEXT_INFO << "[INFO: ";                  break;
         default:                     alert << "[ANOMALY: ";                            break; 
     }    
 
