@@ -96,7 +96,9 @@ endif()
 # ---------------------------------------------------------
 # APP EXECUTABLE
 # ---------------------------------------------------------
-add_executable(sandbox)
+add_executable(sandbox
+    ${CMAKE_SOURCE_DIR}/src/main.cpp
+)
 
 # ---- Windows RC in its own target (no include dirs passed to windres) ----
 if (WIN32)

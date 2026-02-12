@@ -1,7 +1,9 @@
 #include "application/Application.hpp"
+
 #include "persistence/Paths.hpp"
 #include "persistence/SettingsLoader.hpp"
 #include "persistence/ProjectLoader.hpp"
+
 
 #define APPLICATION_TITLE "PrismTSS"
 
@@ -17,7 +19,11 @@ int main(int argc, char** argv) {
     ctx.settings.settingsPath = ctx.settings.userConfigDir / "settings.json";
     SettingsLoader::load(ctx.settings);
 
-    if (!Application::initialize(ctx)) return 1;
+    if (!Application::initialize(ctx)) 
+    {
+        std::cerr << "Application failed to initialize" << std::endl;
+        return 1;
+    }
     Application::runLoop(ctx);
 
     ProjectLoader::save(ctx.project);

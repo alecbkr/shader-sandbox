@@ -36,6 +36,34 @@ class UniformRegistry;
 class EventDispatcher;
 class ModelCache;
 
+<<<<<<< HEAD
+    static void drawUniformInspector();
+    static void drawObjectsInspector();
+    static void drawAssetsInspector();
+    static void drawShaderFileInspector();
+    static void drawAddObjectMenu();
+    static void drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus);
+    static void drawShaderLinkMenu(ShaderLinkMenu& menu, const std::vector<const char*>& vertChoices, const std::vector<const char*>& geoChoices, const std::vector<const char*>& fragChoices);
+    static void initializeMenu(ShaderLinkMenu& menu, const std::vector<const char*>& vertChoices, const std::vector<const char*>& geoChoices, const std::vector<const char*>& fragChoices);
+    static void initializeMenu(ModelShaderMenu& menu, const std::vector<const char*>& shaderChoices);
+    static void initializeMenu(ModelTextureMenu& menu);
+    static bool drawShaderProgramMenu(ModelShaderMenu& selector, const std::vector<const char*>& shaderChoices);
+    static bool drawTextureMenu(ModelTextureMenu& selector);
+    static bool drawTextInput(std::string *value, const char *label);
+    static bool drawUniformInputValue(int* value, Uniform* uniform = nullptr);
+    static bool drawUniformInputValue(float* value, Uniform* uniform = nullptr);
+    static bool drawUniformInputValue(glm::vec3* value, Uniform* uniform = nullptr);
+    static bool drawUniformInputValue(glm::vec4* value, Uniform* uniform = nullptr);
+    static bool drawUniformInputValue(glm::mat4* value, Uniform* uniform = nullptr);
+    static bool drawUniformInputValue(glm::quat* value, Uniform* uniform = nullptr);
+    static bool drawUniformInputValue(InspectorSampler2D* value, Uniform* uniform = nullptr);
+    static bool drawUniformInputValue(UniformFunction* value, Uniform* uniform);
+    static void drawUniformInput(Uniform& uniform, const std::string& objectName);
+    static void drawUniformInput(Uniform& uniform, unsigned int modelID);
+    static bool drawModelPositionInput(Model* model);
+    static bool drawModelScaleInput(Model* model);
+    static bool drawModelOrientationInput(Model* model);
+=======
 class InspectorUI {
 public:
     InspectorUI();
@@ -85,10 +113,10 @@ private:
     bool drawUniformInputValue(glm::mat4* value, Uniform* uniform = nullptr);
     bool drawUniformInputValue(glm::quat* value, Uniform* uniform = nullptr);
     bool drawUniformInputValue(InspectorSampler2D* value, Uniform* uniform = nullptr);
-    bool drawUniformInputValue(InspectorReference* value, Uniform* uniform = nullptr);
     void drawUniformInput(Uniform& uniform, const std::string& objectName);
     void drawUniformInput(Uniform& uniform, unsigned int modelID);
     bool drawModelPositionInput(Model* model);
     bool drawModelScaleInput(Model* model);
     bool drawModelOrientationInput(Model* model);
+>>>>>>> main
 };
