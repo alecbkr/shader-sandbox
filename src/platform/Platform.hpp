@@ -10,6 +10,8 @@ class ContextManager;
 class Keybinds;
 class ActionRegistry;
 class InputState;
+class AppContext;
+struct AppSettings;
 
 struct PlatformInitStruct {
     u32 width;
@@ -20,7 +22,7 @@ struct PlatformInitStruct {
 class Platform {
 public:
     Platform();
-    bool initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Keybinds* _keybindsPtr, ActionRegistry* _actionRegistryPtr, InputState* _inputsPtr, u32 _width, u32 _height, const char* _app_title);
+    bool initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Keybinds* _keybindsPtr, ActionRegistry* _actionRegistryPtr, InputState* _inputsPtr, const char* _app_title, AppSettings* settingsPtr);
     bool shouldClose();
     void swapBuffers();
     void pollEvents();
@@ -31,6 +33,7 @@ public:
     void setWindowIcon();
     double getTime();
     std::filesystem::path getExeDir() const;
+    void terminate();
 
 private:
     bool initialized = false;

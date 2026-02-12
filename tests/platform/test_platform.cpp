@@ -9,6 +9,7 @@
 #include "core/input/Keybinds.hpp"
 #include "core/input/ActionRegistry.hpp"
 #include "core/input/InputState.hpp"
+#include "application/AppContext.hpp"
 
 TEST_CASE("Platform: methods are safe before initialize (guards)", "[platform]") {
     Platform p;
@@ -50,19 +51,19 @@ TEST_CASE("Platform: initialize window + callbacks (integration, may skip)", "[p
 
     ContextManager ctx;
     REQUIRE(ctx.initialize(&logger, &actions));
-
-    Keybinds keybinds;
-    REQUIRE(keybinds.initialize(&logger, &ctx, &actions));
-
+    
     InputState input;
     REQUIRE(input.initialize(&logger));
-    keybinds.setInputsPtr(&input);
 
+    Keybinds keybinds;
+    REQUIRE(keybinds.initialize(&logger, &ctx, &actions, &input));
+
+    AppContext app("test");
     Platform p;
 
     // Try to init. If this environment can't create a window / GL context,
     // don't fail the whole suite — skip this test.
-    const bool ok = p.initialize(&logger, &ctx, &keybinds, &actions, &input, 320, 240, "sandbox_tests");
+    const bool ok = p.initialize(&logger, &ctx, &keybinds, &actions, &input, "sandbox_tests", &app.settings);
     if (!ok) {
         SKIP("Platform initialize failed (likely headless/graphics unavailable in this environment).");
     }

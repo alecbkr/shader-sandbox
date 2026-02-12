@@ -24,8 +24,16 @@
 #include "core/input/Keybinds.hpp"
 #include "engine/AppTimer.hpp"
 #include "engine/Errorlog.hpp"
+#include "persistence/ProjectLoader.hpp"
 
 bool Application::initialized = false;
+
+void subscribeMenuButtons(AppContext& ctx) {
+    ctx.events.Subscribe(EventType::SaveProject, [&ctx](const EventPayload&) -> bool {
+        ProjectLoader::save(ctx.project);
+        return false;
+    });
+}
 
 bool addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI* viewportUIPtr, ContextManager* contextManagerPtr, EventDispatcher* eventsPtr) {
     if (!actionRegPtr) return false;
@@ -112,16 +120,15 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Context Manager was not initialized successfully.");
         return false;
     }
-    if (!ctx.keybinds.initialize(&ctx.logger, &ctx.ctx_manager, &ctx.action_registry)) {
-        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Keybinds were not initialized successfully.");
-        return false;
-    }
     if (!ctx.inputs.initialize(&ctx.logger)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Input State was not initialized successfully.");
         return false;
     }
-    ctx.keybinds.setInputsPtr(&ctx.inputs);
-    if (!ctx.platform.initialize(&ctx.logger, &ctx.ctx_manager, &ctx.keybinds, &ctx.action_registry, &ctx.inputs, ctx.width, ctx.height, ctx.app_title)) {
+    if (!ctx.keybinds.initialize(&ctx.logger, &ctx.ctx_manager, &ctx.action_registry, &ctx.inputs)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Keybinds were not initialized successfully.");
+        return false;
+    }
+    if (!ctx.platform.initialize(&ctx.logger, &ctx.ctx_manager, &ctx.keybinds, &ctx.action_registry, &ctx.inputs, ctx.app_title, &ctx.settings)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Platform layer was not initialized successfully.");
         return false;
     }
@@ -175,7 +182,7 @@ bool Application::initialize(AppContext& ctx) {
         return false;
     }
     loadPresetAssets(ctx);
-    // setup UI
+    subscribeMenuButtons(ctx);
     initializeUI(ctx);
     if (!ctx.console_ui.initialize(&ctx.logger)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Console UI was not initialized successfully.");
@@ -225,6 +232,7 @@ void Application::runLoop(AppContext& ctx) {
         Application::renderUI(ctx);
         ctx.platform.swapBuffers();
     }
+    ctx.platform.terminate();
 }
 
 void Application::renderUI(AppContext& ctx) {
@@ -260,6 +268,11 @@ void Application::shutdown(AppContext& ctx) {
 bool Application::shouldClose(AppContext& ctx) {
     if (!initialized) return false;
     return ctx.platform.shouldClose();
+}
+
+void Application::windowResize(AppContext& ctx, u32 _width, u32 _height) {
+    ctx.settings.width = _width;
+    ctx.settings.height = _height;
 }
 
 // void Application::setAppStateControls(AppStateControls state) {

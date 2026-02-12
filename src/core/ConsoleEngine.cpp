@@ -1,44 +1,60 @@
 #include "ConsoleEngine.hpp"
+#include "logging/Logger.hpp"
 
-ConsoleEngine::ConsoleEngine() {
-    ConsoleEngine::registerCommand("clear", std::make_shared<ClearCommand>()); 
-}
-
-void ConsoleEngine::registerCommand(const std::string& name, std::shared_ptr<Command> command) {
-    commandRegistry[name] = command; 
-}
-
-void ConsoleEngine::processInput(const std::string& input) {
-    std::vector<std::string> args = tokenize(input); 
-
-    if (args.empty()) {
-        return; 
+bool ConsoleEngine::initialize(Logger* _loggerPtr) {
+    if (initialized) {
+        _loggerPtr->addLog(LogLevel::WARNING, "Console UI Initialization", "Console UI was already initialized.");
+        return false;
     }
 
-    // get the name of the command we need to exec 
-    std::string cmdName = args[0]; 
+    logSrc = _loggerPtr->getConsoleSinkPtr();
 
-    auto iter = commandRegistry.find(cmdName); 
+    // Register Buttons 
+    registerButton(ConsoleActions::CLEAR, [this](){
+        if (logSrc) logSrc->clearLogs();
+    }); 
 
-    // validate that the command exists inside the hash map
-    if(iter != commandRegistry.end()) {
-        std::shared_ptr<Command> cmd = iter->second; 
-        cmd->Execute(args); 
-    } else {
-        //Logger::addLog(LogLevel::LOG_ERROR, "command not found", "Could not find command '" + args[0] + "'");
+    // Register Toggles 
+    registerToggle(ConsoleActions::AUTO_SCROLL, [this](bool state) {
+        toggles.isAutoScroll = state; 
+    });
+    registerToggle(ConsoleActions::COLLAPSE_LOGS, [this](bool state) {
+        toggles.isCollapsedLogs = state; 
+    });
+    registerToggle(ConsoleActions::SHOW_ERRORS, [this](bool state) {
+        toggles.isShowError = state; 
+    }); 
+    registerToggle(ConsoleActions::SHOW_WARNINGS, [this](bool state) {
+        toggles.isShowWarning = state; 
+    });
+    registerToggle(ConsoleActions::SHOW_INFO, [this](bool state) {
+        toggles.isShowInfo = state; 
+    });
+    // TODO: implement other filters that filter by the log's source 
+    
+    initialized = true;
+    return true;
+}
+
+// updates the action registry given a new name and action
+void ConsoleEngine::registerButton(std::string_view name, std::function<void()> callbackFn) {
+    btnRegistry[name] = std::move(callbackFn); 
+}
+
+void ConsoleEngine::registerToggle(std::string_view name, std::function<void(bool)> callbackFn) {
+    toggleRegistry[name] = std::move(callbackFn); 
+}
+
+const std::deque<LogEntry>& ConsoleEngine::getLogs() const {
+    return logSrc->getLogs();
+}
+
+void ConsoleEngine::executeBtnAction(std::string_view name) {
+    if (auto it = btnRegistry.find(name); it != btnRegistry.end()) {
+        it->second(); 
     }
 }
 
-std::vector<std::string> ConsoleEngine::tokenize(const std::string& input) {
-    std::istringstream iss(input); 
-    std::vector<std::string> tokens; 
-    std::string token; 
-
-    // split white spaces 
-    while(iss >> token) {
-        tokens.push_back(token);
-    }
-
-    return tokens; 
+ConsoleToggles& ConsoleEngine::getToggles() {
+    return toggles; 
 }
-

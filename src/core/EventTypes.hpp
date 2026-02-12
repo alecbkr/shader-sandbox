@@ -3,7 +3,7 @@
 #include <variant>
 #include <string>
 
-enum EventType {
+enum class EventType {
     // Fill out event types here
     NoType,
     WindowResize,
@@ -34,7 +34,7 @@ using EventPayload = std::variant<
     KeyPressedPayload,
     OpenFilePayload,
     RenameFilePayload,
-    DeleteFilePayload
+    DeleteFilePayload,
 >;
 
 struct Event {
@@ -44,37 +44,37 @@ struct Event {
 };
 
 inline Event MakeSaveActiveShaderFileEvent(std::string filePath, unsigned int modelID) {
-    return { SaveActiveShaderFile, false, SaveActiveShaderFilePayload{filePath, modelID} };
+    return { EventType::SaveActiveShaderFile, false, SaveActiveShaderFilePayload{filePath, modelID} };
 };
 
 inline Event MakeReloadShaderEvent(std::string programName) {
-    return { ReloadShader, false, ReloadShaderPayload{programName} };
+    return { EventType::ReloadShader, false, ReloadShaderPayload{programName} };
 };
 
 inline Event MakeWindowResizeEvent(int w, int h) {
-    return { WindowResize, false, WindowResizePayload{w, h} };
+    return { EventType::WindowResize, false, WindowResizePayload{w, h} };
 };
 
 inline Event MakeKeyPressedEvent(int key) {
-    return { KeyPressed, false, KeyPressedPayload{key} };
+    return { EventType::KeyPressed, false, KeyPressedPayload{key} };
 };
 
 inline Event MakeQuitAppEvent() {
-    return { Quit, false, std::monostate{} };
+    return { EventType::Quit, false, std::monostate{} };
 };
 
 inline Event OpenFileEvent(std::string filePath, std::string fileName, unsigned int modelID) {
-    return { OpenFile, false, OpenFilePayload{filePath, fileName, modelID} };
+    return { EventType::OpenFile, false, OpenFilePayload{filePath, fileName, modelID} };
 }
 
 inline Event NewFileEvent() {
-    return {NewFile, false, std::monostate{} };
+    return { EventType::NewFile, false, std::monostate{} };
 }
 
 inline Event RenameFileEvent(std::string oldName, std::string newName) {
-    return { RenameFile, false, RenameFilePayload{oldName, newName} };
+    return { EventType::RenameFile, false, RenameFilePayload{oldName, newName} };
 }
 
 inline Event DeleteFileEvent(std::string fileName) {
-    return { DeleteFile, false, DeleteFilePayload{fileName} };
+    return { EventType::DeleteFile, false, DeleteFilePayload{fileName} };
 }

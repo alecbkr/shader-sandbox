@@ -51,8 +51,11 @@ TEST_CASE("Keybinds initialize creates expected default bindings", "[keybinds]")
     ContextManager ctx;
     REQUIRE(ctx.initialize(&logger, &actions));
 
+    InputState input;
+    REQUIRE(input.initialize(&logger));
+
     Keybinds kb;
-    REQUIRE(kb.initialize(&logger, &ctx, &actions));
+    REQUIRE(kb.initialize(&logger, &ctx, &actions, &input));
 
     REQUIRE(kb.bindings().size() == 11);
 
@@ -100,8 +103,7 @@ TEST_CASE("Keybinds comboDown returns true only when all keys in combo are down"
     REQUIRE(input.initialize(&logger));
 
     Keybinds kb;
-    REQUIRE(kb.initialize(&logger, &ctx, &actions));
-    kb.setInputsPtr(&input);
+    REQUIRE(kb.initialize(&logger, &ctx, &actions, &input));
 
     input.beginFrame();
     REQUIRE_FALSE(kb.comboDown(KeyCombo{Key::LeftCtrl, Key::S}));
@@ -130,8 +132,7 @@ TEST_CASE("Keybinds comboPressedThisFrame is true if combo is down AND at least 
     REQUIRE(input.initialize(&logger));
 
     Keybinds kb;
-    REQUIRE(kb.initialize(&logger, &ctx, &actions));
-    kb.setInputsPtr(&input);
+    REQUIRE(kb.initialize(&logger, &ctx, &actions, &input));
 
     // Frame 1: press Ctrl then S => should count as pressed-this-frame
     input.beginFrame();
@@ -161,8 +162,7 @@ TEST_CASE("Keybinds gatherActionsForFrame queues Pressed bindings in the correct
     REQUIRE(input.initialize(&logger));
 
     Keybinds kb;
-    REQUIRE(kb.initialize(&logger, &ctx, &actions));
-    kb.setInputsPtr(&input);
+    REQUIRE(kb.initialize(&logger, &ctx, &actions, &input));
 
     int saveCalls = 0;
     actions.bind(Action::SaveActiveShaderFile, [&] { saveCalls++; });
@@ -199,8 +199,7 @@ TEST_CASE("Keybinds gatherActionsForFrame queues Down bindings every frame when 
     REQUIRE(input.initialize(&logger));
 
     Keybinds kb;
-    REQUIRE(kb.initialize(&logger, &ctx, &actions));
-    kb.setInputsPtr(&input);
+    REQUIRE(kb.initialize(&logger, &ctx, &actions, &input));
 
     int forwardCalls = 0;
     actions.bind(Action::CameraForward, [&] { forwardCalls++; });
@@ -233,8 +232,7 @@ TEST_CASE("Keybinds EditorCamera bindings work regardless of context (F2)", "[ke
     REQUIRE(input.initialize(&logger));
 
     Keybinds kb;
-    REQUIRE(kb.initialize(&logger, &ctx, &actions));
-    kb.setInputsPtr(&input);
+    REQUIRE(kb.initialize(&logger, &ctx, &actions, &input));
 
     int switchCalls = 0;
     actions.bind(Action::SwitchControlContext, [&] { switchCalls++; });
@@ -273,8 +271,7 @@ TEST_CASE("Keybinds disabled binding does not queue action", "[keybinds]") {
     REQUIRE(input.initialize(&logger));
 
     Keybinds kb;
-    REQUIRE(kb.initialize(&logger, &ctx, &actions));
-    kb.setInputsPtr(&input);
+    REQUIRE(kb.initialize(&logger, &ctx, &actions, &input));
 
     int calls = 0;
     actions.bind(Action::None, [&] { calls++; });
