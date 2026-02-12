@@ -1,4 +1,6 @@
 #pragma once
+
+#include <filesystem>
 #include <types.hpp>
 #include "core/logging/Logger.hpp"
 #include "core/input/ActionRegistry.hpp"
@@ -25,13 +27,30 @@
 #include "core/ui/InspectorUI.hpp"
 #include "object/ModelImporter.hpp"
 
-struct AppContext {
-    AppContext(u32 _width, u32 _height, const char* _app_title)
-        : width(_width), height(_height), app_title(_app_title) {};
+struct Project {
+    std::string projectTitle;
+    std::filesystem::path projectRoot;
+    std::filesystem::path projectShadersDir;
+    std::filesystem::path projectJSON;
+};
 
-    u32 width;
-    u32 height;
+struct AppSettings {
+    std::filesystem::path userConfigDir;
+    std::filesystem::path settingsPath;
+
+    u32 width = 960;
+    u32 height = 540;
+    u32 posX = 100;
+    u32 posY = 100;
+};
+
+struct AppContext {
+    AppContext(const char* _app_title) : app_title(_app_title) {};
+
     const char* app_title;
+    
+    AppSettings settings;
+    Project project; // loaded project (or none)
 
     Logger logger;
     ActionRegistry action_registry;
