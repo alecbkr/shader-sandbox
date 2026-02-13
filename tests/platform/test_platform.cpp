@@ -55,15 +55,16 @@ TEST_CASE("Platform: initialize window + callbacks (integration, may skip)", "[p
     InputState input;
     REQUIRE(input.initialize(&logger));
 
-    Keybinds keybinds;
-    REQUIRE(keybinds.initialize(&logger, &ctx, &actions, &input));
+    AppSettings settings;
 
-    AppContext app("test");
+    Keybinds keybinds;
+    REQUIRE(keybinds.initialize(&logger, &ctx, &actions, &input, settings.keybindsMap));
+
     Platform p;
 
     // Try to init. If this environment can't create a window / GL context,
     // don't fail the whole suite — skip this test.
-    const bool ok = p.initialize(&logger, &ctx, &keybinds, &actions, &input, "sandbox_tests", &app.settings);
+    const bool ok = p.initialize(&logger, &ctx, &keybinds, &actions, &input, "sandbox_tests", &settings);
     if (!ok) {
         SKIP("Platform initialize failed (likely headless/graphics unavailable in this environment).");
     }

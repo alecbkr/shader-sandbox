@@ -3,13 +3,16 @@
 #include <cstdint>
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
+#include <types.hpp>
+#include <string>
 #include "core/input/ActionRegistry.hpp"
 #include "core/input/ContextManager.hpp"
 #include "platform/components/Keys.hpp"
-//#include "core/input/InputState.hpp"
 
 class Logger;
 class InputState;
+struct SettingsKeybind;
 
 enum class Trigger : uint8_t {
     Pressed,
@@ -21,6 +24,7 @@ struct KeyCombo {
     std::vector<Key> keys;
 
     KeyCombo() = default;
+    KeyCombo(std::vector<u16> _keys);
     KeyCombo(std::initializer_list<Key> list);
 
     // normalize order to avoid duplicates like {S,L} vs {L,S}
@@ -38,7 +42,7 @@ struct Binding {
 class Keybinds {
 public:
     Keybinds();
-    bool initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, ActionRegistry* _actionRegPtr, InputState* _inputsPtr);
+    bool initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, ActionRegistry* _actionRegPtr, InputState* _inputsPtr, const std::unordered_map<std::string, SettingsKeybind>& keybindsMap);
     void shutdown();
     Binding makeBinding(Action action, KeyCombo combo, ControlCtx ctx, Trigger trigger = Trigger::Pressed, bool enabled = true);
     void setBindings(const std::vector<Binding>& b);
