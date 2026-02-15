@@ -418,18 +418,18 @@ void InspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, ShaderLink
 
     // These need to contain empty string first! if you have an issue, check stuff relating to this.
     // TODO: this doesn't work, there's going to be state issues when we add or delete files. We also have no way of maintaining order! 
-    std::vector<std::string> vertChoices{""};
-    std::vector<std::string> fragChoices{""};
-    std::vector<std::string> geoChoices{""}; // not doing this right now
+    std::vector<const char*> vertChoices{""};
+    std::vector<const char*> fragChoices{""};
+    std::vector<const char*> geoChoices{""}; // not doing this right now
 
     for (const auto& [id, file] : fileRegPtr->getFiles()) {
         std::string& extension = file->extension;
         std::string& filePath = file->filePath;
         if (extension == ".vert") {
-            vertChoices.push_back(filePath);
+            vertChoices.push_back(filePath.c_str());
         }
         else if (extension == ".frag") {
-            fragChoices.push_back(filePath);
+            fragChoices.push_back(filePath.c_str());
         }
         else {
             //Logger::addLog(LogLevel::INFO, "drawShaderLinkMenu", "Shader file type " + extension + " not supported, only .vert and .frag");
@@ -437,31 +437,16 @@ void InspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, ShaderLink
         }
     }
 
-    std::vector<const char*> vertChoicesC;
-    std::vector<const char*> fragChoicesC;
-    std::vector<const char*> geoChoicesC; // not doing this right now
-    vertChoicesC.reserve(vertChoices.size());
-    fragChoicesC.reserve(fragChoices.size());
-    geoChoicesC.reserve(geoChoices.size());
-    for (int i = 0; i < vertChoices.size(); i++) {
-        vertChoicesC.push_back(vertChoicesC[i]);
-    }
-    for (int i = 0; i < fragChoices.size(); i++) {
-        fragChoicesC.push_back(fragChoicesC[i]);
-    }
-    for (int i = 0; i < geoChoices.size(); i++) {
-        geoChoicesC.push_back(geoChoicesC[i]);
-    }
 
     ImGuiID guiID = 0;
     for (auto& [shaderName, menu] : menus) {
         if (!menu.initialized) {
-            initializeMenu(menu, vertChoicesC, geoChoicesC, fragChoicesC);
+            initializeMenu(menu, vertChoices, geoChoices, fragChoices);
         }
         
         if (ImGui::TreeNode(menu.shaderName.c_str())) {
             ImGui::PushID(guiID);
-            drawShaderLinkMenu(menu, vertChoicesC, geoChoicesC, fragChoicesC);
+            drawShaderLinkMenu(menu, vertChoices, geoChoices, fragChoices);
             ImGui::PopID();
             guiID++;
             ImGui::TreePop();

@@ -208,46 +208,73 @@ std::vector<std::string> InspectorEngine::tokenizeShaderCode(const ShaderProgram
 
 std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const ShaderProgram& program) {
     std::unordered_map<std::string, Uniform> programUniforms;
-    if (!program.isCompiled()) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "parseUniforms", "should not be parsing an invalid shader program!");
-        return programUniforms;
-    }
-    // This code assumes the shader file is valid, and thus doesn't check syntax
 
+    /*
     std::vector<std::string> tokens = tokenizeShaderCode(program);
-    std::unordered_set<std::string> structNames;
-    Uniform currentUniform;
-    
-    enum class LT { Searching, Uniform, StructName, Type, UniformName, SemiColon, Comma, Struct };
-    LT lastToken = LT::Searching;
+    enum { SearchingForUniform, JustReadUniform, JustReadType, JustReadName, JustReadSemiColon, JustReadComma } state = SearchingForUniform;
     for (int i = 0; i < tokens.size(); i++) {
         std::string& token = tokens[i];
-        switch (lastToken) {
-            case LT::Searching: {
+        switch (state) {
+            case SearchingForUniform: {
                 if (token == "uniform") {
-                    lastToken = LT::Uniform;
-                }
-                break;
-            }
-            case LT::Uniform: {
-                if (structNames.contains(token))
-                auto typePair = typeMap.find(token);
-                if (typePair == typeMap.end()) {
-                    loggerPtr->addLog(LogLevel::WARNING, "parseUnifoms", "Invalid Uniform Type: ", token); 
+                    state = JustReadUniform;
                     continue;
                 }
-                currentUniform.type = typePair->second;
                 break;
             }
-            case LT::Type: {
-                
+            case JustReadUniform: {
+                auto typePair = typeMap.find(token);
+                if (typePair == typeMap.end()) {
+                    Logger::addLog(LogLevel::WARNING, "parseUnifroms", "Invalid Uniform Type: ", word); 
+                    continue;
+                }
             }
-            case LT::Struct: {
+        }
+    }*/
+
+    std::string line;
+    for (size_t i = 0; i < 2; i++) {
+        std::stringstream sourceCode = i == 0 ?
+            std::stringstream(program.vertShader_code) :
+            std::stringstream(program.fragShader_code);
+        
+        while (std::getline(sourceCode, line)) {
+            // Figure out if line is a uniform line
+            std::istringstream line_ss(line);
+            std::string word;
+            line_ss >> word; // first word of the line (test for "uniform")
+
+            bool isUniformLine = word == "uniform";
+            if (!isUniformLine) continue; 
+            // At this point, we're reading a line with one or more uniform definitions.
+
+            // Determine the type of uniform
+            line_ss >> word; // second word of the line (look for type of uniform)
+
+            auto typePair = typeMap.find(word);
+            if (typePair == typeMap.end()) {
+                loggerPtr->addLog(LogLevel::WARNING, "parseUnifroms", "Invalid Uniform Type: ", word); 
+                continue;
+            }
+            // Start assigning values.
+            std::string uniformName;
+
+            // Assign the uniform name
+            while (line_ss >> uniformName) {
+                Uniform uniform;
+                uniform.type = typePair->second;
+                assignDefaultValue(uniform);
+                if (uniformName.back() == ';') {
+                    uniformName.pop_back();
+                }
+
+                uniform.name = uniformName;
+                programUniforms[uniform.name] = uniform;
+                line_ss >> uniformName; // read next word
 
             }
         }
     }
-
     return programUniforms;
 }
 
@@ -428,10 +455,6 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
                 switch (currentFunction.returnType) {
                 case UniformType::Vec3: {
                     const Camera* const cam = viewportUIPtr->getCamera();
-                    if (cam == nullptr) {
-                        loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", "camera is null!");
-                        continue;
-                    }
                     if (function.referencedUniformName == "position") {
                         finalValue = uniform;
                         finalValue.name = uniform.name;
