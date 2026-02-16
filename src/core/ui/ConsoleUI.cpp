@@ -161,10 +161,6 @@ void ConsoleUI::drawLogs() {
         }
         TextSelector::End();
     }
-
-    if (ImGui::IsMouseClicked(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered()) {
-        selection.clear();
-    }
 }
 
 

@@ -10,25 +10,29 @@ TextSelector::CurrentState TextSelector::state;
 bool TextSelector::Begin(const char* id, int totalRows, TextSelectionCtx& ctx, TextSelectorLayout& layout) {
     ImGui::PushID(id); 
 
-    layout.lineHeight = std::max(1.0f, ImGui::GetTextLineHeight()); 
+    layout.lineHeight = std::max(1.0f, ImGui::GetTextLineHeightWithSpacing()); 
     layout.charWidth = ImGui::CalcTextSize("A").x; 
     layout.maxWidth = ImGui::GetContentRegionAvail().x; 
     layout.highlightColor = IM_COL32(0, 120, 215, 100); 
     layout.origin = ImGui::GetCursorScreenPos(); 
 
     float totalHeight = (float)totalRows * layout.lineHeight; 
+
     ImGui::SetNextItemAllowOverlap();
     ImGui::InvisibleButton("##InputLayer", ImVec2(layout.maxWidth, totalHeight));
 
+    // mouse drag/clicking logic 
     if (ImGui::IsItemActive() || ImGui::IsItemHovered()) {
         ImGui::SetMouseCursor(ImGuiMouseCursor_TextInput); 
         handleInput(totalRows, ctx, layout); 
     }
 
+    ImGui::SetCursorScreenPos(layout.origin);     // reset the cursor so that the invisible buttons can be drawn on top of the text widgets
+
     state.ctx = &ctx; 
     state.layout = layout; 
     state.totalRows = totalRows; 
-    state.currRow = 0; 
+    // state.currRow = 0; 
     state.isActive = true; 
 
     return true; 
@@ -50,7 +54,12 @@ void TextSelector::Text(const std::string& rawText, std::function<void()> drawCa
 
     TextSelectionCtx* ctx = state.ctx; 
     const TextSelectorLayout& layout = state.layout; 
-    int rowIdx = state.currRow; 
+    // int rowIdx = state.currRow; 
+
+    ImVec2 cursorPos = ImGui::GetCursorScreenPos(); 
+    float relY = cursorPos.y - layout.origin.y; 
+
+    int rowIdx = (int)((relY / layout.lineHeight) + 0.5f); 
     
     if (ctx->isActive && ctx->wordRecalc && rowIdx == ctx->startRow) {
         int start, end; 
@@ -60,7 +69,7 @@ void TextSelector::Text(const std::string& rawText, std::function<void()> drawCa
         ctx->wordRecalc = false; 
     }
 
-    float lineY = layout.origin.y + (rowIdx * layout.lineHeight);           // setup drawing the highlight
+    // float lineY = layout.origin.y + (rowIdx * layout.lineHeight);           // setup drawing the highlight
     // handles drawing the actual highlight box around the text 
     if (ctx->isActive) {
         int rMin = std::min(ctx->startRow, ctx->endRow);
@@ -115,8 +124,8 @@ void TextSelector::Text(const std::string& rawText, std::function<void()> drawCa
             if (hlEnd > hlStart) {
                 ImDrawList* drawList = ImGui::GetWindowDrawList(); 
                 drawList->AddRectFilled(
-                    ImVec2(layout.origin.x + hlStart, lineY), 
-                    ImVec2(layout.origin.x + hlEnd, lineY + layout.lineHeight), 
+                    ImVec2(layout.origin.x + hlStart, cursorPos.y), 
+                    ImVec2(layout.origin.x + hlEnd, cursorPos.y + layout.lineHeight), 
                     layout.highlightColor
                 ); 
             }
@@ -124,13 +133,13 @@ void TextSelector::Text(const std::string& rawText, std::function<void()> drawCa
         }
     }
 
-    ImGui::SetCursorScreenPos(ImVec2(layout.origin.x, lineY)); 
+    // ImGui::SetCursorScreenPos(ImVec2(layout.origin.x, lineY)); 
 
     if (drawCallback) {
         drawCallback(); 
     }
 
-    state.currRow ++; 
+    // state.currRow ++; 
 
 }
 

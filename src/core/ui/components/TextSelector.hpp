@@ -51,7 +51,7 @@ private:
     struct CurrentState {
         TextSelectionCtx* ctx = nullptr; 
         TextSelectorLayout layout; 
-        int currRow = 0; 
+        // int currRow = 0; 
         int totalRows = 0; 
         bool isActive = false; 
     }; 
