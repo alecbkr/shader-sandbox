@@ -74,7 +74,9 @@ void TextSelector::Text(const std::string& rawText, std::function<void()> drawCa
             if (ctx->mode == SelectionMode::Line) {
                 hlStart = 0.0f; 
                 hlEnd = layout.maxWidth; 
-            } else {
+            } 
+            
+            else {
                 int cStart = ctx->startCol; 
                 int cEnd = ctx->endCol; 
 
@@ -167,7 +169,7 @@ void TextSelector::handleInput(int totalRows, TextSelectionCtx& ctx, const TextS
             ctx.mode = SelectionMode::Word; 
             ctx.startCol = col; 
             ctx.endCol = col; 
-            ctx.wordRecalc = false; 
+            ctx.wordRecalc = true; 
         } else { 
             ctx.mode = SelectionMode::Normal; 
             ctx.startCol = col; 
@@ -179,7 +181,6 @@ void TextSelector::handleInput(int totalRows, TextSelectionCtx& ctx, const TextS
     // handle drag
     else if (ImGui::IsMouseDown(0) && ctx.isActive) {
         ctx.endRow = row;
-        ctx.endCol = col;
 
         if (ctx.mode == SelectionMode::Normal) {
             ctx.endCol = col; 
@@ -222,17 +223,17 @@ void TextSelector::getWordUnderCursor(const std::string& text, int col, int& out
         outStart = col; 
         while(outStart > 0 && isWhiteSpace(text[outStart - 1])) outStart--; 
         outEnd = col; 
-        while(outEnd < text.length() - 1 && isWhiteSpace(text[outEnd + 1])) outEnd++; 
+        while(outEnd < text.length() && isWhiteSpace(text[outEnd])) outEnd++; 
     }
     else if (isDelimeter(clickedChar)) {
         outStart = col; 
-        outEnd = col; 
+        outEnd = col + 1; 
     }
     else {
         outStart = col; 
         while(outStart > 0 && isToken(text[outStart -1])) outStart--;
         outEnd = col; 
-        while(outEnd < text.length() -1 && isToken(text[outEnd + 1])) outEnd++; 
+        while(outEnd < text.length() && isToken(text[outEnd])) outEnd++; 
     }
 }
 
