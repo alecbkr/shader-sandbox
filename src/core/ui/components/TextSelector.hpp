@@ -42,11 +42,22 @@ struct TextSelectorLayout {
 class TextSelector {
 public:
     static bool Begin(const char* id, int totalRows, TextSelectionCtx& ctx, TextSelectorLayout& layout);
-    static void Text(int rowIndex, const std::string& lineContent, const TextSelectionCtx& ctx, const TextSelectorLayout& layout, std::function<void()> drawCallback);
+    static void Text(const std::string& rawText); 
+    static void Text(const std::string& rawText, std::function<void()> drawCallback);
     static void End(); 
     static void copyText(const TextSelectionCtx& ctx, int totalRows, std::function<std::string(int)> fetchLine);
     
 private:
+    struct CurrentState {
+        TextSelectionCtx* ctx = nullptr; 
+        TextSelectorLayout layout; 
+        int currRow = 0; 
+        int totalRows = 0; 
+        bool isActive = false; 
+    }; 
+
+    static CurrentState state; 
+
     static void handleInput(int totalRows, TextSelectionCtx& ctx, const TextSelectorLayout& layout);
     static void getWordUnderCursor(const std::string& text, int col, int& outStart, int& outEnd);
     static bool isWhiteSpace(char c); 

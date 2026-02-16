@@ -140,7 +140,7 @@ void ConsoleUI::drawLogs() {
                 std::string fullText = formatLogString(log);
                 if (repeatCount > 0) fullText += " (" + std::to_string(repeatCount + 1) + ")";
 
-                TextSelector::Text(i, fullText, selection, layout, [&]() {
+                TextSelector::Text(fullText, [&]() {
                     LogStyle style = getLogStyle(log);
                     
                     ImGui::TextColored(style.color, "%s", style.prefix.c_str());

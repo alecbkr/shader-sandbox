@@ -4,87 +4,141 @@
 #include <iostream>
 #include <sstream>
 
+TextSelector::CurrentState TextSelector::state; 
+
+// setups the draw state to begin drawing the selection boxes 
 bool TextSelector::Begin(const char* id, int totalRows, TextSelectionCtx& ctx, TextSelectorLayout& layout) {
-    layout.lineHeight = std::max(1.0f, ImGui::GetTextLineHeight());
+    ImGui::PushID(id); 
+
+    layout.lineHeight = std::max(1.0f, ImGui::GetTextLineHeight()); 
     layout.charWidth = ImGui::CalcTextSize("A").x; 
-    layout.maxWidth = ImGui::GetContentRegionAvail().x;
-    layout.highlightColor = IM_COL32(0, 120, 215, 100); // Default VScode Blue
+    layout.maxWidth = ImGui::GetContentRegionAvail().x; 
+    layout.highlightColor = IM_COL32(0, 120, 215, 100); 
+    layout.origin = ImGui::GetCursorScreenPos(); 
 
-    float totalHeight = (float)totalRows * layout.lineHeight;
-    
-    ImGui::SetNextItemAllowOverlap(); 
-    ImGui::InvisibleButton(id, ImVec2(layout.maxWidth, totalHeight));
+    float totalHeight = (float)totalRows * layout.lineHeight; 
+    ImGui::SetNextItemAllowOverlap();
+    ImGui::InvisibleButton("##InputLayer", ImVec2(layout.maxWidth, totalHeight));
 
-    layout.origin = ImGui::GetItemRectMin(); 
-    
     if (ImGui::IsItemActive() || ImGui::IsItemHovered()) {
-        ImGui::SetMouseCursor(ImGuiMouseCursor_TextInput);
-        handleInput(totalRows, ctx, layout);
+        ImGui::SetMouseCursor(ImGuiMouseCursor_TextInput); 
+        handleInput(totalRows, ctx, layout); 
     }
-    return true;
+
+    state.ctx = &ctx; 
+    state.layout = layout; 
+    state.totalRows = totalRows; 
+    state.currRow = 0; 
+    state.isActive = true; 
+
+    return true; 
 }
 
-void TextSelector::Text(int rowIdx, const std::string& lineContent, const TextSelectionCtx& ctx, const TextSelectorLayout& layout, std::function<void()> drawCallback) {
-    if (ctx.isActive && ctx.wordRecalc && rowIdx == ctx.startRow) {
-        TextSelectionCtx& tmpCtx = const_cast<TextSelectionCtx&>(ctx);
-        int start, end; 
-        getWordUnderCursor(lineContent, tmpCtx.startCol, start, end); 
-        tmpCtx.startCol = start; 
-        tmpCtx.endCol = end; 
-        tmpCtx.wordRecalc = false; 
+// renders a normal ImGui::TextUnformatted
+void TextSelector::Text(const std::string& rawText) {
+    Text(rawText, [&rawText](){
+        ImGui::TextUnformatted(rawText.c_str()); 
+    });
+}
+
+// renders the callback function where you can set different types of ImGui text widgets (e.g. having multi-colored text)
+void TextSelector::Text(const std::string& rawText, std::function<void()> drawCallback) {
+    if (!state.isActive) {
+        if (drawCallback) drawCallback(); 
+        return; 
     }
 
-    float lineY = layout.origin.y + (rowIdx * layout.lineHeight);
-    ImGui::SetCursorScreenPos(ImVec2(layout.origin.x, lineY));
+    TextSelectionCtx* ctx = state.ctx; 
+    const TextSelectorLayout& layout = state.layout; 
+    int rowIdx = state.currRow; 
+    
+    if (ctx->isActive && ctx->wordRecalc && rowIdx == ctx->startRow) {
+        int start, end; 
+        getWordUnderCursor(rawText, ctx->startCol, start, end); 
+        ctx->startCol = start; 
+        ctx->endCol = end; 
+        ctx->wordRecalc = false; 
+    }
 
-    // handles drawing the highlight around the text 
-    if (ctx.isActive) {
-        int rMin = std::min(ctx.startRow, ctx.endRow);
-        int rMax = std::max(ctx.startRow, ctx.endRow);
+    float lineY = layout.origin.y + (rowIdx * layout.lineHeight);           // setup drawing the highlight
+    // handles drawing the actual highlight box around the text 
+    if (ctx->isActive) {
+        int rMin = std::min(ctx->startRow, ctx->endRow);
+        int rMax = std::max(ctx->startRow, ctx->endRow);
 
         if (rowIdx >= rMin && rowIdx <= rMax) {
             float hlStart = 0.0f;
-            float hlEnd = layout.maxWidth;
-
-            int cStart = ctx.startCol;
-            int cEnd = ctx.endCol;
+            float hlEnd = 0.0f;
             
-            if (ctx.startRow > ctx.endRow) std::swap(cStart, cEnd);
-            if (ctx.startRow == ctx.endRow && cStart > cEnd) std::swap(cStart, cEnd);
+            // Triple clicking to select the entire line 
+            if (ctx->mode == SelectionMode::Line) {
+                hlStart = 0.0f; 
+                hlEnd = layout.maxWidth; 
+            } else {
+                int cStart = ctx->startCol; 
+                int cEnd = ctx->endCol; 
 
-            bool hasSelection = (rMin != rMax) || (cStart != cEnd);
+                // normalize the columns for highlighting backwards 
+                if (ctx->startRow > ctx->endRow) std::swap(cStart, cEnd); 
+                if (ctx->startRow == ctx->endRow && cStart > cEnd) std::swap(cStart, cEnd); 
 
-            if (hasSelection) {
-                if (rMin == rMax) { 
-                    hlStart = cStart * layout.charWidth;
+                // single line selection
+                if (rMin == rMax) {
+                    hlStart = cStart * layout.charWidth; 
                     hlEnd = cEnd * layout.charWidth; 
-                                       
-                } else if (rowIdx == rMin) { 
-                    int activeCol = (ctx.startRow < ctx.endRow) ? ctx.startCol : ctx.endCol;
-                    hlStart = activeCol * layout.charWidth;
-                } else if (rowIdx == rMax) { 
-                    int activeCol = (ctx.startRow < ctx.endRow) ? ctx.endCol : ctx.startCol;
-                    hlEnd = activeCol * layout.charWidth; 
+                } 
+                
+                // start of the multiline 
+                else if (rowIdx == rMin) {
+                    int col = (ctx->startRow < ctx->endRow) ? ctx->startCol : ctx->endCol; 
+                    hlStart = col * layout.charWidth; 
+                    hlEnd = layout.maxWidth; 
+                } 
+                
+                // end of the multiline
+                else if (rowIdx == rMax) {
+                    hlStart = 0.0f; 
+                    int col = (ctx->startRow < ctx->endRow) ? ctx->endCol : ctx->startCol; 
+                    hlEnd = col * layout.charWidth; 
                 }
-
-                ImDrawList* drawList = ImGui::GetWindowDrawList();
-                drawList->AddRectFilled(
-                    ImVec2(layout.origin.x + hlStart, lineY),
-                    ImVec2(layout.origin.x + hlEnd, lineY + layout.lineHeight),
-                    layout.highlightColor
-                );
+                
+                // middle lines 
+                else {
+                    hlStart = 0.0f; 
+                    hlEnd = layout.maxWidth; 
+                }
             }
+
+            // draws the actual rectangle text highlighting 
+            if (hlEnd > hlStart) {
+                ImDrawList* drawList = ImGui::GetWindowDrawList(); 
+                drawList->AddRectFilled(
+                    ImVec2(layout.origin.x + hlStart, lineY), 
+                    ImVec2(layout.origin.x + hlEnd, lineY + layout.lineHeight), 
+                    layout.highlightColor
+                ); 
+            }
+            
         }
     }
 
+    ImGui::SetCursorScreenPos(ImVec2(layout.origin.x, lineY)); 
+
     if (drawCallback) {
-        drawCallback();
-    } else {
-        ImGui::TextUnformatted(lineContent.c_str());
+        drawCallback(); 
     }
+
+    state.currRow ++; 
+
 }
 
+// resets the current active state
 void TextSelector::End() {
+    if (state.isActive) {
+        state.isActive = false; 
+        state.ctx = nullptr; 
+        ImGui::PopID(); 
+    }
 }
 
 void TextSelector::handleInput(int totalRows, TextSelectionCtx& ctx, const TextSelectorLayout& layout) {
@@ -106,12 +160,19 @@ void TextSelector::handleInput(int totalRows, TextSelectionCtx& ctx, const TextS
         ctx.startRow = row; ctx.endRow = row;
 
         if (clicks == 3) { 
+            ctx.mode = SelectionMode::Line; 
             ctx.startCol = 0; 
             ctx.endCol = std::numeric_limits<int>::max(); 
         } else if (clicks == 2) { 
-            ctx.startCol = col; ctx.endCol = col; 
+            ctx.mode = SelectionMode::Word; 
+            ctx.startCol = col; 
+            ctx.endCol = col; 
+            ctx.wordRecalc = false; 
         } else { 
-             ctx.startCol = col; ctx.endCol = col;
+            ctx.mode = SelectionMode::Normal; 
+            ctx.startCol = col; 
+            ctx.endCol = col;
+            ctx.wordRecalc = false; 
         }
     } 
 
@@ -119,6 +180,10 @@ void TextSelector::handleInput(int totalRows, TextSelectionCtx& ctx, const TextS
     else if (ImGui::IsMouseDown(0) && ctx.isActive) {
         ctx.endRow = row;
         ctx.endCol = col;
+
+        if (ctx.mode == SelectionMode::Normal) {
+            ctx.endCol = col; 
+        }
     }
 }
 
