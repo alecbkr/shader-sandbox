@@ -444,13 +444,13 @@ void InspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, ShaderLink
     fragChoicesC.reserve(fragChoices.size());
     geoChoicesC.reserve(geoChoices.size());
     for (int i = 0; i < vertChoices.size(); i++) {
-        vertChoicesC.push_back(vertChoicesC[i]);
+        vertChoicesC.push_back(vertChoices[i].c_str());
     }
     for (int i = 0; i < fragChoices.size(); i++) {
-        fragChoicesC.push_back(fragChoicesC[i]);
+        fragChoicesC.push_back(fragChoices[i].c_str());
     }
     for (int i = 0; i < geoChoices.size(); i++) {
-        geoChoicesC.push_back(geoChoicesC[i]);
+        geoChoicesC.push_back(geoChoices[i].c_str());
     }
 
     ImGuiID guiID = 0;

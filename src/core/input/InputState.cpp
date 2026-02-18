@@ -100,19 +100,33 @@ void InputState::onKey(int _key, int action) {
     Key key = translateGlfwKey(_key);
     if (key == Key::Unknown) return;
 
+    const std::size_t idx = keyIndex(key);
+    if (idx < 0 || idx >= KEY_COUNT) {
+        // log both values so you can see what's wrong
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "InputState::onKey",
+            "keyIndex out of range: idx=" + std::to_string(idx) +
+            " KEY_COUNT=" + std::to_string(KEY_COUNT) +
+            " glfwKey=" + std::to_string(_key));
+        return;
+    }
+
     if (action == 1) { // GLFW_PRESS
-        if (!down[keyIndex(key)]) {
-            pressed[keyIndex(key)] = 1;
+        if (!down[idx]) {
+            pressed[idx] = 1;
+            loggerPtr->addLog(LogLevel::INFO, "InputState::onKey",
+                "pressedKeys size=" + std::to_string(pressedKeys.size()) +
+                " cap=" + std::to_string(pressedKeys.capacity()));
             pressedKeys.push_back(key);
         }
-        down[keyIndex(key)] = 1;
+        down[idx] = 1;
     } else if (action == 0) { // GLFW_RELEASE
-        if (down[keyIndex(key)]) released[keyIndex(key)] = 1;
-        down[keyIndex(key)] = 0;
+        if (down[idx]) released[idx] = 1;
+        down[idx] = 0;
     } else if (action == 2) { // GLFW_REPEAT
-        down[keyIndex(key)] = 1;
+        down[idx] = 1;
     }
 }
+
 
 void InputState::onMouseButton(int _button, int action) {
     MouseButton button = translateGlfwMouseButton(_button);

@@ -23,6 +23,8 @@ Platform::Platform() {
     keybindsPtr = nullptr;
     actionRegPtr = nullptr;
     inputsPtr = nullptr;
+    userData.inputs = nullptr;
+    userData.settings = nullptr;
 }
 
 void setContextCurrent(Window& window) {
@@ -49,7 +51,7 @@ void Platform::setWindowIcon() {
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 
-    auto* settings = static_cast<AppSettings*>(glfwGetWindowUserPointer(window));
+    auto* settings = static_cast<WindowUserData*>(glfwGetWindowUserPointer(window))->settings;
     if (!settings) return;
 
     settings->width = static_cast<u32>(width);
@@ -57,7 +59,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 void window_position_callback(GLFWwindow* window, int xpos, int ypos) {
-    auto* settings = static_cast<AppSettings*>(glfwGetWindowUserPointer(window));
+    auto* settings = static_cast<WindowUserData*>(glfwGetWindowUserPointer(window))->settings;
     if (!settings) return;
 
     settings->posX = xpos;
@@ -75,6 +77,8 @@ bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ke
     keybindsPtr = _keybindsPtr;
     actionRegPtr = _actionRegPtr;
     inputsPtr = _inputsPtr;
+    userData.inputs = _inputsPtr;
+    userData.settings = settingsPtr;
     
     if (!glfwInit()) return false;
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -89,7 +93,7 @@ bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ke
     }
 
     
-    glfwSetWindowUserPointer(windowPtr->getGLFWWindow(), inputsPtr);
+    glfwSetWindowUserPointer(windowPtr->getGLFWWindow(), &userData);
     initializeInputCallbacks();
     
     setWindowIcon();
@@ -103,7 +107,6 @@ bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ke
 
     glViewport(0, 0, settingsPtr->width, settingsPtr->height);
 
-    glfwSetWindowUserPointer(windowPtr->getGLFWWindow(), settingsPtr);
     glfwSetFramebufferSizeCallback(windowPtr->getGLFWWindow(), framebuffer_size_callback);
     glfwSetWindowPosCallback(windowPtr->getGLFWWindow(), window_position_callback);
 
@@ -156,22 +159,22 @@ void Platform::initializeInputCallbacks() {
     GLFWwindow* w = windowPtr->getGLFWWindow();
 
     glfwSetKeyCallback(w, [](GLFWwindow* w, int key, int scancode, int action, int mods) {
-        auto* in = static_cast<InputState*>(glfwGetWindowUserPointer(w));
+        auto* in = static_cast<WindowUserData*>(glfwGetWindowUserPointer(w))->inputs;
         if (in) in->onKey(key, action);
     });
 
     glfwSetMouseButtonCallback(w, [](GLFWwindow* w, int button, int action, int mods) {
-        auto* in = static_cast<InputState*>(glfwGetWindowUserPointer(w));
+        auto* in = static_cast<WindowUserData*>(glfwGetWindowUserPointer(w))->inputs;
         if (in) in->onMouseButton(button, action);
     });
 
     glfwSetCursorPosCallback(w, [](GLFWwindow* w, double x, double y) {
-        auto* in = static_cast<InputState*>(glfwGetWindowUserPointer(w));
+        auto* in = static_cast<WindowUserData*>(glfwGetWindowUserPointer(w))->inputs;
         if (in) in->onCursorPos(x, y);
     });
 
     glfwSetScrollCallback(w, [](GLFWwindow* w, double x, double y) {
-        auto* in = static_cast<InputState*>(glfwGetWindowUserPointer(w));
+        auto* in = static_cast<WindowUserData*>(glfwGetWindowUserPointer(w))->inputs;
         if (in) in->onScroll(x, y);
     });
 }
