@@ -100,10 +100,7 @@ void InputState::onKey(int _key, int action) {
     Key key = translateGlfwKey(_key);
     if (key == Key::Unknown) return;
 
-    const int idx = keyIndex(key);
-    // loggerPtr->addLog(LogLevel::INFO, "InputState::onKey",
-    //     "keyIndex:" + std::to_string(idx) +
-    //     " KEY_COUNT:" + std::to_string(KEY_COUNT));
+    const std::size_t idx = keyIndex(key);
     if (idx < 0 || idx >= KEY_COUNT) {
         // log both values so you can see what's wrong
         loggerPtr->addLog(LogLevel::LOG_ERROR, "InputState::onKey",
@@ -116,6 +113,9 @@ void InputState::onKey(int _key, int action) {
     if (action == 1) { // GLFW_PRESS
         if (!down[idx]) {
             pressed[idx] = 1;
+            loggerPtr->addLog(LogLevel::INFO, "InputState::onKey",
+                "pressedKeys size=" + std::to_string(pressedKeys.size()) +
+                " cap=" + std::to_string(pressedKeys.capacity()));
             pressedKeys.push_back(key);
         }
         down[idx] = 1;
