@@ -28,6 +28,8 @@
 #include "object/ModelImporter.hpp"
 #include "application/AppSettings.hpp"
 #include "application/Project.hpp"
+#include "core/ui/modals/ModalManager.hpp"
+#include "core/ui/modals/SettingsModal.hpp"
 
 struct AppContext {
     AppContext(const char* _app_title) : app_title(_app_title) {};
@@ -60,4 +62,6 @@ struct AppContext {
     MenuUI menu_ui;
     EditorUI editor_ui;
     InspectorUI inspector_ui;
+    ModalManager modals;
+    SettingsModal settingsModal;
 };

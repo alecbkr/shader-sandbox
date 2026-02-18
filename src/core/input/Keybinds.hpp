@@ -45,6 +45,7 @@ public:
     bool initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, ActionRegistry* _actionRegPtr, InputState* _inputsPtr, const std::unordered_map<std::string, SettingsKeybind>& keybindsMap);
     void shutdown();
     Binding makeBinding(Action action, KeyCombo combo, ControlCtx ctx, Trigger trigger = Trigger::Pressed, bool enabled = true);
+    void syncBindings(const std::unordered_map<std::string, SettingsKeybind>& keybindsMap);
     void setBindings(const std::vector<Binding>& b);
     void addBinding(const Binding& b);
     void clear();

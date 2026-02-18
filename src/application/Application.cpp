@@ -62,6 +62,9 @@ void initializeUI(AppContext& ctx) {
     ctx.platform.initializeImGui();
 
     ImGui_ImplOpenGL3_Init();
+
+    ctx.settingsModal.initialize(&ctx.logger, &ctx.inputs, &ctx.keybinds, &ctx.settings);
+    ctx.modals.registerModal(&ctx.settingsModal);
 }
 
 void loadPresetAssets(AppContext& ctx) {
@@ -192,7 +195,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Viewport UI was not initialized successfully.");
         return false;
     }
-    if (!ctx.menu_ui.initialize(&ctx.logger, &ctx.events)) {
+    if (!ctx.menu_ui.initialize(&ctx.logger, &ctx.events, &ctx.modals)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Menu UI was not initialized successfully.");
         return false;
     }

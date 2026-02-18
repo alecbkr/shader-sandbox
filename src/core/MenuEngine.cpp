@@ -1,5 +1,6 @@
 #include "core/MenuEngine.hpp"
 #include <array>
+#include "core/ui/modals/SettingsModal.hpp"
 
 MenuItem::MenuItem(std::string_view _name, EventType _eventType) : name(_name), eventType(_eventType) {};
 MenuItem::MenuItem(std::string_view _name, std::string_view _shortcut, EventType _eventType) : name(_name), shortcut(_shortcut), eventType(_eventType) {};
@@ -32,7 +33,7 @@ static const std::array<MenuItem, 6> fileMenu = {{
     {"Save Active Shader File", "Ctrl+S", EventType::SaveActiveShaderFile},
     {"Save Project", "Ctrl+Shift+S", EventType::SaveProject},
     {"Reload Shader", "Ctrl+R", EventType::ReloadShader},
-    {"Settings", "settings_modal", true},
+    {"Settings", SettingsModal::ID, true},
     {"Quit", "Alt+F4", EventType::Quit},
 }};
 

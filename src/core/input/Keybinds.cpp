@@ -38,11 +38,8 @@ bool Keybinds::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ac
     ctxManagerPtr = _ctxManagerPtr;
     actionRegPtr = _actionRegPtr;
     inputsPtr = _inputsPtr;
-    bindings_.clear();
-
-    for (const auto& [name, bind] : keybindsMap) {
-        addBinding(makeBinding((Action)bind.action, KeyCombo(bind.keys), (ControlCtx)bind.context, (Trigger)bind.trigger));
-    }
+    
+    syncBindings(keybindsMap);
     
     initialized = true;
     return true;
@@ -60,6 +57,13 @@ void Keybinds::shutdown() {
 
 Binding Keybinds::makeBinding(Action action, KeyCombo combo, ControlCtx ctx, Trigger trigger, bool enabled) {
     return Binding{action, combo, ctx, trigger, enabled};
+}
+
+void Keybinds::syncBindings(const std::unordered_map<std::string, SettingsKeybind>& keybindsMap) {
+    bindings_.clear();
+    for (const auto& [name, bind] : keybindsMap) {
+        addBinding(makeBinding((Action)bind.action, KeyCombo(bind.keys), (ControlCtx)bind.context, (Trigger)bind.trigger));
+    }
 }
 
 void Keybinds::setBindings(const std::vector<Binding>& b) {
