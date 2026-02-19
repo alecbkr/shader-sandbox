@@ -4,6 +4,7 @@
 #include <types.hpp>
 #include <vector>
 #include <unordered_map>
+#include "application/SettingsStyles.hpp"
 
 struct SettingsKeybind {
     const u32 action;
@@ -34,4 +35,10 @@ struct AppSettings {
         {"saveProject", {9, {47, 19}, 1, 0}},
         {"quitApplication", {10, {47, 74}, 1, 0}},
     };
+
+    // Styles
+    SettingsStyles styles;
+
+    // Graphics
+    bool vsyncEnabled = false;
 };

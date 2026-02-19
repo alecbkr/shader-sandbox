@@ -42,6 +42,12 @@ bool SettingsLoader::load(AppSettings& settings) {
                 }
             }
         }
+
+        // Load Styles
+        settings.styles.loadStyles(j);
+
+        // Load graphics
+        settings.vsyncEnabled = j.value("vsync", settings.vsyncEnabled);
     } catch (...) {
         return false;
     }
@@ -64,6 +70,10 @@ void SettingsLoader::save(const AppSettings& settings) {
         keybinds[name] = bind.keys;
     }
     j["keybinds"] = keybinds;
+
+    settings.styles.saveStyles(j);
+
+    j["vsync"] = settings.vsyncEnabled;
 
     std::ofstream out(settings.settingsPath);
     out << j.dump(4);

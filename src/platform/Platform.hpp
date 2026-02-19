@@ -32,6 +32,7 @@ public:
     void setWindowIcon();
     double getTime();
     std::filesystem::path getExeDir() const;
+    void swapInterval(int interval);
     void terminate();
 
 private:

@@ -61,9 +61,18 @@ void initializeUI(AppContext& ctx) {
 
     ctx.platform.initializeImGui();
 
+    ImFont* mainFont = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 18.0f);
+    if (mainFont) ImGui::PushFont(mainFont);
+
+    if (!ctx.settings.styles.hasLoadedStyles) {
+        ImGui::StyleColorsDark();
+        ctx.settings.styles.captureFromImGui(ImGui::GetStyle());
+    }
+    ctx.settings.styles.applyToImGui(ImGui::GetStyle());
+
     ImGui_ImplOpenGL3_Init();
 
-    ctx.settingsModal.initialize(&ctx.logger, &ctx.inputs, &ctx.keybinds, &ctx.settings);
+    ctx.settingsModal.initialize(&ctx.logger, &ctx.inputs, &ctx.keybinds, &ctx.platform, &ctx.settings);
     ctx.modals.registerModal(&ctx.settingsModal);
 }
 
@@ -235,7 +244,6 @@ void Application::runLoop(AppContext& ctx) {
         Application::renderUI(ctx);
         ctx.platform.swapBuffers();
     }
-    ctx.platform.terminate();
 }
 
 void Application::renderUI(AppContext& ctx) {
@@ -260,6 +268,8 @@ void Application::renderUI(AppContext& ctx) {
 }
 
 void Application::shutdown(AppContext& ctx) {
+    ctx.settings.styles.captureFromImGui(ImGui::GetStyle());
+    ctx.platform.terminate();
     // UI Shutdown
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
