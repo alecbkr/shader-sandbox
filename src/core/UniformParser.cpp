@@ -19,7 +19,7 @@ std::unordered_map<std::string, Uniform> UniformParser::parseUniforms(const Shad
 
     std::vector<std::string> tokens = tokenizeShaderCode(program);
     std::unordered_map<std::string, std::vector<UniformInStruct>> structDefinitions;
-    std::stack<std::string> currentStructNames;
+    std::string currentStructName;
     std::string typeName;
     
     LastTokenWas lastTokenWas = LastTokenWas::IgnoreLastToken;
@@ -46,16 +46,16 @@ std::unordered_map<std::string, Uniform> UniformParser::parseUniforms(const Shad
                 }
 
                 typeName = token;
-                lastTokenWas = LastTokenWas::Type;
+                lastTokenWas = LastTokenWas::TypeName;
                 break;
             }
-            case LastTokenWas::Type: {
+            case LastTokenWas::TypeName: {
                 // If we read a type, at this point the only thing we can do is read the name of a variable.
+                std::string& uniformName = token;
                 if (state == ParseState::StructDefinition) {
-                    
+                    handleUniformName(programUniforms, uniformName, typeName, structDefinitions, tokens, i, currentStructName);
                 }
                 else if (state == ParseState::UniformDeclaration) {
-                    std::string& uniformName = token;
                     handleUniformName(programUniforms, uniformName, typeName, structDefinitions, tokens, i);
                 }
                 else {
@@ -98,13 +98,12 @@ std::unordered_map<std::string, Uniform> UniformParser::parseUniforms(const Shad
             case LastTokenWas::SemiColon: {
                 if (state == ParseState::StructDefinition) {
                     if (token == "}") {
-                        if (currentStructNames.empty()) {
-                             state = ParseState::Default;
-                        }
+                        state = ParseState::Default;
+                        lastTokenWas = LastTokenWas::IgnoreLastToken;
                     } 
                     else if (glslTypeMap.contains(token) || structDefinitions.contains(token)) {
                         typeName = token;
-                        lastTokenWas = LastTokenWas::Type;
+                        lastTokenWas = LastTokenWas::TypeName;
                     } 
                     else {
                         loggerPtr->addLog(LogLevel::LOG_ERROR, "parseUniforms", "expected '}' or type in struct, got: " + token);
@@ -128,10 +127,8 @@ std::unordered_map<std::string, Uniform> UniformParser::parseUniforms(const Shad
                 break;
             }
             case LastTokenWas::Struct: {
-                std::string& structName = token;
-                currentStructNames.push(structName);
-                structDefinitions[structName] = {};
-                std::vector<UniformInStruct>& uniformsInStruct = structDefinitions[structName];
+                currentStructName = token;
+                structDefinitions[currentStructName] = {};
                 lastTokenWas = LastTokenWas::StructName;
                 
                 break;
@@ -143,6 +140,17 @@ std::unordered_map<std::string, Uniform> UniformParser::parseUniforms(const Shad
                 }
                 lastTokenWas = LastTokenWas::LeftCurlyBrace;
 
+                break;
+            }
+            case LastTokenWas::LeftCurlyBrace: {
+                // opening up the struct definition. this token is either ending struct (empty struct)
+                // or we're reading a type name
+                if (token == "}") {
+                    lastTokenWas = LastTokenWas::IgnoreLastToken;
+                    state = ParseState::Default;
+                }
+                typeName = token;
+                lastTokenWas = LastTokenWas::TypeName;
                 break;
             }
         }
@@ -216,7 +224,22 @@ std::vector<std::string> UniformParser::tokenizeShaderCode(const ShaderProgram& 
     return tokens;
 }
 
-void UniformParser::handleUniformName(std::unordered_map<std::string, Uniform>& programUniforms, std::string& uniformName, std::string typeName, std::unordered_map<std::string, std::vector<UniformInStruct>>& structDefinitions, std::vector<std::string>& tokens, int tokenIndex) {
+void UniformParser::handleUniformName(
+    std::unordered_map<std::string, Uniform>& programUniforms,
+    const std::string& uniformName,
+    const std::string& typeName,
+    std::unordered_map<std::string, std::vector<UniformInStruct>>& structDefinitions,
+    const std::vector<std::string>& tokens,
+    int tokenIndex,
+    const std::string& structName   // optional: "" at top level, parent name when recursing
+) {
+    ParseState state;
+    // structName is "" by default
+    if (structName.empty()) {
+        state = ParseState::UniformDeclaration;
+    }
+    else state = ParseState::StructDefinition;
+
     // rare case where we just handle tokens manually.
     bool isArray = tokenIndex < tokens.size() - 4 && tokens[tokenIndex + 1] == "[";
     bool isStruct = structDefinitions.contains(typeName);
@@ -227,15 +250,21 @@ void UniformParser::handleUniformName(std::unordered_map<std::string, Uniform>& 
             loggerPtr->addLog(LogLevel::LOG_ERROR, "UniformParser::appendUniform", "type " + typeName + " not supported yet");
             return;
         }
-        UniformType type = glslTypeMap.at(typeName); 
-        programUniforms[uniformName] = Uniform{.name = uniformName, .type = type};
+        if (state == ParseState::UniformDeclaration) {
+            UniformType type = glslTypeMap.at(typeName); 
+            programUniforms[uniformName] = Uniform{.name = uniformName, .type = type};
+        }
+        else if (state == ParseState::StructDefinition) {
+            std::vector<UniformInStruct>& uniformsInStruct = structDefinitions.at(structName);
+            uniformsInStruct.push_back(UniformInStruct{.uniformName = uniformName, .typeName = typeName});
+        }
         return;
     }
 
     // Handle array
     if (isArray) {
-        std::string& arraySizeToken = tokens[tokenIndex + 2];
-        std::string& rightBracket = tokens[tokenIndex + 3];
+        const std::string& arraySizeToken = tokens[tokenIndex + 2];
+        const std::string& rightBracket = tokens[tokenIndex + 3];
 
         bool isDigit = true;
         for (char a : arraySizeToken) {
@@ -256,7 +285,7 @@ void UniformParser::handleUniformName(std::unordered_map<std::string, Uniform>& 
         
         for (int i = 0; i< arraySize; i++) {
             std::string nameToUse = uniformName + "[" + std::to_string(i) + "]";
-            handleUniformName(programUniforms, nameToUse, typeName, structDefinitions, tokens, tokenIndex + 4);
+            handleUniformName(programUniforms, nameToUse, typeName, structDefinitions, tokens, tokenIndex + 4, structName);
         }
         return;
     }
@@ -265,10 +294,14 @@ void UniformParser::handleUniformName(std::unordered_map<std::string, Uniform>& 
     // Recursion, yay. 
     // Might be better to use a stack based approach, but this is fine for now. It might fail under 20+ nested structs, 
     // but who is doing that???
-    std::vector<UniformInStruct> structUniforms;
+    if (!isStruct) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "UniformParser::parseUniforms", "Error: on struct path but not handling a struct...");
+        return;
+    }
+    std::vector<UniformInStruct> structUniforms = structDefinitions.at(typeName);
     for (UniformInStruct uni : structUniforms) {
         std::string uniName = uniformName + '.' + uni.uniformName;
-        handleUniformName(programUniforms, uniName, uni.typeName, structDefinitions, tokens, tokenIndex);
+        handleUniformName(programUniforms, uniName, uni.typeName, structDefinitions, tokens, tokenIndex, structName);
     }
     return;
 }
