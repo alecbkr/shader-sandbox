@@ -1,4 +1,5 @@
 #include "InspectorEngine.hpp"
+#include "core/UniformParser.hpp"
 #include "core/logging/LogSink.hpp"
 #include "core/ui/ViewportUI.hpp"
 #include "engine/Camera.hpp"
@@ -6,6 +7,7 @@
 #include "logging/Logger.hpp"
 #include "core/UniformRegistry.hpp"
 #include <memory>
+#include <stack>
 #include <string>
 #include <unordered_map>
 #include <sstream>
@@ -80,8 +82,13 @@ void InspectorEngine::refreshUniforms() {
     }
 
     // sry for the nesting
+    UniformParser parser(loggerPtr);
+
     for (const auto& [programName, program] : programs) {
-        const auto& parsedUniforms = parseUniforms(*program);
+        auto parsedUniforms = parser.parseUniforms(*program);
+        for (auto& [name, uniform] : parsedUniforms) {
+            uniform.value = getDefaultValue(uniform.type);
+        }
         std::cout << programName << std::endl;
         std::cout << programToObjectList[programName].size() << std::endl;
         for (unsigned int modelID : programToObjectList[programName]) {
@@ -139,116 +146,6 @@ bool InspectorEngine::handleEditShaderProgram(const std::string& vertexFile, con
 
     InspectorEngine::refreshUniforms();
     return true;
-}
-
-std::vector<std::string> InspectorEngine::tokenizeShaderCode(const ShaderProgram& program) {
-    // Cursor wrote this, it seemed good and caught a lot of stuff I wouldn't have first try.
-    std::string source = program.vertShader_code + "\n" + program.fragShader_code;
-    std::vector<std::string> tokens;
-    tokens.reserve(source.size() / 4u); 
-
-    enum { Normal, LineComment, BlockComment, DoubleQuotedString, SingleQuotedString } state = Normal;
-    std::string currentToken;
-
-    for (size_t i = 0; i < source.size(); ) {
-        char currentChar = source[i];
-        char nextChar = (i + 1 < source.size()) ? source[i + 1] : '\0';
-
-        switch (state) {
-        case Normal: {
-            if (std::isspace(static_cast<unsigned char>(currentChar))) {
-                i++;
-                continue;
-            }
-            if (currentChar == '/' && nextChar == '/') { state = LineComment; i += 2; continue; }
-            if (currentChar == '/' && nextChar == '*') { state = BlockComment; i += 2; continue; }
-            if (currentChar == '"') { state = DoubleQuotedString; i++; continue; }
-            if (currentChar == '\'') { state = SingleQuotedString; i++; continue; }
-
-            if (std::isalpha(static_cast<unsigned char>(currentChar)) || currentChar == '_') {
-                currentToken.clear();
-                while (i < source.size() && (std::isalnum(static_cast<unsigned char>(source[i])) || source[i] == '_'))
-                    currentToken += source[i++];
-                tokens.push_back(currentToken);
-                continue;
-            }
-            if (std::isdigit(static_cast<unsigned char>(currentChar)) || (currentChar == '.' && i + 1 < source.size() && std::isdigit(static_cast<unsigned char>(source[i + 1])))) {
-                currentToken.clear();
-                while (i < source.size() && (std::isdigit(static_cast<unsigned char>(source[i])) || source[i] == '.' || source[i] == 'e' || source[i] == 'E' || source[i] == '-' || source[i] == '+'))
-                    currentToken += source[i++];
-                tokens.push_back(currentToken);
-                continue;
-            }
-            if (currentChar == ';' || currentChar == ',' || currentChar == '[' || currentChar == ']' || currentChar == '{' || currentChar == '}' || currentChar == '(' || currentChar == ')') {
-                tokens.push_back(std::string(1, currentChar));
-                i++;
-                continue;
-            }
-            i++;
-            break;
-        } case LineComment: {
-            if (currentChar == '\n') state = Normal;
-            i++;
-            break;
-        } case BlockComment: {
-            if (currentChar == '*' && nextChar == '/') { state = Normal; i += 2; continue; }
-            i++;
-            break;
-        } case DoubleQuotedString: case SingleQuotedString: {
-            if (currentChar == '\\') { i += 2; continue; }
-            if ((state == DoubleQuotedString && currentChar == '"') || (state == SingleQuotedString && currentChar == '\'')) state = Normal;
-            i++;
-            break;
-        }
-        }
-    }
-
-    return tokens;
-}
-
-std::unordered_map<std::string, Uniform> InspectorEngine::parseUniforms(const ShaderProgram& program) {
-    std::unordered_map<std::string, Uniform> programUniforms;
-    if (!program.isCompiled()) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "parseUniforms", "should not be parsing an invalid shader program!");
-        return programUniforms;
-    }
-    // This code assumes the shader file is valid, and thus doesn't check syntax
-
-    std::vector<std::string> tokens = tokenizeShaderCode(program);
-    std::unordered_set<std::string> structNames;
-    Uniform currentUniform;
-    
-    enum class LT { Searching, Uniform, StructName, Type, UniformName, SemiColon, Comma, Struct };
-    LT lastToken = LT::Searching;
-    for (int i = 0; i < tokens.size(); i++) {
-        std::string& token = tokens[i];
-        switch (lastToken) {
-            case LT::Searching: {
-                if (token == "uniform") {
-                    lastToken = LT::Uniform;
-                }
-                break;
-            }
-            case LT::Uniform: {
-                if (structNames.contains(token))
-                auto typePair = typeMap.find(token);
-                if (typePair == typeMap.end()) {
-                    loggerPtr->addLog(LogLevel::WARNING, "parseUnifoms", "Invalid Uniform Type: ", token); 
-                    continue;
-                }
-                currentUniform.type = typePair->second;
-                break;
-            }
-            case LT::Type: {
-                
-            }
-            case LT::Struct: {
-
-            }
-        }
-    }
-
-    return programUniforms;
 }
 
 void InspectorEngine::assignDefaultValue(Uniform& uniform) {
@@ -559,7 +456,11 @@ void InspectorEngine::reloadUniforms(unsigned int modelID) {
         return;
     }
 
-    auto newUniforms = parseUniforms(*modelProgram);
+    UniformParser parser(loggerPtr);
+    auto newUniforms = parser.parseUniforms(*modelProgram);
+    for (auto& [name, uniform] : newUniforms) {
+        uniform.value = getDefaultValue(uniform.type);
+    }
 
     for (auto& [id, modelPtr] : modelCachePtr->modelIDMap) {
         if (modelPtr && modelPtr->getProgramID() == modelProgram->name) {

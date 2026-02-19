@@ -29,6 +29,16 @@ inline std::string to_string(UniformType type) {
     return "Unknown(string for this type not added yet!";
 }
 
+const std::unordered_map<std::string, UniformType> glslTypeMap = {
+    {"vec3", UniformType::Vec3},
+    {"vec4", UniformType::Vec4},
+    {"int", UniformType::Int},
+    {"float", UniformType::Float},
+    {"mat4", UniformType::Mat4},
+    {"sampler2D", UniformType::Sampler2D}
+};
+
+
 
 struct InspectorSampler2D {
     int textureUnit; 
