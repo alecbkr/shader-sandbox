@@ -25,9 +25,6 @@ public:
     }; 
 
 private:
-
-    SearchText searcher;
-
     float targetWidth = 0.0f;
     float targetHeight = 0.0f;
     ImVec2 windowPos = ImVec2(0, 0);
@@ -35,6 +32,7 @@ private:
     std::shared_ptr<ConsoleEngine> engine = nullptr; 
     std::shared_ptr<ConsoleSink> logSrc = nullptr;
     Logger* loggerPtr; 
+    SearchText searcher;
     TextSelectionCtx selectionCtx; 
     TextSelectorLayout selectionLayout; 
 
@@ -49,7 +47,6 @@ private:
     void drawSingleLog(const LogEntry& log, int index, int repeatCount, bool& isScroll);
 
     // Allows for users to copy their logs from the console
-    void copyLogsToClipboard(); 
     LogStyle getLogStyle(const LogEntry& log); 
     std::string formatLogString(const LogEntry& log); 
     bool isLogFiltered(const LogEntry& log); 
