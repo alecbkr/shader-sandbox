@@ -1,10 +1,12 @@
 #include "EditorEngine.hpp"
 #include <fstream>
 #include <filesystem>
+#include <limits>
 #include "core/logging/Logger.hpp"
 #include "core/EventDispatcher.hpp"
 #include "object/ModelCache.hpp"
 #include "core/ShaderRegistry.hpp"
+#include "application/SettingsStyles.hpp"
 
 std::string getFileContents(std::string filename) {
     std::ifstream in(filename, std::ios::binary);
@@ -20,32 +22,39 @@ std::string getFileContents(std::string filename) {
     return "";
 }
 
-Editor::Editor(std::string filePath, std::string fileName, unsigned int modelID) {
-    this->filePath = filePath;
-    this->fileName = fileName;
+Editor::Editor(std::string filePath, std::string fileName, unsigned int modelID, SettingsStyles* styles) {
+    this->filePath = std::move(filePath);
+    this->fileName = std::move(fileName);
     this->modelID = modelID;
-
-    auto lang = TextEditor::LanguageDefinition::GLSL();
-    // Will probably need to find the entire list of glsl keywords
-    const char* const glslKeywords[] = {
-        "vec2", "vec3", "vec4", "mat2", "mat3", "mat4", "sampler2D", "samplerCube", 
-        "out", "in", "uniform", "layout"
-    };
-
-    for (auto& k : glslKeywords)
-        lang.mKeywords.insert(k);
-
+    this->stylesPtr = styles;
+    seenPaletteVersion = std::numeric_limits<u32>::max();
+    
+    TextEditor::LanguageDefinition lang = TextEditor::LanguageDefinition::GLSL();
     this->textEditor.SetLanguageDefinition(lang);
-    auto palette = TextEditor::GetDarkPalette();
     this->textEditor.SetShowWhitespaces(false);
+    applyPaletteIfOutdated();
 
-    // Change palette colors here
-    palette[(int)TextEditor::PaletteIndex::Identifier] = 0xff9cdcfe;
-    palette[(int)TextEditor::PaletteIndex::Keyword] = 0xffd197d9;
-    textEditor.SetPalette(palette);
+    this->textEditor.SetText(getFileContents(this->filePath));
+}
 
-    std::string content = getFileContents(filePath);
-    this->textEditor.SetText(content);
+void Editor::render() {
+    applyPaletteIfOutdated();
+    textEditor.Render("ShaderEditor");
+}
+
+void Editor::applyPaletteIfOutdated() {
+    if (stylesPtr->paletteVersion != seenPaletteVersion) {
+        if (stylesPtr->hasLoadedPalette) {
+            TextEditor::Palette pal;
+            for (int i = 0; i < (int)TextEditor::PaletteIndex::Max; ++i) {
+                pal[i] = ImGui::ColorConvertFloat4ToU32(stylesPtr->editorPalette[i]);
+            }
+            textEditor.SetPalette(pal);
+            seenPaletteVersion = stylesPtr->paletteVersion;
+        } else {
+            textEditor.SetPalette(TextEditor::GetDarkPalette());
+        }
+    }
 }
 
 void Editor::destroy() {
@@ -58,11 +67,12 @@ EditorEngine::EditorEngine() {
     eventsPtr = nullptr;
     modelCachePtr = nullptr;
     shaderRegPtr = nullptr;
+    stylesPtr = nullptr;
     editors.clear();
     activeEditor = 0;
 }
 
-bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, ShaderRegistry* _shaderRegPtr) {
+bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, ShaderRegistry* _shaderRegPtr, SettingsStyles* styles) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Editor Engine Initialization", "Editor Engine was already initialized.");
         return false;
@@ -71,6 +81,7 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
     eventsPtr = _eventsPtr;
     modelCachePtr = _modelCachePtr;
     shaderRegPtr = _shaderRegPtr;
+    stylesPtr = styles;
     editors.clear();
     activeEditor = 0;
 
@@ -78,6 +89,17 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
     eventsPtr->Subscribe(EventType::NewFile, std::bind(&EditorEngine::spawnEditor, this, std::placeholders::_1));
     eventsPtr->Subscribe(EventType::RenameFile, std::bind(&EditorEngine::renameEditor, this, std::placeholders::_1));
     eventsPtr->Subscribe(EventType::DeleteFile, std::bind(&EditorEngine::deleteEditor, this, std::placeholders::_1));
+
+    // syncing styles with settings if no loaded settings
+    if (!stylesPtr->hasLoadedPalette) {
+        const auto& dark = TextEditor::GetDarkPalette();
+
+        for (int i = 0; i < (int)TextEditor::PaletteIndex::Max; ++i) {
+            stylesPtr->editorPalette[i] = ImGui::ColorConvertU32ToFloat4(dark[i]);
+        }
+
+        stylesPtr->hasLoadedPalette = true;
+    }
     
     initialized = true;
     return true;
@@ -111,9 +133,9 @@ bool EditorEngine::spawnEditor(const EventPayload& payload) {
             }
         }
         if (!data->filePath.empty()) {
-            editors.push_back(new Editor(data->filePath, data->fileName, linkedID));
+            editors.push_back(new Editor(data->filePath, data->fileName, linkedID, stylesPtr));
         } else {
-            editors.push_back(new Editor("../shaders/tex.frag", "tex.frag", linkedID));
+            editors.push_back(new Editor("../shaders/tex.frag", "tex.frag", linkedID, stylesPtr));
         }
         return true;
     } else if (std::get_if<std::monostate>(&payload)) {
@@ -121,7 +143,7 @@ bool EditorEngine::spawnEditor(const EventPayload& payload) {
             const std::string fileName = "Untitled " + findNextUntitledNumber();
             const std::string filePath = "../shaders/" + fileName;
             createFile(filePath);
-            editors.push_back(new Editor(filePath, fileName, 0));
+            editors.push_back(new Editor(filePath, fileName, 0, stylesPtr));
             return true;
         } catch (const std::filesystem::filesystem_error& e) {
             loggerPtr->addLog(LogLevel::LOG_ERROR, "EditorEngine::createFile", std::string("Filesystem error: ") + e.what());

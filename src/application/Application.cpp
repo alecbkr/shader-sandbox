@@ -73,7 +73,8 @@ void Application::initializeUI(AppContext& ctx) {
     fonts[2] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 18.0f);
     fonts[3] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 21.0f);
     fonts[4] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 24.0f);
-    fonts[5] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 27.0f);  
+    fonts[5] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 27.0f);
+    fontIdx = ctx.settings.fontIdx;
     io.FontDefault = fonts[fontIdx];
 
     if (!ctx.settings.styles.hasLoadedStyles) {
@@ -193,7 +194,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "File Registry was not initialized successfully.");        
         return false;
     }
-    if (!ctx.editor_engine.initialize(&ctx.logger, &ctx.events, &ctx.model_cache, &ctx.shader_registry)) {
+    if (!ctx.editor_engine.initialize(&ctx.logger, &ctx.events, &ctx.model_cache, &ctx.shader_registry, &ctx.settings.styles)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Editor Engine was not initialized successfully.");
         return false;
     }
@@ -285,6 +286,7 @@ void Application::renderUI(AppContext& ctx) {
 
 void Application::shutdown(AppContext& ctx) {
     ctx.settings.styles.captureFromImGui(ImGui::GetStyle());
+    ctx.settings.fontIdx = fontIdx;
     ctx.platform.terminate();
     // UI Shutdown
     ImGui_ImplOpenGL3_Shutdown();

@@ -194,7 +194,7 @@ void SettingsModal::drawStylesPage() {
     };
 
     // ===== Global =====
-    if (ImGui::CollapsingHeader("Global", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Global")) {
         ImGui::Indent();
         if (beginSectionTable("##style_global")) {
             row("Alpha", [&] { ImGui::SliderFloat("##Alpha", &style.Alpha, 0.1f, 1.0f, "%0.2f"); });
@@ -206,7 +206,7 @@ void SettingsModal::drawStylesPage() {
     }
 
     // ===== Window =====
-    if (ImGui::CollapsingHeader("Window", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Window")) {
         ImGui::Indent();
         if (beginSectionTable("##style_window")) {
             row("Window Padding", [&] { ImGui::SliderFloat2("##WindowPadding", &style.WindowPadding.x, 1.0f, 20.0f, "%0.1f"); });
@@ -236,7 +236,7 @@ void SettingsModal::drawStylesPage() {
     }
 
     // ===== Child & Popup =====
-    if (ImGui::CollapsingHeader("Child & Popup", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Child & Popup")) {
         ImGui::Indent();
         if (beginSectionTable("##style_child_popup")) {
             row("Child Rounding", [&] { ImGui::SliderFloat("##ChildRounding", &style.ChildRounding, 0.0f, 10.0f, "%0.1f"); });
@@ -250,7 +250,7 @@ void SettingsModal::drawStylesPage() {
     }
 
     // ===== Frame & Layout =====
-    if (ImGui::CollapsingHeader("Frame & Layout", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Frame & Layout")) {
         ImGui::Indent();
         if (beginSectionTable("##style_frame_layout")) {
             row("Frame Padding", [&] { ImGui::SliderFloat2("##FramePadding", &style.FramePadding.x, 2.0f, 16.0f, "%0.1f"); });
@@ -272,7 +272,7 @@ void SettingsModal::drawStylesPage() {
     }
 
     // ===== Scrollbar & Grabs =====
-    if (ImGui::CollapsingHeader("Scrollbars & Grabs", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Scrollbars & Grabs")) {
         ImGui::Indent();
         if (beginSectionTable("##style_scroll_grab")) {
             row("Scrollbar Size", [&] { ImGui::SliderFloat("##ScrollbarSize", &style.ScrollbarSize, 5.0f, 25.0f, "%0.0f"); });
@@ -287,7 +287,7 @@ void SettingsModal::drawStylesPage() {
     }
 
     // ===== Tabs =====
-    if (ImGui::CollapsingHeader("Tabs", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Tabs")) {
         ImGui::Indent();
         if (beginSectionTable("##style_tabs")) {
             row("Tab Rounding", [&] { ImGui::SliderFloat("##TabRounding", &style.TabRounding, 0.0f, 12.0f, "%0.1f"); });
@@ -305,7 +305,7 @@ void SettingsModal::drawStylesPage() {
     }
 
     // ===== Tables & Tree =====
-    if (ImGui::CollapsingHeader("Tables & Tree", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Tables & Tree")) {
         ImGui::Indent();
         if (beginSectionTable("##style_tables_tree")) {
             row("Table Header Angle", [&] { ImGui::SliderFloat("##TableAngledHeadersAngle", &style.TableAngledHeadersAngle, -50.0f, 50.0f, "%0.1f"); });
@@ -341,7 +341,7 @@ void SettingsModal::drawStylesPage() {
     }
 
     // ===== Drag & Drop =====
-    if (ImGui::CollapsingHeader("Drag & Drop", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Drag & Drop")) {
         ImGui::Indent();
         if (beginSectionTable("##style_dragdrop")) {
             row("Target Rounding", [&] { ImGui::SliderFloat("##DragDropTargetRounding", &style.DragDropTargetRounding, 0.0f, 12.0f, "%0.1f"); });
@@ -354,7 +354,7 @@ void SettingsModal::drawStylesPage() {
     }
 
     // ===== Text & Alignment =====
-    if (ImGui::CollapsingHeader("Text & Alignment", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Text & Alignment")) {
         ImGui::Indent();
         if (beginSectionTable("##style_text_align")) {
             row("Color Button Position", [&] {
@@ -379,7 +379,7 @@ void SettingsModal::drawStylesPage() {
     }
 
     // ===== Rendering =====
-    if (ImGui::CollapsingHeader("Rendering", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Rendering")) {
         ImGui::Indent();
         if (beginSectionTable("##style_rendering")) {
             row("AntiAliased Lines", [&] { ImGui::Checkbox("##AntiAliasedLines", &style.AntiAliasedLines); });
@@ -396,7 +396,7 @@ void SettingsModal::drawStylesPage() {
     }
 
     // ===== Misc =====
-    if (ImGui::CollapsingHeader("Misc", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Misc")) {
         ImGui::Indent();
         if (beginSectionTable("##style_misc")) {
             row("Log Slider Deadzone", [&] { ImGui::SliderFloat("##LogSliderDeadzone", &style.LogSliderDeadzone, 0.0f, 12.0f, "%0.1f"); });
@@ -422,28 +422,57 @@ void SettingsModal::drawStylesPage() {
         "NavWindowingDimBg","ModalWindowDimBg"
     };
 
-    if (ImGui::CollapsingHeader("Colors", ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (ImGui::CollapsingHeader("Application Colors")) {
         ImGui::Indent();
-
-        ImGui::TextDisabled("Tip: Hover widgets to see live preview changes.");
-
-        // Picker + preview aligned nicely
         if (beginSectionTable("##style_colors")) {
             row("Style Color", [&] { ImGui::Combo("##StyleColor", &selectedStyleColor, kColorNames, ImGuiCol_COUNT); });
-
-            row("Preview", [&] {
-                ImGui::ColorButton("##style_color_preview",
-                    style.Colors[selectedStyleColor],
-                    ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop,
-                    ImVec2(60, 18));
-            });
-
             endSectionTable();
         }
-
         ImGui::Spacing();
-        ImGui::ColorPicker4("##Picker", &style.Colors[selectedStyleColor].x);
 
+        const float pickerWidth = 240.0f;
+        float avail = ImGui::GetContentRegionAvail().x;
+        float x = ImGui::GetCursorPosX() + (avail - pickerWidth) * 0.5f;
+        if (x > ImGui::GetCursorPosX()) ImGui::SetCursorPosX(x);
+
+        ImGui::PushItemWidth(pickerWidth);
+        ImGui::ColorPicker4("##Picker", &style.Colors[selectedStyleColor].x,
+            ImGuiColorEditFlags_NoSmallPreview |
+            ImGuiColorEditFlags_PickerHueBar
+        );
+        ImGui::PopItemWidth();
+        ImGui::Unindent();
+    }
+
+    // ===== Editor Colors =====
+    static const char* kEditorPaletteNames[] = {
+        "Default", "Keyword", "Number", "String", "CharLiteral", "Punctuation", "Preprocessor", "Identifier", "KnownIdentifier",
+        "PreprocIdentifier", "Comment", "MultiLineComment", "Background", "Cursor", "Selection", "ErrorMarker", "Breakpoint", "LineNumber",
+        "CurrentLineFill", "CurrentLineFillInactive", "CurrentLineEdge"
+    };
+
+    if (ImGui::CollapsingHeader("Editor Colors")) {
+        ImGui::Indent();
+        if (beginSectionTable("##style_editorcolors")) {
+            row("Style Color", [&] { ImGui::Combo("##StyleColor", &selectedEditorStyleColor, kEditorPaletteNames, 21); });
+            endSectionTable();
+        }
+        ImGui::Spacing();
+
+        const float pickerWidth = 240.0f;
+        float avail = ImGui::GetContentRegionAvail().x;
+        float x = ImGui::GetCursorPosX() + (avail - pickerWidth) * 0.5f;
+        if (x > ImGui::GetCursorPosX()) ImGui::SetCursorPosX(x);
+
+        ImGui::PushItemWidth(pickerWidth);
+        static ImVec4 tempColor = ImVec4(1, 1, 1, 1);
+        if (ImGui::ColorPicker4("##Picker", &settingsPtr->styles.editorPalette[selectedEditorStyleColor].x,
+            ImGuiColorEditFlags_NoSmallPreview |
+            ImGuiColorEditFlags_PickerHueBar
+        )) {
+            settingsPtr->styles.paletteVersion++;
+        }
+        ImGui::PopItemWidth();
         ImGui::Unindent();
     }
 
