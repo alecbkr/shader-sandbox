@@ -33,6 +33,9 @@ public:
     double getTime();
     std::filesystem::path getExeDir() const;
     void swapInterval(int interval);
+    void iconifyWindow();
+    void maximizeWindow();
+    void moveWindowPosRelative(int x, int y);
     void terminate();
 
 private:

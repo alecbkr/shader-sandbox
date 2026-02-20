@@ -7,11 +7,13 @@
 class Logger;
 class EventDispatcher;
 class Keybinds;
+class Platform;
+struct AppContext;
 
 class MenuUI {
 public:
     MenuUI();
-    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModalManager* _modalsPtr, Keybinds* _keybindsPtr);
+    bool initialize(Logger* _loggerPtr, Platform* _platformPtr, EventDispatcher* _eventsPtr, ModalManager* _modalsPtr, Keybinds* _keybindsPtr, AppContext* ctx);
     void render();
 
 private:
@@ -20,6 +22,8 @@ private:
     EventDispatcher* eventsPtr = nullptr;
     ModalManager* modalsPtr = nullptr;
     Keybinds* keybindsPtr = nullptr;
+    Platform* platformPtr = nullptr;
+    AppContext* appctx = nullptr;
     void drawMenuBar();
     void drawMenuItem(const MenuItem& item);
 };

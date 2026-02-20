@@ -7,22 +7,6 @@ MenuItem::MenuItem(std::string_view _name, Action _action, EventType _eventType)
 MenuItem::MenuItem(bool _isSeparator) : isSeparator(_isSeparator) {};
 MenuItem::MenuItem(std::string_view _name, std::string_view _modalName, bool _opensModal) : name(_name), modalName(_modalName), opensModal(_opensModal) {};
 MenuItem::MenuItem(std::string_view _name, std::span<const MenuItem> _children) : name(_name), children(_children) {};
-// Example of how a more complex menu might look.
-
-// static constexpr std::array<MenuItem, 2> exportMenu = {{
-//     {"Export Image...", "Ctrl+E"},
-//     {"Export Shader..."},
-// }};
-
-// static constexpr std::array<MenuItem, 7> fileMenu = {{
-//     {"New", "Ctrl+N"},
-//     {"Open...", "Ctrl+O"},
-//     {"", "", true}, // separator line
-//     {"Export", std::span<const MenuItem>(exportMenu)},
-//     {"", "", true}, // separator line
-//     {"Save Active Shader File", "Ctrl+S", false},
-//     {"Quit", "Alt+F4"},
-// }};
 
 static const std::array<MenuItem, 8> fileMenu = {{
     {"New Shader File", Action::NewShaderFile, EventType::NewFile},

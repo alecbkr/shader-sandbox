@@ -206,6 +206,20 @@ void Platform::swapInterval(int interval) {
     glfwSwapInterval(interval);
 }
 
+void Platform::iconifyWindow() {
+    glfwIconifyWindow(windowPtr->getGLFWWindow());
+}
+
+void Platform::maximizeWindow() {
+    glfwMaximizeWindow(windowPtr->getGLFWWindow());
+}
+
+void Platform::moveWindowPosRelative(int x, int y) {
+    int wx, wy;
+    glfwGetWindowPos(windowPtr->getGLFWWindow(), &wx, &wy);
+    glfwSetWindowPos(windowPtr->getGLFWWindow(), wx + x, wy + y);
+}
+
 void Platform::terminate(){
     glfwTerminate();
 }
