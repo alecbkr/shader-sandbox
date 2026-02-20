@@ -45,6 +45,7 @@ private:
     KeybindCapture capture;
 
     int selectedStyleColor = 0;
+    int selectedEditorStyleColor = 0;
 
     void updateCaptureFromInput();
     std::string formatKeys(const std::vector<u16>& keys) const;

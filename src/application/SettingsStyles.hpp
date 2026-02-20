@@ -2,10 +2,15 @@
 #include <array>
 #include <imgui/imgui.h>
 #include <nlohmann/json.hpp>
+#include <types.hpp>
+#include "core/ui/TextEditor.h"
+
 using json = nlohmann::json;
 
 struct SettingsStyles {
     bool hasLoadedStyles = false;
+    bool hasLoadedPalette = false;
+    u32 paletteVersion = 0;
 
     // ---- Core ----
     float alpha = 1.0f;
@@ -101,6 +106,12 @@ struct SettingsStyles {
 
     // UI helper (not really style, but tied to style page UX)
     int selectedStyleColor = ImGuiCol_Text;
+
+    static constexpr int EditorPaletteCount = (int)TextEditor::PaletteIndex::Max;
+    std::array<ImVec4, EditorPaletteCount> editorPalette = {};
+
+    // UI helper for the settings page
+    int selectedEditorPaletteColor = 0;
 
     // ---- Apply / Capture ----
     void applyToImGui(ImGuiStyle& s) const {
@@ -355,6 +366,18 @@ struct SettingsStyles {
         }
         s["colors"] = colorArray;
 
+        // Editor Palette
+        json editorPaletteArray = json::array();
+        for (int i = 0; i < EditorPaletteCount; i++) {
+            editorPaletteArray.push_back({
+                editorPalette[i].x,
+                editorPalette[i].y,
+                editorPalette[i].z,
+                editorPalette[i].w
+            });
+        }
+        s["editorPalette"] = editorPaletteArray;
+
         j["styles"] = s;
     }
 
@@ -398,6 +421,17 @@ struct SettingsStyles {
             for (size_t i = 0; i < s["colors"].size() && i < ImGuiCol_COUNT; i++) {
                 const auto& c = s["colors"][i];
                 colors[i] = ImVec4(c[0], c[1], c[2], c[3]);
+            }
+        }
+
+        hasLoadedPalette = false;
+        if (!s.contains("editorPalette") || !s["editorPalette"].is_array()) return;
+        hasLoadedPalette = true;
+
+        if (s.contains("editorPalette") && s["editorPalette"].is_array()) {
+            for (size_t i = 0; i < s["editorPalette"].size() && i < (size_t)EditorPaletteCount; i++) {
+                const auto& c = s["editorPalette"][i];
+                editorPalette[i] = ImVec4(c[0], c[1], c[2], c[3]);
             }
         }
     }

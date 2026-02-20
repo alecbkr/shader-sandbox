@@ -10,10 +10,6 @@
 // #include "core/EventDispatcher.hpp"
 #include "core/logging/Logger.hpp"
 
-void renderEditor(Editor* editor) {
-    editor->textEditor.Render("ShaderEditor");
-}
-
 void EditorUI::render() {
     float menuBarHeight = ImGui::GetFrameHeight();
 
@@ -35,7 +31,7 @@ void EditorUI::render() {
                 bool openTab = true;
 
                 if (ImGui::BeginTabItem(tabTitle.c_str(), &openTab)) {
-                    renderEditor(editorEngPtr->editors[i]);
+                    editorEngPtr->editors[i]->render();
                     editorEngPtr->activeEditor = i;
 
                     ImGui::EndTabItem();
