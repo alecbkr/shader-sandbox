@@ -73,7 +73,8 @@ void Application::initializeUI(AppContext& ctx) {
     fonts[2] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 18.0f);
     fonts[3] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 21.0f);
     fonts[4] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 24.0f);
-    fonts[5] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 27.0f);  
+    fonts[5] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 27.0f);
+    fontIdx = ctx.settings.fontIdx;
     io.FontDefault = fonts[fontIdx];
 
     if (!ctx.settings.styles.hasLoadedStyles) {
@@ -285,6 +286,7 @@ void Application::renderUI(AppContext& ctx) {
 
 void Application::shutdown(AppContext& ctx) {
     ctx.settings.styles.captureFromImGui(ImGui::GetStyle());
+    ctx.settings.fontIdx = fontIdx;
     ctx.platform.terminate();
     // UI Shutdown
     ImGui_ImplOpenGL3_Shutdown();

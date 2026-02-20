@@ -22,6 +22,8 @@ struct AppSettings {
     u32 posX = 100;
     u32 posY = 100;
 
+    u8 fontIdx = 2;
+
     // Keybinds
     std::unordered_map<std::string, SettingsKeybind> keybindsMap = {
         {"cameraForward", {1, {23}, 2, 2}},

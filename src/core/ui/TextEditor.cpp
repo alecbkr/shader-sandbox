@@ -2877,51 +2877,167 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::HLSL()
 
 const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::GLSL()
 {
-	static bool inited = false;
-	static LanguageDefinition langDef;
-	if (!inited)
-	{
-		static const char* const keywords[] = {
-			"auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", "int", "long", "register", "restrict", "return", "short",
-			"signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while", "_Alignas", "_Alignof", "_Atomic", "_Bool", "_Complex", "_Generic", "_Imaginary",
-			"_Noreturn", "_Static_assert", "_Thread_local"
-		};
-		for (auto& k : keywords)
-			langDef.mKeywords.insert(k);
+    static bool inited = false;
+    static LanguageDefinition langDef;
+    if (!inited)
+    {
+        // --- Keywords / reserved words / qualifiers ---
+        // This list is "common core GLSL" across 330-ish and modern usage.
+        // (Not attempting to be perfectly version-specific; it's meant to be practical.)
+        static const char* const keywords[] = {
+            // Storage / interface qualifiers
+            "in", "out", "inout",
+            "uniform", "buffer", "shared",
+            "const", "coherent", "volatile", "restrict", "readonly", "writeonly",
 
-		static const char* const identifiers[] = {
-			"abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol", "ceil", "clock", "cosh", "ctime", "div", "exit", "fabs", "floor", "fmod", "getchar", "getenv", "isalnum", "isalpha", "isdigit", "isgraph",
-			"ispunct", "isspace", "isupper", "kbhit", "log10", "log2", "log", "memcmp", "modf", "pow", "putchar", "putenv", "puts", "rand", "remove", "rename", "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "time", "tolower", "toupper"
-		};
-		for (auto& k : identifiers)
-		{
-			Identifier id;
-			id.mDeclaration = "Built-in function";
-			langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
-		}
+            // Layout + interpolation + sampling qualifiers
+            "layout",
+            "flat", "smooth", "noperspective",
+            "centroid", "sample",
+            "patch",
 
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[ \\t]*#[ \\t]*[a-zA-Z_]+", PaletteIndex::Preprocessor));
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::String));
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\'\\\\?[^\\']\\'", PaletteIndex::CharLiteral));
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[fF]?", PaletteIndex::Number));
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::Number));
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[0-7]+[Uu]?[lL]?[lL]?", PaletteIndex::Number));
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::Number));
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", PaletteIndex::Punctuation));
+            // Precision qualifiers (more relevant to GLSL ES, but harmless)
+            "precision", "highp", "mediump", "lowp",
 
-		langDef.mCommentStart = "/*";
-		langDef.mCommentEnd = "*/";
-		langDef.mSingleLineComment = "//";
+            // Control flow
+            "if", "else", "switch", "case", "default",
+            "for", "while", "do",
+            "break", "continue", "return", "discard",
 
-		langDef.mCaseSensitive = true;
-		langDef.mAutoIndentation = true;
+            // Types (scalars + vectors)
+            "void",
+            "bool", "int", "uint", "float", "double",
+            "bvec2", "bvec3", "bvec4",
+            "ivec2", "ivec3", "ivec4",
+            "uvec2", "uvec3", "uvec4",
+            "vec2", "vec3", "vec4",
+            "dvec2", "dvec3", "dvec4",
 
-		langDef.mName = "GLSL";
+            // Matrices
+            "mat2", "mat3", "mat4",
+            "mat2x2", "mat2x3", "mat2x4",
+            "mat3x2", "mat3x3", "mat3x4",
+            "mat4x2", "mat4x3", "mat4x4",
+            "dmat2", "dmat3", "dmat4",
+            "dmat2x2", "dmat2x3", "dmat2x4",
+            "dmat3x2", "dmat3x3", "dmat3x4",
+            "dmat4x2", "dmat4x3", "dmat4x4",
 
-		inited = true;
-	}
-	return langDef;
+            // Samplers (common)
+            "sampler1D", "sampler2D", "sampler3D", "samplerCube",
+            "sampler2DRect",
+            "sampler1DShadow", "sampler2DShadow", "samplerCubeShadow",
+            "sampler2DArray", "sampler2DArrayShadow",
+            "samplerCubeArray", "samplerCubeArrayShadow",
+
+            // Unsigned / integer samplers
+            "isampler2D", "isampler3D", "isamplerCube", "isampler2DArray",
+            "usampler2D", "usampler3D", "usamplerCube", "usampler2DArray",
+
+            // Images (common)
+            "image2D", "iimage2D", "uimage2D",
+            "image3D", "iimage3D", "uimage3D",
+            "imageCube", "iimageCube", "uimageCube",
+            "image2DArray", "iimage2DArray", "uimage2DArray",
+
+            // Struct / functions
+            "struct",
+
+            // Booleans
+            "true", "false"
+        };
+        for (auto& k : keywords)
+            langDef.mKeywords.insert(k);
+
+        // --- Known identifiers (built-in functions, plus gl_* builtins) ---
+        // Your editor uses mIdentifiers + mPreprocIdentifiers; we'll populate mIdentifiers.
+        auto addBuiltin = [&](const char* name, const char* decl) {
+            Identifier id;
+            id.mDeclaration = decl;
+            langDef.mIdentifiers.insert(std::make_pair(std::string(name), id));
+        };
+
+        // Common math + utility functions
+        static const char* const builtinFns[] = {
+            // trig
+            "radians","degrees","sin","cos","tan","asin","acos","atan","sinh","cosh","tanh","asinh","acosh","atanh",
+            // exp / log / pow
+            "pow","exp","log","exp2","log2","sqrt","inversesqrt",
+            // common
+            "abs","sign","floor","trunc","round","roundEven","ceil","fract","mod","min","max","clamp","mix","step","smoothstep",
+            // float ops
+            "isnan","isinf",
+            // vector ops
+            "length","distance","dot","cross","normalize","faceforward","reflect","refract",
+            // matrix / transform
+            "matrixCompMult","transpose","inverse","determinant",
+            // derivatives
+            "dFdx","dFdy","fwidth",
+            // interpolation / packing
+            "interpolateAtCentroid","interpolateAtSample","interpolateAtOffset",
+            "packUnorm2x16","unpackUnorm2x16","packSnorm2x16","unpackSnorm2x16",
+            "packHalf2x16","unpackHalf2x16",
+            // texture
+            "texture","textureProj","textureLod","textureProjLod","textureGrad","textureProjGrad",
+            "texelFetch","textureSize","textureQueryLod","textureGather",
+            // atomics / image (common names)
+            "imageLoad","imageStore","imageSize","imageAtomicAdd","imageAtomicMin","imageAtomicMax","imageAtomicAnd","imageAtomicOr","imageAtomicXor","imageAtomicExchange","imageAtomicCompSwap",
+        };
+        for (auto& fn : builtinFns)
+            addBuiltin(fn, "Built-in function");
+
+        // Built-in variables (not exhaustive, but the important ones)
+        static const char* const builtinVars[] = {
+            "gl_Position",
+            "gl_PointSize",
+            "gl_FragCoord",
+            "gl_FrontFacing",
+            "gl_FragDepth",
+            "gl_VertexID",
+            "gl_InstanceID",
+            "gl_PrimitiveID",
+            "gl_SampleID",
+            "gl_SamplePosition",
+            "gl_NumWorkGroups",
+            "gl_WorkGroupID",
+            "gl_LocalInvocationID",
+            "gl_GlobalInvocationID",
+            "gl_LocalInvocationIndex"
+        };
+        for (auto& v : builtinVars)
+            addBuiltin(v, "Built-in variable");
+
+        // --- Token regexes ---
+        // Preprocessor: color whole directive line
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("^[ \\t]*#[ \\t]*.*", PaletteIndex::Preprocessor));
+
+        // Strings / char literals (GLSL doesn't really have 'char', but this doesn't hurt)
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::String));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\'\\\\?[^\\']\\'", PaletteIndex::CharLiteral));
+
+        // Numbers (keep yours; GLSL accepts many of these forms)
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?([fF])?", PaletteIndex::Number));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?[0-9]+([uU])?", PaletteIndex::Number));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[xX][0-9a-fA-F]+([uU])?", PaletteIndex::Number));
+
+        // Identifiers + punctuation (same idea as yours)
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.\\:]", PaletteIndex::Punctuation));
+
+        // Comments
+        langDef.mCommentStart = "/*";
+        langDef.mCommentEnd = "*/";
+        langDef.mSingleLineComment = "//";
+
+        // Misc
+        langDef.mCaseSensitive = true;
+        langDef.mAutoIndentation = true;
+        langDef.mPreprocChar = '#';
+        langDef.mName = "GLSL";
+
+        inited = true;
+    }
+    return langDef;
 }
 
 const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::C()
