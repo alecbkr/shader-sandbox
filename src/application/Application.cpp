@@ -27,6 +27,11 @@
 #include "persistence/ProjectLoader.hpp"
 
 bool Application::initialized = false;
+std::size_t Application::fontIdx = 2;
+std::array<ImFont*, 6> Application::fonts{};
+
+void Application::increaseFont() { if (fontIdx < 5) fontIdx++; }
+void Application::decreaseFont() { if (fontIdx > 0) fontIdx--; }
 
 void subscribeMenuButtons(AppContext& ctx) {
     ctx.events.Subscribe(EventType::SaveProject, [&ctx](const EventPayload&) -> bool {
@@ -35,7 +40,7 @@ void subscribeMenuButtons(AppContext& ctx) {
     });
 }
 
-bool addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI* viewportUIPtr, ContextManager* contextManagerPtr, EventDispatcher* eventsPtr) {
+bool Application::addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI* viewportUIPtr, ContextManager* contextManagerPtr, EventDispatcher* eventsPtr) {
     if (!actionRegPtr) return false;
     if (!viewportUIPtr) return false;
     if (!contextManagerPtr) return false;
@@ -50,10 +55,12 @@ bool addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI* viewportUIP
     actionRegPtr->bind(Action::SaveActiveShaderFile, [eventsPtr]() { eventsPtr->TriggerEvent({ EventType::SaveActiveShaderFile, false, std::monostate{} }); });
     actionRegPtr->bind(Action::SaveProject, [eventsPtr]() { eventsPtr->TriggerEvent({ EventType::SaveProject, false, std::monostate{} }); });
     actionRegPtr->bind(Action::QuitApplication, [eventsPtr]() { eventsPtr->TriggerEvent({ EventType::Quit, false, std::monostate{} }); });
+    actionRegPtr->bind(Action::FontSizeIncrease, []() { Application::increaseFont(); });
+    actionRegPtr->bind(Action::FontSizeDecrease, []() { Application::decreaseFont(); });
     return true;
 }
 
-void initializeUI(AppContext& ctx) {
+void Application::initializeUI(AppContext& ctx) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
@@ -61,8 +68,13 @@ void initializeUI(AppContext& ctx) {
 
     ctx.platform.initializeImGui();
 
-    ImFont* mainFont = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 18.0f);
-    if (mainFont) ImGui::PushFont(mainFont);
+    fonts[0] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 12.0f);
+    fonts[1] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 15.0f);
+    fonts[2] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 18.0f);
+    fonts[3] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 21.0f);
+    fonts[4] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 24.0f);
+    fonts[5] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 27.0f);  
+    io.FontDefault = fonts[fontIdx];
 
     if (!ctx.settings.styles.hasLoadedStyles) {
         ImGui::StyleColorsDark();
@@ -217,7 +229,7 @@ bool Application::initialize(AppContext& ctx) {
         return false;
     }
 
-    if (!addDefaultActionBinds(&ctx.action_registry, &ctx.viewport_ui, &ctx.ctx_manager, &ctx.events)) {
+    if (!Application::addDefaultActionBinds(&ctx.action_registry, &ctx.viewport_ui, &ctx.ctx_manager, &ctx.events)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Default actions were not bound correctly.");
         return false;
     }
@@ -254,6 +266,8 @@ void Application::renderUI(AppContext& ctx) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    ImFont* f = Application::fonts[Application::fontIdx];
+    if (f) ImGui::PushFont(f);
 
     // Render UI
     ctx.inspector_ui.render();
@@ -261,6 +275,8 @@ void Application::renderUI(AppContext& ctx) {
     ctx.console_ui.render();
     ctx.viewport_ui.render();
     ctx.menu_ui.render();
+
+    if (f) ImGui::PopFont();
 
     // Post Render
     ImGui::Render();
