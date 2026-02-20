@@ -75,21 +75,55 @@ void ConsoleUI::render() {
 void ConsoleUI::drawLogs() {
     if (!logSrc || !engine) return; 
 
+    struct FilteredLog {
+        int idx; 
+        int collapsedCount; 
+    }; 
+
     const auto& logs = logSrc->getLogs(); 
     bool isScroll = false;
 
     updateSearchAndScroll(logs, isScroll);
+    std::vector <FilteredLog> filteredLogs; 
 
-    for (int i = 0; i < logs.size(); i++) {
-        int collapseCount = getCollapseCount(logs, i);
-        drawSingleLog(logs[i], i, collapseCount, isScroll);
-        i += collapseCount; 
+    // get the filtered logs if filters are applied
+    for (int i = 0; i < logs.size();) {
+        if (!isLogFiltered(logs[i])) {
+            int collapsedCount = getCollapseCount(logs, i);
+            filteredLogs.push_back({i, collapsedCount});          
+            i += collapsedCount + 1; 
+        } else {
+            i++; 
+        }
     }
 
-    // 3. Apply auto-scrolling if requested
+    if (TextSelector::Begin("ConsoleLogs", filteredLogs.size(), selectionCtx, selectionLayout)) {
+        for (int row = 0; row < filteredLogs.size(); ++row) {
+            const auto& filteredLog = filteredLogs[row]; 
+            drawSingleLog(logs[filteredLog.idx], filteredLog.idx, filteredLog.collapsedCount, isScroll); 
+        }
+        TextSelector::End(); 
+    }
+
+    
+    if (selectionCtx.isActive && ImGui::IsWindowFocused() && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_C)) {
+        TextSelector::copyText(selectionCtx, filteredLogs.size(), [&](int row) {
+            if (row >= 0 && row < filteredLogs.size()) {
+                const LogEntry& log = logs[filteredLogs[row].idx];
+                std::string text = formatLogString(log);
+                if (filteredLogs[row].collapsedCount > 0) {
+                    text += " (" + std::to_string(filteredLogs[row].collapsedCount + 1) + ")";
+                }
+                return text;
+            }
+            return std::string("");
+        }); 
+    }
+
     if (isScroll && engine->getToggles().isAutoScroll) {
         ImGui::SetScrollHereY(1.0f); 
     }
+
 }
 
 void ConsoleUI::drawMenuBar() {      
@@ -227,70 +261,70 @@ int ConsoleUI::getCollapseCount(const std::deque<LogEntry> &logs, int currIdx) {
 }
 
 void ConsoleUI::drawSingleLog(const LogEntry& log, int idx, int repeatCount, bool& isScroll) {
-    auto& togStates = engine->getToggles();
-
-    if (log.level == LogLevel::LOG_ERROR && !togStates.isShowError) return; 
-    if (log.level == LogLevel::WARNING && !togStates.isShowWarning) return; 
-    if (log.level == LogLevel::INFO && !togStates.isShowInfo) return; 
-    
-    if (log.category == LogCategory::UI && !togStates.isShowUI) return; 
-    if (log.category == LogCategory::ASSETS && !togStates.isShowAssets) return; 
-    if (log.category == LogCategory::SHADER && !togStates.isShowShader) return; 
-    if (log.category == LogCategory::OTHER && !togStates.isShowOther) return;  
-    if (log.category == LogCategory::SYSTEM && !togStates.isShowSystem) return; 
-    
     LogStyle style = getLogStyle(log);
-    ImGui::PushID(idx);
-    ImVec2 screenPos = ImGui::GetCursorScreenPos();
-
-    int matchIndexToCheck = idx; 
-    if (repeatCount > 0 && searcher.hasMatches()) {
-        const auto& activeMatch = searcher.getActiveMatch(); 
-        if (activeMatch.itemIdx > idx && activeMatch.itemIdx <= (idx + repeatCount)) {
-            matchIndexToCheck = activeMatch.itemIdx; 
-        }
-    }
-
-    if (searcher.isItemActiveMatch(matchIndexToCheck)) {
-        if (searcher.checkAndClearScrollRequest()) {
-            ImGui::SetScrollHereY(0.5f);
-            isScroll = false; 
-        }
-
-        const auto& match = searcher.getActiveMatch();
-        std::string fullText = formatLogString(log);
-
-        if (match.charIdx + match.length <= fullText.size()) {
-            std::string textBefore = fullText.substr(0, match.charIdx);
-            std::string textMatch = fullText.substr(match.charIdx, match.length);
-
-            float offsetX = ImGui::CalcTextSize(textBefore.c_str()).x;
-            float width = ImGui::CalcTextSize(textMatch.c_str()).x;
-
-            ImGui::GetWindowDrawList()->AddRectFilled(
-                ImVec2(screenPos.x + offsetX, screenPos.y),
-                ImVec2(screenPos.x + offsetX + width, screenPos.y + ImGui::GetTextLineHeight()),
-                IM_COL32(200, 200, 200, 100)
-            );
-        }
-    }
-
-    ImGui::TextColored(style.color, "%s", style.prefix.c_str());
-    ImGui::SameLine(0, 0);
-    
-    if (log.additional.empty()) {
-        ImGui::TextUnformatted(log.msg.c_str());
-    } else {
-        std::string fullMsg = log.msg + " " + log.additional;
-        ImGui::TextUnformatted(fullMsg.c_str());
-    }
+    std::string rawText = formatLogString(log); 
 
     if (repeatCount > 0) {
-        ImGui::SameLine();
-        ImGui::TextDisabled("(%d)", repeatCount + 1);
+        rawText += " (" + std::to_string(repeatCount + 1) + ")"; 
     }
 
-    ImGui::PopID();
+    TextSelector::Text(rawText, [&]() {
+        ImGui::PushID(idx); 
+        ImVec2 screenPos = ImGui::GetCursorScreenPos(); 
+
+        int idxToCheck = idx;
+        if (repeatCount > 0 && searcher.hasMatches()) {
+            const auto& activeMatch = searcher.getActiveMatch(); 
+            if(activeMatch.itemIdx > idx && activeMatch.itemIdx <= (idx + repeatCount)) {
+                idxToCheck = activeMatch.itemIdx; 
+            }
+        } 
+
+        // Draw Search Highlight if its active
+        if (searcher.isItemActiveMatch(idxToCheck)) {
+            if (searcher.checkAndClearScrollRequest()) {
+                ImGui::SetScrollHereY(0.5f);
+                isScroll = false; 
+            }
+
+            const auto& match = searcher.getActiveMatch();
+            std::string fullText = formatLogString(log);
+
+            if (match.charIdx + match.length <= fullText.size()) {
+                std::string textBefore = fullText.substr(0, match.charIdx);
+                std::string textMatch = fullText.substr(match.charIdx, match.length);
+
+                float offsetX = ImGui::CalcTextSize(textBefore.c_str()).x;
+                float width = ImGui::CalcTextSize(textMatch.c_str()).x;
+
+                ImGui::GetWindowDrawList()->AddRectFilled(
+                    ImVec2(screenPos.x + offsetX, screenPos.y),
+                    ImVec2(screenPos.x + offsetX + width, screenPos.y + ImGui::GetTextLineHeight()),
+                    IM_COL32(200, 200, 200, 100)
+                );
+            }
+        }
+
+        // Draw the actual colored text using the custom widget 
+        ImGui::TextColored(style.color, "%s", style.prefix.c_str());
+        ImGui::SameLine(0, 0);
+        
+        if (log.additional.empty()) {
+            ImGui::TextUnformatted(log.msg.c_str());
+        } else {
+            std::string fullMsg = log.msg + " " + log.additional;
+            ImGui::TextUnformatted(fullMsg.c_str());
+        }
+
+        if (repeatCount > 0) {
+            ImGui::SameLine();
+            ImGui::TextDisabled("(%d)", repeatCount + 1);
+        }
+
+        ImGui::PopID();
+    }); 
+    
+
 }
 
 ConsoleUI::LogStyle ConsoleUI::getLogStyle(const LogEntry& log) {
@@ -322,4 +356,18 @@ std::string ConsoleUI::formatLogString(const LogEntry& log) {
     return fullMsg; 
 }
 
+bool ConsoleUI::isLogFiltered(const LogEntry& log) {
+    auto& togStates = engine->getToggles(); 
 
+    // Message type
+    if (log.level == LogLevel::LOG_ERROR && !togStates.isShowError) return true;
+
+    // source types 
+    if (log.category == LogCategory::UI && !togStates.isShowUI) return true; 
+    if (log.category == LogCategory::ASSETS && !togStates.isShowAssets) return true; 
+    if (log.category == LogCategory::SHADER && !togStates.isShowShader) return true; 
+    if (log.category == LogCategory::OTHER && !togStates.isShowOther) return true;  
+    if (log.category == LogCategory::SYSTEM && !togStates.isShowSystem) return true;
+
+    return false; 
+}

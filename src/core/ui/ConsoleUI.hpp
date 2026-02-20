@@ -6,10 +6,10 @@
 #include <vector>
 #include <memory>
 #include <deque>
-
 #include "../logging/ConsoleSink.hpp"
 #include "../ConsoleEngine.hpp"
 #include "components/SearchText.hpp"
+#include "components/TextSelector.hpp"
 
 class Logger;
 
@@ -25,6 +25,7 @@ public:
     }; 
 
 private:
+
     SearchText searcher;
 
     float targetWidth = 0.0f;
@@ -34,6 +35,8 @@ private:
     std::shared_ptr<ConsoleEngine> engine = nullptr; 
     std::shared_ptr<ConsoleSink> logSrc = nullptr;
     Logger* loggerPtr; 
+    TextSelectionCtx selectionCtx; 
+    TextSelectorLayout selectionLayout; 
 
     size_t lastLogSize = 0; 
     bool initialized = false;
@@ -49,4 +52,6 @@ private:
     void copyLogsToClipboard(); 
     LogStyle getLogStyle(const LogEntry& log); 
     std::string formatLogString(const LogEntry& log); 
+    bool isLogFiltered(const LogEntry& log); 
+    void handleInput(); 
 };
