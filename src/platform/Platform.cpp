@@ -99,6 +99,7 @@ bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ke
     setWindowIcon();
     setContextCurrent(*windowPtr);
     glfwSetWindowPos(windowPtr->getGLFWWindow(), settingsPtr->posX, settingsPtr->posY);
+    glfwSwapInterval(settingsPtr->vsyncEnabled ? 1 : 0);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         loggerPtr->addLog(LogLevel::CRITICAL, "Platform GLAD Initialization", "Failed to initialize GLAD.");
@@ -199,6 +200,10 @@ std::filesystem::path Platform::getExeDir() const {
 
     // Fallback (should rarely happen)
     return std::filesystem::current_path();
+}
+
+void Platform::swapInterval(int interval) {
+    glfwSwapInterval(interval);
 }
 
 void Platform::terminate(){

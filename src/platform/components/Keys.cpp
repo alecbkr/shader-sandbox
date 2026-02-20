@@ -1,5 +1,6 @@
 #include "platform/components/Keys.hpp"
 #include "platform/GL.hpp"
+#include <iterator>
 
 Key translateGlfwKey(int glfwKey) {
     switch (glfwKey) {
@@ -134,4 +135,85 @@ MouseButton translateGlfwMouseButton(int glfwButton) {
         case GLFW_MOUSE_BUTTON_8: return MouseButton::B8;
         default: return MouseButton::Unknown;
     }
+}
+
+static constexpr const char* KEY_NAMES[] = {
+    "Unknown",
+
+    "A","B","C","D","E","F","G",
+    "H","I","J","K","L","M",
+    "N","O","P","Q","R","S","T",
+    "U","V","W","X","Y","Z",
+
+    "0","1","2","3","4",
+    "5","6","7","8","9",
+
+    "Escape",
+    "Enter",
+    "Tab",
+    "Backspace",
+    "Space",
+    "CapsLock",
+
+    "LShift","RShift",
+    "LCtrl","RCtrl",
+    "LAlt","RAlt",
+    "LSuper","RSuper",
+
+    ",",".",
+    "/","\\",
+    ";","'",
+    "[","]",
+    "-","=",
+
+    "Insert","Delete","Home","End",
+    "PageUp","PageDown",
+
+    "Up","Down","Left","Right",
+
+    "F1","F2","F3","F4","F5","F6",
+    "F7","F8","F9","F10","F11","F12",
+
+    "Num0","Num1","Num2","Num3",
+    "Num4","Num5","Num6","Num7",
+    "Num8","Num9",
+
+    "Num+","Num-",
+    "Num*","Num/"
+};
+
+static_assert(
+    static_cast<size_t>(Key::Count) ==
+    std::size(KEY_NAMES),
+    "Key name table out of sync with enum"
+);
+
+const char* keyToString(Key key) {
+    const std::size_t idx = static_cast<std::size_t>(key);
+
+    if (idx >= static_cast<std::size_t>(Key::Count)) return "Invalid";
+
+    return KEY_NAMES[idx];
+}
+
+static constexpr const char* MOUSE_NAMES[] = {
+    "Unknown",
+    "Mouse Left",
+    "Mouse Right",
+    "Mouse Middle",
+    "Mouse4","Mouse5","Mouse6","Mouse7","Mouse8"
+};
+
+static_assert(
+    static_cast<size_t>(MouseButton::Count) ==
+    std::size(MOUSE_NAMES),
+    "Mouse enum and table out of sync"
+);
+
+
+const char* mouseButtonToString(MouseButton b) {
+    size_t idx = static_cast<size_t>(b);
+    if (idx >= static_cast<size_t>(MouseButton::Count))
+        return "Invalid";
+    return MOUSE_NAMES[idx];
 }

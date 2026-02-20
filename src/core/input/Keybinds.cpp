@@ -38,11 +38,8 @@ bool Keybinds::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ac
     ctxManagerPtr = _ctxManagerPtr;
     actionRegPtr = _actionRegPtr;
     inputsPtr = _inputsPtr;
-    bindings_.clear();
-
-    for (const auto& [name, bind] : keybindsMap) {
-        addBinding(makeBinding((Action)bind.action, KeyCombo(bind.keys), (ControlCtx)bind.context, (Trigger)bind.trigger));
-    }
+    
+    syncBindings(keybindsMap);
     
     initialized = true;
     return true;
@@ -60,6 +57,13 @@ void Keybinds::shutdown() {
 
 Binding Keybinds::makeBinding(Action action, KeyCombo combo, ControlCtx ctx, Trigger trigger, bool enabled) {
     return Binding{action, combo, ctx, trigger, enabled};
+}
+
+void Keybinds::syncBindings(const std::unordered_map<std::string, SettingsKeybind>& keybindsMap) {
+    bindings_.clear();
+    for (const auto& [name, bind] : keybindsMap) {
+        addBinding(makeBinding((Action)bind.action, KeyCombo(bind.keys), (ControlCtx)bind.context, (Trigger)bind.trigger));
+    }
 }
 
 void Keybinds::setBindings(const std::vector<Binding>& b) {
@@ -96,8 +100,12 @@ bool Keybinds::comboPressedThisFrame(const KeyCombo& combo) {
 }
 
 void Keybinds::gatherActionsForFrame(ControlCtx context) {
+
     for (const Binding& binding : bindings_) {
         if (!binding.enabled) continue;
+        if (binding.action == Action::SaveActiveShaderFile && context == ControlCtx::Camera) {
+            int test = 1 + 1;
+        }
         if ((binding.context != ControlCtx::EditorCamera)) {
             if ((binding.context != context)) continue;
         }
@@ -105,7 +113,9 @@ void Keybinds::gatherActionsForFrame(ControlCtx context) {
         if (binding.trigger == Trigger::Down) {
             if (comboDown(binding.combo)) actionRegPtr->addActionToProcess(binding.action);
         } else if (binding.trigger == Trigger::Pressed) {
-            if (comboPressedThisFrame(binding.combo)) actionRegPtr->addActionToProcess(binding.action);
+            if (comboPressedThisFrame(binding.combo)) {
+                actionRegPtr->addActionToProcess(binding.action);
+            }
         }
     }
 }

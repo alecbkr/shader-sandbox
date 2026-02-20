@@ -25,6 +25,7 @@ int main(int argc, char** argv) {
         return 1;
     }
     Application::runLoop(ctx);
+    Application::shutdown(ctx);
 
     ProjectLoader::save(ctx.project);
     SettingsLoader::save(ctx.settings);

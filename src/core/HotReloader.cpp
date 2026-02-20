@@ -65,7 +65,7 @@ void HotReloader::shutdown() {
 void HotReloader::update() {
     if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S)) {
         int activeIdx = editorEngPtr->activeEditor;
-        if (activeIdx != -1) {
+        if (activeIdx != -1 && editorEngPtr->editors.size() > 0) {
             auto* active = editorEngPtr->editors[activeIdx];
             
             if (active == nullptr) {

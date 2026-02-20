@@ -113,9 +113,6 @@ void InputState::onKey(int _key, int action) {
     if (action == 1) { // GLFW_PRESS
         if (!down[idx]) {
             pressed[idx] = 1;
-            loggerPtr->addLog(LogLevel::INFO, "InputState::onKey",
-                "pressedKeys size=" + std::to_string(pressedKeys.size()) +
-                " cap=" + std::to_string(pressedKeys.capacity()));
             pressedKeys.push_back(key);
         }
         down[idx] = 1;

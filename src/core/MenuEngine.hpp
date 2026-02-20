@@ -16,6 +16,7 @@ struct ModalItem {
 };
 
 struct Modal {
+    std::string_view name = {};
     std::span<const ModalItem> children = {};
 };
 
