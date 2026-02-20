@@ -100,8 +100,12 @@ bool Keybinds::comboPressedThisFrame(const KeyCombo& combo) {
 }
 
 void Keybinds::gatherActionsForFrame(ControlCtx context) {
+
     for (const Binding& binding : bindings_) {
         if (!binding.enabled) continue;
+        if (binding.action == Action::SaveActiveShaderFile && context == ControlCtx::Camera) {
+            int test = 1 + 1;
+        }
         if ((binding.context != ControlCtx::EditorCamera)) {
             if ((binding.context != context)) continue;
         }
@@ -109,7 +113,9 @@ void Keybinds::gatherActionsForFrame(ControlCtx context) {
         if (binding.trigger == Trigger::Down) {
             if (comboDown(binding.combo)) actionRegPtr->addActionToProcess(binding.action);
         } else if (binding.trigger == Trigger::Pressed) {
-            if (comboPressedThisFrame(binding.combo)) actionRegPtr->addActionToProcess(binding.action);
+            if (comboPressedThisFrame(binding.combo)) {
+                actionRegPtr->addActionToProcess(binding.action);
+            }
         }
     }
 }

@@ -29,9 +29,9 @@ bool ContextManager::initialize(Logger* _loggerPtr, ActionRegistry* _actionRegis
 void ContextManager::toggleCtx() {
     if (isEditor()) {
         push(ControlCtx::Camera);
-        return;
+    } else {
+        push(ControlCtx::Editor);
     }
-    push(ControlCtx::Editor);
 }
 
 void ContextManager::set(ControlCtx ctx) { current_ = ctx; }
