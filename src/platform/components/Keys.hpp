@@ -78,3 +78,5 @@ const char* mouseButtonToString(MouseButton button);
 inline const char* keyCodeToString(uint16_t code) {
     return keyToString(static_cast<Key>(code));
 }
+
+extern const char* KEY_NAMES[(int)Key::Count];

@@ -2,8 +2,8 @@
 #include <array>
 #include "core/ui/modals/SettingsModal.hpp"
 
-MenuItem::MenuItem(std::string_view _name, EventType _eventType) : name(_name), eventType(_eventType) {};
-MenuItem::MenuItem(std::string_view _name, std::string_view _shortcut, EventType _eventType) : name(_name), shortcut(_shortcut), eventType(_eventType) {};
+MenuItem::MenuItem(std::string_view _name, EventType _eventType) : name(_name), eventType(_eventType) { noAction = true; };
+MenuItem::MenuItem(std::string_view _name, Action _action, EventType _eventType) : name(_name), action(_action), eventType(_eventType) {};
 MenuItem::MenuItem(bool _isSeparator) : isSeparator(_isSeparator) {};
 MenuItem::MenuItem(std::string_view _name, std::string_view _modalName, bool _opensModal) : name(_name), modalName(_modalName), opensModal(_opensModal) {};
 MenuItem::MenuItem(std::string_view _name, std::span<const MenuItem> _children) : name(_name), children(_children) {};
@@ -24,42 +24,40 @@ MenuItem::MenuItem(std::string_view _name, std::span<const MenuItem> _children) 
 //     {"Quit", "Alt+F4"},
 // }};
 
-static const std::array<ModalItem, 1> settingsModal = {{
-    {"", ModalInput::MI_TEXT},
-}};
-
-static const std::array<MenuItem, 6> fileMenu = {{
-    {"New Shader File", "Ctrl+N", EventType::NewFile},
-    {"Save Active Shader File", "Ctrl+S", EventType::SaveActiveShaderFile},
-    {"Save Project", "Ctrl+Shift+S", EventType::SaveProject},
-    {"Reload Shader", "Ctrl+R", EventType::ReloadShader},
+static const std::array<MenuItem, 8> fileMenu = {{
+    {"New Shader File", Action::NewShaderFile, EventType::NewFile},
+    {true},
+    {"Save Active Shader File", Action::SaveActiveShaderFile, EventType::SaveActiveShaderFile},
+    {"Save Project", Action::SaveProject, EventType::SaveProject},
+    {true},
     {"Settings", SettingsModal::ID, true},
-    {"Quit", "Alt+F4", EventType::Quit},
+    {true},
+    {"Quit", Action::QuitApplication, EventType::Quit},
 }};
 
-static const std::array<MenuItem, 5> editMenu = {{
-    {"Undo", "Ctrl+Z", EventType::NoType},
-    {"Redo", "Ctrl+Y", EventType::NoType},
-    {"Format Shader", "Ctrl+F", EventType::NoType},
-    {"Copy Selection", "Ctrl+C", EventType::NoType},
-    {"Paste", "Ctrl+V", EventType::NoType},
+static const std::array<MenuItem, 4> editMenu = {{
+    {"Undo", Action::Undo, EventType::NoType},
+    {"Redo", Action::Redo, EventType::NoType},
+    {true},
+    {"Format Active Shader", Action::FormatActiveShader, EventType::NoType},
 }};
 
 static const std::array<MenuItem, 4> togglePanelsMenu = {{
-    {"Console", "", EventType::NoType},
-    {"Editor", "", EventType::NoType},
-    {"Inspector", "", EventType::NoType},
-    {"Viewport", "", EventType::NoType},
+    {"Console", EventType::NoType},
+    {"Editor", EventType::NoType},
+    {"Inspector", EventType::NoType},
+    {"Viewport", EventType::NoType},
 }};
 
-static const std::array<MenuItem, 3> viewMenu = {{
+static const std::array<MenuItem, 4> viewMenu = {{
     {"Toggle Panels", std::span<const MenuItem>(togglePanelsMenu)},
-    {"Reset Layout", "", EventType::NoType},
-    {"Fullscreen Viewport", "", EventType::NoType},
+    {"Reset Layout", EventType::NoType},
+    {true},
+    {"Fullscreen Viewport", Action::FullscreenViewport, EventType::NoType},
 }};
 
 static const std::array<MenuItem, 1> toolsMenu = {{
-    {"Screenshot", "", EventType::NoType},
+    {"Screenshot", Action::ScreenshotViewport, EventType::NoType},
 }};
 
 static const std::array<MenuItem, 4> rootMenu = {{

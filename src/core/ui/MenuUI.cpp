@@ -1,24 +1,16 @@
 #include "core/ui/MenuUI.hpp"
 #include "core/logging/Logger.hpp"
 #include "core/EventDispatcher.hpp"
-
-bool testMenuUIQuit(const EventPayload& payload) {
-    printf("Testing Quit\n");
-    return true;
-}
-
-bool testMenuUISave(const EventPayload& payload) {
-    printf("Testing Save\n");
-    return true;
-}
+#include "core/input/Keybinds.hpp"
 
 MenuUI::MenuUI() {
     initialized = false;
     loggerPtr = nullptr;
     eventsPtr = nullptr;
+    keybindsPtr = nullptr;
 }
 
-bool MenuUI::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModalManager* _modalsPtr) {
+bool MenuUI::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModalManager* _modalsPtr, Keybinds* _keybindsPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Menu UI Initialization", "Menu UI was already initialized.");
         return false;
@@ -26,9 +18,8 @@ bool MenuUI::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModalMa
     loggerPtr = _loggerPtr;
     eventsPtr = _eventsPtr;
     modalsPtr = _modalsPtr;
+    keybindsPtr = _keybindsPtr;
 
-    eventsPtr->Subscribe(EventType::SaveActiveShaderFile, testMenuUISave);
-    eventsPtr->Subscribe(EventType::Quit, testMenuUIQuit);
     initialized = true;
     return true;
 }
@@ -59,13 +50,19 @@ void MenuUI::drawMenuItem(const MenuItem& item) {
             ImGui::EndMenu();
         }
     } else if (item.isSeparator) {
+        ImGui::Spacing();
         ImGui::Separator();
+        ImGui::Spacing();
     } else if (item.opensModal) {
         if (ImGui::MenuItem(item.name.data())) {
             if (modalsPtr) modalsPtr->open(item.modalName);
         }
+    } else if (item.noAction) {
+        if (ImGui::MenuItem(item.name.data())) {
+            eventsPtr->TriggerEvent(Event{ item.eventType, false, std::monostate{} });
+        }
     } else {
-        if (ImGui::MenuItem(item.name.data(), item.shortcut.data())) {
+        if (ImGui::MenuItem(item.name.data(), keybindsPtr->getKeyComboStringFromAction(item.action).c_str())) {
             eventsPtr->TriggerEvent(Event{ item.eventType, false, std::monostate{} });
         }
     }

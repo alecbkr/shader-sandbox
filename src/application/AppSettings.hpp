@@ -38,6 +38,12 @@ struct AppSettings {
         {"quitApplication", {10, {47, 74}, 1, 0}},
         {"fontSizeIncrease", {11, {45, 60}, 1, 0}},
         {"fontSizeDecrease", {12, {45, 59}, 1, 0}},
+        {"newShaderFile", {13, {45, 14}, 1, 0}},
+        {"undo", {14, {45, 26}, 1, 0}},
+        {"redo", {15, {45, 25}, 1, 0}},
+        {"formatActiveShader", {16, {45, 6}, 1, 0}},
+        {"screenshotViewport", {17, {82}, 3, 0}},
+        {"fullscreenViewport", {18, {75}, 2, 0}},
     };
 
     // Styles

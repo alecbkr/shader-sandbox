@@ -82,6 +82,53 @@ const std::vector<Binding>& Keybinds::bindings() {
     return bindings_;
 }
 
+static inline bool isCtrl(Key k)  { return k == Key::LeftCtrl  || k == Key::RightCtrl; }
+static inline bool isShift(Key k) { return k == Key::LeftShift || k == Key::RightShift; }
+static inline bool isAlt(Key k)   { return k == Key::LeftAlt   || k == Key::RightAlt; }
+static inline bool isSuper(Key k) { return k == Key::LeftSuper || k == Key::RightSuper; }
+
+static inline void appendPart(std::string& s, const char* part) {
+    if (!s.empty()) s += "+";
+    s += part;
+}
+
+const std::string Keybinds::getKeyComboStringFromAction(Action action) {
+    for (const auto& bind : bindings_) {
+        if (bind.action != action) continue;
+        if (!bind.enabled) return "Unbound";
+
+        bool ctrl = false, shift = false, alt = false, super = false;
+        Key primary = Key::Unknown;
+
+        const KeyCombo& combo = bind.combo;
+
+        for (const Key key : combo.keys) {
+            if (key == Key::Unknown) continue;
+
+            if (isCtrl(key))       ctrl = true;
+            else if (isShift(key)) shift = true;
+            else if (isAlt(key))   alt = true;
+            else if (isSuper(key)) super = true;
+            else                   primary = key;
+        }
+
+        std::string out;
+        if (ctrl)  appendPart(out, "Ctrl");
+        if (shift) appendPart(out, "Shift");
+        if (alt)   appendPart(out, "Alt");
+        if (super) appendPart(out, "Super");
+
+        if (primary != Key::Unknown) {
+            appendPart(out, KEY_NAMES[(int)primary]);
+        }
+
+        if (out.empty()) out = "Unbound";
+        return out;
+    }
+
+    return "Unbound";
+}
+
 bool Keybinds::comboDown(const KeyCombo& combo) {
     if (combo.keys.empty()) return false;
     for (Key key : combo.keys) {
@@ -103,9 +150,6 @@ void Keybinds::gatherActionsForFrame(ControlCtx context) {
 
     for (const Binding& binding : bindings_) {
         if (!binding.enabled) continue;
-        if (binding.action == Action::SaveActiveShaderFile && context == ControlCtx::Camera) {
-            int test = 1 + 1;
-        }
         if ((binding.context != ControlCtx::EditorCamera)) {
             if ((binding.context != context)) continue;
         }
