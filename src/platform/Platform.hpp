@@ -13,10 +13,9 @@ class InputState;
 class AppContext;
 struct AppSettings;
 
-struct PlatformInitStruct {
-    u32 width;
-    u32 height;
-    std::string title;
+struct WindowUserData {
+    InputState* inputs;
+    AppSettings* settings;
 };
 
 class Platform {
@@ -33,6 +32,7 @@ public:
     void setWindowIcon();
     double getTime();
     std::filesystem::path getExeDir() const;
+    void swapInterval(int interval);
     void terminate();
 
 private:
@@ -43,4 +43,5 @@ private:
     Keybinds* keybindsPtr = nullptr;
     ActionRegistry* actionRegPtr = nullptr;
     InputState* inputsPtr = nullptr;
+    WindowUserData userData{};
 };

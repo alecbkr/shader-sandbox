@@ -20,10 +20,35 @@ bool SettingsLoader::load(AppSettings& settings) {
         in >> j;
 
         SettingsLoader::version = j.value("version", 1);
+        
+        // Load window information
         settings.width = j.value("windowWidth",  settings.width);
         settings.height = j.value("windowHeight", settings.height);
         settings.posX = j.value("windowPositionX", settings.posX);
         settings.posY = j.value("windowPositionY", settings.posY);
+        settings.fontIdx = j.value("fontIdx", settings.fontIdx);
+
+        // Load keybinds
+        if (j.contains("keybinds") && j["keybinds"].is_object()) {
+            const auto& saved_kb = j["keybinds"];
+
+            for (auto& [name, sk] : settings.keybindsMap) {
+                if (saved_kb.contains(name) && saved_kb[name].is_array()) {
+                    sk.keys.clear();
+                    sk.keys.reserve(saved_kb[name].size());
+                    
+                    for (const auto& k : saved_kb[name]) {
+                        if (k.is_number_integer()) sk.keys.push_back(static_cast<u16>(k.get<int>()));
+                    }
+                }
+            }
+        }
+
+        // Load Styles
+        settings.styles.loadStyles(j);
+
+        // Load graphics
+        settings.vsyncEnabled = j.value("vsync", settings.vsyncEnabled);
     } catch (...) {
         return false;
     }
@@ -40,6 +65,17 @@ void SettingsLoader::save(const AppSettings& settings) {
     j["windowHeight"] = settings.height;
     j["windowPositionX"] = settings.posX;
     j["windowPositionY"] = settings.posY;
+    j["fontIdx"] = settings.fontIdx;
+
+    json keybinds = json::object();
+    for (const auto& [name, bind] : settings.keybindsMap) {
+        keybinds[name] = bind.keys;
+    }
+    j["keybinds"] = keybinds;
+
+    settings.styles.saveStyles(j);
+
+    j["vsync"] = settings.vsyncEnabled;
 
     std::ofstream out(settings.settingsPath);
     out << j.dump(4);

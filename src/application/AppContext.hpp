@@ -26,23 +26,10 @@
 #include "core/ui/EditorUI.hpp"
 #include "core/ui/InspectorUI.hpp"
 #include "object/ModelImporter.hpp"
-
-struct Project {
-    std::string projectTitle;
-    std::filesystem::path projectRoot;
-    std::filesystem::path projectShadersDir;
-    std::filesystem::path projectJSON;
-};
-
-struct AppSettings {
-    std::filesystem::path userConfigDir;
-    std::filesystem::path settingsPath;
-
-    u32 width = 960;
-    u32 height = 540;
-    u32 posX = 100;
-    u32 posY = 100;
-};
+#include "application/AppSettings.hpp"
+#include "application/Project.hpp"
+#include "core/ui/modals/ModalManager.hpp"
+#include "core/ui/modals/SettingsModal.hpp"
 
 struct AppContext {
     AppContext(const char* _app_title) : app_title(_app_title) {};
@@ -75,4 +62,6 @@ struct AppContext {
     MenuUI menu_ui;
     EditorUI editor_ui;
     InspectorUI inspector_ui;
+    ModalManager modals;
+    SettingsModal settingsModal;
 };
