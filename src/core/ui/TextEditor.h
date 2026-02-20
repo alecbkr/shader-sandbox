@@ -23,6 +23,7 @@ public:
 		Punctuation,
 		Preprocessor,
 		Identifier,
+		Function,
 		KnownIdentifier,
 		PreprocIdentifier,
 		Comment,
@@ -314,6 +315,7 @@ private:
 	void ProcessInputs();
 	void Colorize(int aFromLine = 0, int aCount = -1);
 	void ColorizeRange(int aFromLine = 0, int aToLine = 0);
+	void ColorizeFunctions(int aFromLine, int toLine);
 	void ColorizeInternal();
 	float TextDistanceToLineStart(const Coordinates& aFrom) const;
 	void EnsureCursorVisible();

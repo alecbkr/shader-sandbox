@@ -446,7 +446,7 @@ void SettingsModal::drawStylesPage() {
 
     // ===== Editor Colors =====
     static const char* kEditorPaletteNames[] = {
-        "Default", "Keyword", "Number", "String", "CharLiteral", "Punctuation", "Preprocessor", "Identifier", "KnownIdentifier",
+        "Default", "Keyword", "Number", "String", "CharLiteral", "Punctuation", "Preprocessor", "Identifier", "Function", "KnownIdentifier",
         "PreprocIdentifier", "Comment", "MultiLineComment", "Background", "Cursor", "Selection", "ErrorMarker", "Breakpoint", "LineNumber",
         "CurrentLineFill", "CurrentLineFillInactive", "CurrentLineEdge"
     };
@@ -454,7 +454,7 @@ void SettingsModal::drawStylesPage() {
     if (ImGui::CollapsingHeader("Editor Colors")) {
         ImGui::Indent();
         if (beginSectionTable("##style_editorcolors")) {
-            row("Style Color", [&] { ImGui::Combo("##StyleColor", &selectedEditorStyleColor, kEditorPaletteNames, 21); });
+            row("Style Color", [&] { ImGui::Combo("##StyleColor", &selectedEditorStyleColor, kEditorPaletteNames, (int)TextEditor::PaletteIndex::Max); });
             endSectionTable();
         }
         ImGui::Spacing();

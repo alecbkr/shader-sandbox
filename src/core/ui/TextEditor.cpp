@@ -2013,6 +2013,7 @@ const TextEditor::Palette & TextEditor::GetDarkPalette()
 			0xffffffff, // Punctuation
 			0xff408080,	// Preprocessor
 			0xffaaaaaa, // Identifier
+			0xff50c7ff, // Function
 			0xff9bc64d, // Known identifier
 			0xffc040a0, // Preproc identifier
 			0xff206020, // Comment (single line)
@@ -2041,6 +2042,7 @@ const TextEditor::Palette & TextEditor::GetLightPalette()
 			0xff000000, // Punctuation
 			0xff406060,	// Preprocessor
 			0xff404040, // Identifier
+			0xff0055aa, // Function
 			0xff606010, // Known identifier
 			0xffc040a0, // Preproc identifier
 			0xff205020, // Comment (single line)
@@ -2069,6 +2071,7 @@ const TextEditor::Palette & TextEditor::GetRetroBluePalette()
 			0xffffffff, // Punctuation
 			0xff008000,	// Preprocessor
 			0xff00ffff, // Identifier
+			0xffff00ff, // Function
 			0xffffffff, // Known identifier
 			0xffff00ff, // Preproc identifier
 			0xff808080, // Comment (single line)
@@ -2245,6 +2248,100 @@ void TextEditor::ColorizeRange(int aFromLine, int aToLine)
 	}
 }
 
+static inline bool IsIdentStart(unsigned char c)
+{
+    return (c == '_') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+
+static inline bool IsIdentChar(unsigned char c)
+{
+    return IsIdentStart(c) || (c >= '0' && c <= '9');
+}
+
+void TextEditor::ColorizeFunctions(int fromLine, int toLine)
+{
+    if (mLines.empty() || !mColorizerEnabled)
+        return;
+
+    fromLine = std::max(0, fromLine);
+    toLine   = std::min((int)mLines.size(), toLine);
+    if (fromLine >= toLine)
+        return;
+
+    for (int lineNo = fromLine; lineNo < toLine; ++lineNo)
+    {
+        auto& line = mLines[lineNo];
+        if (line.empty())
+            continue;
+
+        int i = 0;
+        while (i < (int)line.size())
+        {
+            Glyph& g = line[i];
+            unsigned char c = (unsigned char)g.mChar;
+
+            if (g.mComment || g.mMultiLineComment || g.mPreprocessor)
+            {
+                i += UTF8CharLength((char)c);
+                continue;
+            }
+
+			const bool isIdentifierToken =
+                (g.mColorIndex == PaletteIndex::Identifier) ||
+                (g.mColorIndex == PaletteIndex::KnownIdentifier);
+
+            if (!isIdentifierToken || !IsIdentStart(c))
+            {
+                i += UTF8CharLength((char)c);
+                continue;
+            }
+
+            const int identStart = i;
+            int identEnd = i;
+
+            while (identEnd < (int)line.size())
+            {
+                Glyph& gg = line[identEnd];
+                unsigned char cc = (unsigned char)gg.mChar;
+
+                if (gg.mComment || gg.mMultiLineComment || gg.mPreprocessor)
+                    break;
+
+                if (!IsIdentChar(cc))
+                    break;
+
+                if (!(gg.mColorIndex == PaletteIndex::Identifier ||
+                      gg.mColorIndex == PaletteIndex::KnownIdentifier))
+                    break;
+
+                identEnd += UTF8CharLength((char)cc);
+            }
+
+            int j = identEnd;
+            while (j < (int)line.size())
+            {
+                unsigned char sc = (unsigned char)line[j].mChar;
+                if (!(sc == ' ' || sc == '\t'))
+                    break;
+                j += UTF8CharLength((char)sc);
+            }
+
+            if (j < (int)line.size() && line[j].mChar == '(')
+            {
+                for (int k = identStart; k < identEnd; )
+                {
+                    unsigned char kc = (unsigned char)line[k].mChar;
+                    if (!(line[k].mComment || line[k].mMultiLineComment || line[k].mPreprocessor))
+                        line[k].mColorIndex = PaletteIndex::Function;
+                    k += UTF8CharLength((char)kc);
+                }
+            }
+
+            i = identEnd;
+        }
+    }
+}
+
 void TextEditor::ColorizeInternal()
 {
 	if (mLines.empty() || !mColorizerEnabled)
@@ -2377,6 +2474,7 @@ void TextEditor::ColorizeInternal()
 		const int increment = (mLanguageDefinition.mTokenize == nullptr) ? 10 : 10000;
 		const int to = std::min(mColorRangeMin + increment, mColorRangeMax);
 		ColorizeRange(mColorRangeMin, to);
+		ColorizeFunctions(mColorRangeMin, to);
 		mColorRangeMin = to;
 
 		if (mColorRangeMax == mColorRangeMin)
