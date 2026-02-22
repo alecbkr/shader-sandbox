@@ -1,4 +1,6 @@
 #pragma once
+
+#include <filesystem>
 #include <types.hpp>
 #include "core/logging/Logger.hpp"
 #include "core/input/ActionRegistry.hpp"
@@ -24,14 +26,18 @@
 #include "core/ui/EditorUI.hpp"
 #include "core/ui/InspectorUI.hpp"
 #include "object/ModelImporter.hpp"
+#include "application/AppSettings.hpp"
+#include "application/Project.hpp"
+#include "core/ui/modals/ModalManager.hpp"
+#include "core/ui/modals/SettingsModal.hpp"
 
 struct AppContext {
-    AppContext(u32 _width, u32 _height, const char* _app_title)
-        : width(_width), height(_height), app_title(_app_title) {};
+    AppContext(const char* _app_title) : app_title(_app_title) {};
 
-    u32 width;
-    u32 height;
     const char* app_title;
+    
+    AppSettings settings;
+    Project project; // loaded project (or none)
 
     Logger logger;
     ActionRegistry action_registry;
@@ -56,4 +62,6 @@ struct AppContext {
     MenuUI menu_ui;
     EditorUI editor_ui;
     InspectorUI inspector_ui;
+    ModalManager modals;
+    SettingsModal settingsModal;
 };

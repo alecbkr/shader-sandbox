@@ -4,19 +4,8 @@
 #include <string>
 #include "application/AppContext.hpp"
 #include "core/logging/Logger.hpp"
-
-struct ApplicationInitStruct {
-    u32 width;
-    u32 height;
-    std::string title;
-    LoggerInitialization loggerSetting;
-};
-
-// enum AppStateControls {
-//     NO_STATE,
-//     AS_EDITOR,
-//     AS_CAMERA
-// };
+#include <imgui/imgui.h>
+#include <array>
 
 class Application {
 public:
@@ -24,11 +13,14 @@ public:
     static void runLoop(AppContext& ctx);
     static void renderUI(AppContext& ctx);
     static void shutdown(AppContext& ctx);
-    // static void setAppStateControls(AppStateControls state);
-    // static AppStateControls checkAppStateControls();
-
+    static void windowResize(AppContext& ctx, u32 width, u32 height);
 private:
     static bool initialized;
-    // static AppStateControls appControls;
+    static std::array<ImFont*, 6> fonts;
+    static std::size_t fontIdx;
     static bool shouldClose(AppContext& ctx);
+    static void initializeUI(AppContext& ctx);
+    static bool addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI* viewportUIPtr, ContextManager* contextManagerPtr, EventDispatcher* eventsPtr);
+    static void increaseFont();
+    static void decreaseFont();
 };

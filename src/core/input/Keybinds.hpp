@@ -3,13 +3,16 @@
 #include <cstdint>
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
+#include <types.hpp>
+#include <string>
 #include "core/input/ActionRegistry.hpp"
 #include "core/input/ContextManager.hpp"
 #include "platform/components/Keys.hpp"
-//#include "core/input/InputState.hpp"
 
 class Logger;
 class InputState;
+struct SettingsKeybind;
 
 enum class Trigger : uint8_t {
     Pressed,
@@ -21,6 +24,7 @@ struct KeyCombo {
     std::vector<Key> keys;
 
     KeyCombo() = default;
+    KeyCombo(std::vector<u16> _keys);
     KeyCombo(std::initializer_list<Key> list);
 
     // normalize order to avoid duplicates like {S,L} vs {L,S}
@@ -38,10 +42,10 @@ struct Binding {
 class Keybinds {
 public:
     Keybinds();
-    bool initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, ActionRegistry* actionRegPtr);
+    bool initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, ActionRegistry* _actionRegPtr, InputState* _inputsPtr, const std::unordered_map<std::string, SettingsKeybind>& keybindsMap);
     void shutdown();
-    void setInputsPtr(InputState* _inputsPtr);
     Binding makeBinding(Action action, KeyCombo combo, ControlCtx ctx, Trigger trigger = Trigger::Pressed, bool enabled = true);
+    void syncBindings(const std::unordered_map<std::string, SettingsKeybind>& keybindsMap);
     void setBindings(const std::vector<Binding>& b);
     void addBinding(const Binding& b);
     void clear();
@@ -52,7 +56,6 @@ public:
 
 private:
     bool initialized = false;
-    bool inputStateInitialized = false;
     std::vector<Binding> bindings_;
     Logger* loggerPtr = nullptr;
     ContextManager* ctxManagerPtr = nullptr;

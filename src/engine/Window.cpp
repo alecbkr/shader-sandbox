@@ -1,12 +1,13 @@
 #include "Window.hpp"
 
-#include "Errorlog.hpp"
+// #include "Errorlog.hpp"
+#include "core/logging/Logger.hpp"
 #include "InputHandler.hpp"
 
 
 OldWindow::OldWindow(const char *processName, int widthIn, int heightIn) {
     if (!glfwInit()) {
-        ERRLOG.logEntry(EL_CRITICAL, "WINDOW", "glfwInit failure");
+        // Logger::addLog(LogLevel::CRITICAL, "WINDOW", "glfwInit failure"); 
     }
 
     glfwWindowHint(GLFW_SAMPLES, 4);
@@ -17,7 +18,7 @@ OldWindow::OldWindow(const char *processName, int widthIn, int heightIn) {
     window = glfwCreateWindow(widthIn, heightIn, processName, NULL, NULL); 
     if (window == NULL) {
         glfwTerminate();
-        ERRLOG.logEntry(EL_CRITICAL, "WINDOW", "glfwCreateWindow failure");
+        // Logger::addLog(LogLevel::CRITICAL, "WINDOW", "glfwCreateWindow failure"); 
     }
 
     
@@ -26,7 +27,7 @@ OldWindow::OldWindow(const char *processName, int widthIn, int heightIn) {
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         glfwDestroyWindow(window);
         glfwTerminate();
-        ERRLOG.logEntry(EL_CRITICAL, "WINDOW", "gladLoadGLLoader failure");
+        // Logger::addLog(LogLevel::CRITICAL, "WINDOW", "gladLoadGLLoader failure"); 
     }   
     
     // WINDOWSIZE.width = widthIn;
@@ -43,6 +44,7 @@ OldWindow::OldWindow(const char *processName, int widthIn, int heightIn) {
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     // ERRLOG.logEntry(EL_INFO, "WINDOW", "Success");
+    // Logger::addLog(LogLevel::INFO, "WINDOW", "Success"); 
 }
 
 

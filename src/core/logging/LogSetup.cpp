@@ -1,10 +1,13 @@
 #include "LogSetup.hpp"
 
+// TODO: make this more portable later 
+const std::string log_dir = "../src/core/logging/logs";
+
 LogCtx initLogging() {
     LogCtx ctx; 
 
     ctx.consoleSink = std::make_shared<ConsoleSink>(); 
-    ctx.fileSink = std::make_shared<FileSink>(); 
+    ctx.fileSink = std::make_shared<FileSink>(log_dir); 
     ctx.stdoutSink = std::make_shared<StdoutSink>(); 
 
     // Logger::addSink(ctx.consoleSink); 

@@ -10,6 +10,7 @@
 #include "core/input/ContextManager.hpp"
 #include "core/logging/Logger.hpp"
 #include "platform/components/Keys.hpp"
+#include "application/AppContext.hpp"
 
 // Helper: find an int GLFW key code that maps to your Key enum
 static int glfwKeyFor(Key target) {
@@ -42,6 +43,8 @@ TEST_CASE("KeyCombo normalize sorts by keyIndex and removes duplicates", "[keybi
 }
 
 TEST_CASE("Keybinds initialize creates expected default bindings", "[keybinds]") {
+    AppSettings settings;
+    
     Logger logger;
     REQUIRE(logger.initialize());
 
@@ -51,10 +54,13 @@ TEST_CASE("Keybinds initialize creates expected default bindings", "[keybinds]")
     ContextManager ctx;
     REQUIRE(ctx.initialize(&logger, &actions));
 
-    Keybinds kb;
-    REQUIRE(kb.initialize(&logger, &ctx, &actions));
+    InputState input;
+    REQUIRE(input.initialize(&logger));
 
-    REQUIRE(kb.bindings().size() == 11);
+    Keybinds kb;
+    REQUIRE(kb.initialize(&logger, &ctx, &actions, &input, settings.keybindsMap));
+
+    REQUIRE(kb.bindings().size() == 10);
 
     bool foundQuit = false;
     bool foundSave = false;
@@ -87,6 +93,8 @@ TEST_CASE("Keybinds initialize creates expected default bindings", "[keybinds]")
 }
 
 TEST_CASE("Keybinds comboDown returns true only when all keys in combo are down", "[keybinds]") {
+    AppSettings settings;
+    
     Logger logger;
     REQUIRE(logger.initialize());
 
@@ -100,8 +108,7 @@ TEST_CASE("Keybinds comboDown returns true only when all keys in combo are down"
     REQUIRE(input.initialize(&logger));
 
     Keybinds kb;
-    REQUIRE(kb.initialize(&logger, &ctx, &actions));
-    kb.setInputsPtr(&input);
+    REQUIRE(kb.initialize(&logger, &ctx, &actions, &input, settings.keybindsMap));
 
     input.beginFrame();
     REQUIRE_FALSE(kb.comboDown(KeyCombo{Key::LeftCtrl, Key::S}));
@@ -117,6 +124,8 @@ TEST_CASE("Keybinds comboDown returns true only when all keys in combo are down"
 }
 
 TEST_CASE("Keybinds comboPressedThisFrame is true if combo is down AND at least one key was pressed this frame", "[keybinds]") {
+    AppSettings settings;
+        
     Logger logger;
     REQUIRE(logger.initialize());
 
@@ -130,8 +139,7 @@ TEST_CASE("Keybinds comboPressedThisFrame is true if combo is down AND at least 
     REQUIRE(input.initialize(&logger));
 
     Keybinds kb;
-    REQUIRE(kb.initialize(&logger, &ctx, &actions));
-    kb.setInputsPtr(&input);
+    REQUIRE(kb.initialize(&logger, &ctx, &actions, &input, settings.keybindsMap));
 
     // Frame 1: press Ctrl then S => should count as pressed-this-frame
     input.beginFrame();
@@ -148,6 +156,8 @@ TEST_CASE("Keybinds comboPressedThisFrame is true if combo is down AND at least 
 }
 
 TEST_CASE("Keybinds gatherActionsForFrame queues Pressed bindings in the correct context", "[keybinds]") {
+    AppSettings settings;    
+    
     Logger logger;
     REQUIRE(logger.initialize());
 
@@ -161,8 +171,7 @@ TEST_CASE("Keybinds gatherActionsForFrame queues Pressed bindings in the correct
     REQUIRE(input.initialize(&logger));
 
     Keybinds kb;
-    REQUIRE(kb.initialize(&logger, &ctx, &actions));
-    kb.setInputsPtr(&input);
+    REQUIRE(kb.initialize(&logger, &ctx, &actions, &input, settings.keybindsMap));
 
     int saveCalls = 0;
     actions.bind(Action::SaveActiveShaderFile, [&] { saveCalls++; });
@@ -186,6 +195,8 @@ TEST_CASE("Keybinds gatherActionsForFrame queues Pressed bindings in the correct
 }
 
 TEST_CASE("Keybinds gatherActionsForFrame queues Down bindings every frame when held (Camera W)", "[keybinds]") {
+    AppSettings settings;
+        
     Logger logger;
     REQUIRE(logger.initialize());
 
@@ -199,8 +210,7 @@ TEST_CASE("Keybinds gatherActionsForFrame queues Down bindings every frame when 
     REQUIRE(input.initialize(&logger));
 
     Keybinds kb;
-    REQUIRE(kb.initialize(&logger, &ctx, &actions));
-    kb.setInputsPtr(&input);
+    REQUIRE(kb.initialize(&logger, &ctx, &actions, &input, settings.keybindsMap));
 
     int forwardCalls = 0;
     actions.bind(Action::CameraForward, [&] { forwardCalls++; });
@@ -220,6 +230,8 @@ TEST_CASE("Keybinds gatherActionsForFrame queues Down bindings every frame when 
 }
 
 TEST_CASE("Keybinds EditorCamera bindings work regardless of context (F2)", "[keybinds]") {
+    AppSettings settings;
+        
     Logger logger;
     REQUIRE(logger.initialize());
 
@@ -233,8 +245,7 @@ TEST_CASE("Keybinds EditorCamera bindings work regardless of context (F2)", "[ke
     REQUIRE(input.initialize(&logger));
 
     Keybinds kb;
-    REQUIRE(kb.initialize(&logger, &ctx, &actions));
-    kb.setInputsPtr(&input);
+    REQUIRE(kb.initialize(&logger, &ctx, &actions, &input, settings.keybindsMap));
 
     int switchCalls = 0;
     actions.bind(Action::SwitchControlContext, [&] { switchCalls++; });
@@ -260,6 +271,8 @@ TEST_CASE("Keybinds EditorCamera bindings work regardless of context (F2)", "[ke
 }
 
 TEST_CASE("Keybinds disabled binding does not queue action", "[keybinds]") {
+    AppSettings settings;
+        
     Logger logger;
     REQUIRE(logger.initialize());
 
@@ -273,8 +286,7 @@ TEST_CASE("Keybinds disabled binding does not queue action", "[keybinds]") {
     REQUIRE(input.initialize(&logger));
 
     Keybinds kb;
-    REQUIRE(kb.initialize(&logger, &ctx, &actions));
-    kb.setInputsPtr(&input);
+    REQUIRE(kb.initialize(&logger, &ctx, &actions, &input, settings.keybindsMap));
 
     int calls = 0;
     actions.bind(Action::None, [&] { calls++; });

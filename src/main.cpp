@@ -1,15 +1,33 @@
 #include "application/Application.hpp"
-#include "core/logging/Logger.hpp"
 
-#define START_WIDTH 960
-#define START_HEIGHT 540
-#define APPLICATION_TITLE "Shader Sandbox"
+#include "persistence/Paths.hpp"
+#include "persistence/SettingsLoader.hpp"
+#include "persistence/ProjectLoader.hpp"
 
-int main() {
-    AppContext ctx = AppContext(START_WIDTH, START_HEIGHT, APPLICATION_TITLE);
-    if (!Application::initialize(ctx)) {
+
+#define APPLICATION_TITLE "PrismTSS"
+
+int main(int argc, char** argv) {
+    AppContext ctx = AppContext(APPLICATION_TITLE);
+
+    ctx.project.projectRoot = Paths::getProjectRootDir(argc, argv, ctx.project.projectTitle);
+    ctx.project.projectShadersDir = ctx.project.projectRoot / "shaders";
+    ctx.project.projectJSON = ctx.project.projectRoot / "project.json";
+    ProjectLoader::load(ctx.project);
+
+    ctx.settings.userConfigDir = Paths::getUserConfigDir(APPLICATION_TITLE);
+    ctx.settings.settingsPath = ctx.settings.userConfigDir / "settings.json";
+    SettingsLoader::load(ctx.settings);
+
+    if (!Application::initialize(ctx)) 
+    {
+        std::cerr << "Application failed to initialize" << std::endl;
         return 1;
     }
     Application::runLoop(ctx);
+    Application::shutdown(ctx);
+
+    ProjectLoader::save(ctx.project);
+    SettingsLoader::save(ctx.settings);
     return 0;
 }
