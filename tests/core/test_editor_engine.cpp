@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 
+#include "application/SettingsStyles.hpp"
 #include "core/logging/Logger.hpp"
 #include "core/EventDispatcher.hpp"
 #include "object/ModelCache.hpp"
@@ -20,6 +21,7 @@ TEST_CASE("EditorEngine: Lifecycle and Initialization", "[editor_engine]") {
     EventDispatcher events;
     ModelCache cache;
     ShaderRegistry registry;
+    SettingsStyles styles;
 
     logger.initialize();
     events.initialize(&logger);
@@ -27,18 +29,18 @@ TEST_CASE("EditorEngine: Lifecycle and Initialization", "[editor_engine]") {
     EditorEngine engine;
 
     SECTION("Initialization attaches event listeners") {
-        REQUIRE(engine.initialize(&logger, &events, &cache, &registry) == true);
+        REQUIRE(engine.initialize(&logger, &events, &cache, &registry, &styles) == true);
 
         // Verify double initialization fails
-        REQUIRE(engine.initialize(&logger, &events, &cache, &registry) == false);
+        REQUIRE(engine.initialize(&logger, &events, &cache, &registry, &styles) == false);
     }
 
     SECTION("Shutdown resets state") {
-        engine.initialize(&logger, &events, &cache, &registry);
+        engine.initialize(&logger, &events, &cache, &registry, &styles);
         engine.shutdown();
 
         // After shutdown, engine should be ready for a fresh init
-        REQUIRE(engine.initialize(&logger, &events, &cache, &registry) == true);
+        REQUIRE(engine.initialize(&logger, &events, &cache, &registry, &styles) == true);
     }
 }
 
@@ -47,12 +49,13 @@ TEST_CASE("EditorEngine: Editor Management via Events", "[editor_engine][events]
     EventDispatcher events;
     ModelCache cache;
     ShaderRegistry registry;
+    SettingsStyles styles;
 
     logger.initialize();
     events.initialize(&logger);
 
     EditorEngine engine;
-    engine.initialize(&logger, &events, &cache, &registry);
+    engine.initialize(&logger, &events, &cache, &registry, &styles);
 
     // Setup a temp file
     std::string testPath = "test_shader.frag";
@@ -103,12 +106,13 @@ TEST_CASE("EditorEngine: Untitled File Generation", "[editor_engine][filesystem]
     EventDispatcher events;
     ModelCache cache;
     ShaderRegistry registry;
+    SettingsStyles styles;
 
     logger.initialize();
     events.initialize(&logger);
 
     EditorEngine engine;
-    engine.initialize(&logger, &events, &cache, &registry);
+    engine.initialize(&logger, &events, &cache, &registry, &styles);
 
     // Ensure directory exists for the test
     std::filesystem::create_directories("../shaders");
@@ -137,12 +141,13 @@ TEST_CASE("EditorEngine: Model ID Linking", "[editor_engine]") {
     EventDispatcher events;
     ModelCache cache;
     ShaderRegistry registry;
+    SettingsStyles styles;
 
     logger.initialize();
     events.initialize(&logger);
 
     EditorEngine engine;
-    engine.initialize(&logger, &events, &cache, &registry);
+    engine.initialize(&logger, &events, &cache, &registry, &styles);
 
     SECTION("Editor inherits ModelID from payload") {
         events.TriggerEvent(OpenFileEvent("path.glsl", "name.glsl", 1234u));

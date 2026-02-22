@@ -13,11 +13,7 @@ public:
     EditorUI();
     void render();
     bool initialize(Logger* _loggerPtr, EditorEngine* _editorEngPtr, ContextManager* _contextManagerPtr);
-    static void drawActiveFind(std::string activeLine, ImVec2 textPos);
-    static SearchText searcher;
-    void replaceText(bool replaceAll);
 private:
-    void renderEditor(Editor* editor);
     bool initialized = false;
     Logger* loggerPtr = nullptr;
     EditorEngine* editorEngPtr = nullptr;

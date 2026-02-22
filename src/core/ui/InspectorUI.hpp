@@ -85,6 +85,7 @@ private:
     bool drawUniformInputValue(glm::mat4* value, Uniform* uniform = nullptr);
     bool drawUniformInputValue(glm::quat* value, Uniform* uniform = nullptr);
     bool drawUniformInputValue(InspectorSampler2D* value, Uniform* uniform = nullptr);
+    bool drawUniformInputValue(InspectorReference* value, Uniform* uniform = nullptr);
     void drawUniformInput(Uniform& uniform, const std::string& objectName);
     void drawUniformInput(Uniform& uniform, unsigned int modelID);
     bool drawModelPositionInput(Model* model);

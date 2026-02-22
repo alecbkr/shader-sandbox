@@ -1,13 +1,14 @@
 #pragma once
 
 #include <vector>
+#include <cstdint>
 
 class Logger;
 class ActionRegistry;
 
 // Make the ControlCtx a bitmask if more contexts are added
 // Then make the actual application context an enum
-enum class ControlCtx {
+enum class ControlCtx : std::uint8_t {
     None = 0,
     Editor,
     Camera,

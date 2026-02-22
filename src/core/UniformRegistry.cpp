@@ -102,11 +102,15 @@ const std::unordered_map<std::string, Uniform>* UniformRegistry::tryReadUniforms
 }
 
 void UniformRegistry::registerUniform(unsigned int modelID, Uniform uniform) {
+    uniform.modelID = modelID;
     uniforms[modelID][uniform.name] = uniform;
 }
 
 void UniformRegistry::insertUniformMap(unsigned int modelID, const std::unordered_map<std::string, Uniform>& map) {
     uniforms[modelID] = map;
+    for (auto& [name, uniform] : uniforms[modelID]) {
+        uniform.modelID = modelID;
+    }
 }
 
 void UniformRegistry::eraseUniform(unsigned int modelID, const std::string& uniformName) {

@@ -71,3 +71,10 @@ constexpr std::size_t keyIndex(Key key) {
 constexpr std::size_t buttonIndex(MouseButton button) {
     return static_cast<std::size_t>(button);
 }
+
+const char* keyToString(Key key);
+const char* mouseButtonToString(MouseButton button);
+
+inline const char* keyCodeToString(uint16_t code) {
+    return keyToString(static_cast<Key>(code));
+}

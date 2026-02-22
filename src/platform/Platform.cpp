@@ -7,6 +7,7 @@
 #include "core/input/Keybinds.hpp"
 #include "core/input/ActionRegistry.hpp"
 #include "core/input/InputState.hpp"
+#include "application/AppContext.hpp"
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -22,6 +23,8 @@ Platform::Platform() {
     keybindsPtr = nullptr;
     actionRegPtr = nullptr;
     inputsPtr = nullptr;
+    userData.inputs = nullptr;
+    userData.settings = nullptr;
 }
 
 void setContextCurrent(Window& window) {
@@ -45,7 +48,25 @@ void Platform::setWindowIcon() {
     stbi_image_free(pixels);
 }
 
-bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Keybinds* _keybindsPtr, ActionRegistry* _actionRegPtr, InputState* _inputsPtr, u32 _width, u32 _height, const char* _app_title) {
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
+
+    auto* settings = static_cast<WindowUserData*>(glfwGetWindowUserPointer(window))->settings;
+    if (!settings) return;
+
+    settings->width = static_cast<u32>(width);
+    settings->height = static_cast<u32>(height);
+}
+
+void window_position_callback(GLFWwindow* window, int xpos, int ypos) {
+    auto* settings = static_cast<WindowUserData*>(glfwGetWindowUserPointer(window))->settings;
+    if (!settings) return;
+
+    settings->posX = xpos;
+    settings->posY = ypos;
+}
+
+bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Keybinds* _keybindsPtr, ActionRegistry* _actionRegPtr, InputState* _inputsPtr, const char* _app_title, AppSettings* settingsPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Platform Initialization", "The platform layer is already initialized.");
         return false;
@@ -56,6 +77,8 @@ bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ke
     keybindsPtr = _keybindsPtr;
     actionRegPtr = _actionRegPtr;
     inputsPtr = _inputsPtr;
+    userData.inputs = _inputsPtr;
+    userData.settings = settingsPtr;
     
     if (!glfwInit()) return false;
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -63,24 +86,30 @@ bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ke
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
     bool windowIsValid;
-    windowPtr = Window::createWindow(_width, _height, _app_title, windowIsValid);
+    windowPtr = Window::createWindow(settingsPtr->width, settingsPtr->height, _app_title, windowIsValid);
     if (!windowIsValid) {
         loggerPtr->addLog(LogLevel::CRITICAL, "Platform Window Creation", "Failed to create window.");
         return false;
     }
 
-    glfwSetWindowUserPointer(windowPtr->getGLFWWindow(), inputsPtr);
+    
+    glfwSetWindowUserPointer(windowPtr->getGLFWWindow(), &userData);
     initializeInputCallbacks();
-
+    
     setWindowIcon();
     setContextCurrent(*windowPtr);
+    glfwSetWindowPos(windowPtr->getGLFWWindow(), settingsPtr->posX, settingsPtr->posY);
+    glfwSwapInterval(settingsPtr->vsyncEnabled ? 1 : 0);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         loggerPtr->addLog(LogLevel::CRITICAL, "Platform GLAD Initialization", "Failed to initialize GLAD.");
         return false;
     }
 
-    glViewport(0, 0, _width, _height);
+    glViewport(0, 0, settingsPtr->width, settingsPtr->height);
+
+    glfwSetFramebufferSizeCallback(windowPtr->getGLFWWindow(), framebuffer_size_callback);
+    glfwSetWindowPosCallback(windowPtr->getGLFWWindow(), window_position_callback);
 
     #ifdef __linux__
         // Disable vsync on linux because it can cause issues when shader sandbox window is minimized.
@@ -131,22 +160,22 @@ void Platform::initializeInputCallbacks() {
     GLFWwindow* w = windowPtr->getGLFWWindow();
 
     glfwSetKeyCallback(w, [](GLFWwindow* w, int key, int scancode, int action, int mods) {
-        auto* in = static_cast<InputState*>(glfwGetWindowUserPointer(w));
+        auto* in = static_cast<WindowUserData*>(glfwGetWindowUserPointer(w))->inputs;
         if (in) in->onKey(key, action);
     });
 
     glfwSetMouseButtonCallback(w, [](GLFWwindow* w, int button, int action, int mods) {
-        auto* in = static_cast<InputState*>(glfwGetWindowUserPointer(w));
+        auto* in = static_cast<WindowUserData*>(glfwGetWindowUserPointer(w))->inputs;
         if (in) in->onMouseButton(button, action);
     });
 
     glfwSetCursorPosCallback(w, [](GLFWwindow* w, double x, double y) {
-        auto* in = static_cast<InputState*>(glfwGetWindowUserPointer(w));
+        auto* in = static_cast<WindowUserData*>(glfwGetWindowUserPointer(w))->inputs;
         if (in) in->onCursorPos(x, y);
     });
 
     glfwSetScrollCallback(w, [](GLFWwindow* w, double x, double y) {
-        auto* in = static_cast<InputState*>(glfwGetWindowUserPointer(w));
+        auto* in = static_cast<WindowUserData*>(glfwGetWindowUserPointer(w))->inputs;
         if (in) in->onScroll(x, y);
     });
 }
@@ -171,4 +200,12 @@ std::filesystem::path Platform::getExeDir() const {
 
     // Fallback (should rarely happen)
     return std::filesystem::current_path();
+}
+
+void Platform::swapInterval(int interval) {
+    glfwSwapInterval(interval);
+}
+
+void Platform::terminate(){
+    glfwTerminate();
 }

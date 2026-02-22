@@ -23,7 +23,7 @@ public:
     std::shared_ptr<ConsoleSink> getConsoleSinkPtr();
     
 private:
-    LogLevel abortWhen;
+    static LogLevel abortWhen;
     std::vector<std::shared_ptr<LogSink>> sinks;
     std::shared_ptr<ConsoleSink> consoleSinkPtr = nullptr;
     constexpr std::string_view toRelativePath(const char* path, std::string_view prefix);

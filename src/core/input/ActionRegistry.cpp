@@ -1,5 +1,6 @@
 #include "core/input/ActionRegistry.hpp"
 #include "core/logging/Logger.hpp"
+#include <iostream>
 
 ActionRegistry::ActionRegistry() {
     initialized = false;

@@ -1,7 +1,13 @@
 #include "core/input/Keybinds.hpp"
 #include "core/logging/Logger.hpp"
 #include "core/input/InputState.hpp"
+#include "application/AppSettings.hpp"
 
+KeyCombo::KeyCombo(std::vector<u16> _keys) {
+    keys.reserve(_keys.size());
+    for (u16 key : _keys) keys.push_back((Key)key);
+    normalize();
+}
 
 KeyCombo::KeyCombo(std::initializer_list<Key> list) : keys(list) {
     normalize();
@@ -23,7 +29,7 @@ Keybinds::Keybinds() {
     inputsPtr = nullptr;
 }
 
-bool Keybinds::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, ActionRegistry* _actionRegPtr, InputState* _inputsPtr) {
+bool Keybinds::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, ActionRegistry* _actionRegPtr, InputState* _inputsPtr, const std::unordered_map<std::string, SettingsKeybind>& keybindsMap) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Keybinds Initialization", "Keybinds have already been initialzied.");
         return false;
@@ -32,19 +38,8 @@ bool Keybinds::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ac
     ctxManagerPtr = _ctxManagerPtr;
     actionRegPtr = _actionRegPtr;
     inputsPtr = _inputsPtr;
-    bindings_.clear();
-
-    addBinding(makeBinding(Action::QuitApplication, KeyCombo{Key::LeftAlt, Key::F4}, ControlCtx::Editor));
-    addBinding(makeBinding(Action::SaveActiveShaderFile, KeyCombo{Key::LeftCtrl, Key::S}, ControlCtx::Editor));
-    addBinding(makeBinding(Action::SaveProject, KeyCombo{Key::LeftAlt, Key::S}, ControlCtx::Editor));
-    addBinding(makeBinding(Action::SwitchControlContext, KeyCombo{Key::F2}, ControlCtx::EditorCamera));
-    addBinding(makeBinding(Action::CameraUp, KeyCombo{Key::Space}, ControlCtx::Camera, Trigger::Down));
-    addBinding(makeBinding(Action::CameraDown, KeyCombo{Key::LeftCtrl}, ControlCtx::Camera, Trigger::Down));
-    addBinding(makeBinding(Action::CameraLeft, KeyCombo{Key::A}, ControlCtx::Camera, Trigger::Down));
-    addBinding(makeBinding(Action::CameraRight, KeyCombo{Key::D}, ControlCtx::Camera, Trigger::Down));
-    addBinding(makeBinding(Action::CameraForward, KeyCombo{Key::W}, ControlCtx::Camera, Trigger::Down));
-    addBinding(makeBinding(Action::CameraBack, KeyCombo{Key::S}, ControlCtx::Camera, Trigger::Down));
-    addBinding(makeBinding(Action::None, KeyCombo{Key::G}, ControlCtx::Editor));
+    
+    syncBindings(keybindsMap);
     
     initialized = true;
     return true;
@@ -62,6 +57,13 @@ void Keybinds::shutdown() {
 
 Binding Keybinds::makeBinding(Action action, KeyCombo combo, ControlCtx ctx, Trigger trigger, bool enabled) {
     return Binding{action, combo, ctx, trigger, enabled};
+}
+
+void Keybinds::syncBindings(const std::unordered_map<std::string, SettingsKeybind>& keybindsMap) {
+    bindings_.clear();
+    for (const auto& [name, bind] : keybindsMap) {
+        addBinding(makeBinding((Action)bind.action, KeyCombo(bind.keys), (ControlCtx)bind.context, (Trigger)bind.trigger));
+    }
 }
 
 void Keybinds::setBindings(const std::vector<Binding>& b) {
@@ -98,8 +100,12 @@ bool Keybinds::comboPressedThisFrame(const KeyCombo& combo) {
 }
 
 void Keybinds::gatherActionsForFrame(ControlCtx context) {
+
     for (const Binding& binding : bindings_) {
         if (!binding.enabled) continue;
+        if (binding.action == Action::SaveActiveShaderFile && context == ControlCtx::Camera) {
+            int test = 1 + 1;
+        }
         if ((binding.context != ControlCtx::EditorCamera)) {
             if ((binding.context != context)) continue;
         }
@@ -107,7 +113,9 @@ void Keybinds::gatherActionsForFrame(ControlCtx context) {
         if (binding.trigger == Trigger::Down) {
             if (comboDown(binding.combo)) actionRegPtr->addActionToProcess(binding.action);
         } else if (binding.trigger == Trigger::Pressed) {
-            if (comboPressedThisFrame(binding.combo)) actionRegPtr->addActionToProcess(binding.action);
+            if (comboPressedThisFrame(binding.combo)) {
+                actionRegPtr->addActionToProcess(binding.action);
+            }
         }
     }
 }

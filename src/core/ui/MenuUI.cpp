@@ -18,13 +18,14 @@ MenuUI::MenuUI() {
     eventsPtr = nullptr;
 }
 
-bool MenuUI::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr) {
+bool MenuUI::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModalManager* _modalsPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Menu UI Initialization", "Menu UI was already initialized.");
         return false;
     }
     loggerPtr = _loggerPtr;
     eventsPtr = _eventsPtr;
+    modalsPtr = _modalsPtr;
 
     eventsPtr->Subscribe(EventType::SaveActiveShaderFile, testMenuUISave);
     eventsPtr->Subscribe(EventType::Quit, testMenuUIQuit);
@@ -34,6 +35,7 @@ bool MenuUI::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr) {
 
 void MenuUI::render() {
     drawMenuBar();
+    modalsPtr->render();
 }
 
 void MenuUI::drawMenuBar() {
@@ -56,13 +58,15 @@ void MenuUI::drawMenuItem(const MenuItem& item) {
             }
             ImGui::EndMenu();
         }
+    } else if (item.isSeparator) {
+        ImGui::Separator();
+    } else if (item.opensModal) {
+        if (ImGui::MenuItem(item.name.data())) {
+            if (modalsPtr) modalsPtr->open(item.modalName);
+        }
     } else {
-        if (item.isSeparator) {
-            ImGui::Separator();
-        } else {
-            if (ImGui::MenuItem(item.name.data(), item.shortcut.data())) {
-                eventsPtr->TriggerEvent(Event{ item.eventType, false, std::monostate{} });
-            }
+        if (ImGui::MenuItem(item.name.data(), item.shortcut.data())) {
+            eventsPtr->TriggerEvent(Event{ item.eventType, false, std::monostate{} });
         }
     }
 }

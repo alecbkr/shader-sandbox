@@ -1,4 +1,5 @@
 #include "core/HotReloader.hpp"
+#include "core/logging/LogSink.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "engine/Errorlog.hpp"
 #include <fstream>
@@ -64,9 +65,13 @@ void HotReloader::shutdown() {
 void HotReloader::update() {
     if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S)) {
         int activeIdx = editorEngPtr->activeEditor;
-        if (activeIdx != -1) {
+        if (activeIdx != -1 && editorEngPtr->editors.size() > 0) {
             auto* active = editorEngPtr->editors[activeIdx];
             
+            if (active == nullptr) {
+                loggerPtr->addLog(LogLevel::LOG_ERROR, "HotReloader::update", "editor is null?");
+                return;
+            }
             std::ofstream out(active->filePath, std::ios::binary);
             out << active->textEditor.GetText();
             out.close();

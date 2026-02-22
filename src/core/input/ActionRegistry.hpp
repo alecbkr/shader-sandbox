@@ -19,6 +19,8 @@ enum class Action {
     SaveActiveShaderFile,
     SaveProject,
     QuitApplication,
+    FontSizeIncrease,
+    FontSizeDecrease,
     Count
 };
 

@@ -9,38 +9,6 @@
 #include "components/SearchText.hpp"
 #include "core/input/ContextManager.hpp"
 #include "core/logging/Logger.hpp"
-SearchText EditorUI::searcher;
-
-void EditorUI::renderEditor(Editor* editor) {
-    searcher.setSearchFlag(SearchUIFlags::ADVANCED | SearchUIFlags::REPLACE);
-
-    if (searcher.GetisDirty() || (searcher.hasQuery() && editor->textEditor.IsTextChanged())) {
-        searcher.updateMatches(editor->textEditor.GetTextLines(), [&](const std::string &funcText) -> std::string {
-            return funcText;
-        });
-    }
-
-    editor->textEditor.Render("ShaderEditor");
-}
-
-void EditorUI::drawActiveFind(std::string activeLine, ImVec2 textPos) {
-    const auto& activeMatch = searcher.getActiveMatch();
-
-    if (activeMatch.charIdx + activeMatch.length <= activeLine.size()) {
-        std::string textBefore = activeLine.substr(0, activeMatch.charIdx);
-        std::string textMatch = activeLine.substr(activeMatch.charIdx, activeMatch.length);
-
-        float offsetX = ImGui::CalcTextSize(textBefore.c_str()).x;
-        float width = ImGui::CalcTextSize(textMatch.c_str()).x;
-
-        ImGui::GetWindowDrawList()->AddRectFilled(
-            ImVec2(textPos.x + offsetX, textPos.y),
-            ImVec2(textPos.x + offsetX + width, textPos.y + ImGui::GetTextLineHeight()),
-            IM_COL32(200, 200, 200, 100)
-        );
-    }
-
-}
 
 void EditorUI::render() {
     if (!contextManagerPtr->isEditor()) ImGui::SetWindowFocus(nullptr);
@@ -49,8 +17,8 @@ void EditorUI::render() {
 
     int displayWidth = ImGui::GetIO().DisplaySize.x;
     int displayHeight = ImGui::GetIO().DisplaySize.y - menuBarHeight;
-    float width = (float)displayWidth * EditorUI::targetWidth;
-    float height = (float)displayHeight * EditorUI::targetHeight;
+    float width = (float)displayWidth * targetWidth;
+    float height = (float)displayHeight * targetHeight;
 
     ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_Always);
     ImGui::SetNextWindowPos(ImVec2(windowPos.x, windowPos.y + menuBarHeight), ImGuiCond_Always);
@@ -76,11 +44,11 @@ void EditorUI::render() {
 
                 if (ImGui::BeginTabItem(tabTitle.c_str(), &openTab)) {
                     if (findBar) {
-                        searcher.drawSearchUI([&](const SearchText::Match& match, const char* replace) {
+                        editorEngPtr->editors[i]->searcher.drawSearchUI([&](const SearchText::Match& match, const char* replace) {
                             editorEngPtr->editors[i]->textEditor.ReplaceMatch(match, replace);
                         });
                     }
-                    renderEditor(editorEngPtr->editors[i]);
+                    editorEngPtr->editors[i]->render();
                     editorEngPtr->activeEditor = i;
 
                     ImGui::EndTabItem();

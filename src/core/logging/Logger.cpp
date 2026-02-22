@@ -8,7 +8,6 @@ Logger::Logger() {
     sinks.clear();
     consoleSinkPtr = nullptr;
     initialized = false;
-    abortWhen = LogLevel::CRITICAL;
 }
 
 bool Logger::initialize(){
@@ -60,7 +59,6 @@ void Logger::addLog(LogLevel level, std::string src, std::string msg, std::strin
     std::string fName(toRelativePath(file_location.file_name(), project_path));
     LogCategory category = LogClassifier::categorize(file_location);
     // std::string cat_str = LogClassifier::categoryToString(category);
-
     LogEntry entry; 
     entry.level = level; 
     entry.src = src; 

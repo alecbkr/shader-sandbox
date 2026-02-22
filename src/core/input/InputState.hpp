@@ -9,8 +9,8 @@
 
 class InputState {
 public:
-    static constexpr int KEY_COUNT = keyIndex(Key::Count);
-    static constexpr int MOUSE_COUNT = buttonIndex(MouseButton::Count);
+    static constexpr std::size_t KEY_COUNT = static_cast<std::size_t>(Key::Count);
+    static constexpr std::size_t MOUSE_COUNT = static_cast<std::size_t>(MouseButton::Count);
     std::vector<Key> pressedKeys;
 
     InputState();
