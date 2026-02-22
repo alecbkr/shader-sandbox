@@ -1486,6 +1486,24 @@ void TextEditor::InsertText(const char * aValue)
 	Colorize(start.mLine - 1, totalLines + 2);
 }
 
+void TextEditor::ReplaceMatch(const SearchText::Match& match, const char* replace) {
+	int startColumn = GetCharacterColumn(match.itemIdx, match.charIdx);
+	Coordinates startCoord(match.itemIdx, startColumn);
+
+	int endColumn = GetCharacterColumn(match.itemIdx, match.charIdx + match.length);
+	Coordinates endCoord(match.itemIdx, endColumn);
+
+	DeleteRange(startCoord, endCoord);
+	InsertTextAt(startCoord, replace);
+
+	mState.mCursorPosition = startCoord;
+	mState.mSelectionStart = startCoord;
+	mState.mSelectionEnd = startCoord;
+	mScrollToCursor = true;
+	Colorize();
+	mTextChanged = true;
+}
+
 void TextEditor::DeleteSelection()
 {
 	assert(mState.mSelectionEnd >= mState.mSelectionStart);

@@ -7,7 +7,6 @@
 
 #include "imgui.h"
 #include "components/SearchText.hpp"
-#include "core/EventDispatcher.hpp"
 #include "core/input/ContextManager.hpp"
 #include "core/logging/Logger.hpp"
 SearchText EditorUI::searcher;
@@ -15,7 +14,7 @@ SearchText EditorUI::searcher;
 void EditorUI::renderEditor(Editor* editor) {
     searcher.setSearchFlag(SearchUIFlags::ADVANCED | SearchUIFlags::REPLACE);
 
-    if (searcher.GetisDirty()) {
+    if (searcher.GetisDirty() || (searcher.hasQuery() && editor->textEditor.IsTextChanged())) {
         searcher.updateMatches(editor->textEditor.GetTextLines(), [&](const std::string &funcText) -> std::string {
             return funcText;
         });
@@ -77,7 +76,9 @@ void EditorUI::render() {
 
                 if (ImGui::BeginTabItem(tabTitle.c_str(), &openTab)) {
                     if (findBar) {
-                        searcher.drawSearchUI();
+                        searcher.drawSearchUI([&](const SearchText::Match& match, const char* replace) {
+                            editorEngPtr->editors[i]->textEditor.ReplaceMatch(match, replace);
+                        });
                     }
                     renderEditor(editorEngPtr->editors[i]);
                     editorEngPtr->activeEditor = i;

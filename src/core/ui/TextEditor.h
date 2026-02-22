@@ -9,6 +9,7 @@
 #include <map>
 #include <regex>
 #include "imgui.h"
+#include "components/SearchText.hpp"
 
 class TextEditor
 {
@@ -235,6 +236,8 @@ public:
 
 	void InsertText(const std::string& aValue);
 	void InsertText(const char* aValue);
+
+	void ReplaceMatch(const SearchText::Match& match, const char* replace);
 
 	void MoveUp(int aAmount = 1, bool aSelect = false);
 	void MoveDown(int aAmount = 1, bool aSelect = false);

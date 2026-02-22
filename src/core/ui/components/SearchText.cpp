@@ -1,6 +1,6 @@
 #include "SearchText.hpp"
 
-bool SearchText::drawSearchUI(std::function<void()> onReplaceClick) {
+bool SearchText::drawSearchUI(std::function<void(Match& match, char* replace)> onReplaceClick) {
     bool changed = false;
 
     if (flags & SearchUIFlags::REPLACE) {
@@ -79,7 +79,16 @@ bool SearchText::drawSearchUI(std::function<void()> onReplaceClick) {
         ImGui::BeginDisabled(matches.empty() || currentMatchIdx == -1);
         if (ImGui::Button("Replace")) {
             if (onReplaceClick) {
-                onReplaceClick();
+                onReplaceClick(matches[currentMatchIdx], replaceBuffer);
+            }
+        }
+        ImGui::SameLine();
+
+        if (ImGui::Button("Replace All")) {
+            if (onReplaceClick) {
+                for (int i = static_cast<int>(matches.size()) - 1; i >= 0; i--) {
+                    onReplaceClick(matches[i], replaceBuffer);
+                }
             }
         }
         ImGui::EndDisabled();
