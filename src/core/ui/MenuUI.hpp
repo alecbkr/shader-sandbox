@@ -25,6 +25,11 @@ private:
     Platform* platformPtr = nullptr;
     AppContext* appctx = nullptr;
 
+    unsigned int iconTex = 0;
+    int iconW = 0;
+    int iconH = 0;
+    bool initializeIconTexture();
+
     bool dragging = false;
     int prevMousePosX = 0;
     int prevMousePosY = 0;
