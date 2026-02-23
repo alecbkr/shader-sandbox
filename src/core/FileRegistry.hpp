@@ -11,7 +11,7 @@ class Platform;
 enum FileState {
     NONE,
     RENAME,
-    DELETE,
+    FS_DELETE,
     NEW
 };
 

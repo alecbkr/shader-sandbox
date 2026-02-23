@@ -88,7 +88,7 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
     eventsPtr->Subscribe(EventType::OpenFile, std::bind(&EditorEngine::spawnEditor, this, std::placeholders::_1));
     eventsPtr->Subscribe(EventType::NewFile, std::bind(&EditorEngine::spawnEditor, this, std::placeholders::_1));
     eventsPtr->Subscribe(EventType::RenameFile, std::bind(&EditorEngine::renameEditor, this, std::placeholders::_1));
-    eventsPtr->Subscribe(EventType::DeleteFile, std::bind(&EditorEngine::deleteEditor, this, std::placeholders::_1));
+    eventsPtr->Subscribe(EventType::ET_DeleteFile, std::bind(&EditorEngine::deleteEditor, this, std::placeholders::_1));
 
     // syncing styles with settings if no loaded settings
     if (!stylesPtr->hasLoadedPalette) {

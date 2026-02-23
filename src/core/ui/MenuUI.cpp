@@ -75,8 +75,7 @@ void MenuUI::drawMenuBar() {
             float dragX1 = buttonsX0;
             float dragW  = dragX1 - dragX0;
 
-            if (dragW > 10.0f)
-            {
+            if (dragW > 10.0f) {
                 ImGui::SameLine();
                 ImGui::SetCursorPosX(dragX0);
 
@@ -85,29 +84,26 @@ void MenuUI::drawMenuBar() {
                 ImGui::InvisibleButton("##TitlebarDrag", dragSize);
 
                 if (ImGui::IsItemActivated()) {
+                    // dragging = false;
                     bool draggingHandled = platformPtr->beginNativeWindowDrag();
-                    if (!draggingHandled) {
-                        dragging = true;
-                        platformPtr->getScreenCursorPosition(prevMousePosX, prevMousePosY);
-                    }
+                    // if (!draggingHandled) {
+                    //     dragging = true;
+                    //     platformPtr->getScreenCursorPosition(prevMousePosX, prevMousePosY);
+                    // }
                 }
 
-                if (dragging && ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-                    int currentX, currentY;
-                    platformPtr->getScreenCursorPosition(currentX, currentY);
+                // if (dragging && ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+                //     int currentX, currentY;
+                //     platformPtr->getScreenCursorPosition(currentX, currentY);
+                //     platformPtr->moveWindowPosRelative(currentX - prevMousePosX, currentY - prevMousePosY);
 
-                    int deltaX = currentX - prevMousePosX;
-                    int deltaY = currentY - prevMousePosY;
+                //     prevMousePosX = currentX;
+                //     prevMousePosY = currentY;
+                // }
 
-                    platformPtr->moveWindowPosRelative(deltaX, deltaY);
-
-                    prevMousePosX = currentX;
-                    prevMousePosY = currentY;
-                }
-
-                if (dragging && ImGui::IsItemDeactivated()) {
-                    dragging = false;
-                }
+                // if (dragging && ImGui::IsItemDeactivated()) {
+                //     dragging = false;
+                // }
             }
 
             if (ImGui::Button("_", ImVec2(btnW, btnH)))

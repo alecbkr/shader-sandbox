@@ -15,7 +15,7 @@ enum class EventType {
     OpenFile,
     NewFile,
     RenameFile,
-    DeleteFile,
+    ET_DeleteFile,
 };
 
 struct SaveActiveShaderFilePayload { std::string filePath; unsigned int modelID; };
@@ -76,5 +76,5 @@ inline Event RenameFileEvent(std::string oldName, std::string newName) {
 }
 
 inline Event DeleteFileEvent(std::string fileName) {
-    return { EventType::DeleteFile, false, DeleteFilePayload{fileName} };
+    return { EventType::ET_DeleteFile, false, DeleteFilePayload{fileName} };
 }
