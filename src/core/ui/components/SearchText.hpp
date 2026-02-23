@@ -42,7 +42,7 @@ class SearchText {
     bool matchWholeWord = false; 
     bool showReplace = false; 
 
-    bool drawSearchUI(std::function<void()> onReplaceClick = nullptr);      // UI for find 
+    bool drawSearchUI(std::function<void(Match& match, char* replace)> onReplaceClick = nullptr);      // UI for find
     bool GetisDirty() const {return isDirty;}                               // On update of things we need to search through 
     void setDirty(bool dirty) {isDirty = dirty;}    
     bool hasQuery() const {return inputBuffer[0] != '\0'; }                 // user has typed in the input field
