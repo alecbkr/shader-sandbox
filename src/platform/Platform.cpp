@@ -10,6 +10,8 @@
 #include "application/AppContext.hpp"
 
 #if defined(_WIN32)
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
 #include <windows.h>
 #elif defined(__linux__)
 #include <unistd.h>
@@ -218,6 +220,35 @@ void Platform::moveWindowPosRelative(int x, int y) {
     int wx, wy;
     glfwGetWindowPos(windowPtr->getGLFWWindow(), &wx, &wy);
     glfwSetWindowPos(windowPtr->getGLFWWindow(), wx + x, wy + y);
+}
+
+void Platform::getScreenCursorPosition(int& x, int& y) const {
+    GLFWwindow* w = windowPtr->getGLFWWindow();
+
+    int winX, winY;
+    glfwGetWindowPos(w, &winX, &winY);
+
+    double cursorX, cursorY;
+    glfwGetCursorPos(w, &cursorX, &cursorY);
+
+    x = winX + cursorX;
+    y = winY + cursorY;
+}
+
+bool Platform::beginNativeWindowDrag() {
+#ifdef _WIN32
+    GLFWwindow* w = windowPtr->getGLFWWindow();
+    HWND hwnd = glfwGetWin32Window(w);
+
+    if (IsZoomed(hwnd)) return false;
+
+    ReleaseCapture();
+
+    SendMessage(hwnd, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
+    return true;
+#else
+    return false;
+#endif
 }
 
 void Platform::terminate(){

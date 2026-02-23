@@ -84,10 +84,29 @@ void MenuUI::drawMenuBar() {
                 ImVec2 dragSize(dragW, ImGui::GetFrameHeight());
                 ImGui::InvisibleButton("##TitlebarDrag", dragSize);
 
-                if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-                {
-                    ImVec2 d = ImGui::GetIO().MouseDelta;
-                    platformPtr->moveWindowPosRelative((int)d.x, (int)d.y);
+                if (ImGui::IsItemActivated()) {
+                    bool draggingHandled = platformPtr->beginNativeWindowDrag();
+                    if (!draggingHandled) {
+                        dragging = true;
+                        platformPtr->getScreenCursorPosition(prevMousePosX, prevMousePosY);
+                    }
+                }
+
+                if (dragging && ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+                    int currentX, currentY;
+                    platformPtr->getScreenCursorPosition(currentX, currentY);
+
+                    int deltaX = currentX - prevMousePosX;
+                    int deltaY = currentY - prevMousePosY;
+
+                    platformPtr->moveWindowPosRelative(deltaX, deltaY);
+
+                    prevMousePosX = currentX;
+                    prevMousePosY = currentY;
+                }
+
+                if (dragging && ImGui::IsItemDeactivated()) {
+                    dragging = false;
                 }
             }
 
@@ -104,13 +123,6 @@ void MenuUI::drawMenuBar() {
 
             if (ImGui::Button("X", ImVec2(btnW, btnH))) {
                 appctx->shouldClose = true;
-            }
-
-            if (ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows) &&
-                !ImGui::IsAnyItemActive() &&
-                ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-                ImVec2 d = io.MouseDelta;
-                platformPtr->moveWindowPosRelative((int)d.x, (int)d.y);
             }
             ImGui::EndMenuBar();
         }

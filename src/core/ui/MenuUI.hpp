@@ -24,6 +24,10 @@ private:
     Keybinds* keybindsPtr = nullptr;
     Platform* platformPtr = nullptr;
     AppContext* appctx = nullptr;
+
+    bool dragging = false;
+    int prevMousePosX = 0;
+    int prevMousePosY = 0;
     void drawMenuBar();
     void drawMenuItem(const MenuItem& item);
 };

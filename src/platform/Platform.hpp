@@ -36,6 +36,8 @@ public:
     void iconifyWindow();
     void maximizeWindow();
     void moveWindowPosRelative(int x, int y);
+    void getScreenCursorPosition(int& x, int& y) const;
+    bool beginNativeWindowDrag();
     void terminate();
 
 private:
