@@ -4,6 +4,15 @@
 #include <memory>
 #include <filesystem>
 #include "platform/components/Window.hpp"
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
 
 class Logger;
 class ContextManager;
@@ -33,6 +42,12 @@ public:
     double getTime();
     std::filesystem::path getExeDir() const;
     void swapInterval(int interval);
+    void iconifyWindow();
+    void maximizeWindow();
+    void moveWindowPosRelative(int x, int y);
+    void getScreenCursorPosition(int& x, int& y) const;
+    bool beginNativeWindowDrag();
+    bool enableBorderlessSnap();
     void terminate();
 
 private:
@@ -44,4 +59,14 @@ private:
     ActionRegistry* actionRegPtr = nullptr;
     InputState* inputsPtr = nullptr;
     WindowUserData userData{};
+
+    void installBorderlessWin32Hooks();
+    void uninstallBorderlessWin32Hooks();
+#ifdef _WIN32
+    HWND hwnd = nullptr;
+    WNDPROC oldWndProc = nullptr;
+    static LRESULT CALLBACK WndProcThunk(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+    LRESULT wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+    int resizeBorderPx = 8;
+#endif
 };

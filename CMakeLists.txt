@@ -77,6 +77,7 @@ if (WIN32)
         user32
         shell32
         winmm
+        dwmapi
     )
 elseif (APPLE)
     target_link_libraries(sandbox_engine PUBLIC

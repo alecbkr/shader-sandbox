@@ -324,7 +324,7 @@ void InspectorUI::drawDeleteFileEntity(ShaderFile* fileData) {
     ImGui::SameLine();
 
     if (ImGui::Button(("DELETE##" + fileData->fileName).c_str())) {
-        eventsPtr->TriggerEvent(Event { EventType::DeleteFile, false, DeleteFilePayload { fileData->fileName } });
+        eventsPtr->TriggerEvent(Event { EventType::ET_DeleteFile, false, DeleteFilePayload { fileData->fileName } });
     }
 
     ImGui::SameLine();
@@ -340,7 +340,7 @@ void drawContextMenu(ShaderFile* fileData) {
             fileData->state = RENAME;
         }
         if (ImGui::Selectable("Delete")) {
-            fileData->state = DELETE;
+            fileData->state = FS_DELETE;
         }
 
         ImGui::EndPopup();
@@ -377,7 +377,7 @@ void InspectorUI::drawShaderFileInspector() {
             case RENAME:
                 drawRenameFileEntry(fileData);
                 break;
-            case DELETE:
+            case FS_DELETE:
                 drawDeleteFileEntity(fileData);
                 break;
             case NEW:

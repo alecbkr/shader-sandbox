@@ -137,7 +137,7 @@ MouseButton translateGlfwMouseButton(int glfwButton) {
     }
 }
 
-static constexpr const char* KEY_NAMES[] = {
+const char* KEY_NAMES[(int)Key::Count] = {
     "Unknown",
 
     "A","B","C","D","E","F","G",
