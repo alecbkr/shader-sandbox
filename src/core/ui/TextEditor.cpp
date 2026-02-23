@@ -6,6 +6,7 @@
 
 #include "TextEditor.h"
 
+#include "EditorUI.hpp"
 #include "imgui.h"
 
 // TODO
@@ -850,7 +851,7 @@ void TextEditor::HandleMouseInputs()
 	}
 }
 
-void TextEditor::Render()
+void TextEditor::Render(SearchText* searcher)
 {
 	/* Compute mCharAdvance regarding to scaled font size (Ctrl + mouse wheel)*/
 	const float fontSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
@@ -1012,6 +1013,25 @@ void TextEditor::Render()
 			auto prevColor = line.empty() ? mPalette[(int)PaletteIndex::Default] : GetGlyphColor(line[0]);
 			ImVec2 bufferOffset;
 
+			if (searcher->isItemActiveMatch(lineNo)) {
+				const auto& activeLine = GetTextLines()[lineNo];
+				const auto& activeMatch = searcher->getActiveMatch();
+
+				if (activeMatch.charIdx + activeMatch.length <= activeLine.size()) {
+					std::string textBefore = activeLine.substr(0, activeMatch.charIdx);
+					std::string textMatch = activeLine.substr(activeMatch.charIdx, activeMatch.length);
+
+					float offsetX = ImGui::CalcTextSize(textBefore.c_str()).x;
+					float width = ImGui::CalcTextSize(textMatch.c_str()).x;
+
+					ImGui::GetWindowDrawList()->AddRectFilled(
+						ImVec2(textScreenPos.x + offsetX, textScreenPos.y),
+						ImVec2(textScreenPos.x + offsetX + width, textScreenPos.y + ImGui::GetTextLineHeight()),
+						IM_COL32(200, 200, 200, 100)
+					);
+				}
+			}
+
 			for (int i = 0; i < line.size();)
 			{
 				auto& glyph = line[i];
@@ -1117,7 +1137,7 @@ void TextEditor::Render()
 	}
 }
 
-void TextEditor::Render(const char* aTitle, const ImVec2& aSize, bool aBorder)
+void TextEditor::Render(const char* aTitle, SearchText* searcher, const ImVec2& aSize, bool aBorder)
 {
 	mWithinRender = true;
 	mTextChanged = false;
@@ -1138,7 +1158,7 @@ void TextEditor::Render(const char* aTitle, const ImVec2& aSize, bool aBorder)
 		HandleMouseInputs();
 
 	ColorizeInternal();
-	Render();
+	Render(searcher);
 
 	if (mHandleKeyboardInputs)
 		ImGui::PopItemFlag();
@@ -1479,6 +1499,24 @@ void TextEditor::InsertText(const char * aValue)
 	SetSelection(pos, pos);
 	SetCursorPosition(pos);
 	Colorize(start.mLine - 1, totalLines + 2);
+}
+
+void TextEditor::ReplaceMatch(const SearchText::Match& match, const char* replace) {
+	int startColumn = GetCharacterColumn(match.itemIdx, match.charIdx);
+	Coordinates startCoord(match.itemIdx, startColumn);
+
+	int endColumn = GetCharacterColumn(match.itemIdx, match.charIdx + match.length);
+	Coordinates endCoord(match.itemIdx, endColumn);
+
+	DeleteRange(startCoord, endCoord);
+	InsertTextAt(startCoord, replace);
+
+	mState.mCursorPosition = startCoord;
+	mState.mSelectionStart = startCoord;
+	mState.mSelectionEnd = startCoord;
+	mScrollToCursor = true;
+	Colorize();
+	mTextChanged = true;
 }
 
 void TextEditor::DeleteSelection()

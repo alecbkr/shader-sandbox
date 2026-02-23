@@ -16,6 +16,7 @@ struct SettingsStyles;
 
 struct Editor {
     TextEditor textEditor;
+    SearchText searcher;
     Editor(std::string filePath, std::string fileName, unsigned int modelID, SettingsStyles* styles);
     std::string filePath;
     std::string fileName;

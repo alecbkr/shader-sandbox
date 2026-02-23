@@ -60,7 +60,7 @@ TEST_CASE("Keybinds initialize creates expected default bindings", "[keybinds]")
     Keybinds kb;
     REQUIRE(kb.initialize(&logger, &ctx, &actions, &input, settings.keybindsMap));
 
-    REQUIRE(kb.bindings().size() == 10);
+    REQUIRE(kb.bindings().size() == 12);
 
     bool foundQuit = false;
     bool foundSave = false;

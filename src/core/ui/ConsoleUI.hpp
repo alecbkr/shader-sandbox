@@ -6,7 +6,6 @@
 #include <vector>
 #include <memory>
 #include <deque>
-
 #include "../logging/ConsoleSink.hpp"
 #include "../ConsoleEngine.hpp"
 #include "components/SearchText.hpp"
@@ -20,9 +19,9 @@ public:
     void render();
 
     struct LogStyle {
-        std::string prefix; 
-        ImVec4 color; 
-    }; 
+        std::string prefix;
+        ImVec4 color;
+    };
 
 private:
     SearchText searcher;
@@ -31,22 +30,22 @@ private:
     float targetHeight = 0.0f;
     ImVec2 windowPos = ImVec2(0, 0);
     
-    std::shared_ptr<ConsoleEngine> engine = nullptr; 
+    std::shared_ptr<ConsoleEngine> engine = nullptr;
     std::shared_ptr<ConsoleSink> logSrc = nullptr;
-    Logger* loggerPtr; 
+    Logger* loggerPtr;
 
-    size_t lastLogSize = 0; 
+    size_t lastLogSize = 0;
     bool initialized = false;
-    int selectionStart = -1; 
-    
-    void drawLogs(); 
-    void drawMenuBar(); 
-    void updateSearchAndScroll(const std::deque<LogEntry> &logs, bool& isScroll); 
+    int selectionStart = -1;
+
+    void drawLogs();
+    void drawMenuBar();
+    void updateSearchAndScroll(const std::deque<LogEntry> &logs, bool& isScroll);
     int getCollapseCount(const std::deque<LogEntry> &logs, int currIdx);
     void drawSingleLog(const LogEntry& log, int index, int repeatCount, bool& isScroll);
 
-    // Allows for users to copy their logs from the console
-    void copyLogsToClipboard(); 
-    LogStyle getLogStyle(const LogEntry& log); 
-    std::string formatLogString(const LogEntry& log); 
-};
+    // Allows for users to copy their logs from the console(because of the way ImGui renders text I had to do this)
+    void copyLogsToClipboard();
+    LogStyle getLogStyle(const LogEntry& log);
+    std::string formatLogString(const LogEntry& log);
+}; 

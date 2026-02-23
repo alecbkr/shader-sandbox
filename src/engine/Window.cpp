@@ -7,7 +7,7 @@
 
 OldWindow::OldWindow(const char *processName, int widthIn, int heightIn) {
     if (!glfwInit()) {
-        // Logger::addLog(LogLevel::CRITICAL, "WINDOW", "glfwInit failure"); 
+        // Logger::addLog(LogLevel::CRITICAL, "WINDOW", "glfwInit failure");
     }
 
     glfwWindowHint(GLFW_SAMPLES, 4);
@@ -18,21 +18,21 @@ OldWindow::OldWindow(const char *processName, int widthIn, int heightIn) {
     window = glfwCreateWindow(widthIn, heightIn, processName, NULL, NULL); 
     if (window == NULL) {
         glfwTerminate();
-        // Logger::addLog(LogLevel::CRITICAL, "WINDOW", "glfwCreateWindow failure"); 
+        // Logger::addLog(LogLevel::CRITICAL, "WINDOW", "glfwCreateWindow failure");
     }
 
-    
+
     glfwMakeContextCurrent(window);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         glfwDestroyWindow(window);
         glfwTerminate();
-        // Logger::addLog(LogLevel::CRITICAL, "WINDOW", "gladLoadGLLoader failure"); 
+        // Logger::addLog(LogLevel::CRITICAL, "WINDOW", "gladLoadGLLoader failure");
     }   
     
     // WINDOWSIZE.width = widthIn;
     // WINDOWSIZE.height = heightIn;
-    
+
     // glfwSetKeyCallback(window, InputHandler::key_callback);
     // glfwSetMouseButtonCallback(window, InputHandler::mouse_callback);
     // glfwSetCursorPosCallback(window, InputHandler::cursor_callback);
@@ -44,7 +44,7 @@ OldWindow::OldWindow(const char *processName, int widthIn, int heightIn) {
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     // ERRLOG.logEntry(EL_INFO, "WINDOW", "Success");
-    // Logger::addLog(LogLevel::INFO, "WINDOW", "Success"); 
+    // Logger::addLog(LogLevel::INFO, "WINDOW", "Success");
 }
 
 

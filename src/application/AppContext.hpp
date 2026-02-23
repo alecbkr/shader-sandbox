@@ -54,6 +54,7 @@ struct AppContext {
     InspectorEngine inspector_engine;
     HotReloader hot_reloader;
     FileRegistry file_registry;
+    ConsoleEngine console_engine;
     EditorEngine editor_engine;
     PresetAssets preset_assets;
     TextureRegistry texture_registry;

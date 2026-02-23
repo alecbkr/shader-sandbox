@@ -23,12 +23,14 @@ std::string getFileContents(std::string filename) {
 }
 
 Editor::Editor(std::string filePath, std::string fileName, unsigned int modelID, SettingsStyles* styles) {
+    searcher.setSearchFlag(SearchUIFlags::ADVANCED | SearchUIFlags::REPLACE);
+
     this->filePath = std::move(filePath);
     this->fileName = std::move(fileName);
     this->modelID = modelID;
     this->stylesPtr = styles;
     seenPaletteVersion = std::numeric_limits<u32>::max();
-    
+
     TextEditor::LanguageDefinition lang = TextEditor::LanguageDefinition::GLSL();
     this->textEditor.SetLanguageDefinition(lang);
     this->textEditor.SetShowWhitespaces(false);
@@ -38,8 +40,14 @@ Editor::Editor(std::string filePath, std::string fileName, unsigned int modelID,
 }
 
 void Editor::render() {
+    if (searcher.GetisDirty() || (searcher.hasQuery() && textEditor.IsTextChanged())) {
+        searcher.updateMatches(textEditor.GetTextLines(), [&](const std::string &funcText) -> std::string {
+            return funcText;
+        });
+    }
+
     applyPaletteIfOutdated();
-    textEditor.Render("ShaderEditor");
+    textEditor.Render("ShaderEditor", &searcher);
 }
 
 void Editor::applyPaletteIfOutdated() {
@@ -77,6 +85,7 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
         loggerPtr->addLog(LogLevel::WARNING, "Editor Engine Initialization", "Editor Engine was already initialized.");
         return false;
     }
+
     loggerPtr = _loggerPtr;
     eventsPtr = _eventsPtr;
     modelCachePtr = _modelCachePtr;
@@ -100,7 +109,7 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
 
         stylesPtr->hasLoadedPalette = true;
     }
-    
+
     initialized = true;
     return true;
 }
