@@ -9,11 +9,12 @@ class ShaderRegistry;
 class ModelCache;
 class EditorEngine;
 class InspectorEngine;
+class ContextManager;
 
 class HotReloader{
 public:
     HotReloader();
-    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, ModelCache* _modelCachePtr, EditorEngine* _editorEngPtr, InspectorEngine* _inspectorEngPtr);
+    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, ModelCache* _modelCachePtr, EditorEngine* _editorEngPtr, InspectorEngine* _inspectorEngPtr, ContextManager* _contextManagerPtr);
     void shutdown();
     void update();
     bool compile(const std::string &filepath, const std::string &programName);
@@ -26,6 +27,8 @@ private:
     ModelCache* modelCachePtr = nullptr;
     EditorEngine* editorEngPtr = nullptr;
     InspectorEngine* inspectorEngPtr = nullptr;
+    ContextManager* contextManagerPtr = nullptr;
+
 
     std::string readSourceFile(const std::string &filepath);
     void scanSourceFiles(const std::string &sourceCode);

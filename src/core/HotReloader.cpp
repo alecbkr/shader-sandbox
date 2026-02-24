@@ -10,6 +10,8 @@
 #include "object/ModelCache.hpp"
 #include "core/EditorEngine.hpp"
 #include "core/InspectorEngine.hpp"
+#include <filesystem>
+#include "core/input/ContextManager.hpp"
 
 HotReloader::HotReloader() {
     initialized = false;
@@ -21,7 +23,7 @@ HotReloader::HotReloader() {
     inspectorEngPtr = nullptr;
 }
 
-bool HotReloader::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, ModelCache* _modelCachePtr, EditorEngine* _editorEngPtr, InspectorEngine* _inspectorEngPtr) {
+bool HotReloader::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, ModelCache* _modelCachePtr, EditorEngine* _editorEngPtr, InspectorEngine* _inspectorEngPtr, ContextManager* _contextManagerPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Hot Reloader Initialization", "Hot Reloader was already initialized.");
         return false;
@@ -32,18 +34,43 @@ bool HotReloader::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, Sh
     modelCachePtr = _modelCachePtr;
     editorEngPtr = _editorEngPtr;
     inspectorEngPtr = _inspectorEngPtr;
+    contextManagerPtr = _contextManagerPtr;
 
     eventsPtr->Subscribe(EventType::SaveActiveShaderFile, [this](const EventPayload& payload) -> bool {
-    if (const auto* data = std::get_if<SaveActiveShaderFilePayload>(&payload)) {
-        
-        Model* model = modelCachePtr->getModel(data->modelID);
-        if (!model) return false;
+    int activeIdx = editorEngPtr->activeEditor;
+    if (activeIdx == -1 || editorEngPtr->editors.empty()) {
+        loggerPtr->addLog(LogLevel::WARNING, "HotReloader", "No active shader editor open");
+        return false; 
+    }
+    auto* active = editorEngPtr->editors[activeIdx];
+        if (!active) return false;
 
-            if (HotReloader::compile(data->filePath, model->getProgramID())) {
-                inspectorEngPtr->reloadUniforms(data->modelID); 
-                return true;
+        std::ofstream out(active->filePath, std::ios::binary);
+        if (out.is_open()) {
+            out << active->textEditor.GetText();
+            out.close();
+        }
+
+        std::string targetProgram = "";
+        std::string absSavedPath = std::filesystem::weakly_canonical(active->filePath).string();
+
+        for (auto const& [name, prog] : shaderRegPtr->getPrograms()) {
+            if (std::filesystem::weakly_canonical(prog->vertPath).string() == absSavedPath ||
+                std::filesystem::weakly_canonical(prog->fragPath).string() == absSavedPath) {
+                targetProgram = name;
+                break;
             }
         }
+
+        if (!targetProgram.empty()) {
+            if (this->compile(active->filePath, targetProgram)) {
+                inspectorEngPtr->reloadUniforms(active->modelID);
+                return true;
+            }
+        } else {
+             loggerPtr->addLog(LogLevel::WARNING, "HotReloader", "Saved file not associated with any program.");
+        }
+
         return false;
     });
 
@@ -63,23 +90,7 @@ void HotReloader::shutdown() {
 }
 
 void HotReloader::update() {
-    if (ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_S)) {
-        int activeIdx = editorEngPtr->activeEditor;
-        if (activeIdx != -1 && editorEngPtr->editors.size() > 0) {
-            auto* active = editorEngPtr->editors[activeIdx];
-            
-            if (active == nullptr) {
-                loggerPtr->addLog(LogLevel::LOG_ERROR, "HotReloader::update", "editor is null?");
-                return;
-            }
-            std::ofstream out(active->filePath, std::ios::binary);
-            out << active->textEditor.GetText();
-            out.close();
-
-            eventsPtr->TriggerEvent(MakeSaveActiveShaderFileEvent(active->filePath, active->modelID));            
-            loggerPtr->addLog(LogLevel::INFO, "HotReloader", "Performing Hot Reloading");
-        }
-    }
+    
 }
 
 bool HotReloader::compile(const std::string &filepath, const std::string &programName) {
@@ -109,33 +120,49 @@ std::string HotReloader::readSourceFile(const std::string &filepath) {
     return "";
 }
 
-bool HotReloader::attemptCompile(const std::string &fragShaderPath, const std::string &programName) {
-    ShaderProgram *oldProgram = shaderRegPtr->getProgram(programName);
-    std::string vPath = (oldProgram) ? oldProgram->vertPath : "../shaders/default.vert";
+bool HotReloader::attemptCompile(const std::string &shaderPath, const std::string &programName) {
+    ShaderProgram *oldProgram = shaderRegPtr->getProgram(programName);    
 
     if (programName.empty()) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "attemptCompile", "Shader name cannot be empty");
         return false;
     }
 
-    auto newProgram = std::make_unique<ShaderProgram>(
-        vPath.c_str(), 
-        fragShaderPath.c_str(),
-        programName.c_str(),
-        loggerPtr
-    );
-
-    if (!newProgram->isCompiled()) {
-        if (oldProgram && oldProgram->isCompiled()) {
-            oldProgram->use();
-        } else {
-            glUseProgram(0);
-        }
+    if (!oldProgram) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "attemptCompile", "Could not find program name");
         return false;
     }
+    auto getAbsPath = [](const std::string& p) -> std::string {
+        if (p.empty()) return "";
+        try {
+            return std::filesystem::weakly_canonical(p).string();
+        } catch (...) { 
+            return p; 
+        }
+    };
 
-    shaderRegPtr->replaceProgram(programName, std::move(newProgram));
-    return true;
+    std::string vPath = getAbsPath(oldProgram->vertPath);
+    std::string fPath = getAbsPath(oldProgram->fragPath);
+    std::string normalizedTriggerPath = getAbsPath(shaderPath);
+
+    if (normalizedTriggerPath.find(".vert") != std::string::npos) {
+        vPath = normalizedTriggerPath;
+    } else if (normalizedTriggerPath.find(".frag") != std::string::npos) {
+        fPath = normalizedTriggerPath;
+    }
+
+    if (inspectorEngPtr->handleEditShaderProgram(vPath, fPath, programName)) {
+        ShaderProgram* updatedProg = shaderRegPtr->getProgram(programName);
+        if (updatedProg) {
+            updatedProg->vertPath = vPath;
+            updatedProg->fragPath = fPath;
+        }
+
+        inspectorEngPtr->refreshUniforms();
+        loggerPtr->addLog(LogLevel::INFO, "HotReloader", "Successfully hot-reloaded: " + programName);
+        return true;
+    }
+    return false;
 }
 
 void HotReloader::scanSourceFiles(const std::string &sourceCode) {
