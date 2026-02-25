@@ -5,7 +5,7 @@
 #include "core/logging/Logger.hpp"
 
 
-Texture::Texture(std::string texture_path, TextureType type) {
+Texture::Texture(std::string texture_path, TextureType type, Logger* _loggerPtr) : loggerPtr(_loggerPtr) {
     this->path = texture_path;
     this->type = type;
     
