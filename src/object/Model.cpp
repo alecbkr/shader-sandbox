@@ -7,9 +7,8 @@
 
 
 
-Model::Model(const unsigned int id) : ID(id){
-
-}
+Model::Model(const unsigned int ID, ShaderRegistry* _shaderRegPtr, Logger* _loggerPtr)
+    : ID(ID), shaderRegPtr(_shaderRegPtr), loggerPtr(_loggerPtr) {}
 
 
 // -----FUNCTIONALITY
@@ -105,7 +104,7 @@ void Model::setModelProgram(std::string& programID) {
 
 void Model::setMaterialProgram(unsigned int materialID, std::string& programID) {
     if (all_materials.size() - 1 < materialID) {
-        Logger::addLog(LogLevel::ERROR, "MODEL | setMaterialProgram()", "Material doesn't exist at index ", std::to_string(materialID));
+        loggerPtr->Logger::addLog(LogLevel::LOG_ERROR, "MODEL | setMaterialProgram()", "Material doesn't exist at index ", std::to_string(materialID));
         return;
     }
     all_materials[materialID]->setProgramID(programID);
@@ -114,7 +113,7 @@ void Model::setMaterialProgram(unsigned int materialID, std::string& programID) 
 
 void Model::setMaterialType(unsigned int materialID, MaterialType type) {
     if (all_materials.size() - 1 < materialID) {
-        Logger::addLog(LogLevel::ERROR, "MODEL | setMaterialType()", "Material doesn't exist at index ", std::to_string(materialID));
+        loggerPtr->Logger::addLog(LogLevel::LOG_ERROR, "MODEL | setMaterialType()", "Material doesn't exist at index ", std::to_string(materialID));
         return;
     }
     all_materials[materialID]->type = type;
@@ -155,7 +154,7 @@ std::string Model::getProgramID() {
 
 
 void Model::setProgramID(std::string programID) {
-    Logger::addLog(LogLevel::ERROR, "MODEL-setProgramID()", "doing nothing");
+    // loggerPtr->Logger::addLog(LogLevel::LOG_ERROR, "MODEL-setProgramID()", "doing nothing");
 }
 
 

@@ -1,17 +1,16 @@
 #include "CustomModel.hpp"
 #include "texture/TextureCache.hpp"
 // #include "texture/CubeMap.hpp"
-#include "../core/logging/Logger.hpp"
-#include "../core/logging/LogSink.hpp"
 
+#include "core/logging/Logger.hpp"
 
-CustomModel::CustomModel(const unsigned int modelID) : Model(modelID) {
+CustomModel::CustomModel(const unsigned int modelID, ShaderRegistry* shaderRegPtr, Logger* _loggerPtr) 
+    : Model(ID, shaderRegPtr, _loggerPtr), loggerPtr(_loggerPtr) {
     primitives.emplace_back(modelID, 0, 0);
 
     all_materials.push_back(std::make_unique<Material>(MaterialType::Opaque, nextMaterialID));
     all_meshes.emplace_back(std::make_unique<MeshA>(nextMeshID));
 }
-
 
 void CustomModel::setMesh(std::vector<float> raw_vertices, std::vector<unsigned int> indices, bool hasPos, bool hasNorm, bool hasUV) {
     all_meshes[0]->unloadFromGPU();
@@ -22,7 +21,7 @@ void CustomModel::setMesh(std::vector<float> raw_vertices, std::vector<unsigned 
     rowstride += 2*hasUV;
 
     if (raw_vertices.size() % rowstride != 0) {
-        Logger::addLog(LogLevel::ERROR, "MODEL_ADDMESH", "passed vertex data is wrong");
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODEL_ADDMESH", "passed vertex data is wrong");
         return;
     }
 

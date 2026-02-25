@@ -7,16 +7,14 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include "core/logging/LogSink.hpp"
-#include "core/logging/Logger.hpp"
+// #include "core/logging/LogSink.hpp"
+// #include "core/logging/Logger.hpp"
 #include "MeshAssimp.hpp"
 #include "Material.hpp"
 #include "ImportedModel.hpp"
-// #include "../texture/Texture2D.hpp"
-// #include "../texture/TextureType.hpp"
-
 #include "texture/TextureCache.hpp"
 
+class Logger;
 
 struct ImportContext {
     std::string directory;
@@ -52,7 +50,7 @@ inline bool importModel(std::string path, ImportedModel& model) {
     const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        Logger::addLog(LogLevel::WARNING, "MODEL_IMPORTER", "Model not found");
+        // Logger::addLog(LogLevel::WARNING, "MODEL_IMPORTER", "Model not found");
         return false;
     }
 
@@ -179,7 +177,7 @@ static void getTextures(aiMaterial *mat, std::vector<unsigned int>& textureIDs, 
         for (unsigned int idx = 0; idx < mat->GetTextureCount(aiType); idx++) {
             aiString aiTex;
             if (mat->GetTexture(aiType, idx, &aiTex) != AI_SUCCESS) {
-                Logger::addLog(LogLevel::ERROR, "ASSIMP_IMPORT", "Assimp failed to get texture");
+                // Logger::addLog(LogLevel::ERROR, "ASSIMP_IMPORT", "Assimp failed to get texture");
                 continue;
             }
 

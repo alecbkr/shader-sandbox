@@ -1,13 +1,14 @@
 #include "ImportedModel.hpp"
 
 #include "AssimpImporter.hpp"
-#include "core/logging/LogSink.hpp"
+#include "core/logging/Logger.hpp"
 
 
-ImportedModel::ImportedModel(const unsigned int ID, std::string pathname) : Model(ID) {
+ImportedModel::ImportedModel(const unsigned int ID, std::string pathname, ShaderRegistry* _shaderRegPtr, Logger* _loggerPtr)
+    : Model(ID, _shaderRegPtr, _loggerPtr) {
     
     if (importModel(pathname, *this) == false) {
-        Logger::addLog(LogLevel::ERROR, "MODEL", "Model import failed, returned false");
+        _loggerPtr->addLog(LogLevel::LOG_ERROR, "MODEL", "Model import failed, returned false");
         return;
     }
     all_meshes.empty() == true ? properties.hasMeshes = false : properties.hasMeshes = true;

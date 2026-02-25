@@ -1,4 +1,5 @@
 /build
+/build-debug
 /bin
 /.vscode
 
@@ -9,3 +10,4 @@
 .idea
 
 src/core/logging/logs.txt
+src/core/logging/logs/log_*.txt

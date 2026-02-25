@@ -2,14 +2,37 @@
 
 #include "imgui/imgui.h"
 #include "core/MenuEngine.hpp"
+#include "core/ui/modals/ModalManager.hpp"
+
+class Logger;
+class EventDispatcher;
+class Keybinds;
+class Platform;
+struct AppContext;
 
 class MenuUI {
 public:
-    static bool initialize();
-    static void render();
+    MenuUI();
+    bool initialize(Logger* _loggerPtr, Platform* _platformPtr, EventDispatcher* _eventsPtr, ModalManager* _modalsPtr, Keybinds* _keybindsPtr, AppContext* ctx);
+    void render();
 
 private:
-    static bool initialized;
-    static void drawMenuBar();
-    static void drawMenuItem(const MenuItem& item);
+    bool initialized = false;
+    Logger* loggerPtr = nullptr;
+    EventDispatcher* eventsPtr = nullptr;
+    ModalManager* modalsPtr = nullptr;
+    Keybinds* keybindsPtr = nullptr;
+    Platform* platformPtr = nullptr;
+    AppContext* appctx = nullptr;
+
+    unsigned int iconTex = 0;
+    int iconW = 0;
+    int iconH = 0;
+    bool initializeIconTexture();
+
+    bool dragging = false;
+    int prevMousePosX = 0;
+    int prevMousePosY = 0;
+    void drawMenuBar();
+    void drawMenuItem(const MenuItem& item);
 };

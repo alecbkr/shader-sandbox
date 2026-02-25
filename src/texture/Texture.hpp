@@ -9,16 +9,17 @@ Honestly, it might make more sense to include this in the engine dir, but whatev
 is for now.
 */
 
+#pragma once
 
-#ifndef TEXTURE_HPP
-#define TEXTURE_HPP
 
 // #include <GLFW/glfw3.h>
 #include <glad/glad.h>
+#include "platform/GL.hpp"
 #include "TextureType.hpp"
 #include <string>
 #include <vector>
 
+class Logger;
 
 class Texture {
     
@@ -26,7 +27,8 @@ class Texture {
         mutable GLuint ID = 0;
         std::string path;
         
-        Texture(std::string texture_path, TextureType type);
+        Logger* loggerPtr;
+        Texture(std::string texture_path, TextureType type, Logger* _loggerPtr);
         virtual ~Texture();
         virtual void bind(unsigned int texNum) = 0;
         void unbind();
@@ -44,5 +46,3 @@ class Texture {
     private:
         
 };
-
-#endif

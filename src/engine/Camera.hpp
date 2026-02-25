@@ -3,6 +3,8 @@
 
 #include <glm/glm.hpp>
 
+class AppTimer;
+
 enum Camera_Movement {
     CAM_FORWARD,
     CAM_BACKWARD,
@@ -25,7 +27,7 @@ class Camera {
         float CameraSensitivity;
         float Zoom;
 
-        Camera();
+        Camera(AppTimer* _timerPtr);
         glm::mat4 GetViewMatrix();
         void ProcessKeyboard(Camera_Movement dir, float deltaTime);
         void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch);
@@ -38,6 +40,7 @@ class Camera {
         void MoveDown();
     
     private:
+        AppTimer* timerPtr = nullptr;
         void updateCameraVectors();
 };
 

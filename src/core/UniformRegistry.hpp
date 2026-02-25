@@ -3,11 +3,13 @@
 #include <unordered_map>
 #include <string>
 
-#define UNIFORM_REGISTRY UniformRegistry::instance()
+class Logger;
 
 class UniformRegistry {
     public:
-    static UniformRegistry& instance();
+    UniformRegistry();
+    bool initialize(Logger* _loggerPtr);
+    void shutdown();
     const Uniform* tryReadUniform(unsigned int modelID, const std::string& uniformName) const; // return false if we didn't find it.
     const std::unordered_map<std::string, Uniform>* tryReadUniforms(unsigned int modelID) const;
     bool containsObject(unsigned int modelID);
@@ -25,7 +27,8 @@ class UniformRegistry {
     const std::unordered_map<std::string, Uniform>* tryReadMaterialUniforms(unsigned int modelID, unsigned int materialID) const;
 
     private:
-    UniformRegistry();
+    bool initialized = false;
+    Logger* loggerPtr = nullptr;
     std::unordered_map<unsigned int, std::unordered_map<std::string, Uniform>> uniforms;
 
     // ALECS JUNK

@@ -9,6 +9,7 @@
 #include <map>
 #include <regex>
 #include "imgui.h"
+#include "components/SearchText.hpp"
 
 class TextEditor
 {
@@ -23,6 +24,7 @@ public:
 		Punctuation,
 		Preprocessor,
 		Identifier,
+		Function,
 		KnownIdentifier,
 		PreprocIdentifier,
 		Comment,
@@ -194,7 +196,7 @@ public:
 	void SetErrorMarkers(const ErrorMarkers& aMarkers) { mErrorMarkers = aMarkers; }
 	void SetBreakpoints(const Breakpoints& aMarkers) { mBreakpoints = aMarkers; }
 
-	void Render(const char* aTitle, const ImVec2& aSize = ImVec2(), bool aBorder = false);
+	void Render(const char* aTitle, SearchText* searcher, const ImVec2& aSize = ImVec2(), bool aBorder = false);
 	void SetText(const std::string& aText);
 	std::string GetText() const;
 
@@ -235,6 +237,8 @@ public:
 
 	void InsertText(const std::string& aValue);
 	void InsertText(const char* aValue);
+
+	void ReplaceMatch(const SearchText::Match& match, const char* replace);
 
 	void MoveUp(int aAmount = 1, bool aSelect = false);
 	void MoveDown(int aAmount = 1, bool aSelect = false);
@@ -314,6 +318,7 @@ private:
 	void ProcessInputs();
 	void Colorize(int aFromLine = 0, int aCount = -1);
 	void ColorizeRange(int aFromLine = 0, int aToLine = 0);
+	void ColorizeFunctions(int aFromLine, int toLine);
 	void ColorizeInternal();
 	float TextDistanceToLineStart(const Coordinates& aFrom) const;
 	void EnsureCursorVisible();
@@ -346,7 +351,7 @@ private:
 
 	void HandleKeyboardInputs();
 	void HandleMouseInputs();
-	void Render();
+	void Render(SearchText* searcher);
 
 	float mLineSpacing;
 	Lines mLines;

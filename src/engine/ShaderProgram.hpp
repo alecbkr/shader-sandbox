@@ -1,11 +1,11 @@
 #ifndef SHADERPROGRAM_HPP
 #define SHADERPROGRAM_HPP
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include "platform/GL.hpp"
 #include <glm/glm.hpp>
 #include <string>
 
+class Logger;
 
 class ShaderProgram {
     public:
@@ -15,8 +15,9 @@ class ShaderProgram {
         std::string name;
         std::string vertPath;
         std::string fragPath;
+        Logger* loggerPtr = nullptr;
 
-        ShaderProgram(const char *vertshader_path, const char *fragshader_path, const char *name);
+        ShaderProgram(const char *vertshader_path, const char *fragshader_path, const char *name, Logger* _loggerPtr);
         void use();
         void kill();
         void setUniform_int(const char *uniformName, int val);

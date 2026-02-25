@@ -12,6 +12,9 @@
 #include "Material.hpp"
 #include "ModelPrimitive.hpp"
 
+class ShaderRegistry;
+class Logger;
+
 class Model {
     private:
         struct ModelFlags {
@@ -22,10 +25,12 @@ class Model {
 
     public:
         const unsigned int ID;
+        ShaderRegistry* shaderRegPtr = nullptr;
+        Logger* loggerPtr = nullptr;
         std::string        name; // PLACEHOLDER does not do anything rn
         std::vector<ModelPrimitive> primitives;
 
-        Model(const unsigned int ID);
+        Model(const unsigned int ID, ShaderRegistry* _shaderRegPtr, Logger* _loggerPtr);
         virtual ~Model() = default;
         // FUNCTIONALITY
         void renderPrimitive(unsigned int meshID);

@@ -1,10 +1,14 @@
 #pragma once
 
 #include <vector>
+#include <cstdint>
+
+class Logger;
+class ActionRegistry;
 
 // Make the ControlCtx a bitmask if more contexts are added
 // Then make the actual application context an enum
-enum class ControlCtx {
+enum class ControlCtx : std::uint8_t {
     None = 0,
     Editor,
     Camera,
@@ -13,18 +17,21 @@ enum class ControlCtx {
 
 class ContextManager {
 public:
-    static bool initialize();
-    static void toggleCtx();
-    static void set(ControlCtx ctx);
-    static ControlCtx current();
-    static bool is(ControlCtx ctx);
-    static bool isEditor();
-    static bool isCamera();
-    static void push(ControlCtx ctx);
-    static void pop();
-    static void clearStack();
+    ContextManager();
+    bool initialize(Logger* _loggerPtr, ActionRegistry* _actionRegPtr);
+    void toggleCtx();
+    void set(ControlCtx ctx);
+    ControlCtx current();
+    bool is(ControlCtx ctx);
+    bool isEditor();
+    bool isCamera();
+    void push(ControlCtx ctx);
+    void pop();
+    void clearStack();
 
 private:
-    static ControlCtx current_;
-    static std::vector<ControlCtx> stack_;
+    bool initialized = false;
+    ControlCtx current_ = ControlCtx::None;
+    std::vector<ControlCtx> stack_;
+    Logger* loggerPtr = nullptr;
 };

@@ -9,18 +9,36 @@
 #include "core/EventDispatcher.hpp"
 #include "core/ShaderRegistry.hpp"
 #include "core/logging/Logger.hpp"
-
-std::unordered_map<unsigned int, std::unique_ptr<Model>> ModelCache::modelIDMap;
-unsigned int ModelCache::nextModelID = 0;
-
-std::vector<ModelPrimitive*> ModelCache::opaquePrims;
-std::vector<ModelPrimitive*> ModelCache::translucentPrims;
-std::vector<ModelPrimitive*> ModelCache::cutoutPrims;
-ModelPrimitive*              ModelCache::skyboxPrim = nullptr;
+#include "presets/PresetAssets.hpp"
 
 
-bool ModelCache::initialize() {
-    EventDispatcher::Subscribe(EventType::ReloadShader, [](const EventPayload& payload) -> bool {
+ModelCache::ModelCache() {
+    initialized = false;
+    inspectorEngPtrSet = false;
+    loggerPtr = nullptr;
+    inspectorEngPtr = nullptr;
+    eventsPtr = nullptr;
+    shaderRegPtr = nullptr;
+    uniformRegPtr = nullptr;
+    presetsPtr = nullptr;
+    // modelCache.clear();
+}
+
+bool ModelCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, PresetAssets* _presetsPtr) {
+    if (initialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Model Cache Initialization", "Model Cache was already initialized.");
+        return false;
+    }
+    loggerPtr = _loggerPtr;
+    inspectorEngPtr = nullptr;;
+    eventsPtr = _eventsPtr;
+    shaderRegPtr = _shaderRegPtr;
+    uniformRegPtr = _uniformRegPtr;
+    presetsPtr = _presetsPtr;
+    // modelImporterPtr = _modelImporterPtr;
+    // modelCache.clear();
+    
+    eventsPtr->Subscribe(EventType::ReloadShader, [this](const EventPayload& payload) -> bool {
         
         if (const auto* data = std::get_if<ReloadShaderPayload>(&payload)) {
             
@@ -36,7 +54,19 @@ bool ModelCache::initialize() {
         return false;
     });
 
+    initialized = true;
     return true;
+}
+
+void ModelCache::shutdown() {
+    loggerPtr = nullptr;
+    inspectorEngPtr = nullptr;
+    eventsPtr = nullptr;
+    shaderRegPtr = nullptr;
+    nextModelID = 0;
+    // modelCache.clear();
+    inspectorEngPtrSet = false;
+    initialized = false;
 }
 
 
@@ -47,11 +77,11 @@ unsigned int ModelCache::createCustom(
 ) {
 
     if (modelIDMap.contains(nextModelID)) {
-        Logger::addLog(LogLevel::ERROR, "MODEL_CACHE", "createModel failed, ID already in use", std::to_string(nextModelID));
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODEL_CACHE", "createModel failed, ID already in use", std::to_string(nextModelID));
         return INVALID_MODEL;
     }
     
-    std::unique_ptr<CustomModel> customModel = std::make_unique<CustomModel>(nextModelID);
+    std::unique_ptr<CustomModel> customModel = std::make_unique<CustomModel>(nextModelID, shaderRegPtr, loggerPtr);
     customModel->setMesh(vertices, indices, hasPos, hasNorms, hasUVs);
     Model* rawPointer = customModel.get();
 
@@ -66,10 +96,11 @@ unsigned int ModelCache::createCustom(
 unsigned int ModelCache::createImported(std::string model_path) {
 
     if (modelIDMap.contains(nextModelID)) {
-        Logger::addLog(LogLevel::ERROR, "MODEL_CACHE", "createModel failed, ID already in use", std::to_string(nextModelID));
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODEL_CACHE", "createModel failed, ID already in use", std::to_string(nextModelID));
         return INVALID_MODEL;
     }
-    std::unique_ptr<ImportedModel> importedModel = std::make_unique<ImportedModel>(nextModelID, model_path);
+
+    std::unique_ptr<ImportedModel> importedModel = std::make_unique<ImportedModel>(nextModelID, model_path, shaderRegPtr, loggerPtr);
     Model* rawPointer = importedModel.get();
     modelIDMap.emplace(nextModelID, std::move(importedModel));
     // modelCache.push_back(rawPointer);
@@ -81,7 +112,7 @@ unsigned int ModelCache::createImported(std::string model_path) {
 
 
 unsigned int ModelCache::createPreset(MeshPreset preset) {
-    MeshData presetData = PresetAssets::getPresetMesh(preset);
+    MeshData presetData = presetsPtr->getPresetMesh(preset);
     std::unique_ptr<CustomModel> presetModel = std::make_unique<CustomModel>(nextModelID);
     Model* rawPointer = presetModel.get();
 
@@ -94,7 +125,7 @@ unsigned int ModelCache::createPreset(MeshPreset preset) {
 
 
 unsigned int ModelCache::createSkybox(std::string cubemap_dir) {
-    MeshData cube = PresetAssets::getPresetMesh(MeshPreset::CUBE);
+    MeshData cube = presetsPtr->getPresetMesh(MeshPreset::CUBE);
     std::unique_ptr<CustomModel> skyboxModel = std::make_unique<CustomModel>(nextModelID);
     Model* rawPointer = skyboxModel.get();
 
@@ -110,13 +141,13 @@ unsigned int ModelCache::createSkybox(std::string cubemap_dir) {
 
 void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camPos) {
     
-    UNIFORM_REGISTRY.registerSceneUniform({"projection", UniformType::Mat4, perspective});
-    UNIFORM_REGISTRY.registerSceneUniform({"view", UniformType::Mat4, view});
+    uniformRegPtr->registerSceneUniform({"projection", UniformType::Mat4, perspective});
+    uniformRegPtr->registerSceneUniform({"view", UniformType::Mat4, view});
 
     // REGISTER INDIVIDUAL MODEL UNIFORMS
     for (auto& model : modelIDMap) {
         if (model.second->getMaterialType(0) == MaterialType::Skybox) continue;
-        UNIFORM_REGISTRY.registerModelUniform(model.second->ID, {"model", UniformType::Mat4, model.second->getModelMatrix()});
+        uniformRegPtr->registerModelUniform(model.second->ID, {"model", UniformType::Mat4, model.second->getModelMatrix()});
     }
 
     // RENDER SKYBOX PRIMITIVE
@@ -150,14 +181,14 @@ void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camP
 void ModelCache::renderModel(unsigned int modelID, glm::mat4 perspective, glm::mat4 view, glm::vec3 camPos) {
     Model* model = getModel(modelID);
     if (model == nullptr) {
-        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(modelID));
+        loggerPtr->addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(modelID));
         return;
     }
 
-    UNIFORM_REGISTRY.registerSceneUniform({"projection", UniformType::Mat4, perspective});
-    UNIFORM_REGISTRY.registerSceneUniform({"view", UniformType::Mat4, view});
-    // UNIFORM_REGISTRY.registerUniform(model->ID, {"cameraPos", UniformType::Vec3, camPos});
-    UNIFORM_REGISTRY.registerModelUniform(modelID, {"model", UniformType::Mat4, model->getModelMatrix()});
+    uniformRegPtr->registerSceneUniform({"projection", UniformType::Mat4, perspective});
+    uniformRegPtr->registerSceneUniform({"view", UniformType::Mat4, view});
+    // uniformRegPtr->registerUniform(model->ID, {"cameraPos", UniformType::Vec3, camPos});
+    uniformRegPtr->registerModelUniform(modelID, {"model", UniformType::Mat4, model->getModelMatrix()});
 
     for (ModelPrimitive& prim : model->primitives) {
         InspectorEngine::applyAllUniformsForPrimitive(prim);
@@ -169,13 +200,13 @@ void ModelCache::renderModel(unsigned int modelID, glm::mat4 perspective, glm::m
 void ModelCache::renderPrimitive(unsigned int modelID, unsigned int meshID, glm::mat4 perspective, glm::mat4 view, glm::vec3 camPos) {
     Model* model = modelIDMap[modelID].get();
     if (model == nullptr) {
-        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(modelID));
+        loggerPtr->addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(modelID));
         return;
     }
-    UNIFORM_REGISTRY.registerSceneUniform({"projection", UniformType::Mat4, perspective});
-    UNIFORM_REGISTRY.registerSceneUniform({"view", UniformType::Mat4, view});
-    // UNIFORM_REGISTRY.registerUniform(model->ID, {"cameraPos", UniformType::Vec3, camPos});
-    UNIFORM_REGISTRY.registerModelUniform(modelID, {"model", UniformType::Mat4, model->getModelMatrix()});
+    uniformRegPtr->registerSceneUniform({"projection", UniformType::Mat4, perspective});
+    uniformRegPtr->registerSceneUniform({"view", UniformType::Mat4, view});
+    // uniformRegPtr->registerUniform(model->ID, {"cameraPos", UniformType::Vec3, camPos});
+    uniformRegPtr->registerModelUniform(modelID, {"model", UniformType::Mat4, model->getModelMatrix()});
     
     model->renderPrimitive(meshID);
 }
@@ -184,7 +215,7 @@ void ModelCache::renderPrimitive(unsigned int modelID, unsigned int meshID, glm:
 void ModelCache::deleteModel(unsigned int modelID) {
     Model* model = getModel(modelID);
     if (model == nullptr) {
-        Logger::addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(modelID));
+        loggerPtr->addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(modelID));
         return;
     }
 
@@ -219,10 +250,10 @@ void ModelCache::printPrimRelations(unsigned int modelID) {
 void ModelCache::renderPrim(unsigned int modelID, unsigned int meshID, glm::mat4 perspective, glm::mat4 view) {
     Model* model = modelIDMap[modelID].get();
 
-    UNIFORM_REGISTRY.registerSceneUniform({"projection", UniformType::Mat4, perspective});
-    UNIFORM_REGISTRY.registerSceneUniform({"view", UniformType::Mat4, view});
-    // UNIFORM_REGISTRY.registerUniform(model->ID, {"cameraPos", UniformType::Vec3, camPos});
-    UNIFORM_REGISTRY.registerSceneUniform({"model", UniformType::Mat4, model->getModelMatrix()});
+    uniformRegPtr->registerSceneUniform({"projection", UniformType::Mat4, perspective});
+    uniformRegPtr->registerSceneUniform({"view", UniformType::Mat4, view});
+    // uniformRegPtr->registerUniform(model->ID, {"cameraPos", UniformType::Vec3, camPos});
+    uniformRegPtr->registerSceneUniform({"model", UniformType::Mat4, model->getModelMatrix()});
 
     model->renderPrimitive(meshID);
 }
@@ -240,7 +271,7 @@ Model* ModelCache::getModel(unsigned int modelID) {
 void ModelCache::setModelMaterialType(unsigned int modelID, unsigned int materialID, MaterialType type) {
     Model* model = getModel(modelID);
     if (model == nullptr) {
-        Logger::addLog(LogLevel::ERROR, "MODELCACHE | setModelMaterialType()", "modelID not found");
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE | setModelMaterialType()", "modelID not found");
         return;
     }
 
@@ -323,8 +354,8 @@ int ModelCache::getNumberOfModels() {
 //     std::sort(modelCache.begin(), modelCache.end(),
 //         [](const Model* a, const Model* b) 
 //     {  
-//         auto* progA = ShaderRegistry::getProgram(a->getProgramID());
-//         auto* progB = ShaderRegistry::getProgram(b->getProgramID());
+//         auto* progA = shaderRegPtr->getProgram(a->getProgramID());
+//         auto* progB = shaderRegPtr->getProgram(b->getProgramID());
     
 //         // Both null equal
 //         if (!progA && !progB)
@@ -338,7 +369,12 @@ int ModelCache::getNumberOfModels() {
 //         if (!progB)
 //             return true;
 
-//         // Both valid compare IDs
+        // Both valid compare IDs
 //         return progA->ID < progB->ID;
 //     });
 // }
+
+void ModelCache::setInspectorEnginePtr(InspectorEngine* _inspectorEngPtr) {
+    inspectorEngPtr = _inspectorEngPtr;
+    inspectorEngPtrSet = true;
+}

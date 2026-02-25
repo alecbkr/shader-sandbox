@@ -7,11 +7,8 @@ std::unique_ptr<Window> Window::createWindow(u32 width, u32 height, std::string 
     return windowPtr;
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
-}
-
 Window::Window(u32 _width, u32 _height, std::string _title) : width(_width), height(_height), title(_title) {
+    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
     window = glfwCreateWindow(_width, _height, _title.c_str(), NULL, NULL);
     if (window == NULL) {
         // TODO: use logger
@@ -22,9 +19,6 @@ Window::Window(u32 _width, u32 _height, std::string _title) : width(_width), hei
     }
 
     glfwMakeContextCurrent(window);
-    glViewport(0, 0, _width, _height);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
     isValid = true;
 }
 

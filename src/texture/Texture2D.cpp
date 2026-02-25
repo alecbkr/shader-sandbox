@@ -3,7 +3,7 @@
 #include "../core/logging/LogSink.hpp"
 #include <stb_image.h>
 
-Texture2D::Texture2D(std::string texture_path, TextureType type) : Texture(texture_path, type) {
+Texture2D::Texture2D(std::string texture_path, TextureType type, Logger* _loggerPtr) : Texture(texture_path, type, _loggerPtr) {
 
 }
 
@@ -18,12 +18,12 @@ void Texture2D::bind(unsigned int texNum) {
 
 void Texture2D::loadToGPU() {
     if (isInitialized == false) {
-        Logger::addLog(LogLevel::WARNING, "TEXTURE", "Can't send uninitialized texture to GPU");
+        if (loggerPtr) loggerPtr->addLog(LogLevel::WARNING, "TEXTURE", "Can't send uninitialized texture to GPU");
         return;
     } 
     if (isLoadedInGPU) return;
 
-    Logger::addLog(LogLevel::INFO, "TEXTURE2D", "Loading texture...");
+    if (loggerPtr) loggerPtr->addLog(LogLevel::INFO, "TEXTURE2D", "Loading texture...");
 
     stbi_set_flip_vertically_on_load(true);
     unsigned char* data;
@@ -31,7 +31,7 @@ void Texture2D::loadToGPU() {
     int width, height, channelCnt;
     data = stbi_load(path.c_str(), &width, &height, &channelCnt, 0);
     if (data == nullptr) {
-        Logger::addLog(LogLevel::ERROR, "TEXTURE", "Could not find texture from path:",  path);
+        if (loggerPtr) loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURE", "Could not find texture from path:",  path);
         valid = false;
         return;
     }
@@ -41,7 +41,7 @@ void Texture2D::loadToGPU() {
         case 3: format = GL_RGB;  break;
         case 4: format = GL_RGBA; break;
         default: 
-            Logger::addLog(LogLevel::ERROR, "TEXTURE", "Format could not be determined");
+            if (loggerPtr) loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURE", "Format could not be determined");
             valid = false;
             return;
     }

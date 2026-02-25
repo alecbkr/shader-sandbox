@@ -1,10 +1,11 @@
 #include <string>
 #include <string_view>
-#include <sstream>    
+#include <sstream> 
+#include "LogClassifier.hpp"   
 
 enum class LogLevel {
     CRITICAL = 0, 
-    ERROR = 1,
+    LOG_ERROR = 1,
     WARNING = 2,
     INFO = 3
 }; 
@@ -14,18 +15,8 @@ struct LogEntry {
     std::string src;
     std::string msg;
     std::string additional; 
+    LogCategory category; 
+    std::string fileName; 
     int lineNum;       
 };
-
-// struct ColorDef {
-//     float r, g, b, a;               // standard decimal representation 
-
-//     // Convert to Ansi for stdout
-//     std::string toAnsi() const {
-//         int newR = static_cast<int>(r * 255); 
-//         int newG = static_cast<int>(g * 255); 
-//         int newB = static_cast<int>(b * 255); 
-//         return std::sstream("")
-//     }
-// }
 

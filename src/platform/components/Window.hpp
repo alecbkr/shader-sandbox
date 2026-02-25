@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <GLFW/glfw3.h>
+#include "platform/GL.hpp"
 #include <memory>
 #include "types.hpp"
 

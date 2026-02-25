@@ -1,32 +1,79 @@
 #include "core/ui/InspectorUI.hpp"
+
+#include <filesystem>
+
+#include "core/logging/LogSink.hpp"
+#include "core/logging/Logger.hpp"
 #include "core/InspectorEngine.hpp"
 #include "core/ShaderRegistry.hpp"
 #include "core/TextureRegistry.hpp"
 #include "core/UniformRegistry.hpp"
 #include "core/EventDispatcher.hpp"
 #include "core/UniformTypes.hpp"
-#include "core/logging/LogSink.hpp"
-#include "core/logging/Logger.hpp"
+#include "core/UniformRegistry.hpp"
+#include "core/ShaderRegistry.hpp"
 #include "engine/Errorlog.hpp"
-#include "engine/ShaderProgram.hpp"
-#include "object/Model.hpp"
 #include "object/ModelCache.hpp"
 #include "texture/Texture.hpp"
+#include "core/FileRegistry.hpp"
+#include "engine/ShaderProgram.hpp"
+#include <ostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "core/FileRegistry.hpp"
+InspectorUI::InspectorUI() {
+    newUniformName = "";
+    newUniformShaderName = "";
+    newUniformType = UniformType::NoType;
+    modelShaderMenus.clear();
+    modelTextureMenus.clear();
+    shaderLinkMenus.clear();
+    intitialized = false;
+    loggerPtr = nullptr;
+    inspectorEngPtr = nullptr;
+    textureRegPtr = nullptr;
+    shaderRegPtr = nullptr;
+    uniformRegPtr = nullptr;
+    eventsPtr = nullptr;
+    modelCachePtr = nullptr;
+    fileRegPtr = nullptr;
+    height = 0;
+    width = 0;
+}
 
-int InspectorUI::height = 400;
-int InspectorUI::width = 400;
-std::vector<std::string> InspectorUI::uniformNamesToDelete{};
-std::string InspectorUI::newUniformName{};
-std::string InspectorUI::newUniformShaderName{};
-UniformType InspectorUI::newUniformType = UniformType::NoType;
-std::unordered_map<unsigned int, ModelShaderMenu> InspectorUI::modelShaderMenus{};
-std::unordered_map<unsigned int, ModelTextureMenu> InspectorUI::modelTextureMenus{};
-std::unordered_map<std::string, ShaderLinkMenu> InspectorUI::shaderLinkMenus{};
+bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr) {
+    if (intitialized) {
+        loggerPtr->addLog(LogLevel::WARNING, "Inspector UI Initialization", "Inspector UI was already initialized.");
+        return false;
+    }
+    loggerPtr = _loggerPtr;
+    inspectorEngPtr = _inspectorEngPtr;
+    textureRegPtr = _textureRegPtr;
+    shaderRegPtr = _shaderRegPtr;
+    uniformRegPtr = _uniformRegPtr;
+    eventsPtr = _eventsPtr;
+    modelCachePtr = _modelCachePtr;
+    fileRegPtr = _fileRegPtr;
+    intitialized = true;
+    newUniformType = UniformType::NoType;
+    modelShaderMenus.clear();
+    modelTextureMenus.clear();
+    shaderLinkMenus.clear();
+    return true;
+}
+
+void InspectorUI::shutdown() {
+    if (!intitialized) return;
+    loggerPtr = nullptr;
+    inspectorEngPtr = nullptr;
+    textureRegPtr = nullptr;
+    shaderRegPtr = nullptr;
+    uniformRegPtr = nullptr;
+    eventsPtr = nullptr;
+    modelCachePtr = nullptr;
+    intitialized = false;
+}
 
 void InspectorUI::render() {
     float menuBarHeight = ImGui::GetFrameHeight();
@@ -70,16 +117,16 @@ void InspectorUI::render() {
 
 void InspectorUI::drawUniformInspector() {
     int imGuiID = 0;
-    for (auto &[modelID, model] : ModelCache::modelIDMap) {
-        ShaderProgram* modelProgram = ShaderRegistry::getProgram(model->getProgramID());
+    for (auto &[modelID, model] : modelCachePtr->modelIDMap) {
+        ShaderProgram* modelProgram = shaderRegPtr->getProgram(model->getProgramID());
         if (modelProgram == nullptr) {
             // don't show models with no shader...
             continue;
         }
         std::string label = "model " + std::to_string(modelID);
         if (ImGui::TreeNode(label.c_str())) {
-            const std::unordered_map<std::string, Uniform>* uniformMap = UNIFORM_REGISTRY.tryReadUniforms(modelID);
-            
+            const std::unordered_map<std::string, Uniform>* uniformMap = uniformRegPtr->tryReadUniforms(modelID);
+
             if (uniformMap == nullptr) {
                 Errorlog::getInstance().logEntry(EL_WARNING, "drawUniformInspector", "Object not found in registry: ", modelID);
                 ImGui::TreePop();
@@ -102,7 +149,7 @@ void InspectorUI::drawObjectsInspector() {
     // This is messy. I need to split it up into different functions at some point.
     // something like "setupObjectsInspector"
     drawAddObjectMenu();
-    for (auto &[modelID, model] : ModelCache::modelIDMap) {
+    for (auto &[modelID, model] : modelCachePtr->modelIDMap) {
         if (!modelShaderMenus.contains(modelID)) {
             modelShaderMenus[modelID] = ModelShaderMenu{ 
                 .modelID = modelID,
@@ -136,10 +183,8 @@ void InspectorUI::drawObjectsInspector() {
                 drawModelOrientationInput(model.get());
                 ImGui::TreePop();
             }
-            if (ImGui::TreeNode("mesh")) {
-                ImGui::TreePop();
-            }
             if (ImGui::TreeNode("textures")) {
+                // Can't do this yet...
                 if (!textureMenu.initialized) {
                     //initializeMenu(textureMenu);
                 }
@@ -148,8 +193,8 @@ void InspectorUI::drawObjectsInspector() {
             }
             if (ImGui::TreeNode("shader program")) {
                 std::vector<const char *> shaderChoices;
-                shaderChoices.reserve(ShaderRegistry::getNumberOfPrograms());
-                auto& shaders = ShaderRegistry::getPrograms();
+                shaderChoices.reserve(shaderRegPtr->getNumberOfPrograms());
+                const auto& shaders = shaderRegPtr->getPrograms();
                 for (auto &[name, shader] : shaders) {
                     shaderChoices.push_back(name.c_str());
                 }
@@ -221,35 +266,35 @@ static const std::vector<float> gridPlane_verts {
         1,2,6, 1,6,5, // right
         0,3,7, 0,7,4  // left
     };
-    std::unordered_map<std::string, ShaderProgram*>& programs = ShaderRegistry::getPrograms();
+    const auto& programs = shaderRegPtr->getPrograms();
     if (programs.empty()) return;
 
     // just grab a random shader program it really does not matter
     ShaderProgram& defaultProgram = *programs.begin()->second;
 
     if (ImGui::Button("Add Plane")) {
-        unsigned int planeID = ModelCache::createPreset(MeshPreset::PLANE);
-        ModelCache::getModel(planeID)->setModelProgram(defaultProgram.name);
-        InspectorEngine::refreshUniforms();
+        unsigned int planeID = modelCachePtr->createPreset(MeshPreset::PLANE);
+        modelCachePtr->getModel(planeID)->setModelProgram(defaultProgram.name);
+        inspectorEngPtr->refreshUniforms();
     }
     if (ImGui::Button("Add Pyramid")) {
-        unsigned int pyramidID = ModelCache::createPreset(MeshPreset::PYRAMID);
-        ModelCache::getModel(pyramidID)->setModelProgram(defaultProgram.name);
-        InspectorEngine::refreshUniforms();
+        unsigned int pyramidID = modelCachePtr->createPreset(MeshPreset::PYRAMID);
+        modelCachePtr->getModel(pyramidID)->setModelProgram(defaultProgram.name);
+        inspectorEngPtr->refreshUniforms();
     }
     if (ImGui::Button("Add Cube")) {
-        unsigned int cubeID = ModelCache::createPreset(MeshPreset::CUBE);
-        ModelCache::getModel(cubeID)->setModelProgram(defaultProgram.name);
-        InspectorEngine::refreshUniforms();
+        unsigned int cubeID = modelCachePtr->createPreset(MeshPreset::CUBE);
+        modelCachePtr->getModel(cubeID)->setModelProgram(defaultProgram.name);
+        inspectorEngPtr->refreshUniforms();
     }}
 
 void InspectorUI::drawAssetsInspector() {
-    for (const Texture* texPtr : TextureRegistry::readTextures()) {
+    for (const Texture* texPtr : textureRegPtr->readTextures()) {
         ImGui::Text("%s\n", texPtr->path.c_str());
     }
 }
 
-void drawRenameFileEntry(ShaderFile* fileData) {
+void InspectorUI::drawRenameFileEntry(ShaderFile* fileData) {
     static char buf[256];
     strncpy(buf, fileData->renameBuffer.c_str(), 255);
 
@@ -261,7 +306,7 @@ void drawRenameFileEntry(ShaderFile* fileData) {
     bool buttonSumitted = ImGui::Button(("OK##" + fileData->fileName).c_str());
 
     if ((keyboardSubmitted || buttonSumitted) && !fileData->renameBuffer.empty()) {
-        EventDispatcher::TriggerEvent(Event { RenameFile, false, RenameFilePayload {fileData->fileName, fileData->renameBuffer} });
+        eventsPtr->TriggerEvent(Event { EventType::RenameFile, false, RenameFilePayload {fileData->fileName, fileData->renameBuffer} });
     }
 
     ImGui::SameLine();
@@ -272,13 +317,13 @@ void drawRenameFileEntry(ShaderFile* fileData) {
     }
 }
 
-void drawDeleteFileEntity(ShaderFile* fileData) {
-    ImGui::Text("%s", fileData->fileName.c_str());
+void InspectorUI::drawDeleteFileEntity(ShaderFile* fileData) {
+    ImGui::Text(fileData->fileName.c_str());
 
     ImGui::SameLine();
 
     if (ImGui::Button(("DELETE##" + fileData->fileName).c_str())) {
-        EventDispatcher::TriggerEvent(Event { DeleteFile, false, DeleteFilePayload { fileData->fileName } });
+        eventsPtr->TriggerEvent(Event { EventType::ET_DeleteFile, false, DeleteFilePayload { fileData->fileName } });
     }
 
     ImGui::SameLine();
@@ -294,19 +339,19 @@ void drawContextMenu(ShaderFile* fileData) {
             fileData->state = RENAME;
         }
         if (ImGui::Selectable("Delete")) {
-            fileData->state = DELETE;
+            fileData->state = FS_DELETE;
         }
 
         ImGui::EndPopup();
     }
 }
 
-void drawStandardFileEntry(ShaderFile* fileData) {
+void InspectorUI::drawStandardFileEntry(ShaderFile* fileData) {
     if (ImGui::Selectable(fileData->fileName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
         if (ImGui::IsMouseDoubleClicked(0)) {
-            EventDispatcher::TriggerEvent(
+            eventsPtr->TriggerEvent(
                 Event{
-                    OpenFile,
+                    EventType::OpenFile,
                     false,
                     OpenFilePayload{ fileData->filePath, fileData->fileName }
                 }
@@ -320,18 +365,18 @@ void InspectorUI::drawShaderFileInspector() {
     std::string path = "../shaders/";
 
     ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
-
+    
     ImGui::Text("--------------");
     ImGui::Text("Shader Files");
     ImGui::Text("--------------");
-    FileRegistry::reloadMap();
+    fileRegPtr->reloadMap();
 
-    for (const auto &[fileName, fileData] : FileRegistry::getFiles()) {
+    for (const auto &[fileName, fileData] : fileRegPtr->getFiles()) {
         switch (fileData->state) {
             case RENAME:
                 drawRenameFileEntry(fileData);
                 break;
-            case DELETE:
+            case FS_DELETE:
                 drawDeleteFileEntity(fileData);
                 break;
             case NEW:
@@ -361,7 +406,7 @@ void InspectorUI::drawShaderFileInspector() {
 
 // Need to set this to multiple functions, it's confusing & inefficient
 void InspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus) {
-    for (const auto &[shaderName, shader] : ShaderRegistry::getPrograms()) {
+    for (const auto &[shaderName, shader] : shaderRegPtr->getPrograms()) {
         if (!menus.contains(shaderName)) {
             menus[shaderName] = ShaderLinkMenu{
                 .shaderName = shaderName,
@@ -372,18 +417,18 @@ void InspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, ShaderLink
 
     // These need to contain empty string first! if you have an issue, check stuff relating to this.
     // TODO: this doesn't work, there's going to be state issues when we add or delete files. We also have no way of maintaining order! 
-    std::vector<const char*> vertChoices{""};
-    std::vector<const char*> fragChoices{""};
-    std::vector<const char*> geoChoices{""}; // not doing this right now
+    std::vector<std::string> vertChoices{""};
+    std::vector<std::string> fragChoices{""};
+    std::vector<std::string> geoChoices{""}; // not doing this right now
 
-    for (const auto& [id, file] : FileRegistry::getFiles()) {
+    for (const auto& [id, file] : fileRegPtr->getFiles()) {
         std::string& extension = file->extension;
         std::string& filePath = file->filePath;
         if (extension == ".vert") {
-            vertChoices.push_back(filePath.c_str());
+            vertChoices.push_back(filePath);
         }
         else if (extension == ".frag") {
-            fragChoices.push_back(filePath.c_str());
+            fragChoices.push_back(filePath);
         }
         else {
             //Logger::addLog(LogLevel::INFO, "drawShaderLinkMenu", "Shader file type " + extension + " not supported, only .vert and .frag");
@@ -391,16 +436,31 @@ void InspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, ShaderLink
         }
     }
 
+    std::vector<const char*> vertChoicesC;
+    std::vector<const char*> fragChoicesC;
+    std::vector<const char*> geoChoicesC; // not doing this right now
+    vertChoicesC.reserve(vertChoices.size());
+    fragChoicesC.reserve(fragChoices.size());
+    geoChoicesC.reserve(geoChoices.size());
+    for (int i = 0; i < vertChoices.size(); i++) {
+        vertChoicesC.push_back(vertChoices[i].c_str());
+    }
+    for (int i = 0; i < fragChoices.size(); i++) {
+        fragChoicesC.push_back(fragChoices[i].c_str());
+    }
+    for (int i = 0; i < geoChoices.size(); i++) {
+        geoChoicesC.push_back(geoChoices[i].c_str());
+    }
 
     ImGuiID guiID = 0;
     for (auto& [shaderName, menu] : menus) {
         if (!menu.initialized) {
-            initializeMenu(menu, vertChoices, geoChoices, fragChoices);
+            initializeMenu(menu, vertChoicesC, geoChoicesC, fragChoicesC);
         }
         
         if (ImGui::TreeNode(menu.shaderName.c_str())) {
             ImGui::PushID(guiID);
-            drawShaderLinkMenu(menu, vertChoices, geoChoices, fragChoices);
+            drawShaderLinkMenu(menu, vertChoicesC, geoChoicesC, fragChoicesC);
             ImGui::PopID();
             guiID++;
             ImGui::TreePop();
@@ -409,7 +469,7 @@ void InspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, ShaderLink
 }
 
 void InspectorUI::initializeMenu(ShaderLinkMenu& menu, const std::vector<const char*>& vertChoices, const std::vector<const char*>& geoChoices, const std::vector<const char*>& fragChoices) {
-    const ShaderProgram *oldProgram = ShaderRegistry::getProgram(menu.shaderName);
+    const ShaderProgram *oldProgram = shaderRegPtr->getProgram(menu.shaderName);
     bool isNewProgram = oldProgram == nullptr;
     if (isNewProgram) {
         menu.vertSelection = 0;
@@ -419,16 +479,31 @@ void InspectorUI::initializeMenu(ShaderLinkMenu& menu, const std::vector<const c
         return;
     }
 
+    auto getNormalizedPath = [](const std::string& p) -> std::string {
+        if (p.empty()) return "";
+        try {
+            return std::filesystem::weakly_canonical(p).string();
+        } catch (...) {
+            return p;
+        }
+    };
+    std::string registryVert = getNormalizedPath(oldProgram->vertPath);
+    std::string registryFrag = getNormalizedPath(oldProgram->fragPath);
+
     for (int i = 0; i < vertChoices.size(); i++) {
-        std::string filePath = vertChoices[i];
-        if (oldProgram->vertPath == filePath) {
-            menu.vertSelection = i;
+        if (i > 0 && vertChoices[i] != nullptr) {
+            if (getNormalizedPath(vertChoices[i]) == registryVert) {
+                menu.vertSelection = i;
+                break; 
+            }
         }
     }
     for (int i = 0; i < fragChoices.size(); i++) {
-        std::string filePath = fragChoices[i];
-        if (oldProgram->fragPath == filePath) {
-            menu.fragSelection = i;
+        if (i > 0 && fragChoices[i] != nullptr) {
+            if (getNormalizedPath(fragChoices[i]) == registryFrag) {
+                menu.fragSelection = i;
+                break;
+            }
         }
     }
     menu.geometrySelection = 0;
@@ -437,19 +512,19 @@ void InspectorUI::initializeMenu(ShaderLinkMenu& menu, const std::vector<const c
 
 void InspectorUI::initializeMenu(ModelShaderMenu& menu, const std::vector<const char*>& shaderChoices) {
     int i = 0;
-    if (!ModelCache::modelIDMap.contains(menu.modelID)) {
-        Logger::addLog(LogLevel::ERROR, "initializeMenu:ModelShaderMenu", "couldn't find model: " + std::to_string(menu.modelID));
+    if (!modelCachePtr->modelIDMap.contains(menu.modelID)) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "initializeMenu:ModelShaderMenu", "couldn't find model: " + std::to_string(menu.modelID));
     }
-    Model& model = *ModelCache::modelIDMap[menu.modelID];
+    Model& model = *modelCachePtr->modelIDMap[menu.modelID];
 
     for (auto& shaderName: shaderChoices) {
-        const ShaderProgram* shader = ShaderRegistry::getProgram(shaderName);
+        const ShaderProgram* shader = shaderRegPtr->getProgram(shaderName);
         if (shader == nullptr) {
             // might log this later? idk
             continue;
         }
 
-        ShaderProgram* modelProgram = ShaderRegistry::getProgram(model.getProgramID());
+        ShaderProgram* modelProgram = shaderRegPtr->getProgram(model.getProgramID());
         if (modelProgram == nullptr) {
             menu.selection = 0;
             menu.initialized = true;
@@ -466,7 +541,7 @@ void InspectorUI::initializeMenu(ModelShaderMenu& menu, const std::vector<const 
 }
 
 void InspectorUI::initializeMenu(ModelTextureMenu& menu) {
-    Logger::addLog(LogLevel::CRITICAL, "intializeMenu:ModelTextureMenu", "Shouldn not be calling this function! it doesn't work right now");
+    loggerPtr->addLog(LogLevel::CRITICAL, "intializeMenu:ModelTextureMenu", "Shouldn not be calling this function! it doesn't work right now");
     /*
     Model& model = *ModelCache::modelIDMap[menu.modelID];
     std::unordered_set<GLuint> objectTextureIDs;
@@ -512,7 +587,7 @@ void InspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, const std::vector<con
         const std::string vert = vertChoices[menu.vertSelection];
         const std::string frag = fragChoices[menu.fragSelection];
         const std::string& name = menu.shaderName;
-        if (!InspectorEngine::handleEditShaderProgram(vert, frag, name)) {
+        if (!inspectorEngPtr->handleEditShaderProgram(vert, frag, name)) {
             menu = oldMenu;
         }
     }
@@ -531,7 +606,6 @@ bool InspectorUI::drawTextInput(std::string *value, const char *label) {
 
 bool InspectorUI::drawShaderProgramMenu(ModelShaderMenu& menu, const std::vector<const char*>& shaderChoices) {
     bool changed = false;
-
     // display combo box
     if (ImGui::Combo("Shader", &menu.selection, shaderChoices.data(),
                         (int)shaderChoices.size())) {
@@ -541,9 +615,9 @@ bool InspectorUI::drawShaderProgramMenu(ModelShaderMenu& menu, const std::vector
     if (!changed) return false;
     
     // add check in case we get more types
-    ShaderProgram& selectedShader = *ShaderRegistry::getProgram(shaderChoices[menu.selection]);
-    ModelCache::getModel(menu.modelID)->setModelProgram(selectedShader.name);
-    InspectorEngine::refreshUniforms();
+    ShaderProgram& selectedShader = *shaderRegPtr->getProgram(shaderChoices[menu.selection]);
+    modelCachePtr->getModel(menu.modelID)->setModelProgram(selectedShader.name);
+    inspectorEngPtr->refreshUniforms();
     return true;
 }
 
@@ -551,7 +625,7 @@ bool InspectorUI::drawTextureMenu(ModelTextureMenu& menu) {
     // Not sure what the deal is here yet...
     bool changed = false;
     std::vector<const char *> textureChoices;
-    const std::vector<const Texture*>& registryTextures = TextureRegistry::readTextures();
+    const std::vector<const Texture*>& registryTextures = textureRegPtr->readTextures();
     textureChoices.reserve(registryTextures.size());
     for (const Texture* tex : registryTextures) {
         textureChoices.push_back(tex->path.c_str());
@@ -561,15 +635,15 @@ bool InspectorUI::drawTextureMenu(ModelTextureMenu& menu) {
     if (ImGui::Combo("Texture", &menu.textureSelection, textureChoices.data(),
                         (int)textureChoices.size())) {
         changed = true;
-        std::cout << "changed texture" << std::endl;
+        loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed texture");                    
     }
     if (ImGui::InputInt("Unit", &menu.unitSelection)) {
         changed = true;
-        std::cout << "changed unit" << std::endl;
+        loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed unit");
     }
     if (drawTextInput(&menu.uniformName, "Uniform Name")) {
         changed = true;
-        std::cout << "changed uniform name" << std::endl;
+        loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed uniform name");
     }
     // bool changed = false;
     // std::vector<const char *> textureChoices;
@@ -616,7 +690,7 @@ bool InspectorUI::drawUniformInputValue(glm::vec3* value, Uniform* uniform) {
     bool changed = false;
     bool useColorPicker = false;
     if (uniform != nullptr) {
-        ImGui::Checkbox("Use Color Picker", &uniform->useAlternateEditor);
+        changed |= ImGui::Checkbox("Use Color Picker", &uniform->useAlternateEditor);
         useColorPicker = uniform->useAlternateEditor;
     }
 
@@ -686,15 +760,125 @@ bool InspectorUI:: drawUniformInputValue(InspectorSampler2D* value, Uniform* uni
     return drawUniformInputValue(&value->textureUnit);
 }
 
+bool InspectorUI::drawUniformInputValue(InspectorReference* value, Uniform* uniform) {
+    // For now we only support references. This will be a bigger system later
+    value->initialized = false;
+    value->useCamaraData = false;
+    bool changed = false;
+    std::vector<std::string> modelNames;
+    std::vector<const char* > modelChoices{""};
+    std::vector<unsigned int> modelIDs{0};
+    modelNames.reserve(modelCachePtr->modelIDMap.size());
+    modelChoices.reserve(modelCachePtr->modelIDMap.size() + 1);
+    modelIDs.reserve(modelCachePtr->modelIDMap.size() + 1);
+    
+    std::optional<std::vector<std::string>> worldData = getWorldData(uniform->type);
+
+    // let them disable world data in case world data is on when it shouldn't be.
+    if (worldData || value->useWorldData) {
+        changed |= ImGui::Checkbox("Use World Data?", &value->useWorldData);
+    }
+
+    int i = 0;
+    for (auto& [modelID, model] : modelCachePtr->modelIDMap) {
+        // avoid circular references
+        if (modelID == uniform->modelID) {
+            continue;
+        }
+        modelNames.push_back(std::to_string(modelID));
+        modelChoices.push_back(modelNames[i].c_str());
+        modelIDs.push_back(modelID);
+        i++;
+    }
+
+    if (value->useWorldData) {
+        modelChoices.push_back("camera");    
+    }
+
+    
+    changed |= ImGui::Combo("Models", &value->modelSelection, modelChoices.data(), modelChoices.size());
+
+    if (changed) {
+        value->uniformSelection = 0;
+    }
+    if (value->modelSelection == 0) {
+        return changed;
+    }
+
+    if (std::string(modelChoices[value->modelSelection]) == "camera") {
+        value->useCamaraData = true;
+    }
+    else {
+        value->referencedModelID = modelIDs[value->modelSelection];
+    }
+
+    std::vector<const char*> uniformChoices{""}; 
+
+    if (!value->useWorldData) {
+        const auto modelUniforms = uniformRegPtr->tryReadUniforms(value->referencedModelID);
+        if (modelUniforms == nullptr) {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "drawUniformInputValue", "modelID " + std::to_string(value->referencedModelID) + " not found in Uniform Registry!");
+            return false;
+        }
+
+        for (auto& [uniformName, uniform] : *modelUniforms) {
+            if (uniform.type != value->returnType) {
+                continue;
+            }
+            uniformChoices.push_back(uniformName.c_str());
+        }
+    }
+    else {
+        if (!worldData) {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "drawUniformInputValue", "world data is not enabled for this type");
+        }
+        for (const std::string& worldDataStr : worldData.value()) {
+            uniformChoices.push_back(worldDataStr.c_str());
+        }
+    }
+
+    changed |= ImGui::Combo("Uniforms", &value->uniformSelection, uniformChoices.data(), uniformChoices.size());
+
+    if (value->uniformSelection > 0) {
+        // add input validation here!
+        value->referencedUniformName = uniformChoices[value->uniformSelection];
+        value->initialized = true;
+    }
+
+    return changed;
+}
+
 void InspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID) {
+    // It should be noted, uniform is always a COPY of the value from uniform registry
+    // so if we want changes to last they must be applied with applyInput
     if (ImGui::TreeNode(uniform.name.c_str())) {
         bool changed = false;
+        bool changedFunctionBox = false;
+
+        changedFunctionBox |= ImGui::Checkbox("Use Function", &uniform.isFunction);
+
+        if (changedFunctionBox) {
+            // new function
+            if (uniform.isFunction) {
+                uniform.isFunction = true;
+                uniform.value = InspectorReference{
+                    .modelSelection = 0, .uniformSelection = 0,
+                    .returnType = uniform.type,
+                    .initialized = false,
+                };
+            }
+            else {
+                uniform.isFunction = false;
+                uniform.value = inspectorEngPtr->getDefaultValue(uniform.type);
+            }
+        }
+
         std::visit([&](auto& val){
             changed = drawUniformInputValue(&val, &uniform);
         }, uniform.value);
 
-        if (changed) {
-            InspectorEngine::applyInput(modelID, uniform);
+        if (changed || changedFunctionBox) {
+            inspectorEngPtr->applyInput(modelID, uniform);
         }
 
         /*
@@ -709,7 +893,7 @@ void InspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID) {
 
 bool InspectorUI::drawModelPositionInput(Model* model) {
     if (model == nullptr) {
-        Logger::addLog(LogLevel::WARNING, "drawModelPosition", "model does not exist!");
+        loggerPtr->addLog(LogLevel::WARNING, "drawModelPosition", "model does not exist!");
         return false;
     }
 
@@ -729,7 +913,7 @@ bool InspectorUI::drawModelPositionInput(Model* model) {
 
 bool InspectorUI::drawModelScaleInput(Model* model) {
     if (model == nullptr) {
-        Logger::addLog(LogLevel::WARNING, "drawModelScaleInput", "model does not exist!");
+        loggerPtr->addLog(LogLevel::WARNING, "drawModelScaleInput", "model does not exist!");
         return false;
     }
 
@@ -749,7 +933,7 @@ bool InspectorUI::drawModelScaleInput(Model* model) {
 
 bool InspectorUI::drawModelOrientationInput(Model* model) {
     if (model == nullptr) {
-        Logger::addLog(LogLevel::WARNING, "drawModelOrientationInput", "model does not exist!");
+        loggerPtr->addLog(LogLevel::WARNING, "drawModelOrientationInput", "model does not exist!");
         return false;
     }
 
