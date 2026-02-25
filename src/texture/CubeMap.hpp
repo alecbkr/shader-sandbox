@@ -6,10 +6,11 @@
 #include "TextureType.hpp"
 #include <glad/glad.h>
 
-class CubeMap : public Texture{
+class CubeMap final : public Texture{
     public:
         std::vector<std::string> cubemap_paths;
         CubeMap(std::string cubemap_dir);
+        ~CubeMap() = default;
         void bind(unsigned int texNum);
 
     private:

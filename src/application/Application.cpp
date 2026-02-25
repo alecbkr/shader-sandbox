@@ -18,6 +18,7 @@
 #include "core/TextureRegistry.hpp"
 #include "core/FileRegistry.hpp"
 #include "object/ModelCache.hpp"
+#include "texture/TextureCache.hpp"
 #include "core/input/InputState.hpp"
 #include "core/input/ActionRegistry.hpp"
 #include "core/input/ContextManager.hpp"
@@ -26,7 +27,6 @@
 
 // TEMP
 #include "engine/Errorlog.hpp"
-#include "object/CubeMap.hpp"
 
 bool Application::initialized = false;
 AppStateControls Application::appControls = AppStateControls::NO_STATE;
@@ -54,37 +54,29 @@ void loadPresetAssets() {
     ShaderProgram* gridplanePtr = ShaderRegistry::getProgram("gridplane");
     ShaderProgram* skyboxPtr = ShaderRegistry::getProgram("skybox");
 
-    MeshData& plane = PresetAssets::getPresetMesh(MeshPreset::PLANE);
-    MeshData& cube = PresetAssets::getPresetMesh(MeshPreset::CUBE);
-    MeshData& pyramid = PresetAssets::getPresetMesh(MeshPreset::PYRAMID);
-
-    //SKYBOX ID = 0
     unsigned int skyboxID = ModelCache::createSkybox("../assets/textures/skybox");
-    ModelCache::setProgram(skyboxID, *skyboxPtr);
+    ModelCache::getModel(skyboxID)->setModelProgram(skyboxPtr->name);
     
-    //GRIDPLANE ID = 1
-    unsigned int gridID = ModelCache::createModel(plane.verts, plane.indices, true, false, true);
-    ModelCache::setProgram(gridID, *gridplanePtr);
-    ModelCache::scaleModel(gridID, glm::vec3(50.0f));
+    unsigned int gridID = ModelCache::createPreset(MeshPreset::PLANE);
+    ModelCache::getModel(gridID)->setModelProgram(gridplanePtr->name);
+    ModelCache::getModel(gridID)->setScale(glm::vec3(50.0f));
 
-    // unsigned int backpackID = ModelCache::createModel("../assets/models/backpack/backpack.obj");
-    // ModelCache::setProgram(backpackID, *texPtr);
-    
-    // unsigned int pyramid0ID = ModelCache::createModel(pyramid.verts, pyramid.indices, true, false, true);
-    // ModelCache::setProgram(pyramid0ID, *colorPtr);
-    // ModelCache::translateModel(pyramid0ID, glm::vec3(3.3f, 0.0f, -1.0f));
-    // ModelCache::scaleModel(pyramid0ID, glm::vec3(2.0f));
-    // ModelCache::rotateModel(pyramid0ID, 23.2f, glm::vec3(0.0f, 1.0f, 0.0f));
-    
-    // unsigned int pyramid1ID = ModelCache::createModel(pyramid.verts, pyramid.indices, true, false, true);
-    // ModelCache::setProgram(pyramid1ID, *colorPtr);
-    // ModelCache::translateModel(pyramid1ID, glm::vec3(-1.3f, 0.0f, -1.0f));
+    // unsigned int backpackID = ModelCache::createImported("../assets/models/backpack/backpack.obj");
+    // ModelCache::getModel(backpackID)->setModelProgram(texPtr->name);
 
-    // unsigned int cubeID = ModelCache::createModel(cube.verts, cube.indices, true, false, true);
-    // ModelCache::setProgram(cubeID, *colorPtr);
-    // ModelCache::translateModel(cubeID, glm::vec3(4.0f, 3.0f, -5.0f));
-    // ModelCache::scaleModel(cubeID, glm::vec3(1.0, 0.5f, 1.0f));
-    // ModelCache::rotateModel(cubeID, 23.2f, glm::vec3(0.5f, 0.5f, 0.5f));
+    unsigned int testPlane = ModelCache::createPreset(MeshPreset::PLANE);
+    ModelCache::getModel(testPlane)->addTexture("../assets/textures/grass.png", TextureType::TEX_DIFFUSE);
+    ModelCache::setModelMaterialType(testPlane, 0, MaterialType::Translucent);
+    ModelCache::getModel(testPlane)->setModelProgram(texPtr->name);
+    ModelCache::getModel(testPlane)->rotate(90.0, glm::vec3(1.0f, 0.0f, 0.0f));
+    ModelCache::getModel(testPlane)->translate(glm::vec3(0.0f, 1.0f, 0.0f));
+
+    unsigned int testPlane2 = ModelCache::createPreset(MeshPreset::PLANE);
+    ModelCache::getModel(testPlane2)->addTexture("../assets/textures/window.png", TextureType::TEX_DIFFUSE);
+    ModelCache::setModelMaterialType(testPlane2, 0, MaterialType::Translucent);
+    ModelCache::getModel(testPlane2)->setModelProgram(texPtr->name);
+    ModelCache::getModel(testPlane2)->rotate(90.0, glm::vec3(1.0f, 0.0f, 0.0f));
+    ModelCache::getModel(testPlane2)->translate(glm::vec3(-3.0f, 0.0f, 0.0f));
 }
 
 bool Application::initialize(const ApplicationInitStruct& initStruct) {
@@ -117,6 +109,10 @@ bool Application::initialize(const ApplicationInitStruct& initStruct) {
     }
     if (!ModelCache::initialize()) {
         std::cout << "Object Cache was not initialized successfully." << std::endl;
+        return false;
+    }
+    if (!TextureCache::initialize()) {
+        std::cout << "Texture Cache was not initialized successfully." << std::endl;
         return false;
     }
     if (!FileRegistry::initialize()) {

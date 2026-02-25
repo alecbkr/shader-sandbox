@@ -14,10 +14,9 @@ Texture::Texture(std::string texture_path, TextureType type) {
 
 
 
-// Texture::~Texture() {
-//     unloadFromGPU();
-//     stbi_image_free(data);
-// }
+Texture::~Texture() {
+    unloadFromGPU();
+}
 
 
 
@@ -25,6 +24,15 @@ Texture::Texture(std::string texture_path, TextureType type) {
 void Texture::unbind() {
     glActiveTexture(GL_TEXTURE0 + texNum);
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+
+void Texture::unloadFromGPU() {
+    if (isLoadedInGPU == false) return;
+    glDeleteTextures(1, &ID);
+    ID = 0;
+
+    isLoadedInGPU = false;
 }
 
 

@@ -1,40 +1,48 @@
 #pragma once
 
+#include <vector>
+
+#include "Model.hpp"
 #include "CustomModel.hpp"
 #include "ImportedModel.hpp"
-#include <vector>
+#include "ModelPrimitive.hpp"
+#include "presets/PresetAssets.hpp"
 
 static constexpr unsigned int INVALID_MODEL = UINT_MAX;
 
+
 class ModelCache {
     public:
+        static std::unordered_map<unsigned int, std::unique_ptr<Model>> modelIDMap; 
+
         static bool initialize();
         ModelCache() = delete;
 
-        static unsigned int createModel(std::vector<float>, std::vector<unsigned int>, 
+        static unsigned int createCustom(std::vector<float>, std::vector<unsigned int>, 
                                                         bool hasPos, bool hasNorms, bool hasUVs);
-        static unsigned int createModel(std::string pathname);
+        static unsigned int createImported(std::string model_path);
+        static unsigned int createPreset(MeshPreset type);
         static unsigned int createSkybox(std::string cubemap_dir);
-        
-        static void setTexture(unsigned int ID, std::string pathname, std::string uniformName);
-        static void setProgram(unsigned int ID, ShaderProgram& program);
 
-        static void translateModel(unsigned int ID, glm::vec3 pos);
-        static void scaleModel(unsigned int ID, glm::vec3 scale);
-        static void rotateModel(unsigned int ID, float angle, glm::vec3 axis);
-        
-        static void renderModel(unsigned int ID, glm::mat4 projection, glm::mat4 view, glm::vec3 camPos);
         static void renderAll(glm::mat4 projection, glm::mat4 view, glm::vec3 camPos);
-
-        static int getNumberOfModels();
-        static Model* getModel(unsigned int ID);
+        static void renderModel(unsigned int modelID, glm::mat4 projection, glm::mat4 view, glm::vec3 camPos);
+        static void renderPrimitive(unsigned int modelID, unsigned int meshID, glm::mat4 projection, glm::mat4 view, glm::vec3 camPos);
+        static void deleteModel(unsigned int modelID);
+        static Model* getModel(unsigned int modelID);
+        static void setModelMaterialType(unsigned int modelID, unsigned int materialID, MaterialType type);
         
-        static std::unordered_map<unsigned int, std::unique_ptr<Model>> modelIDMap; 
         // DEBUG
-        static void printOrder();
+        static int getNumberOfModels();
+        static void printPrimRelations(unsigned int modelID);
+        static void renderPrim(unsigned int modelID, unsigned int meshID, glm::mat4 perspective, glm::mat4 view);
 
     private:
         static unsigned int nextModelID;
-        static void reorderByProgram();
-        static std::vector<Model*> modelCache; 
+        static std::vector<ModelPrimitive*> opaquePrims;
+        static std::vector<ModelPrimitive*> translucentPrims;
+        static std::vector<ModelPrimitive*> cutoutPrims;
+        static ModelPrimitive* skyboxPrim;
+
+        // static void reorderByProgram();
+        static void placeInCache(unsigned int modelID);
 };

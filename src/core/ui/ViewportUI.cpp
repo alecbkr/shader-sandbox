@@ -7,6 +7,7 @@
 #include <string>
 #include <glm/gtc/matrix_transform.hpp>
 #include "platform/Platform.hpp"
+#include "core/logging/Logger.hpp"
 
 
 bool ViewportUI::initialized = false;
@@ -105,9 +106,9 @@ void ViewportUI::render() {
 
     glm::mat4 perspective = glm::perspective(glm::radians(45.0f), ViewportUI::getAspect(), 0.1f, 100.0f);
     glm::mat4 view = camPtr->GetViewMatrix();
-    ModelCache::renderAll(perspective, view, camPtr->Position); 
+    ModelCache::renderAll(perspective, view, camPtr->Position);
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    
     ViewportUI::draw();
 }
 

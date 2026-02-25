@@ -9,7 +9,7 @@ with the prefix APPTIME.
 #ifndef APPTIMER_HPP
 #define APPTIMER_HPP
 
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 
 #define APPTIME AppTimer::getInstance()
 

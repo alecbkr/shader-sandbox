@@ -33,12 +33,14 @@ void CubeMap::loadToGPU() {
     } 
     if (isLoadedInGPU) return;
 
+    Logger::addLog(LogLevel::INFO, "CUBEMAP", "Loading texture...");
     unsigned char* data;
     GLenum format;
     int width, height, channelCnt;
 
     glGenTextures(1, &ID);
     glBindTexture(GL_TEXTURE_CUBE_MAP, ID);
+    stbi_set_flip_vertically_on_load(false);
     
     for (unsigned int i = 0; i < cubemap_paths.size(); i++) {
         data = stbi_load(cubemap_paths[i].c_str(), &width, &height, &channelCnt, 0);
@@ -61,7 +63,6 @@ void CubeMap::loadToGPU() {
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         stbi_image_free(data);
         // glGenerateMipmap(GL_TEXTURE_2D);
-        Logger::addLog(LogLevel::INFO, "cubemap", "did it");
     }
 
     // Texture Settings:

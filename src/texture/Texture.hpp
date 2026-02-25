@@ -13,6 +13,7 @@ is for now.
 #ifndef TEXTURE_HPP
 #define TEXTURE_HPP
 
+// #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include "TextureType.hpp"
 #include <string>
@@ -26,9 +27,10 @@ class Texture {
         std::string path;
         
         Texture(std::string texture_path, TextureType type);
-        // ~Texture();
+        virtual ~Texture();
         virtual void bind(unsigned int texNum) = 0;
         void unbind();
+        void unloadFromGPU();
         bool isValid() const;
         TextureType getType();
 

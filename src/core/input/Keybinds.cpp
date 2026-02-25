@@ -25,6 +25,8 @@ bool Keybinds::initialize() {
     addBinding(makeBinding(Action::CameraForward, KeyCombo{Key::W}, ControlCtx::Camera, Trigger::Down));
     addBinding(makeBinding(Action::CameraBack, KeyCombo{Key::S}, ControlCtx::Camera, Trigger::Down));
     addBinding(makeBinding(Action::None, KeyCombo{Key::G}, ControlCtx::Editor));
+
+    addBinding(makeBinding(Action::None, KeyCombo{Key::G}, ControlCtx::Editor));
     return true;
 }
 

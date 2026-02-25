@@ -1,84 +1,39 @@
 #include "Model.hpp"
-#include "ModelImporter.hpp"
-#include "core/ShaderRegistry.hpp"
+
 #include "core/logging/Logger.hpp"
 #include "engine/ShaderProgram.hpp"
+#include "../texture/CubeMap.hpp"
+#include "../texture/Texture2D.hpp"
 
 
-Model::Model(const unsigned int ID, ModelType type) : ID(ID), type(type){
+
+Model::Model(const unsigned int id) : ID(id){
 
 }
 
 
 // -----FUNCTIONALITY
-void Model::renderModel() {
-    ShaderProgram* program = ShaderRegistry::getProgram(programID); 
-    if (properties.hasMeshes == false) {
-        Logger::addLog(LogLevel::WARNING, "MODEL", "Render failure, no meshes present");
-        return;
-    }
+void Model::renderPrimitive(unsigned int meshID) {
+    ModelPrimitive& prim = primitives[meshID];
+    MeshA* mesh = all_meshes[prim.meshID].get();
+    Material* mat = all_materials[prim.materialID].get();
 
-    if (properties.hasProgram == false) {
-        Logger::addLog(LogLevel::WARNING, "MODEL", "Render failure, no shader program present");
-        return;
-    }
-
-    program->use();
-    for (MeshA& mesh : all_meshes) {
-        mesh.bind();
-        bindTextures(mesh);
-        glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
+    mesh->bind();
+    mat->bindTextures();
+    glDrawElements(GL_TRIANGLES, mesh->indices.size(), GL_UNSIGNED_INT, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 
-void Model::unloadModel() {
-    if (properties.hasMeshes) {
-        for (MeshA& mesh : all_meshes) {
-            mesh.unloadFromGPU();
-        }
+void Model::unloadAllPrimitives() {
+    for (ModelPrimitive& prim : primitives) {
+        all_meshes[prim.meshID]->unloadFromGPU();
+        // all_materials[prim.materialID]->
     }
 }
 
 
 // -----TRANSLATIONS
-void Model::translate(glm::vec3 position) {
-    this->position = position;
-    calcModelM();
-}
-
-
-void Model::rescale(glm::vec3 scale) {
-    this->scale = scale;
-    calcModelM();
-}
-
-
-void Model::rotate(float angle, glm::vec3 axis) {
-    this->orientation = glm::angleAxis(glm::radians(angle), glm::normalize(axis));
-    calcModelM();
-}
-
-
-
-// -----SETTERS
-void Model::setProgramID(std::string& programID) {
-    this->programID = programID;
-    properties.hasProgram = true;
-}
-
-
-void Model::setMesh(std::vector<float> vertices, std::vector<unsigned int> indices, bool hasPos, bool hasNorm, bool hasUV) {
-
-}
-
-
-void Model::addTexture(std::string pathname) {
-    
-}
-
-
 void Model::setPosition(glm::vec3 position) {
     this->position = position;
     calcModelM();
@@ -92,9 +47,77 @@ void Model::setScale(glm::vec3 scale) {
 
 
 void Model::setRotation(float angle, glm::vec3 axis) {
-    rotation = glm::vec4(angle, axis);
-    this->orientation = glm::angleAxis(glm::radians(angle), glm::normalize(axis));
+    float processedAngle = fmod(angle, 360.0f);
+    if (processedAngle < 0) processedAngle += 360.0f;
+
+    glm::vec3 processedAxis = glm::clamp(axis, glm::vec3(-1.0f), glm::vec3(1.0f));
+    glm::vec3 normalizedAxis = processedAxis;
+    if (glm::length(normalizedAxis) > 0.0001f) {
+        normalizedAxis = glm::normalize(normalizedAxis);
+    }
+
+    rotation = glm::vec4(processedAngle, processedAxis);
+    this->orientation = glm::angleAxis(glm::radians(processedAngle), normalizedAxis);
     calcModelM();
+}
+
+
+void Model::translate(glm::vec3 vector) {
+    position += vector;
+    calcModelM();
+}
+
+
+void Model::rescale(glm::vec3 vector) {
+    scale *= vector;
+    calcModelM();
+}
+
+
+void Model::rotate(float angle, glm::vec3 axis) {
+    float processedAngle = fmod((rotation.x + angle), 360.0f);
+    if (processedAngle < 0) processedAngle += 360.0f;
+
+    glm::vec3 processedAxis = glm::clamp(glm::vec3(rotation.y+axis.x, rotation.z+axis.y, rotation.w+axis.z), -1.0f, 1.0f);
+    glm::vec3 normalizedAxis = processedAxis;
+    if (glm::length(normalizedAxis) > 0.0001f) {
+        normalizedAxis = glm::normalize(normalizedAxis);
+    }
+
+    rotation = glm::vec4(processedAngle, processedAxis);
+    this->orientation = glm::angleAxis(glm::radians(processedAngle), normalizedAxis);
+    calcModelM();
+}
+
+
+// -----SETTERS
+void Model::setMesh(std::vector<float> vertices, std::vector<unsigned int> indices, bool hasPos, bool hasNorm, bool hasUV) {
+
+}
+
+
+void Model::setModelProgram(std::string& programID) {
+    for (auto& mat : all_materials) {
+        mat->setProgramID(programID);
+    }
+}
+
+
+void Model::setMaterialProgram(unsigned int materialID, std::string& programID) {
+    if (all_materials.size() - 1 < materialID) {
+        Logger::addLog(LogLevel::ERROR, "MODEL | setMaterialProgram()", "Material doesn't exist at index ", std::to_string(materialID));
+        return;
+    }
+    all_materials[materialID]->setProgramID(programID);
+}
+
+
+void Model::setMaterialType(unsigned int materialID, MaterialType type) {
+    if (all_materials.size() - 1 < materialID) {
+        Logger::addLog(LogLevel::ERROR, "MODEL | setMaterialType()", "Material doesn't exist at index ", std::to_string(materialID));
+        return;
+    }
+    all_materials[materialID]->type = type;
 }
 
 
@@ -107,50 +130,56 @@ void Model::calcModelM() {
 }
 
 
-std::string Model::getProgramID() const {
-    return programID;
+MaterialType Model::getMaterialType(unsigned int materialID) const {
+    Material* mat = all_materials[materialID].get();
+    return mat->type;
 }
 
 
-const int Model::getID() {
-    return ID;
+std::string Model::getMaterialProgramID(unsigned int materialID) const {
+    Material *mat = all_materials[materialID].get();
+    return mat->getProgramID();
 }
 
 
-glm::vec3 Model::getPosition() {
-    return position;
+glm::mat4 Model::getModelMatrix() const {return modelM;}
+glm::vec3 Model::getPosition()    const {return position;}
+glm::vec3 Model::getScale()       const {return scale;}
+glm::vec4 Model::getRotation()    const {return rotation;}
+
+
+std::string Model::getProgramID() {
+    // Logger::addLog(LogLevel::ERROR, "MODEL-getProgramID()", "outdated getProgramID call, returning dummy value");
+    return "";
 }
 
 
-glm::vec3 Model::getScale() {
-    return scale;
+void Model::setProgramID(std::string programID) {
+    Logger::addLog(LogLevel::ERROR, "MODEL-setProgramID()", "doing nothing");
 }
 
 
-glm::vec4 Model::getRotation() {
-    return rotation;
-}
+// std::shared_ptr<Texture> Model::loadTexture(std::string texture_path, TextureType type) {
 
+//     // if (type == TEX_CUBEMAP) {
+//         // all_textures.try_emplace(
+//         //     texture_path, 
+//         //     std::make_shared<CubeMap>(texture_path)
+//         // );
 
-void Model::bindTextures(MeshA& mesh) {
-    
-    if (mesh.meshflags.hasTextures == false) return;
-    
-    for (auto& texture : mesh.textures) {
-        //TODO needs to go through uniform handler and grab the uniform Sampler2Ds to properly bind textures
-        //placeholder starts
-        switch (texture->getType()) {
-            case TEX_DIFFUSE: 
-                texture->bind(0);
-                // program->setUniform_int("base", 0);
-                break;
-            case TEX_CUBEMAP:
-                texture->bind(0);
-
-            case TEX_SPECULAR:
-                break;
-        }
-        //placeholder ends
-    }
         
-}
+//     // }
+//     // else {
+//     //     all_textures.try_emplace(
+//     //         texture_path, 
+//     //         std::make_shared<Texture2D>(texture_path, type)
+//     //     );
+//     // }
+//     std::shared_ptr<Texture> newTexture;
+//     switch (type) {
+//         case TextureType::TEX_CUBEMAP: newTexture = std::make_shared<CubeMap>(texture_path); break;
+//         default:                       newTexture = std::make_shared<Texture2D>(texture_path, type);
+//     }
+
+//     return newTexture;
+// }

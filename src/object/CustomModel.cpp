@@ -1,16 +1,20 @@
 #include "CustomModel.hpp"
-#include "../engine/Errorlog.hpp"
-#include "CubeMap.hpp"
+#include "texture/TextureCache.hpp"
+// #include "texture/CubeMap.hpp"
+#include "../core/logging/Logger.hpp"
+#include "../core/logging/LogSink.hpp"
 
 
-CustomModel::CustomModel(const unsigned int ID, ModelType type) : Model(ID, type) {
-    all_meshes.push_back(MeshA());
-    meshptr = &all_meshes.back();
+CustomModel::CustomModel(const unsigned int modelID) : Model(modelID) {
+    primitives.emplace_back(modelID, 0, 0);
+
+    all_materials.push_back(std::make_unique<Material>(MaterialType::Opaque, nextMaterialID));
+    all_meshes.emplace_back(std::make_unique<MeshA>(nextMeshID));
 }
 
 
 void CustomModel::setMesh(std::vector<float> raw_vertices, std::vector<unsigned int> indices, bool hasPos, bool hasNorm, bool hasUV) {
-    meshptr->unloadFromGPU();
+    all_meshes[0]->unloadFromGPU();
 
     unsigned int rowstride = 0;
     rowstride += 3*hasPos;
@@ -18,7 +22,7 @@ void CustomModel::setMesh(std::vector<float> raw_vertices, std::vector<unsigned 
     rowstride += 2*hasUV;
 
     if (raw_vertices.size() % rowstride != 0) {
-        ERRLOG.logEntry(EL_ERROR, "MODEL_ADDMESH", "passed vertex data is wrong");
+        Logger::addLog(LogLevel::ERROR, "MODEL_ADDMESH", "passed vertex data is wrong");
         return;
     }
 
@@ -54,24 +58,15 @@ void CustomModel::setMesh(std::vector<float> raw_vertices, std::vector<unsigned 
         vertices.push_back(vertex);
     }
 
-    meshptr->vertices = vertices;
-    meshptr->indices = indices;
-
-    meshptr->meshflags.hasPositions = hasPos;
-    meshptr->meshflags.hasNormals = hasNorm;
-    meshptr->meshflags.hasUVs = hasUV;
-
+    all_meshes[0]->vertices = vertices;
+    all_meshes[0]->indices = indices;
+    all_meshes[0]->meshflags.hasPositions = hasPos;
+    all_meshes[0]->meshflags.hasNormals = hasNorm;
+    all_meshes[0]->meshflags.hasUVs = hasUV;
     properties.hasMeshes = true;
 }
 
 
-void CustomModel::addTexture(std::string filepath) {
-
-}
-
-
-void CustomModel::addCubeMap(std::string cubemap_dir) {
-    meshptr->textures.push_back(std::make_shared<CubeMap>(cubemap_dir));
-    properties.hasTextures = true;
-    meshptr->meshflags.hasTextures = true;
+void CustomModel::addTexture(std::string texture_path, TextureType type) {
+    all_materials[0]->assignTexture(TextureCache::addTexture(texture_path, type));
 }

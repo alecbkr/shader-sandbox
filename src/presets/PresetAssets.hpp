@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <vector>
-#include "object/Texture.hpp"
+#include "texture/Texture.hpp"
 
 enum class MeshPreset {
     PLANE,
@@ -32,8 +32,8 @@ private:
     static MeshData pyramidMesh;
     static MeshData cubeMesh;
 
-    static Texture waterTex;
-    static Texture faceTex;
-    static Texture metalTex;
-    static Texture gridTex;
+    // static Texture waterTex;
+    // static Texture faceTex;
+    // static Texture metalTex;
+    // static Texture gridTex;
 };

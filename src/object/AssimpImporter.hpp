@@ -1,18 +1,21 @@
 #pragma once
 
-#include "TextureType.hpp"
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 #include <vector>
 #include <memory>
 #include <string>
-#include "MeshAssimp.hpp"
-#include "Vertex.hpp"
-#include "ImportedModel.hpp"
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 #include "core/logging/LogSink.hpp"
 #include "core/logging/Logger.hpp"
-#include "Texture2D.hpp"
+#include "MeshAssimp.hpp"
+#include "Material.hpp"
+#include "ImportedModel.hpp"
+// #include "../texture/Texture2D.hpp"
+// #include "../texture/TextureType.hpp"
+
+#include "texture/TextureCache.hpp"
 
 
 struct ImportContext {
@@ -39,8 +42,9 @@ static const aiTextureType TexMap[TEX_MAXTYPE] {
 
 inline bool importModel(std::string path, ImportedModel& model);
 static void processNode(aiNode *node, const aiScene *scene, ImportedModel& model, ImportContext& ctx);
-static void processMesh(aiMesh *aimesh, const aiScene *scene, ImportedModel& model, ImportContext& ctx);
-static void loadTextures(aiMaterial *mat, std::vector<std::shared_ptr<Texture>>& meshTextures, ImportedModel& model, ImportContext& ctx);
+static void processMesh(aiMesh *aimesh, ImportedModel& model, ImportContext& ctx);
+static void processMaterial(aiMaterial *aimat, ImportedModel& model, ImportContext& ctx);
+static void getTextures(aiMaterial *mat, std::vector<unsigned int>& textureIDs, ImportedModel& model, ImportContext& ctx);
 
 
 inline bool importModel(std::string path, ImportedModel& model) {
@@ -53,19 +57,32 @@ inline bool importModel(std::string path, ImportedModel& model) {
     }
 
     ImportContext ctx;
-
     ctx.directory = path.substr(0, path.find_last_of('/'));
-    processNode(scene->mRootNode, scene, model, ctx);
 
+    // GRAB MATERIALS
+    for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
+        processMaterial(scene->mMaterials[i], model, ctx);
+    }
+
+    // PROCESS MESHES
+    processNode(scene->mRootNode, scene, model, ctx);
     return true;
 }
 
 
 static void processNode(aiNode *node, const aiScene *scene, ImportedModel& model, ImportContext &ctx) {
     for (unsigned int i = 0; i < node->mNumMeshes; i++) {
-
+        
         aiMesh *aimesh = scene->mMeshes[node->mMeshes[i]];
-        processMesh(aimesh, scene, model, ctx);
+        processMesh(aimesh, model, ctx);
+
+        Material *mat = model.getMatVec()[aimesh->mMaterialIndex].get();
+
+        model.primitives.emplace_back(
+            model.getID(),                       // MODEL ID
+            model.getMeshVec().back().get()->ID, // MESH ID
+            mat->ID                              // MATERIAL ID
+        );
     }
 
     for (unsigned int i = 0; i < node->mNumChildren; i++) {
@@ -74,18 +91,14 @@ static void processNode(aiNode *node, const aiScene *scene, ImportedModel& model
 }
 
 
-static void processMesh(aiMesh *aimesh, const aiScene *scene, ImportedModel& model, ImportContext &ctx) {
-
-
+static void processMesh(aiMesh *aimesh, ImportedModel& model, ImportContext &ctx) {
     MeshFlags meshflags{
         aimesh->HasPositions(),
         aimesh->HasNormals(),
         aimesh->HasTextureCoords(0),
-        aimesh->HasVertexColors(0),
-        aimesh->mMaterialIndex >= 0 ? true : false // textures
+        aimesh->HasVertexColors(0)
     };
     
-
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
     std::vector<std::shared_ptr<Texture>> textures;
@@ -123,6 +136,7 @@ static void processMesh(aiMesh *aimesh, const aiScene *scene, ImportedModel& mod
             vector4.g = aimesh->mColors[0][i].g;
             vector4.b = aimesh->mColors[0][i].b;
             vector4.a = aimesh->mColors[0][i].a;
+            vertex.color = vector4;
         }
 
         vertices.push_back(vertex);
@@ -136,20 +150,26 @@ static void processMesh(aiMesh *aimesh, const aiScene *scene, ImportedModel& mod
         }
     }
     
-    // TEXTURES
-    if (meshflags.hasTextures) {
-        aiMaterial *material = scene->mMaterials[aimesh->mMaterialIndex];
-        loadTextures(material, textures, model, ctx);
-
-        if (meshflags.hasUVs == false) {
-            Logger::addLog(LogLevel::WARNING, "MODEL IMPORT", "Mesh has textures but no texture coordinates");
-        }
-    }
-    model.getMeshes().push_back(MeshA(vertices, indices, textures, meshflags));
+    model.addMesh(vertices, indices, meshflags);
 }
 
 
-static void loadTextures(aiMaterial *mat, std::vector<std::shared_ptr<Texture>>& textures, ImportedModel& model, ImportContext &ctx) {
+static void processMaterial(aiMaterial *aimat, ImportedModel& model, ImportContext &ctx) {
+
+    MaterialProperties properties;
+    aimat->Get(AI_MATKEY_OPACITY, properties.opacity);
+    aimat->Get(AI_MATKEY_SHININESS, properties.shininess);
+    aimat->Get(AI_MATKEY_ROUGHNESS_FACTOR, properties.roughness);
+    aimat->Get(AI_MATKEY_METALLIC_FACTOR, properties.metalness);
+
+    std::vector<unsigned int> textureIDs;
+    getTextures(aimat, textureIDs, model, ctx);
+
+    model.addMaterial(properties, textureIDs, MaterialType::Opaque);
+}
+
+
+static void getTextures(aiMaterial *mat, std::vector<unsigned int>& textureIDs, ImportedModel& model, ImportContext &ctx) {
     
     for (unsigned int type = 0; type < TEX_MAXTYPE; type++) {
 
@@ -159,23 +179,15 @@ static void loadTextures(aiMaterial *mat, std::vector<std::shared_ptr<Texture>>&
         for (unsigned int idx = 0; idx < mat->GetTextureCount(aiType); idx++) {
             aiString aiTex;
             if (mat->GetTexture(aiType, idx, &aiTex) != AI_SUCCESS) {
-                Logger::addLog(LogLevel::ERROR, "MODEL_IMPORT", "Assimp failed to get texture");
+                Logger::addLog(LogLevel::ERROR, "ASSIMP_IMPORT", "Assimp failed to get texture");
                 continue;
             }
 
             std::string filepath = ctx.directory + "/" + aiTex.C_Str();
-            if (model.getTextures().contains(filepath) == false) {
-                Logger::addLog(LogLevel::INFO, "loadTextures", "building texture: " + filepath);
-                model.getTextures().try_emplace(
-                    filepath, std::static_pointer_cast<Texture>(
-                        std::make_shared<Texture2D>(filepath, static_cast<TextureType>(type)
-                        )
-                    )
-                );
-            }
-            
-            
-            textures.push_back(model.getTextures().at(filepath));
+            model.addTexture(filepath, static_cast<TextureType>(type));
+
+            unsigned int newID = TextureCache::addTexture(filepath, static_cast<TextureType>(type));
+            textureIDs.push_back(newID);
         }
     }
 }

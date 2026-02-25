@@ -1,5 +1,5 @@
 #include "presets/PresetAssets.hpp"
-#include "object/TextureType.hpp"
+#include "texture/TextureType.hpp"
 MeshData PresetAssets::planeMesh{};
 MeshData PresetAssets::pyramidMesh{};
 MeshData PresetAssets::cubeMesh{};

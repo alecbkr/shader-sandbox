@@ -6,6 +6,8 @@
 #include "engine/ShaderProgram.hpp"
 #include "core/UniformTypes.hpp"
 
+#include "../object/ModelPrimitive.hpp"
+
 class InspectorEngine {
 public:
     static bool initialize();
@@ -15,6 +17,12 @@ public:
     static void applyInput(unsigned int modelID, const Uniform& uniform);
     static void reloadUniforms(unsigned int modelID);
     static bool handleEditShaderProgram(const std::string& vertex_file, const std::string& fragment_file, const std::string& programName);
+
+    // ALECS TEST JUNK
+    static void applyAllUniformsForPrimitive(ModelPrimitive prim);
+    static void applySceneUniforms(ShaderProgram& program);
+    static void applyModelUniforms(ShaderProgram& program, unsigned int modelID);
+    static void applyMaterialUniforms(ShaderProgram& program, unsigned int modelID, unsigned int materialID);
 
 private:
     static void applyUniform(unsigned int modelID, const Uniform& uniform);

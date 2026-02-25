@@ -23,6 +23,8 @@ void Texture2D::loadToGPU() {
     } 
     if (isLoadedInGPU) return;
 
+    Logger::addLog(LogLevel::INFO, "TEXTURE2D", "Loading texture...");
+
     stbi_set_flip_vertically_on_load(true);
     unsigned char* data;
     GLenum format;
@@ -57,12 +59,4 @@ void Texture2D::loadToGPU() {
 
     glBindTexture(GL_TEXTURE_2D, 0);
     isLoadedInGPU = true;
-}
-
-
-void Texture2D::unloadFromGPU() {
-    if (isLoadedInGPU == false) return;
-    glDeleteTextures(1, &ID);
-
-    isLoadedInGPU = false;
 }

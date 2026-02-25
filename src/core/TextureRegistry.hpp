@@ -1,5 +1,5 @@
 #pragma once 
-#include "../object/Texture.hpp"
+#include "../texture/Texture.hpp"
 #include <vector>
 
 class TextureRegistry {
