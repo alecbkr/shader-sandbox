@@ -480,16 +480,31 @@ void InspectorUI::initializeMenu(ShaderLinkMenu& menu, const std::vector<const c
         return;
     }
 
+    auto getNormalizedPath = [](const std::string& p) -> std::string {
+        if (p.empty()) return "";
+        try {
+            return std::filesystem::weakly_canonical(p).string();
+        } catch (...) {
+            return p;
+        }
+    };
+    std::string registryVert = getNormalizedPath(oldProgram->vertPath);
+    std::string registryFrag = getNormalizedPath(oldProgram->fragPath);
+
     for (int i = 0; i < vertChoices.size(); i++) {
-        std::string filePath = vertChoices[i];
-        if (oldProgram->vertPath == filePath) {
-            menu.vertSelection = i;
+        if (i > 0 && vertChoices[i] != nullptr) {
+            if (getNormalizedPath(vertChoices[i]) == registryVert) {
+                menu.vertSelection = i;
+                break; 
+            }
         }
     }
     for (int i = 0; i < fragChoices.size(); i++) {
-        std::string filePath = fragChoices[i];
-        if (oldProgram->fragPath == filePath) {
-            menu.fragSelection = i;
+        if (i > 0 && fragChoices[i] != nullptr) {
+            if (getNormalizedPath(fragChoices[i]) == registryFrag) {
+                menu.fragSelection = i;
+                break;
+            }
         }
     }
     menu.geometrySelection = 0;
