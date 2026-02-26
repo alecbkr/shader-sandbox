@@ -12,6 +12,7 @@ class Logger;
 class InspectorEngine;
 class EventDispatcher;
 class ShaderRegistry;
+class TextureCache;
 class UniformRegistry;
 class PresetAssets;
 
@@ -23,7 +24,7 @@ class ModelCache {
         std::unordered_map<unsigned int, std::unique_ptr<Model>> modelIDMap; 
         
         ModelCache();
-        bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, PresetAssets* _presetsPtr);
+        bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, TextureCache* _textureCachePtr, UniformRegistry* _uniformRegPtr, InspectorEngine* _inspectorEngPtr, PresetAssets* _presetsPtr);
         void shutdown();
        
 
@@ -56,12 +57,13 @@ class ModelCache {
         // static void reorderByProgram();
         void placeInCache(unsigned int modelID);
 
-        //test junk
+        //SYSTEM POINTERS
         bool initialized = false;
         bool inspectorEngPtrSet = false;
         Logger* loggerPtr                = nullptr;
         InspectorEngine* inspectorEngPtr = nullptr;
         EventDispatcher* eventsPtr       = nullptr;
+        TextureCache* textureCachePtr    = nullptr;
         ShaderRegistry* shaderRegPtr     = nullptr;
         UniformRegistry* uniformRegPtr   = nullptr;
         PresetAssets* presetsPtr         = nullptr;

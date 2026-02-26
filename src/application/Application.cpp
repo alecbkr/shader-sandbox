@@ -105,11 +105,12 @@ void loadPresetAssets(AppContext& ctx) {
     // ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::FACE));
     // ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::METAL));
     // ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::GRID));
+
+    ShaderProgram* gridplanePtr = ctx.shader_registry.getProgram("gridplane");
+    ShaderProgram* skyboxPtr = ctx.shader_registry.getProgram("skybox");
+    ShaderProgram* texPtr = ctx.shader_registry.getProgram("tex");
+    ShaderProgram* colorPtr = ctx.shader_registry.getProgram("color");
     
-    ShaderProgram* texPtr = ShaderRegistry::getProgram("tex");
-    ShaderProgram* colorPtr = ShaderRegistry::getProgram("color");
-    ShaderProgram* gridplanePtr = ShaderRegistry::getProgram("gridplane");
-    ShaderProgram* skyboxPtr = ShaderRegistry::getProgram("skybox");
 
     unsigned int skyboxID = ctx.model_cache.createSkybox("../assets/textures/skybox");
     ctx.model_cache.getModel(skyboxID)->setModelProgram(skyboxPtr->name);
@@ -118,8 +119,8 @@ void loadPresetAssets(AppContext& ctx) {
     ctx.model_cache.getModel(gridID)->setModelProgram(gridplanePtr->name);
     ctx.model_cache.getModel(gridID)->setScale(glm::vec3(50.0f));
 
-    // unsigned int backpackID = ctx.model_cache.createImported("../assets/models/backpack/backpack.obj");
-    // ctx.model_cache.getModel(backpackID)->setModelProgram(texPtr->name);
+    unsigned int backpackID = ctx.model_cache.createImported("../assets/models/backpack/backpack.obj");
+    ctx.model_cache.getModel(backpackID)->setModelProgram(texPtr->name);
 
     unsigned int testPlane = ctx.model_cache.createPreset(MeshPreset::PLANE);
     ctx.model_cache.getModel(testPlane)->addTexture("../assets/textures/grass.png", TextureType::TEX_DIFFUSE);
@@ -134,6 +135,7 @@ void loadPresetAssets(AppContext& ctx) {
     ctx.model_cache.getModel(testPlane2)->setModelProgram(texPtr->name);
     ctx.model_cache.getModel(testPlane2)->rotate(90.0, glm::vec3(1.0f, 0.0f, 0.0f));
     ctx.model_cache.getModel(testPlane2)->translate(glm::vec3(-3.0f, 0.0f, 0.0f));
+    
 }
 
 bool Application::initialize(AppContext& ctx) {
@@ -181,10 +183,10 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Uniform Registry was not initialized successfully.");
         return false;
     }
-    // if (!TextureCache::initialize()) {
-    //     std::cout << "Texture Cache was not initialized successfully." << std::endl;
-    //     return false;
-    // }
+    if (!ctx.texture_cache.initialize(&ctx.logger)) {
+        std::cout << "Texture Cache was not initialized successfully." << std::endl;
+        return false;
+    }
     // if (!ConsoleEngine::initialize(Logger::getConsoleSinkPtr())) {
     //     std::cout << "Console Engine was not initialized successfully." << std::endl;
     //     return false;
@@ -193,11 +195,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Importer was not initialized successfully.");
         return false;
     }
-    if (!ctx.model_importer.initialize(&ctx.logger)) {
-        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Importer was not initialized successfully.");
-        return false;
-    }
-    if (!ctx.model_cache.initialize(&ctx.logger, &ctx.events, &ctx.shader_registry, &ctx.uniform_registry, &ctx.model_importer)) {
+    if (!ctx.model_cache.initialize(&ctx.logger, &ctx.events, &ctx.shader_registry, &ctx.texture_cache, &ctx.uniform_registry, &ctx.inspector_engine, &ctx.preset_assets)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
         return false;
     }

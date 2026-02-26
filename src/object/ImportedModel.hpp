@@ -6,7 +6,7 @@ class ShaderRegistry;
 
 class ImportedModel final : public Model {
     public:
-        ImportedModel(const unsigned int ID, std::string pathname, ShaderRegistry* _shaderRegPtr, Logger* _loggerPtr);
+        ImportedModel(const unsigned int ID, std::string pathname, TextureCache* _textureCachePtr, Logger* _loggerPtr);
         ~ImportedModel() = default;
         unsigned int getID() const;
         void addMesh(std::vector<Vertex> vertices, std::vector<unsigned int>indices, MeshFlags meshflags);

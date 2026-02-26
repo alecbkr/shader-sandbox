@@ -24,17 +24,18 @@ ModelCache::ModelCache() {
     // modelCache.clear();
 }
 
-bool ModelCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, PresetAssets* _presetsPtr) {
+bool ModelCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, TextureCache* _textureCachePtr, UniformRegistry* _uniformRegPtr, InspectorEngine* _inspectorEngPtr, PresetAssets* _presetsPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Model Cache Initialization", "Model Cache was already initialized.");
         return false;
     }
-    loggerPtr = _loggerPtr;
-    inspectorEngPtr = nullptr;;
-    eventsPtr = _eventsPtr;
-    shaderRegPtr = _shaderRegPtr;
-    uniformRegPtr = _uniformRegPtr;
-    presetsPtr = _presetsPtr;
+    loggerPtr       = _loggerPtr;
+    inspectorEngPtr = _inspectorEngPtr;
+    eventsPtr       = _eventsPtr;
+    shaderRegPtr    = _shaderRegPtr;
+    textureCachePtr = _textureCachePtr;
+    uniformRegPtr   = _uniformRegPtr;
+    presetsPtr      = _presetsPtr;
     // modelImporterPtr = _modelImporterPtr;
     // modelCache.clear();
     
@@ -59,11 +60,11 @@ bool ModelCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, Sha
 }
 
 void ModelCache::shutdown() {
-    loggerPtr = nullptr;
+    loggerPtr       = nullptr;
     inspectorEngPtr = nullptr;
-    eventsPtr = nullptr;
-    shaderRegPtr = nullptr;
-    nextModelID = 0;
+    eventsPtr       = nullptr;
+    shaderRegPtr    = nullptr;
+    textureCachePtr = nullptr;
     // modelCache.clear();
     inspectorEngPtrSet = false;
     initialized = false;
@@ -81,7 +82,7 @@ unsigned int ModelCache::createCustom(
         return INVALID_MODEL;
     }
     
-    std::unique_ptr<CustomModel> customModel = std::make_unique<CustomModel>(nextModelID, shaderRegPtr, loggerPtr);
+    std::unique_ptr<CustomModel> customModel = std::make_unique<CustomModel>(nextModelID, textureCachePtr, loggerPtr);
     customModel->setMesh(vertices, indices, hasPos, hasNorms, hasUVs);
     Model* rawPointer = customModel.get();
 
@@ -100,7 +101,7 @@ unsigned int ModelCache::createImported(std::string model_path) {
         return INVALID_MODEL;
     }
 
-    std::unique_ptr<ImportedModel> importedModel = std::make_unique<ImportedModel>(nextModelID, model_path, shaderRegPtr, loggerPtr);
+    std::unique_ptr<ImportedModel> importedModel = std::make_unique<ImportedModel>(nextModelID, model_path, textureCachePtr, loggerPtr);
     Model* rawPointer = importedModel.get();
     modelIDMap.emplace(nextModelID, std::move(importedModel));
     // modelCache.push_back(rawPointer);
@@ -113,11 +114,11 @@ unsigned int ModelCache::createImported(std::string model_path) {
 
 unsigned int ModelCache::createPreset(MeshPreset preset) {
     MeshData presetData = presetsPtr->getPresetMesh(preset);
-    std::unique_ptr<CustomModel> presetModel = std::make_unique<CustomModel>(nextModelID);
+    std::unique_ptr<CustomModel> presetModel = std::make_unique<CustomModel>(nextModelID, textureCachePtr, loggerPtr);
     Model* rawPointer = presetModel.get();
-
+    
     presetModel->setMesh(presetData.verts, presetData.indices, true, false, true);
-    modelIDMap.emplace(nextModelID, std::move(presetModel));
+    modelIDMap.emplace(presetModel->ID, std::move(presetModel));
     placeInCache(nextModelID);
     nextModelID++;
     return rawPointer->ID;
@@ -126,7 +127,7 @@ unsigned int ModelCache::createPreset(MeshPreset preset) {
 
 unsigned int ModelCache::createSkybox(std::string cubemap_dir) {
     MeshData cube = presetsPtr->getPresetMesh(MeshPreset::CUBE);
-    std::unique_ptr<CustomModel> skyboxModel = std::make_unique<CustomModel>(nextModelID);
+    std::unique_ptr<CustomModel> skyboxModel = std::make_unique<CustomModel>(nextModelID, textureCachePtr, loggerPtr);
     Model* rawPointer = skyboxModel.get();
 
     skyboxModel->setMesh(cube.verts, cube.indices, true, false, true);
@@ -154,16 +155,15 @@ void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camP
     if (skyboxPrim != nullptr) {
         glDepthFunc(GL_LEQUAL);
         glDepthMask(GL_FALSE);
-        InspectorEngine::applyAllUniformsForPrimitive(*skyboxPrim);
+        inspectorEngPtr->applyAllUniformsForPrimitive(*skyboxPrim);
         getModel(skyboxPrim->ModelID)->renderPrimitive(0);
-
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
     }
 
     // RENDER OPAQUE PRIMITIVES
     for (ModelPrimitive* prim : opaquePrims) {
-        InspectorEngine::applyAllUniformsForPrimitive(*prim);
+        inspectorEngPtr->applyAllUniformsForPrimitive(*prim);
         getModel(prim->ModelID)->renderPrimitive(prim->meshID);
     }
 
@@ -171,7 +171,7 @@ void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camP
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
     for (ModelPrimitive* prim : translucentPrims) {
-        InspectorEngine::applyAllUniformsForPrimitive(*prim);
+        inspectorEngPtr->applyAllUniformsForPrimitive(*prim);
         getModel(prim->ModelID)->renderPrimitive(prim->meshID);
     }
     glDisable(GL_BLEND);
@@ -191,7 +191,7 @@ void ModelCache::renderModel(unsigned int modelID, glm::mat4 perspective, glm::m
     uniformRegPtr->registerModelUniform(modelID, {"model", UniformType::Mat4, model->getModelMatrix()});
 
     for (ModelPrimitive& prim : model->primitives) {
-        InspectorEngine::applyAllUniformsForPrimitive(prim);
+        inspectorEngPtr->applyAllUniformsForPrimitive(prim);
         model->renderPrimitive(prim.meshID);
     }
 }
@@ -261,9 +261,10 @@ void ModelCache::renderPrim(unsigned int modelID, unsigned int meshID, glm::mat4
 
 Model* ModelCache::getModel(unsigned int modelID) {
     auto it = modelIDMap.find(modelID);
-    if (it == modelIDMap.end())
+    if (it == modelIDMap.end()) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE | getModel()", "modelID not found: ", std::to_string(modelID));
         return nullptr;
-
+    }
     return it->second.get();
 }
 

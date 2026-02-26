@@ -4,11 +4,11 @@
 #include "core/logging/Logger.hpp"
 
 
-ImportedModel::ImportedModel(const unsigned int ID, std::string pathname, ShaderRegistry* _shaderRegPtr, Logger* _loggerPtr)
-    : Model(ID, _shaderRegPtr, _loggerPtr) {
+ImportedModel::ImportedModel(const unsigned int ID, std::string pathname, TextureCache* _textureCachePtr, Logger* _loggerPtr)
+    : Model(ID, _textureCachePtr, _loggerPtr) {
     
-    if (importModel(pathname, *this) == false) {
-        _loggerPtr->addLog(LogLevel::LOG_ERROR, "MODEL", "Model import failed, returned false");
+    if (importModel(pathname, *this, textureCachePtr, loggerPtr) == false) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODEL", "Model import failed, returned false");
         return;
     }
     all_meshes.empty() == true ? properties.hasMeshes = false : properties.hasMeshes = true;

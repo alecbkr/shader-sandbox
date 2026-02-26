@@ -15,7 +15,7 @@ enum class MaterialType {
 };
 
 struct MaterialProperties {
-    float opacity = 1.0f;
+    float opacity   = 1.0f;
     float shininess = 0.0f;
     float roughness = 0.0f;
     float metalness = 0.0f;
@@ -34,7 +34,7 @@ class Material {
             MaterialType type, 
             unsigned int materialID
         );
-        void bindTextures();
+        std::vector<unsigned int> getMaterialTextureIDs();
         void assignTexture(unsigned int textureID);
         void setProgramID(std::string programID);
         std::string getProgramID();
@@ -42,4 +42,6 @@ class Material {
     private:
         std::string programID;
         std::vector<unsigned int> textureIDs;
+
+        // SYSTEM POINTERS
 };

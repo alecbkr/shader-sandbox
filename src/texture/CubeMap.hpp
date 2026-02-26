@@ -9,7 +9,7 @@
 class CubeMap final : public Texture{
     public:
         std::vector<std::string> cubemap_paths;
-        CubeMap(std::string cubemap_dir);
+        CubeMap(std::string cubemap_dir, Logger* _loggerPtr);
         ~CubeMap() = default;
         void bind(unsigned int texNum);
 

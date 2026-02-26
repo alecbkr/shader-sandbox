@@ -4,7 +4,7 @@
 #include "core/logging/LogSink.hpp"
 #include <stb_image.h>
 
-CubeMap::CubeMap(std::string cubemap_dir) : Texture(cubemap_dir, TEX_CUBEMAP) {
+CubeMap::CubeMap(std::string cubemap_dir, Logger* _loggerPtr) : Texture(cubemap_dir, TEX_CUBEMAP, _loggerPtr) {
     cubemap_paths = {
         cubemap_dir + "/right.jpg",
         cubemap_dir + "/left.jpg",
@@ -28,12 +28,12 @@ void CubeMap::bind(unsigned int texNum) {
 
 void CubeMap::loadToGPU() {
     if (isInitialized == false) {
-        Logger::addLog(LogLevel::WARNING, "CUBEMAP", "Can't send uninitialized texture to GPU");
+        loggerPtr->addLog(LogLevel::WARNING, "CUBEMAP", "Can't send uninitialized texture to GPU");
         return;
     } 
     if (isLoadedInGPU) return;
 
-    Logger::addLog(LogLevel::INFO, "CUBEMAP", "Loading texture...");
+    loggerPtr->addLog(LogLevel::INFO, "CUBEMAP", "Loading texture...");
     unsigned char* data;
     GLenum format;
     int width, height, channelCnt;
@@ -45,7 +45,7 @@ void CubeMap::loadToGPU() {
     for (unsigned int i = 0; i < cubemap_paths.size(); i++) {
         data = stbi_load(cubemap_paths[i].c_str(), &width, &height, &channelCnt, 0);
         if (data == nullptr) {
-            Logger::addLog(LogLevel::ERROR, "TEXTURE", "Could not find texture from path:",  path);
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURE", "Could not find texture from path:",  path);
             valid = false;
             return;
         }
@@ -55,7 +55,7 @@ void CubeMap::loadToGPU() {
             case 3: format = GL_RGB;  break;
             case 4: format = GL_RGBA; break;
             default: 
-                Logger::addLog(LogLevel::ERROR, "TEXTURE", "Format could not be determined");
+                loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURE", "Format could not be determined");
                 valid = false;
                 return;
         }

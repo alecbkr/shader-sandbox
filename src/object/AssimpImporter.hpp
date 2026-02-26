@@ -8,16 +8,19 @@
 #include <assimp/postprocess.h>
 
 // #include "core/logging/LogSink.hpp"
-// #include "core/logging/Logger.hpp"
+#include "core/logging/Logger.hpp"
 #include "MeshAssimp.hpp"
 #include "Material.hpp"
 #include "ImportedModel.hpp"
 #include "texture/TextureCache.hpp"
 
 class Logger;
+class TextureCache;
 
 struct ImportContext {
     std::string directory;
+    Logger* loggerPtr;
+    TextureCache* textureCachePtr;
 };
 
 
@@ -38,23 +41,25 @@ static const aiTextureType TexMap[TEX_MAXTYPE] {
 };
 
 
-inline bool importModel(std::string path, ImportedModel& model);
+inline bool importModel(std::string path, ImportedModel& model, TextureCache* textureCachePtr, Logger* loggerPtr);
 static void processNode(aiNode *node, const aiScene *scene, ImportedModel& model, ImportContext& ctx);
 static void processMesh(aiMesh *aimesh, ImportedModel& model, ImportContext& ctx);
 static void processMaterial(aiMaterial *aimat, ImportedModel& model, ImportContext& ctx);
 static void getTextures(aiMaterial *mat, std::vector<unsigned int>& textureIDs, ImportedModel& model, ImportContext& ctx);
 
 
-inline bool importModel(std::string path, ImportedModel& model) {
+inline bool importModel(std::string path, ImportedModel& model, TextureCache* textureCachePtr, Logger* loggerPtr) {
     Assimp::Importer import;
     const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        // Logger::addLog(LogLevel::WARNING, "MODEL_IMPORTER", "Model not found");
+        loggerPtr->addLog(LogLevel::WARNING, "MODEL_IMPORTER", "Model not found");
         return false;
     }
 
     ImportContext ctx;
+    ctx.loggerPtr = loggerPtr;
+    ctx.textureCachePtr = textureCachePtr;
     ctx.directory = path.substr(0, path.find_last_of('/'));
 
     // GRAB MATERIALS
@@ -184,7 +189,7 @@ static void getTextures(aiMaterial *mat, std::vector<unsigned int>& textureIDs, 
             std::string filepath = ctx.directory + "/" + aiTex.C_Str();
             model.addTexture(filepath, static_cast<TextureType>(type));
 
-            unsigned int newID = TextureCache::addTexture(filepath, static_cast<TextureType>(type));
+            unsigned int newID = ctx.textureCachePtr->addTexture(filepath, static_cast<TextureType>(type));
             textureIDs.push_back(newID);
         }
     }

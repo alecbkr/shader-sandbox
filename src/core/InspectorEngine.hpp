@@ -28,10 +28,10 @@ public:
     UniformValue getDefaultValue(UniformType type);
 
     // ALECS TEST JUNK
-    static void applyAllUniformsForPrimitive(ModelPrimitive prim);
-    static void applySceneUniforms(ShaderProgram& program);
-    static void applyModelUniforms(ShaderProgram& program, unsigned int modelID);
-    static void applyMaterialUniforms(ShaderProgram& program, unsigned int modelID, unsigned int materialID);
+    void applyAllUniformsForPrimitive(ModelPrimitive prim);
+    void applySceneUniforms(ShaderProgram& program);
+    void applyModelUniforms(ShaderProgram& program, unsigned int modelID);
+    void applyMaterialUniforms(ShaderProgram& program, unsigned int modelID, unsigned int materialID);
 
 private:
     void applyFunction(ShaderProgram& program, const Uniform& uniform, const InspectorReference& function);

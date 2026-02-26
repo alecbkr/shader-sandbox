@@ -20,16 +20,18 @@ Material::Material(MaterialProperties props,
 }
 
 
-void Material::bindTextures() {
-    if (textureIDs.empty()) {
-        TextureCache::bindDefault();
-    }
-    else {
-        unsigned int texUnit = 0;
-        for (unsigned int texID : textureIDs) {
-            TextureCache::bindTexture(texID, texUnit++);
-        }
-    }
+std::vector<unsigned int> Material::getMaterialTextureIDs() {
+    // if (textureIDs.empty()) {
+    //     TextureCache::bindDefault();
+    // }
+    // else {
+    //     unsigned int texUnit = 0;
+    //     for (unsigned int texID : textureIDs) {
+    //         TextureCache::bindTexture(texID, texUnit++);
+    //     }
+    // }
+
+    return textureIDs;
 }
 
 
@@ -44,6 +46,5 @@ void Material::setProgramID(std::string programID) {
 
 
 std::string Material::getProgramID() {
-    // Logger::addLog(LogLevel::INFO, "GAYBABY", "little cunt rat", programID);
     return programID;
 }

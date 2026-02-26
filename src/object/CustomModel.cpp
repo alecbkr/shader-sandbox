@@ -4,10 +4,10 @@
 
 #include "core/logging/Logger.hpp"
 
-CustomModel::CustomModel(const unsigned int modelID, ShaderRegistry* shaderRegPtr, Logger* _loggerPtr) 
-    : Model(ID, shaderRegPtr, _loggerPtr), loggerPtr(_loggerPtr) {
+CustomModel::CustomModel(const unsigned int modelID, TextureCache* _textureCachePtr, Logger* _loggerPtr) 
+    : Model(modelID, _textureCachePtr, _loggerPtr) {
     primitives.emplace_back(modelID, 0, 0);
-
+    
     all_materials.push_back(std::make_unique<Material>(MaterialType::Opaque, nextMaterialID));
     all_meshes.emplace_back(std::make_unique<MeshA>(nextMeshID));
 }
@@ -67,5 +67,5 @@ void CustomModel::setMesh(std::vector<float> raw_vertices, std::vector<unsigned 
 
 
 void CustomModel::addTexture(std::string texture_path, TextureType type) {
-    all_materials[0]->assignTexture(TextureCache::addTexture(texture_path, type));
+    all_materials[0]->assignTexture(textureCachePtr->addTexture(texture_path, type));
 }

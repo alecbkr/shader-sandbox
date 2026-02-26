@@ -2,13 +2,12 @@
 
 #include "core/logging/Logger.hpp"
 #include "engine/ShaderProgram.hpp"
-#include "../texture/CubeMap.hpp"
-#include "../texture/Texture2D.hpp"
+#include "texture/TextureCache.hpp"
 
 
 
-Model::Model(const unsigned int ID, ShaderRegistry* _shaderRegPtr, Logger* _loggerPtr)
-    : ID(ID), shaderRegPtr(_shaderRegPtr), loggerPtr(_loggerPtr) {}
+Model::Model(const unsigned int ID, TextureCache* _textureCachePtr, Logger* _loggerPtr)
+    : ID(ID), textureCachePtr(_textureCachePtr), loggerPtr(_loggerPtr) {}
 
 
 // -----FUNCTIONALITY
@@ -18,7 +17,17 @@ void Model::renderPrimitive(unsigned int meshID) {
     Material* mat = all_materials[prim.materialID].get();
 
     mesh->bind();
-    mat->bindTextures();
+
+    std::vector<unsigned int> textureIDs = mat->getMaterialTextureIDs();
+    if (textureIDs.empty()) {
+        textureCachePtr->bindDefault();
+    }
+    else {
+        unsigned int texUnit = 0;
+        for (unsigned int texID : textureIDs) {
+            textureCachePtr->bindTexture(texID, texUnit++);
+        }
+    }
     glDrawElements(GL_TRIANGLES, mesh->indices.size(), GL_UNSIGNED_INT, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -27,7 +36,7 @@ void Model::renderPrimitive(unsigned int meshID) {
 void Model::unloadAllPrimitives() {
     for (ModelPrimitive& prim : primitives) {
         all_meshes[prim.meshID]->unloadFromGPU();
-        // all_materials[prim.materialID]->
+        // all_materials[prim.materialID]->unloadFromGPU();
     }
 }
 

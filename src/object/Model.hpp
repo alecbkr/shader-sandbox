@@ -13,6 +13,7 @@
 #include "ModelPrimitive.hpp"
 
 class ShaderRegistry;
+class TextureCache;
 class Logger;
 
 class Model {
@@ -25,12 +26,15 @@ class Model {
 
     public:
         const unsigned int ID;
-        ShaderRegistry* shaderRegPtr = nullptr;
-        Logger* loggerPtr = nullptr;
         std::string        name; // PLACEHOLDER does not do anything rn
         std::vector<ModelPrimitive> primitives;
 
-        Model(const unsigned int ID, ShaderRegistry* _shaderRegPtr, Logger* _loggerPtr);
+        // SYSTEM POINTERS
+        ShaderRegistry* shaderRegPtr = nullptr;
+        TextureCache* textureCachePtr = nullptr;
+        Logger* loggerPtr = nullptr;
+
+        Model(const unsigned int ID, TextureCache* _textureCachePtr, Logger* _loggerPtr);
         virtual ~Model() = default;
         // FUNCTIONALITY
         void renderPrimitive(unsigned int meshID);
@@ -78,4 +82,6 @@ class Model {
         glm::quat orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
         std::string programID; 
         void calcModelM();
+
+        
 };
