@@ -11,10 +11,19 @@
 #include <unordered_map>
 #include <vector>
 
+// ai did this, need to change this to just be a field of the class
+namespace {
+const float kInputWidth = 72.0f;
+const float kColorPickerSize = 100.0f;
+}
+
 void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr) {
     loggerPtr_ = loggerPtr;
     uniformRegPtr_ = uniformRegPtr;
     modelCachePtr_ = modelCachePtr;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 6.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
 
     int imGuiID = 0;
     for (auto& [modelID, model] : modelCachePtr->modelIDMap) {
@@ -22,16 +31,17 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
         if (modelProgram == nullptr) {
             continue;
         }
-        std::string label = "model " + std::to_string(modelID);
-        if (ImGui::TreeNode(label.c_str())) {
+        std::string label = "Model " + std::to_string(modelID) + "##uniform_model_" + std::to_string(modelID);
+        if (ImGui::TreeNodeEx(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed)) {
             const std::unordered_map<std::string, Uniform>* uniformMap = uniformRegPtr->tryReadUniforms(modelID);
 
             if (uniformMap == nullptr) {
-                loggerPtr_->addLog(LogLevel::WARNING, "drawUniformInspector", "Object not found in registry: ", std::to_string(modelID));
+                loggerPtr_->addLog(LogLevel::WARNING, "drawUniformInspector", "Model not found in registry: ", std::to_string(modelID));
                 ImGui::TreePop();
                 continue;
             }
 
+            ImGui::Indent(6.0f);
             for (auto& [uniformName, uniformRef] : *uniformMap) {
                 ImGui::PushID(imGuiID);
                 Uniform uniformCopy = uniformRef;
@@ -39,17 +49,27 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                 ImGui::PopID();
                 imGuiID++;
             }
+            ImGui::Unindent(6.0f);
             ImGui::TreePop();
         }
     }
+
+    ImGui::PopStyleVar(2);
 }
 
 void UniformInspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID, InspectorEngine* inspectorEngPtr) {
-    if (ImGui::TreeNode(uniform.name.c_str())) {
+    ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.22f, 0.25f, 0.29f, 0.55f));
+    bool nodeOpen = ImGui::TreeNodeEx(uniform.name.c_str(), ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowOverlap);
+    ImGui::PopStyleColor();
+
+    if (nodeOpen) {
+        ImGui::Indent(8.0f);
+
         bool changed = false;
         bool changedFunctionBox = false;
 
-        changedFunctionBox |= ImGui::Checkbox("Use Function", &uniform.isFunction);
+        ImGui::AlignTextToFramePadding();
+        changedFunctionBox |= ImGui::Checkbox("Reference another value", &uniform.isFunction);
 
         if (changedFunctionBox) {
             if (uniform.isFunction) {
@@ -65,6 +85,7 @@ void UniformInspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID
             }
         }
 
+        ImGui::Spacing();
         std::visit([&](auto& val) {
             changed = drawUniformInputValue(&val, &uniform);
         }, uniform.value);
@@ -73,43 +94,44 @@ void UniformInspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID
             inspectorEngPtr->applyInput(modelID, uniform);
         }
 
+        ImGui::Unindent(8.0f);
         ImGui::TreePop();
     }
 }
 
 bool UniformInspectorUI::drawTextInput(std::string* value, const char* label) {
-    bool changed = false;
     char buffer[256];
     std::snprintf(buffer, sizeof(buffer), "%s", value->c_str());
     if (ImGui::InputText(label, buffer, sizeof(buffer))) {
         *value = buffer;
-        changed = true;
+        return true;
     }
-    return changed;
+    return false;
 }
 
 bool UniformInspectorUI::drawUniformInputValue(int* value, Uniform* uniform) {
-    return ImGui::InputInt("value", value);
+    ImGui::SetNextItemWidth(kInputWidth);
+    return ImGui::DragInt("Value", value);
 }
 
 bool UniformInspectorUI::drawUniformInputValue(float* value, Uniform* uniform) {
-    return ImGui::InputFloat("value", value);
+    ImGui::SetNextItemWidth(kInputWidth);
+    return ImGui::DragFloat("Value", value, .1f);
 }
 
 bool UniformInspectorUI::drawUniformInputValue(glm::vec3* value, Uniform* uniform) {
     bool changed = false;
     bool useColorPicker = false;
     if (uniform != nullptr) {
-        changed |= ImGui::Checkbox("Use Color Picker", &uniform->useAlternateEditor);
+        changed |= ImGui::Checkbox("Color picker", &uniform->useAlternateEditor);
         useColorPicker = uniform->useAlternateEditor;
     }
 
     if (useColorPicker) {
-        changed |= ImGui::ColorPicker3("", &value->x);
+        ImGui::SetNextItemWidth(kColorPickerSize);
+        changed |= ImGui::ColorPicker3("##vec3color", &value->x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
     } else {
-        changed |= ImGui::InputFloat("x", &value->x);
-        changed |= ImGui::InputFloat("y", &value->y);
-        changed |= ImGui::InputFloat("z", &value->z);
+        changed |= ImGui::DragFloat3("xyz", &value->x, .1f);
     }
     return changed;
 }
@@ -118,27 +140,31 @@ bool UniformInspectorUI::drawUniformInputValue(glm::vec4* value, Uniform* unifor
     bool changed = false;
     bool useColorPicker = false;
     if (uniform != nullptr) {
-        ImGui::Checkbox("Use Color Picker", &uniform->useAlternateEditor);
+        changed |= ImGui::Checkbox("Color picker", &uniform->useAlternateEditor);
         useColorPicker = uniform->useAlternateEditor;
     }
 
     if (useColorPicker) {
-        changed |= ImGui::ColorPicker4("", &value->x);
+        ImGui::SetNextItemWidth(kColorPickerSize);
+        changed |= ImGui::ColorPicker4("##vec4color", &value->x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_AlphaBar);
     } else {
-        changed |= ImGui::InputFloat("x", &value->x);
-        changed |= ImGui::InputFloat("y", &value->y);
-        changed |= ImGui::InputFloat("z", &value->z);
-        changed |= ImGui::InputFloat("w", &value->w);
+        changed |= ImGui::DragFloat4("xyzw", &value->x, .1f);
     }
     return changed;
 }
 
 bool UniformInspectorUI::drawUniformInputValue(glm::quat* value, Uniform* uniform) {
+    ImGui::TextUnformatted("Quaternion (w, x, y, z)");
+    ImGui::PushItemWidth(kInputWidth);
     bool changed = false;
-    changed |= ImGui::InputFloat("x", &value->x);
-    changed |= ImGui::InputFloat("y", &value->y);
-    changed |= ImGui::InputFloat("z", &value->z);
-    changed |= ImGui::InputFloat("w", &value->w);
+    changed |= ImGui::InputFloat("W", &value->w, 0.0f, 0.0f, "%.3f");
+    ImGui::SameLine(0.0f, 6.0f);
+    changed |= ImGui::InputFloat("X", &value->x, 0.0f, 0.0f, "%.3f");
+    ImGui::SameLine(0.0f, 6.0f);
+    changed |= ImGui::InputFloat("Y", &value->y, 0.0f, 0.0f, "%.3f");
+    ImGui::SameLine(0.0f, 6.0f);
+    changed |= ImGui::InputFloat("Z", &value->z, 0.0f, 0.0f, "%.3f");
+    ImGui::PopItemWidth();
     return changed;
 }
 
@@ -146,16 +172,16 @@ bool UniformInspectorUI::drawUniformInputValue(glm::mat4* value, Uniform* unifor
     static int tableID = 0;
     const int columns = 4;
     tableID++;
+    ImGui::TextUnformatted("Matrix 4×4");
     bool changed = false;
-    if (ImGui::BeginTable(("Matrix4x4" + std::to_string(tableID)).c_str(), columns, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+    if (ImGui::BeginTable(("Matrix4x4" + std::to_string(tableID)).c_str(), columns, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchSame)) {
         for (int row = 0; row < 4; ++row) {
             ImGui::TableNextRow();
             for (int col = 0; col < 4; ++col) {
                 ImGui::TableSetColumnIndex(col);
                 ImGui::PushID(row * 4 + col);
-                ImGui::PushItemWidth(60);
-                ImGui::InputFloat("", &(*value)[col][row]);
-                ImGui::PopItemWidth();
+                ImGui::SetNextItemWidth(-1);
+                changed |= ImGui::InputFloat("##cell", &(*value)[col][row], 0.0f, 0.0f, "%.2f");
                 ImGui::PopID();
             }
         }
@@ -165,7 +191,8 @@ bool UniformInspectorUI::drawUniformInputValue(glm::mat4* value, Uniform* unifor
 }
 
 bool UniformInspectorUI::drawUniformInputValue(InspectorSampler2D* value, Uniform* uniform) {
-    return drawUniformInputValue(&value->textureUnit);
+    ImGui::SetNextItemWidth(kInputWidth);
+    return ImGui::DragInt("Texture unit", &value->textureUnit, 0, 16);
 }
 
 bool UniformInspectorUI::drawUniformInputValue(InspectorReference* value, Uniform* uniform) {
@@ -182,7 +209,7 @@ bool UniformInspectorUI::drawUniformInputValue(InspectorReference* value, Unifor
     std::optional<std::vector<std::string>> worldData = getWorldData(uniform->type);
 
     if (worldData || value->useWorldData) {
-        changed |= ImGui::Checkbox("Use World Data?", &value->useWorldData);
+        changed |= ImGui::Checkbox("Use world data", &value->useWorldData);
     }
 
     int i = 0;
@@ -190,17 +217,18 @@ bool UniformInspectorUI::drawUniformInputValue(InspectorReference* value, Unifor
         if (modelID == uniform->modelID) {
             continue;
         }
-        modelNames.push_back(std::to_string(modelID));
+        modelNames.push_back("Model " + std::to_string(modelID));
         modelChoices.push_back(modelNames[i].c_str());
         modelIDs.push_back(modelID);
         i++;
     }
 
     if (value->useWorldData) {
-        modelChoices.push_back("camera");
+        modelChoices.push_back("Camera");
     }
 
-    changed |= ImGui::Combo("Models", &value->modelSelection, modelChoices.data(), modelChoices.size());
+    ImGui::SetNextItemWidth(-1);
+    changed |= ImGui::Combo("Source model", &value->modelSelection, modelChoices.data(), static_cast<int>(modelChoices.size()));
 
     if (changed) {
         value->uniformSelection = 0;
@@ -209,7 +237,7 @@ bool UniformInspectorUI::drawUniformInputValue(InspectorReference* value, Unifor
         return changed;
     }
 
-    if (std::string(modelChoices[value->modelSelection]) == "camera") {
+    if (std::string(modelChoices[value->modelSelection]) == "Camera") {
         value->useCamaraData = true;
     } else {
         value->referencedModelID = modelIDs[value->modelSelection];
@@ -224,8 +252,8 @@ bool UniformInspectorUI::drawUniformInputValue(InspectorReference* value, Unifor
             return false;
         }
 
-        for (auto& [uniformName, uniform] : *modelUniforms) {
-            if (uniform.type != value->returnType) {
+        for (auto& [uniformName, u] : *modelUniforms) {
+            if (u.type != value->returnType) {
                 continue;
             }
             uniformChoices.push_back(uniformName.c_str());
@@ -239,7 +267,8 @@ bool UniformInspectorUI::drawUniformInputValue(InspectorReference* value, Unifor
         }
     }
 
-    changed |= ImGui::Combo("Uniforms", &value->uniformSelection, uniformChoices.data(), uniformChoices.size());
+    ImGui::SetNextItemWidth(-1);
+    changed |= ImGui::Combo("Source uniform", &value->uniformSelection, uniformChoices.data(), static_cast<int>(uniformChoices.size()));
 
     if (value->uniformSelection > 0) {
         value->referencedUniformName = uniformChoices[value->uniformSelection];
