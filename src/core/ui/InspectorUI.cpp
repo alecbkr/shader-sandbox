@@ -1,5 +1,4 @@
 #include "core/ui/InspectorUI.hpp"
-
 #include "core/ui/UniformInspectorUI.hpp"
 #include "core/ui/ObjectsInspectorUI.hpp"
 #include "core/ui/AssetsInspectorUI.hpp"
@@ -13,9 +12,9 @@
 #include "core/EventDispatcher.hpp"
 #include "core/UniformRegistry.hpp"
 #include "core/ShaderRegistry.hpp"
+#include "core/FileRegistry.hpp"
 #include "object/ModelCache.hpp"
 #include "object/Texture.hpp"
-#include "core/FileRegistry.hpp"
 #include "engine/ShaderProgram.hpp"
 #include <string>
 

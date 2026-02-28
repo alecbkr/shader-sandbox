@@ -2,15 +2,13 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
-#include "object/Model.hpp"
-#include "core/UniformTypes.hpp"
-#include "core/FileRegistry.hpp"
 #include <memory>
 class Logger;
 class InspectorEngine;
 class TextureRegistry;
 class ShaderRegistry;
 class UniformRegistry;
+class FileRegistry;
 class EventDispatcher;
 class ModelCache;
 class UniformInspectorUI;

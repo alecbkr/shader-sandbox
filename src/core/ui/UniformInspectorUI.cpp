@@ -44,6 +44,39 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
     }
 }
 
+void UniformInspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID, InspectorEngine* inspectorEngPtr) {
+    if (ImGui::TreeNode(uniform.name.c_str())) {
+        bool changed = false;
+        bool changedFunctionBox = false;
+
+        changedFunctionBox |= ImGui::Checkbox("Use Function", &uniform.isFunction);
+
+        if (changedFunctionBox) {
+            if (uniform.isFunction) {
+                uniform.isFunction = true;
+                uniform.value = InspectorReference{
+                    .modelSelection = 0, .uniformSelection = 0,
+                    .returnType = uniform.type,
+                    .initialized = false,
+                };
+            } else {
+                uniform.isFunction = false;
+                uniform.value = inspectorEngPtr->getDefaultValue(uniform.type);
+            }
+        }
+
+        std::visit([&](auto& val) {
+            changed = drawUniformInputValue(&val, &uniform);
+        }, uniform.value);
+
+        if (changed || changedFunctionBox) {
+            inspectorEngPtr->applyInput(modelID, uniform);
+        }
+
+        ImGui::TreePop();
+    }
+}
+
 bool UniformInspectorUI::drawTextInput(std::string* value, const char* label) {
     bool changed = false;
     char buffer[256];
@@ -216,35 +249,3 @@ bool UniformInspectorUI::drawUniformInputValue(InspectorReference* value, Unifor
     return changed;
 }
 
-void UniformInspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID, InspectorEngine* inspectorEngPtr) {
-    if (ImGui::TreeNode(uniform.name.c_str())) {
-        bool changed = false;
-        bool changedFunctionBox = false;
-
-        changedFunctionBox |= ImGui::Checkbox("Use Function", &uniform.isFunction);
-
-        if (changedFunctionBox) {
-            if (uniform.isFunction) {
-                uniform.isFunction = true;
-                uniform.value = InspectorReference{
-                    .modelSelection = 0, .uniformSelection = 0,
-                    .returnType = uniform.type,
-                    .initialized = false,
-                };
-            } else {
-                uniform.isFunction = false;
-                uniform.value = inspectorEngPtr->getDefaultValue(uniform.type);
-            }
-        }
-
-        std::visit([&](auto& val) {
-            changed = drawUniformInputValue(&val, &uniform);
-        }, uniform.value);
-
-        if (changed || changedFunctionBox) {
-            inspectorEngPtr->applyInput(modelID, uniform);
-        }
-
-        ImGui::TreePop();
-    }
-}
