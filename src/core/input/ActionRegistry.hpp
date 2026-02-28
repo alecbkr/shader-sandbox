@@ -21,6 +21,12 @@ enum class Action {
     QuitApplication,
     FontSizeIncrease,
     FontSizeDecrease,
+    NewShaderFile,
+    Undo,
+    Redo,
+    FormatActiveShader,
+    ScreenshotViewport,
+    FullscreenViewport,
     Count
 };
 

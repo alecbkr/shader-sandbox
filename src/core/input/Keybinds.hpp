@@ -50,6 +50,7 @@ public:
     void addBinding(const Binding& b);
     void clear();
     const std::vector<Binding>& bindings();
+    const std::string getKeyComboStringFromAction(Action action);
     bool comboDown(const KeyCombo& combo);
     bool comboPressedThisFrame(const KeyCombo& combo);
     void gatherActionsForFrame(ControlCtx context);

@@ -35,9 +35,10 @@ struct AppContext {
     AppContext(const char* _app_title) : app_title(_app_title) {};
 
     const char* app_title;
-    
+    bool shouldClose = false;
+
     AppSettings settings;
-    Project project; // loaded project (or none)
+    Project project;
 
     Logger logger;
     ActionRegistry action_registry;

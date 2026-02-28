@@ -38,6 +38,10 @@ void subscribeMenuButtons(AppContext& ctx) {
         ProjectLoader::save(ctx.project);
         return false;
     });
+    ctx.events.Subscribe(EventType::Quit, [&ctx](const EventPayload&) -> bool {
+        ctx.shouldClose = true;
+        return true;
+    });
 }
 
 bool Application::addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI* viewportUIPtr, ContextManager* contextManagerPtr, EventDispatcher* eventsPtr) {
@@ -57,6 +61,12 @@ bool Application::addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI
     actionRegPtr->bind(Action::QuitApplication, [eventsPtr]() { eventsPtr->TriggerEvent({ EventType::Quit, false, std::monostate{} }); });
     actionRegPtr->bind(Action::FontSizeIncrease, []() { Application::increaseFont(); });
     actionRegPtr->bind(Action::FontSizeDecrease, []() { Application::decreaseFont(); });
+    actionRegPtr->bind(Action::NewShaderFile, [](){});
+    actionRegPtr->bind(Action::Undo, [](){});
+    actionRegPtr->bind(Action::Redo, [](){});
+    actionRegPtr->bind(Action::FormatActiveShader, [](){});
+    actionRegPtr->bind(Action::ScreenshotViewport, [](){});
+    actionRegPtr->bind(Action::FullscreenViewport, [](){});
     return true;
 }
 
@@ -194,7 +204,7 @@ bool Application::initialize(AppContext& ctx) {
         return false;
     }
     ctx.model_cache.setInspectorEnginePtr(&ctx.inspector_engine);
-    if (!ctx.hot_reloader.initialize(&ctx.logger, &ctx.events, &ctx.shader_registry, &ctx.model_cache, &ctx.editor_engine, &ctx.inspector_engine)) {
+    if (!ctx.hot_reloader.initialize(&ctx.logger, &ctx.events, &ctx.shader_registry, &ctx.model_cache, &ctx.editor_engine, &ctx.inspector_engine, &ctx.ctx_manager)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Hot Reloader was not initialized successfully.");
         return false;
     }
@@ -225,7 +235,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Viewport UI was not initialized successfully.");
         return false;
     }
-    if (!ctx.menu_ui.initialize(&ctx.logger, &ctx.events, &ctx.modals)) {
+    if (!ctx.menu_ui.initialize(&ctx.logger, &ctx.platform, &ctx.events, &ctx.modals, &ctx.keybinds, &ctx)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Menu UI was not initialized successfully.");
         return false;
     }
@@ -306,20 +316,10 @@ void Application::shutdown(AppContext& ctx) {
 
 bool Application::shouldClose(AppContext& ctx) {
     if (!initialized) return false;
-    return ctx.platform.shouldClose();
+    return (ctx.platform.shouldClose() || ctx.shouldClose);
 }
 
 void Application::windowResize(AppContext& ctx, u32 _width, u32 _height) {
     ctx.settings.width = _width;
     ctx.settings.height = _height;
 }
-
-// void Application::setAppStateControls(AppStateControls state) {
-//     if (!initialized) return;
-//     Application::appControls = state;
-// }
-
-// AppStateControls Application::checkAppStateControls() {
-//     if (!initialized) return AppStateControls::NO_STATE;
-//     return appControls;
-// }

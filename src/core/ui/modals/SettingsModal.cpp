@@ -465,7 +465,6 @@ void SettingsModal::drawStylesPage() {
         if (x > ImGui::GetCursorPosX()) ImGui::SetCursorPosX(x);
 
         ImGui::PushItemWidth(pickerWidth);
-        static ImVec4 tempColor = ImVec4(1, 1, 1, 1);
         if (ImGui::ColorPicker4("##Picker", &settingsPtr->styles.editorPalette[selectedEditorStyleColor].x,
             ImGuiColorEditFlags_NoSmallPreview |
             ImGuiColorEditFlags_PickerHueBar

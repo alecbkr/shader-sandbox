@@ -32,7 +32,7 @@ bool FileRegistry::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, P
     platformPtr = _platformPtr;
     
     eventsPtr->Subscribe(EventType::RenameFile, [this](const EventPayload& payload) -> bool { renameFile(payload); });
-    eventsPtr->Subscribe(EventType::DeleteFile, [this](const EventPayload& payload) -> bool { deleteFile(payload); });
+    eventsPtr->Subscribe(EventType::ET_DeleteFile, [this](const EventPayload& payload) -> bool { deleteFile(payload); });
     reloadMap();
 
     initialized = true;

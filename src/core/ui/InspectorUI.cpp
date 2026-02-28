@@ -324,7 +324,7 @@ void InspectorUI::drawDeleteFileEntity(ShaderFile* fileData) {
     ImGui::SameLine();
 
     if (ImGui::Button(("DELETE##" + fileData->fileName).c_str())) {
-        eventsPtr->TriggerEvent(Event { EventType::DeleteFile, false, DeleteFilePayload { fileData->fileName } });
+        eventsPtr->TriggerEvent(Event { EventType::ET_DeleteFile, false, DeleteFilePayload { fileData->fileName } });
     }
 
     ImGui::SameLine();
@@ -340,7 +340,7 @@ void drawContextMenu(ShaderFile* fileData) {
             fileData->state = RENAME;
         }
         if (ImGui::Selectable("Delete")) {
-            fileData->state = DELETE;
+            fileData->state = FS_DELETE;
         }
 
         ImGui::EndPopup();
@@ -377,7 +377,7 @@ void InspectorUI::drawShaderFileInspector() {
             case RENAME:
                 drawRenameFileEntry(fileData);
                 break;
-            case DELETE:
+            case FS_DELETE:
                 drawDeleteFileEntity(fileData);
                 break;
             case NEW:
@@ -480,16 +480,31 @@ void InspectorUI::initializeMenu(ShaderLinkMenu& menu, const std::vector<const c
         return;
     }
 
+    auto getNormalizedPath = [](const std::string& p) -> std::string {
+        if (p.empty()) return "";
+        try {
+            return std::filesystem::weakly_canonical(p).string();
+        } catch (...) {
+            return p;
+        }
+    };
+    std::string registryVert = getNormalizedPath(oldProgram->vertPath);
+    std::string registryFrag = getNormalizedPath(oldProgram->fragPath);
+
     for (int i = 0; i < vertChoices.size(); i++) {
-        std::string filePath = vertChoices[i];
-        if (oldProgram->vertPath == filePath) {
-            menu.vertSelection = i;
+        if (i > 0 && vertChoices[i] != nullptr) {
+            if (getNormalizedPath(vertChoices[i]) == registryVert) {
+                menu.vertSelection = i;
+                break; 
+            }
         }
     }
     for (int i = 0; i < fragChoices.size(); i++) {
-        std::string filePath = fragChoices[i];
-        if (oldProgram->fragPath == filePath) {
-            menu.fragSelection = i;
+        if (i > 0 && fragChoices[i] != nullptr) {
+            if (getNormalizedPath(fragChoices[i]) == registryFrag) {
+                menu.fragSelection = i;
+                break;
+            }
         }
     }
     menu.geometrySelection = 0;

@@ -9,8 +9,14 @@
 #include "core/input/InputState.hpp"
 #include "application/AppContext.hpp"
 
-#if defined(_WIN32)
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#define GLFW_EXPOSE_NATIVE_WIN32
 #include <windows.h>
+#include <windowsx.h>
+#include <GLFW/glfw3native.h>
+static constexpr wchar_t kPlatformPropName[] = L"ShaderSandbox.PlatformPtr";
 #elif defined(__linux__)
 #include <unistd.h>
 #endif
@@ -92,6 +98,10 @@ bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ke
         return false;
     }
 
+#ifdef _WIN32
+    enableBorderlessSnap();
+    installBorderlessWin32Hooks();
+#endif
     
     glfwSetWindowUserPointer(windowPtr->getGLFWWindow(), &userData);
     initializeInputCallbacks();
@@ -100,14 +110,13 @@ bool Platform::initialize(Logger* _loggerPtr, ContextManager* _ctxManagerPtr, Ke
     setContextCurrent(*windowPtr);
     glfwSetWindowPos(windowPtr->getGLFWWindow(), settingsPtr->posX, settingsPtr->posY);
     glfwSwapInterval(settingsPtr->vsyncEnabled ? 1 : 0);
-
+    
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         loggerPtr->addLog(LogLevel::CRITICAL, "Platform GLAD Initialization", "Failed to initialize GLAD.");
         return false;
     }
-
+    
     glViewport(0, 0, settingsPtr->width, settingsPtr->height);
-
     glfwSetFramebufferSizeCallback(windowPtr->getGLFWWindow(), framebuffer_size_callback);
     glfwSetWindowPosCallback(windowPtr->getGLFWWindow(), window_position_callback);
 
@@ -206,6 +215,166 @@ void Platform::swapInterval(int interval) {
     glfwSwapInterval(interval);
 }
 
+void Platform::iconifyWindow() {
+    glfwIconifyWindow(windowPtr->getGLFWWindow());
+}
+
+void Platform::maximizeWindow() {
+    glfwMaximizeWindow(windowPtr->getGLFWWindow());
+}
+
+void Platform::moveWindowPosRelative(int x, int y) {
+    int wx, wy;
+    glfwGetWindowPos(windowPtr->getGLFWWindow(), &wx, &wy);
+    glfwSetWindowPos(windowPtr->getGLFWWindow(), wx + x, wy + y);
+}
+
+void Platform::getScreenCursorPosition(int& x, int& y) const {
+    GLFWwindow* w = windowPtr->getGLFWWindow();
+
+    int winX, winY;
+    glfwGetWindowPos(w, &winX, &winY);
+
+    double cursorX, cursorY;
+    glfwGetCursorPos(w, &cursorX, &cursorY);
+
+    x = winX + cursorX;
+    y = winY + cursorY;
+}
+
+bool Platform::beginNativeWindowDrag()
+{
+#ifdef _WIN32
+    GLFWwindow* w = windowPtr->getGLFWWindow();
+    HWND hwnd = glfwGetWin32Window(w);
+
+    ReleaseCapture();
+    SendMessage(hwnd, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
+    glfwPollEvents();
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddMouseButtonEvent(0, false);
+
+    int sx, sy;
+    getScreenCursorPosition(sx, sy);
+
+    io.AddMousePosEvent((float)sx, (float)sy);
+    ImGui::ClearActiveID();
+
+    return true;
+#endif
+    return false;
+}
+
+bool Platform::enableBorderlessSnap() {
+#ifdef _WIN32
+    GLFWwindow* w = windowPtr->getGLFWWindow();
+    HWND hwnd = glfwGetWin32Window(w);
+
+    LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
+
+    style &= ~(WS_CAPTION);
+    style |=  (WS_THICKFRAME | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX);
+
+    SetWindowLongPtr(hwnd, GWL_STYLE, style);
+
+    SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+        SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+
+    return true;
+#else
+    return false;
+#endif
+}
+
 void Platform::terminate(){
+    uninstallBorderlessWin32Hooks();
     glfwTerminate();
 }
+
+void Platform::installBorderlessWin32Hooks(){
+#ifdef _WIN32
+    GLFWwindow* w = windowPtr->getGLFWWindow();
+    hwnd = glfwGetWin32Window(w);
+    SetPropW(hwnd, kPlatformPropName, (HANDLE)this);
+    oldWndProc = (WNDPROC)SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)&Platform::WndProcThunk);
+#endif
+}
+
+void Platform::uninstallBorderlessWin32Hooks(){
+#ifdef _WIN32
+    if (!hwnd) return;
+    if (oldWndProc) SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)oldWndProc);
+    RemovePropW(hwnd, kPlatformPropName);
+    hwnd = nullptr;
+    oldWndProc = nullptr;
+#endif
+}
+
+#ifdef _WIN32
+LRESULT CALLBACK Platform::WndProcThunk(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    auto* self = (Platform*)GetPropW(hWnd, kPlatformPropName);
+    if (self) return self->wndProc(hWnd, msg, wParam, lParam);
+    return DefWindowProcW(hWnd, msg, wParam, lParam);
+}
+#endif
+
+#ifdef _WIN32
+LRESULT Platform::wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+        case WM_NCCALCSIZE: {
+            if (wParam == TRUE)
+                return 0;
+            break;
+        }
+        
+        case WM_GETMINMAXINFO: {
+            MINMAXINFO* mmi = (MINMAXINFO*)lParam;
+
+            HMONITOR monitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+            MONITORINFO mi = {};
+            mi.cbSize = sizeof(mi);
+
+            if (GetMonitorInfoW(monitor, &mi)) {
+                RECT work = mi.rcWork;
+                RECT mon  = mi.rcMonitor;
+
+                mmi->ptMaxPosition.x = work.left - mon.left;
+                mmi->ptMaxPosition.y = work.top  - mon.top;
+                mmi->ptMaxSize.x     = work.right  - work.left;
+                mmi->ptMaxSize.y     = work.bottom - work.top;
+            }
+            return 0;
+        }
+
+        case WM_NCHITTEST: {
+            LRESULT hit = CallWindowProcW(oldWndProc, hWnd, msg, wParam, lParam);
+            if (hit != HTCLIENT) return hit;
+            if (IsZoomed(hWnd)) return HTCLIENT;
+
+            POINT p = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+            RECT r; GetWindowRect(hWnd, &r);
+
+            const int b = resizeBorderPx;
+
+            const bool left   = p.x >= r.left && p.x < r.left + b;
+            const bool right  = p.x <  r.right && p.x >= r.right - b;
+            const bool top    = p.y >= r.top && p.y < r.top + b;
+            const bool bottom = p.y <  r.bottom && p.y >= r.bottom - b;
+
+            if (top && left)     return HTTOPLEFT;
+            if (top && right)    return HTTOPRIGHT;
+            if (bottom && left)  return HTBOTTOMLEFT;
+            if (bottom && right) return HTBOTTOMRIGHT;
+            if (left)            return HTLEFT;
+            if (right)           return HTRIGHT;
+            if (top)             return HTTOP;
+            if (bottom)          return HTBOTTOM;
+
+            return HTCLIENT;
+        }
+    }
+
+    return CallWindowProcW(oldWndProc, hWnd, msg, wParam, lParam);
+}
+#endif
