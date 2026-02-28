@@ -59,4 +59,5 @@ private:
     std::string formatLogString(const LogEntry& log); 
     bool isLogFiltered(const LogEntry& log); 
     std::vector<DisplayLine> wrapLogText(const std::string& fullText, int logIndex, int collapseCount, float maxWidth);
+    void openLogFile(const std::string logPath); 
 };

@@ -86,6 +86,16 @@ std::shared_ptr<ConsoleSink> Logger::getConsoleSinkPtr() {
     return Logger::consoleSinkPtr;
 }
 
+const std::filesystem::path Logger::getLogPath() const {
+    for (const auto& sink: sinks) {
+        if (auto fileSink = dynamic_cast<FileSink*>(sink.get())) {
+            return fileSink->getLogDir();
+        }
+    }
+
+    return {};
+}
+
 // helper that strips the root path to get the relative path of the file
 constexpr std::string_view Logger::toRelativePath(const char* path, std::string_view prefix) {
     std::string_view view(path);

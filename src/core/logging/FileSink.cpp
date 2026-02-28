@@ -54,6 +54,10 @@ void FileSink::addLog(const LogEntry& entry) {
     activeLogFile << newLog << std::flush;      
 }
 
+const std::filesystem::path FileSink::getLogDir() const {
+    return log_dir; 
+}
+
 void FileSink::rotateLogFile(){
     if(activeLogFile.is_open()) {
         activeLogFile.close(); 

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <algorithm>
 #include <iostream>
+#include <cstdlib>
 #include "platform/Platform.hpp"
 #include "../logging/Logger.hpp"
 
@@ -157,13 +158,19 @@ void ConsoleUI::drawLogs() {
             if (ImGui::MenuItem("Clear")) {
                 engine->executeBtnAction(ConsoleActions::CLEAR);
             }
-            ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
-            ImGui::MenuItem("Auto-Scroll", nullptr, &togStates.isAutoScroll);
-            ImGui::MenuItem("Collapse Logs", nullptr, &togStates.isCollapsedLogs);
-            ImGui::PopItemFlag(); 
+            ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
+
+            if (ImGui::MenuItem("Auto-Scroll", nullptr, &togStates.isAutoScroll)) 
+            if (ImGui::MenuItem("Collapse Logs", nullptr, &togStates.isCollapsedLogs)) 
             
-            ImGui::MenuItem("Copy Logs"); 
-            ImGui::MenuItem("Open Log History"); 
+            if (ImGui::MenuItem("Copy Logs")) {
+
+            }
+            if (ImGui::MenuItem("Open Log History")) {
+                std::string p = loggerPtr->getLogPath().string();                
+                openLogFile(p);
+            } 
+            ImGui::PopItemFlag();
             ImGui::EndMenu(); 
         } 
 
@@ -449,3 +456,43 @@ std::vector<ConsoleUI::DisplayLine> ConsoleUI::wrapLogText(const std::string& fu
     return result;
 }
 
+void ConsoleUI::openLogFile(const std::string logPath) {
+    if(logPath.empty()) {
+        loggerPtr->addLog(LogLevel::WARNING, "ConsoleUI", "Cannot open empty log path."); 
+        return; 
+    }
+
+    std::filesystem::path p(logPath); 
+    std::error_code ec; 
+
+    if (!std::filesystem::exists(p, ec)) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "ConsoleUI", "Log directory not found at: " + logPath);
+        return; 
+    }
+
+    std::filesystem::path absPath = std::filesystem::absolute(p, ec); 
+    if (ec) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "ConsoleUI", "Failed to obtain absolute path.");
+        return;  
+    }
+
+    absPath.make_preferred(); 
+    std::string finalPath = absPath.string(); 
+    std::string folderPath; 
+
+    #if defined(_WIN32) || defined(__CYGWIN__) 
+        folderPath = "explorer.exe /e, \"" + finalPath +"\"";
+
+    // TODO: Test these the unix os's to see if they work 
+    #elif defined(__APPLE__)
+        folderPath = "open \"" + finalPath + "\""; 
+
+    #elif defined(__linux__)
+        fodlerPath = "xdg-open \"" + finalPath + "\""; 
+    #else 
+        loggerPtr(LogLevel::Error, "Console", "Macro not defined or unsupported os"); 
+        return; 
+    #endif
+
+    std::system(folderPath.c_str()); 
+}

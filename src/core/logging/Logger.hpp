@@ -3,8 +3,11 @@
 #include <vector> 
 #include "LogSink.hpp"
 #include "core/logging/ConsoleSink.hpp"
+#include "core/logging/FileSink.hpp"
 #include <source_location>
 #include <string_view>
+
+
 
 enum class LoggerInitialization {
     CONSOLE_FILE_STDOUT = 0, 
@@ -21,6 +24,7 @@ public:
     void addSink(std::shared_ptr<LogSink> sink);
     void removeSink(std::shared_ptr<LogSink> sink);
     std::shared_ptr<ConsoleSink> getConsoleSinkPtr();
+    [[nodiscard]] const std::filesystem::path getLogPath() const; 
     
 private:
     static LogLevel abortWhen;

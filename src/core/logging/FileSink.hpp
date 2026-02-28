@@ -14,6 +14,8 @@ class FileSink : public LogSink {
     FileSink(const std::filesystem::path& log_dir = "../src/core/logging/logs");    // make this path more exportable on release 
     ~FileSink(); 
     void addLog(const LogEntry& entry) override; 
+    const std::filesystem::path getLogDir() const; 
+
     private:    
     static constexpr size_t MAX_LOG_FILE_SIZE = 2 * 1000 * 1000;        // max file size for a single log file (2mb) 
     static constexpr size_t MAX_LOGS_SIZE = 50 * 1000 * 1000;           // max size of logs all-together (50mb)
