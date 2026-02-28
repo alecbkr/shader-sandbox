@@ -3,13 +3,15 @@
 #include <chrono>
 #include <format>
 #include <algorithm>
+#include <climits>
 
-FileSink::FileSink(const std::filesystem::path &log_dir) : log_dir(log_dir), logIdx(findNextLogIndex()) {
+FileSink::FileSink(const std::filesystem::path &log_dir) : log_dir(log_dir) {
     if(!std::filesystem::is_directory(log_dir)) {
         if(!std::filesystem::create_directories(log_dir)) {
             std::cerr << "Could not create directory for logger" << log_dir << std::endl; 
         }
     }
+    logIdx = findNextLogIndex(); 
     rotateLogFile(); 
 }
 
@@ -20,17 +22,12 @@ FileSink::~FileSink() {
 }
 
 void FileSink::addLog(const LogEntry& entry) {
-    
-    if(activeLogFile.is_open() && activeLogFile.tellp() > MAX_LOG_FILE_SIZE) {
-        rotateLogFile(); 
-    }
-
-    if(activeLogFile.tellp() > MAX_LOG_FILE_SIZE) {
-        activeLogFile.close(); 
+    // log file greater than its capped size (2MB)
+    if (activeLogFile.is_open() && activeLogFile.tellp() > static_cast<std::streamoff>(MAX_LOGS_SIZE)) {
+        rotateLogFile();
     }
 
     std::stringstream alert; 
-
     switch (entry.level) {
         case    LogLevel::CRITICAL:  alert << "CRITICAL: ";  break; 
         case    LogLevel::LOG_ERROR:     alert  << "ERROR: ";    break; 
@@ -40,7 +37,7 @@ void FileSink::addLog(const LogEntry& entry) {
     }    
 
     auto now = std::chrono::system_clock::now(); 
-    std::string timestamp = std::format("{:%Y-%m-%d %H:%M:%SZ}", now); 
+    std::string timestamp = std::format("{:%Y-%m-%d %H:%M:%SZ}", now); // time in utc
 
     std::string newLog = std::format("'{}' [{}] [{}{}] {}{}\n", 
         entry.fileName, 
@@ -58,23 +55,27 @@ const std::filesystem::path FileSink::getLogDir() const {
     return log_dir; 
 }
 
+// moves the file pointer to a new txt file when size exceeds max amount, too many logs in the folder, or we exceed 50mb in logs
 void FileSink::rotateLogFile(){
-    if(activeLogFile.is_open()) {
-        activeLogFile.close(); 
-    }
+    if(activeLogFile.is_open()) activeLogFile.close(); 
+    
+    // edge case of integer overflow for creating new logs 
+    if (logIdx >= INT_MAX - 1) {
+        try {
+            std::filesystem::remove_all(log_dir); 
+            std::filesystem::create_directories(log_dir); 
+        } catch (...) {}
 
-    logIdx++; 
-
-    if (logIdx >= MAX_LOG_AMOUNT) {
         logIdx = 0; 
+    } else {
+        logIdx ++; 
     }
+
+    cleanLogs(); 
 
     std::string filename = "log_" + std::to_string(logIdx) + ".txt"; 
     currLogFilePath = log_dir / filename; 
-
     activeLogFile.open(currLogFilePath, std::ios::out | std::ios::trunc);
-
-    clearOldLog(); 
 }
 
 // detects the next index of the log by reading through each Log File in '/logs' to ensure that logging occurs at most recent file 
@@ -107,44 +108,50 @@ int FileSink::findNextLogIndex() {
     return maxIdx; 
 }
 
-// Clears the oldest log in 'logs/' to make room for new logs 
-void FileSink::clearOldLog(){
-    if(!std::filesystem::exists(log_dir)) {
-        std::cout << "Could not find directory" << log_dir << std::endl;  
-        return; 
-    }
-
+void FileSink::cleanLogs() {
+    if (!std::filesystem::exists(log_dir)) return; 
     std::vector<LogFileInfo> logs; 
-    std::uintmax_t totalLogSize = 0; // used to determine if we need to remove the oldest log file 
-    
-    // populate meta-data that we need to read for each log file (path, filesize and last write time)
-    for (const auto& log : std::filesystem::directory_iterator(log_dir)) {
-        if(log.is_regular_file()) {
-            std::string fileName = log.path().filename().string(); 
-            LogFileInfo newFileInfo{log.path(), log.file_size(), log.last_write_time()}; 
-            logs.push_back(newFileInfo); 
-            totalLogSize += log.file_size(); 
+    size_t totalDirSize = 0; 
+
+    for (const auto& entry : std::filesystem::directory_iterator(log_dir)) {
+        if (entry.is_regular_file()) {
+            std::string fileName = entry.path().filename().string(); 
+            if(fileName.starts_with("log_") && fileName.ends_with(".txt")) {
+                try {
+                    uintmax_t fileSize = entry.file_size(); 
+                    logs.push_back({entry.path(), fileSize, entry.last_write_time()}); 
+                    totalDirSize += fileSize; 
+                } catch(...) {
+
+                }
+            }
         }
     }
 
-    if(totalLogSize < MAX_LOGS_SIZE) {
-        return;  
-    }
-
-    std::sort (logs.begin(), logs.end(), [](const LogFileInfo& a, const LogFileInfo& b) {
-        return a.lastWritten < b.lastWritten; 
+    // sort the logs by when they were last written to
+    std::sort(logs.begin(), logs.end(), [](const LogFileInfo& a, const LogFileInfo& b) {
+        return a.lastWritten < b.lastWritten;
     });
 
-    // iterate through the logs vector to determine oldest log and remove one or more oldest log files
-    for(const LogFileInfo &log : logs) {
-        // attempt to remove log file 
-        std::error_code ec; 
-        try{
-            std::filesystem::remove(log.path, ec);
-            totalLogSize -= log.size; 
-            std::cout << "cleared log file" << std::endl; 
-        } catch(...) {
-            std::cerr << "Could not clear log file" << std::endl; 
+    size_t currCount = logs.size(); 
+
+    // clear files until we have less than 64 logs and they meet the size constraints
+    for (const auto& log : logs) {
+        bool isCountHigh = currCount >= static_cast<size_t>(MAX_LOG_FILES_COUNT); 
+        bool isSizeHigh = totalDirSize > MAX_LOGS_SIZE; 
+
+        if (isCountHigh || isSizeHigh) {
+            std::error_code ec; 
+            std::filesystem::remove(log.path, ec); 
+
+            if (!ec) {
+                currCount --; 
+                if (totalDirSize >= log.size) totalDirSize -= log.size; 
+            }
+        } 
+
+        else {
+            break; 
         }
     }
 }
