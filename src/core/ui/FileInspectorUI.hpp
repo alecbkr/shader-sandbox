@@ -1,13 +1,21 @@
 #pragma once
 
 #include "core/FileRegistry.hpp"
-#include "core/ui/InspectorUI.hpp"
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+struct ShaderLinkMenu {
+    std::string shaderName;
+    int vertSelection;
+    int geometrySelection;
+    int fragSelection;
+    bool initialized;
+};
+
 
 class Logger;
 class InspectorEngine;

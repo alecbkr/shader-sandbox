@@ -1,6 +1,5 @@
 #pragma once
 
-#include "core/ui/InspectorUI.hpp"
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
@@ -8,6 +7,20 @@
 #include <unordered_map>
 #include <vector>
 
+struct ModelShaderMenu {
+    unsigned int modelID; //std::string objectName;
+    int selection;
+    bool initialized;
+};
+
+
+struct ModelTextureMenu {
+    unsigned int modelID; //std::string objectName;
+    std::string uniformName;
+    int textureSelection;
+    int unitSelection;
+    bool initialized;
+};
 class Logger;
 class InspectorEngine;
 class ShaderRegistry;
