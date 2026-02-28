@@ -16,6 +16,17 @@ const ImVec4 LOG_COLORS[] = {
                                             // Anomaly (light gray)
 };
 
+bool isWhiteSpace(const std::string& str) {
+    if (str.empty()) return false; 
+
+    for (unsigned char c: str) {
+        if (!std::isspace(c)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 ConsoleUI::ConsoleUI() {
     targetWidth = 0.0f;
     targetHeight = 0.0f;
@@ -65,8 +76,8 @@ void ConsoleUI::render() {
 
     if (ImGui::Begin("Console", nullptr, flags)) {
         drawMenuBar();
-        ImGuiWindowFlags consoleFlags = ImGuiWindowFlags_AlwaysHorizontalScrollbar; 
-        ImGui::BeginChild("ShowLogs", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.95f), true, consoleFlags);
+        // ImGuiWindowFlags consoleFlags = ImGuiWindowFlags_AlwaysHorizontalScrollbar; 
+        ImGui::BeginChild("ShowLogs", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.95f), true);
         drawLogs();
         ImGui::EndChild();
     }
@@ -76,56 +87,67 @@ void ConsoleUI::render() {
 void ConsoleUI::drawLogs() {
     if (!logSrc || !engine) return; 
 
-    struct FilteredLog {
-        int idx; 
-        int collapsedCount; 
-    }; 
+    // struct FilteredLog {
+    //     int idx; 
+    //     int collapsedCount; 
+    // }; 
 
     const auto& logs = logSrc->getLogs();
     bool isScroll = false;
 
     updateSearchAndScroll(logs, isScroll);
-    std::vector <FilteredLog> filteredLogs; 
+    
+    float wrapWidth = ImGui::GetWindowSize().x - ImGui::GetStyle().ScrollbarSize - 15.0f;
+    wrapWidth = std::max(wrapWidth, 50.0f); 
+
+    std::vector<DisplayLine> displayLines; 
 
     // get the filtered logs if filters are applied
     for (int i = 0; i < logs.size();) {
         if (!isLogFiltered(logs[i])) {
             int collapsedCount = getCollapseCount(logs, i);
-            filteredLogs.push_back({i, collapsedCount});          
+            
+            std::string rawStr = formatLogString(logs[i]); 
+            auto wrappedLines = wrapLogText(rawStr, i, collapsedCount, wrapWidth); 
+            displayLines.insert(displayLines.end(), wrappedLines.begin(), wrappedLines.end()); 
+
             i += collapsedCount + 1; 
         } else {
             i++; 
         }
     }
 
-    if (TextSelector::Begin("ConsoleLogs", filteredLogs.size(), selectionCtx, selectionLayout)) {
-        for (int row = 0; row < filteredLogs.size(); ++row) {
-            const auto& filteredLog = filteredLogs[row]; 
-            drawSingleLog(logs[filteredLog.idx], filteredLog.idx, filteredLog.collapsedCount, isScroll); 
+    if (TextSelector::Begin("ConsoleLogs", displayLines.size(), selectionCtx, selectionLayout)) {
+        for (int row = 0; row < displayLines.size(); ++row) {
+            // const auto& lineData = displayLines[row]; 
+            // LogEntry tmpLog = logs[lineData.originalLogIdx]; 
+            // tmpLog.msg = lineData.text; 
+            // tmpLog.additional = ""; 
+            drawSingleLog(row, displayLines[row], logs[displayLines[row].originalLogIdx], isScroll); 
         }
         TextSelector::End(); 
     }
 
     
     if (selectionCtx.isActive && ImGui::IsWindowFocused() && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_C)) {
-        TextSelector::copyText(selectionCtx, filteredLogs.size(), [&](int row) {
-            if (row >= 0 && row < filteredLogs.size()) {
-                const LogEntry& log = logs[filteredLogs[row].idx];
-                std::string text = formatLogString(log);
-                if (filteredLogs[row].collapsedCount > 0) {
-                    text += " (" + std::to_string(filteredLogs[row].collapsedCount + 1) + ")";
+        TextSelector::copyText(selectionCtx, displayLines.size(), [&](int row, bool& isWrap) -> std::string {
+            if (row >= 0 && row < displayLines.size()) {
+                isWrap = displayLines[row].isWrap;
+                std::string text = displayLines[row].text;
+                if (displayLines[row].collapsedCount > 0) {
+                    text += " (" + std::to_string(displayLines[row].collapsedCount + 1) + ")";
                 }
                 return text;
             }
-            return std::string("");
-        }); 
+            
+            isWrap = false;
+            return "";
+        });
     }
 
     if (isScroll && engine->getToggles().isAutoScroll) {
         ImGui::SetScrollHereY(1.0f);
     }
-
-
 }
 
  void ConsoleUI::drawMenuBar() {
@@ -167,28 +189,28 @@ void ConsoleUI::drawLogs() {
             ImGui::EndMenu(); 
         }
 
-        if (ImGui::BeginMenu("Spawn New Log")) {
-            ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
-            if (ImGui::MenuItem("Spawn 1 Error Log")) {
-                loggerPtr->addLog(LogLevel::LOG_ERROR, "Console Menu", "This is an error test", "Additional"); 
-            }
-            if (ImGui::MenuItem("Spawn 1 Warning Log")) {
-                loggerPtr->addLog(LogLevel::WARNING, "Console Menu", "This is a test warning", "Additional"); 
-            }
-            if (ImGui::MenuItem("Spawn 1 Info Log")) {
-                loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
-            }
-            if (ImGui::MenuItem("Spawn 1 Overflow Log Test")) {
-                loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console", "Additional"); 
-            }
-            if (ImGui::MenuItem("Spawn 10 Info Logs")) {
-                for (int i = 0; i < 10; i++)
-                    loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
-            }
+        // if (ImGui::BeginMenu("Spawn New Log")) {
+        //     ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
+        //     if (ImGui::MenuItem("Spawn 1 Error Log")) {
+        //         loggerPtr->addLog(LogLevel::LOG_ERROR, "Console Menu", "This is an error test", "Additional"); 
+        //     }
+        //     if (ImGui::MenuItem("Spawn 1 Warning Log")) {
+        //         loggerPtr->addLog(LogLevel::WARNING, "Console Menu", "This is a test warning", "Additional"); 
+        //     }
+        //     if (ImGui::MenuItem("Spawn 1 Info Log")) {
+        //         loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
+        //     }
+        //     if (ImGui::MenuItem("Spawn 1 Overflow Log Test")) {
+        //         loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console", "Additional"); 
+        //     }
+        //     if (ImGui::MenuItem("Spawn 10 Info Logs")) {
+        //         for (int i = 0; i < 10; i++)
+        //             loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
+        //     }
 
-            ImGui::PopItemFlag(); 
-            ImGui::EndMenu(); 
-        }
+        //     ImGui::PopItemFlag(); 
+        //     ImGui::EndMenu(); 
+        // }
 
         if (ImGui::BeginMenu("Find")) {
             searcher.drawSearchUI();
@@ -207,7 +229,7 @@ void ConsoleUI::updateSearchAndScroll(const std::deque<LogEntry> &logs, bool& is
         searcher.updateMatches(logs, [&](const LogEntry &log) -> std::string {
             bool isDuplicate = false;
             if(togStates.isCollapsedLogs && lastLog) {
-                if (log.msg == lastLog ->msg && log.level == lastLog->level &&
+                if (log.msg == lastLog->msg && log.level == lastLog->level &&
                     log.src == lastLog->src && log.additional == lastLog->additional) {
                     isDuplicate = true;
             }
@@ -215,16 +237,6 @@ void ConsoleUI::updateSearchAndScroll(const std::deque<LogEntry> &logs, bool& is
 
         lastLog = &log;
         if(isDuplicate) return "";
-
-        // // avoid filtered logs in search
-        //     if (log.level == LogLevel::LOG_ERROR   && !togStates.isShowError)   return "";
-        //     if (log.level == LogLevel::WARNING && !togStates.isShowWarning) return "";
-        //     if (log.level == LogLevel::INFO    && !togStates.isShowInfo)    return "";
-        //     if (!togStates.isShowUI) return ""; 
-        //     if (!togStates.isShowAssets) return ""; 
-        //     if (!togStates.isShowShader) return ""; 
-        //     if (!togStates.isShowOther) return "";  
-        //     if (!togStates.isShowSystem) return ""; 
         if (isLogFiltered(log)) return ""; 
         
             return ConsoleUI::formatLogString(log); 
@@ -265,22 +277,23 @@ int ConsoleUI::getCollapseCount(const std::deque<LogEntry> &logs, int currIdx) {
     return count;
 }
 
-void ConsoleUI::drawSingleLog(const LogEntry& log, int idx, int repeatCount, bool& isScroll) {
-    LogStyle style = getLogStyle(log);
-    std::string rawText = formatLogString(log); 
+void ConsoleUI::drawSingleLog(int rowIdx, const DisplayLine& lineData, const LogEntry& originalLog, bool& isScroll) {    
+    LogStyle style = getLogStyle(originalLog);
+    std::string rawText = lineData.text; 
 
-    if (repeatCount > 0) {
-        rawText += " (" + std::to_string(repeatCount + 1) + ")"; 
+    if (lineData.collapsedCount > 0) {
+        rawText += " (" + std::to_string(lineData.collapsedCount + 1) + ")"; 
     }
 
     TextSelector::Text(rawText, [&]() {
-        ImGui::PushID(idx); 
+        ImGui::PushID(rowIdx); 
         ImVec2 screenPos = ImGui::GetCursorScreenPos(); 
 
-        int idxToCheck = idx;
-        if (repeatCount > 0 && searcher.hasMatches()) {
+        int logIdx = lineData.originalLogIdx; 
+        int idxToCheck = logIdx;
+        if (lineData.collapsedCount > 0 && searcher.hasMatches()) {
             const auto& activeMatch = searcher.getActiveMatch(); 
-            if(activeMatch.itemIdx > idx && activeMatch.itemIdx <= (idx + repeatCount)) {
+            if(activeMatch.itemIdx > logIdx && activeMatch.itemIdx <= (logIdx + lineData.collapsedCount)) {
                 idxToCheck = activeMatch.itemIdx; 
             }
         } 
@@ -292,12 +305,21 @@ void ConsoleUI::drawSingleLog(const LogEntry& log, int idx, int repeatCount, boo
                 isScroll = false; 
             }
 
-            const auto& match = searcher.getActiveMatch();
-            std::string fullText = formatLogString(log);
 
-            if (match.charIdx + match.length <= fullText.size()) {
-                std::string textBefore = fullText.substr(0, match.charIdx);
-                std::string textMatch = fullText.substr(match.charIdx, match.length);
+            // only highlight the portion of the matched string that falls on the curr wrapped line 
+            const auto& match = searcher.getActiveMatch();
+
+            int lineStart = lineData.charOffset;
+            int lineEnd = lineStart + lineData.text.length();
+            int matchStart = match.charIdx;
+            int matchEnd = match.charIdx + match.length;
+
+            if (matchEnd > lineStart && matchStart < lineEnd) {
+                int localStart = std::max(0, matchStart - lineStart);
+                int localEnd = std::min((int)lineData.text.length(), matchEnd - lineStart);
+                
+                std::string textBefore = lineData.text.substr(0, localStart);
+                std::string textMatch = lineData.text.substr(localStart, localEnd - localStart);
 
                 float offsetX = ImGui::CalcTextSize(textBefore.c_str()).x;
                 float width = ImGui::CalcTextSize(textMatch.c_str()).x;
@@ -310,26 +332,27 @@ void ConsoleUI::drawSingleLog(const LogEntry& log, int idx, int repeatCount, boo
             }
         }
 
-        // Draw the actual colored text using the custom widget 
-        ImGui::TextColored(style.color, "%s", style.prefix.c_str());
-        ImGui::SameLine(0, 0);
-        
-        if (log.additional.empty()) {
-            ImGui::TextUnformatted(log.msg.c_str());
+        // ImGui::TextColored(style.color, "%s", style.prefix.c_str());
+        // ImGui::SameLine(0, 0);        
+
+        // only print the log info if it's the first line of the wrapped text 
+        if (lineData.charOffset == 0 && lineData.text.length() >= style.prefix.length()) {
+            ImGui::TextColored(style.color, "%s", style.prefix.c_str());
+            ImGui::SameLine(0, 0);        
+            
+            std::string msgWithoutPrefix = lineData.text.substr(style.prefix.length());
+            ImGui::TextUnformatted(msgWithoutPrefix.c_str());
         } else {
-            std::string fullMsg = log.msg + " " + log.additional;
-            ImGui::TextUnformatted(fullMsg.c_str());
+            ImGui::TextUnformatted(lineData.text.c_str());
         }
 
-        if (repeatCount > 0) {
+        if (lineData.collapsedCount > 0) {
             ImGui::SameLine();
-            ImGui::TextDisabled("(%d)", repeatCount + 1);
+            ImGui::TextDisabled("(%d)", lineData.collapsedCount + 1);
         }
 
         ImGui::PopID();
     }); 
-    
-
 }
 
 ConsoleUI::LogStyle ConsoleUI::getLogStyle(const LogEntry& log) {
@@ -363,9 +386,10 @@ std::string ConsoleUI::formatLogString(const LogEntry& log) {
 
 bool ConsoleUI::isLogFiltered(const LogEntry& log) {
     auto& togStates = engine->getToggles(); 
-
     // Message type
     if (log.level == LogLevel::LOG_ERROR && !togStates.isShowError) return true;
+    if (log.level == LogLevel::WARNING && !togStates.isShowWarning) return true;
+    if (log.level == LogLevel::INFO && !togStates.isShowInfo) return true; 
 
     // source types 
     if (log.category == LogCategory::UI && !togStates.isShowUI) return true; 
@@ -373,6 +397,55 @@ bool ConsoleUI::isLogFiltered(const LogEntry& log) {
     if (log.category == LogCategory::SHADER && !togStates.isShowShader) return true; 
     if (log.category == LogCategory::OTHER && !togStates.isShowOther) return true;  
     if (log.category == LogCategory::SYSTEM && !togStates.isShowSystem) return true;
+    
+    // auto filter empty messages 
+    if (isWhiteSpace(log.msg) || log.msg == "\n" || log.msg == "\t") return true; 
 
     return false; 
 }
+
+std::vector<ConsoleUI::DisplayLine> ConsoleUI::wrapLogText(const std::string& fullText, int logIndex, int collapseCount, float maxWidth) {
+    std::vector<DisplayLine> result;
+    if (fullText.empty()) {
+        result.push_back({logIndex, "", false, collapseCount, 0});
+        return result;
+    }
+
+    const char* textBegin = fullText.c_str();
+    const char* textEnd = textBegin + fullText.length();
+    const char* const basePtr = textBegin; 
+    ImFont* font = ImGui::GetFont();
+
+    while (textBegin < textEnd) {
+        int currOffset = (int)(textBegin - basePtr); 
+        const char* wrapPos = font->CalcWordWrapPositionA(1.0f, textBegin, textEnd, maxWidth);
+
+        if (!wrapPos) wrapPos = textEnd; 
+
+        if (wrapPos == textBegin) wrapPos++; 
+        
+
+        std::string lineText(textBegin, wrapPos);
+        textBegin = wrapPos;
+
+        if (!lineText.empty() && lineText.back() == '\n') {
+            lineText.pop_back(); 
+        }
+
+        // if (textBegin < textEnd && *textBegin == ' ') {
+        //     textBegin++;
+        // }
+
+        while (textBegin < textEnd && (*textBegin == ' ' || *textBegin == '\n')) {
+            textBegin++;
+        }
+
+        bool isSoftWrap = (textBegin < textEnd);
+        
+        int displayCollapse = isSoftWrap ? 0 : collapseCount;
+
+        result.push_back({logIndex, lineText, isSoftWrap, displayCollapse, currOffset});
+    }
+    return result;
+}
+

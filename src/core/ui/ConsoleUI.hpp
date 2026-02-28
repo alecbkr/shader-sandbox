@@ -24,6 +24,14 @@ public:
         ImVec4 color;
     };
 
+    struct DisplayLine {
+        int originalLogIdx; 
+        std::string text; 
+        bool isWrap; 
+        int collapsedCount; 
+        int charOffset; 
+    };
+
 private:
     float targetWidth = 0.0f;
     float targetHeight = 0.0f;
@@ -44,11 +52,11 @@ private:
     void drawMenuBar();
     void updateSearchAndScroll(const std::deque<LogEntry> &logs, bool& isScroll);
     int getCollapseCount(const std::deque<LogEntry> &logs, int currIdx);
-    void drawSingleLog(const LogEntry& log, int index, int repeatCount, bool& isScroll);
+    void drawSingleLog(int rowIdx, const DisplayLine& lineData, const LogEntry& originalLog, bool& isScroll);
 
-    // Allows for users to copy their logs from the console
+    // helpers 
     LogStyle getLogStyle(const LogEntry& log); 
     std::string formatLogString(const LogEntry& log); 
     bool isLogFiltered(const LogEntry& log); 
-    void handleInput(); 
+    std::vector<DisplayLine> wrapLogText(const std::string& fullText, int logIndex, int collapseCount, float maxWidth);
 };

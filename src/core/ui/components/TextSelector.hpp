@@ -20,7 +20,6 @@ struct TextSelectionCtx {
     int startCol = 0; 
     int endCol = 0; 
     
-    // NEW: Store exact pixel coordinates for proportional font math
     float startMouseX = 0.0f; 
     float endMouseX = 0.0f; 
 
@@ -49,8 +48,8 @@ public:
     static void Text(const std::string& rawText); 
     static void Text(const std::string& rawText, std::function<void()> drawCallback);
     static void End(); 
-    static void copyText(const TextSelectionCtx& ctx, int totalRows, std::function<std::string(int)> fetchLine);
-    
+// Change this inside the TextSelector class:
+    static void copyText(const TextSelectionCtx& ctx, int totalRows, std::function<std::string(int, bool&)> fetchLine);    
 private:
     struct CurrentState {
         TextSelectionCtx* ctx = nullptr; 

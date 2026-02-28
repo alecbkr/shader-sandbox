@@ -216,7 +216,7 @@ int TextSelector::getExactColumn(const std::string& text, float targetX) {
     return len;
 }
 
-void TextSelector::copyText(const TextSelectionCtx& ctx, int totalRows, std::function<std::string(int)> fetchLine) {
+void TextSelector::copyText(const TextSelectionCtx& ctx, int totalRows, std::function<std::string(int, bool&)> fetchLine) {
     if (!ctx.isActive) return;
     
     int topRow = ctx.startRow; 
@@ -235,7 +235,8 @@ void TextSelector::copyText(const TextSelectionCtx& ctx, int totalRows, std::fun
     std::stringstream ss; 
 
     for (int i = topRow; i <= botRow; ++i) {
-        std::string line = fetchLine(i); 
+        bool isWrap = false; 
+        std::string line = fetchLine(i, isWrap); 
         int len = (int)line.length(); 
 
         if (ctx.mode == SelectionMode::Line) {
@@ -259,7 +260,7 @@ void TextSelector::copyText(const TextSelectionCtx& ctx, int totalRows, std::fun
             }
         }
 
-        if (i != botRow) {
+        if (i != botRow && !isWrap) {
             ss << "\n";
         }
     }
