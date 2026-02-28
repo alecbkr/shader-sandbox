@@ -2,6 +2,10 @@
 
 #include <filesystem>
 
+#include "core/ui/UniformInspectorUI.hpp"
+#include "core/ui/ObjectsInspectorUI.hpp"
+#include "core/ui/AssetsInspectorUI.hpp"
+#include "core/ui/FileInspectorUI.hpp"
 #include "core/logging/LogSink.hpp"
 #include "core/logging/Logger.hpp"
 #include "core/InspectorEngine.hpp"
@@ -40,6 +44,10 @@ InspectorUI::InspectorUI() {
     fileRegPtr = nullptr;
     height = 0;
     width = 0;
+    uniformInspectorUI = std::make_unique<UniformInspectorUI>();
+    objectsInspectorUI = std::make_unique<ObjectsInspectorUI>();
+    assetsInspectorUI = std::make_unique<AssetsInspectorUI>();
+    fileInspectorUI = std::make_unique<FileInspectorUI>();
 }
 
 bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr) {
@@ -62,6 +70,8 @@ bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngP
     shaderLinkMenus.clear();
     return true;
 }
+
+InspectorUI::~InspectorUI() = default;
 
 void InspectorUI::shutdown() {
     if (!intitialized) return;
@@ -94,19 +104,19 @@ void InspectorUI::render() {
         if (ImGui::BeginTabBar("Inspector tabs")) {
             
             if (ImGui::BeginTabItem("Uniforms")) {
-                drawUniformInspector();
+                uniformInspectorUI->draw(loggerPtr, inspectorEngPtr, shaderRegPtr, uniformRegPtr, modelCachePtr);
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Objects")) {
-                drawObjectsInspector();
+                objectsInspectorUI->draw(loggerPtr, inspectorEngPtr, shaderRegPtr, textureRegPtr, modelCachePtr);
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Assets")) {
-                drawAssetsInspector();
+                assetsInspectorUI->draw(textureRegPtr);
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Shader Files")) {
-                drawShaderFileInspector();
+                fileInspectorUI->draw(loggerPtr, inspectorEngPtr, shaderRegPtr, fileRegPtr, eventsPtr);
                 ImGui::EndTabItem();
             }
             ImGui::EndTabBar();
