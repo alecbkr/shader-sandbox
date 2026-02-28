@@ -172,7 +172,7 @@ void ShaderProgram::setUniform_vec4float(const char *uniformName, glm::fvec4 val
         loggerPtr->addLog(LogLevel::WARNING, "SHADER UNIFORM: Vec3float", "Location not found for:", uniformName);
         return;
     }
-    glUniform3f(loc, vals.x, vals.y, vals.z);
+    glUniform4f(loc, vals.x, vals.y, vals.z, vals.w);
 }
 
 
