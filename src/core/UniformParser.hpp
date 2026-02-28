@@ -28,5 +28,8 @@ private:
         int tokenIndex,
         const std::string& structName = ""   // optional: "" at top level, parent name when recursing
     );
+
+    // return a new vector of tokens
+    std::vector<std::string>  processDefines(const std::vector<std::string>& tokens);
     Logger* loggerPtr;
 };
