@@ -265,7 +265,6 @@ void Application::runLoop(AppContext& ctx) {
     }
 
     while (!Application::shouldClose(ctx)) {
-        ERRLOG.printClear();
         ctx.timer.update();
         ctx.inputs.beginFrame();
         ctx.platform.pollEvents();
