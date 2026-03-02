@@ -17,6 +17,7 @@ class FileSink : public LogSink {
         std::filesystem::path path; 
         uintmax_t size; 
         std::filesystem::file_time_type lastWritten; 
+        int idx; 
     }; 
 
     uintmax_t MAX_LOG_FILE_SIZE = 2 * 1000 * 1000;        // max file size for a single log file (2mb) 

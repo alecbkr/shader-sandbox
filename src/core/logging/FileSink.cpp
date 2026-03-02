@@ -23,7 +23,7 @@ FileSink::~FileSink() {
 
 void FileSink::addLog(const LogEntry& entry) {
     // log file greater than its capped size (2MB)
-    if (activeLogFile.is_open() && activeLogFile.tellp() > static_cast<std::streamoff>(MAX_LOGS_SIZE)) {
+    if (activeLogFile.is_open() && activeLogFile.tellp() > static_cast<std::streamoff>(MAX_LOG_FILE_SIZE)) {
         rotateLogFile();
     }
 
@@ -119,7 +119,8 @@ void FileSink::cleanLogs() {
             if(fileName.starts_with("log_") && fileName.ends_with(".txt")) {
                 try {
                     uintmax_t fileSize = entry.file_size(); 
-                    logs.push_back({entry.path(), fileSize, entry.last_write_time()}); 
+                    int idx = std::stoi(fileName.substr(4, fileName.length() - 8)); 
+                    logs.push_back({entry.path(), fileSize, entry.last_write_time(), idx}); 
                     totalDirSize += fileSize; 
                 } catch(...) {
 
@@ -130,7 +131,8 @@ void FileSink::cleanLogs() {
 
     // sort the logs by when they were last written to
     std::sort(logs.begin(), logs.end(), [](const LogFileInfo& a, const LogFileInfo& b) {
-        return a.lastWritten < b.lastWritten;
+        if (a.lastWritten != b.lastWritten) return a.lastWritten < b.lastWritten;
+        else return a.idx < b.idx; 
     });
 
     size_t currCount = logs.size(); 
