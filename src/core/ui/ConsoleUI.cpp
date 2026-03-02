@@ -160,6 +160,7 @@ void ConsoleUI::drawLogs() {
         if (ImGui::BeginMenu("View")) {
             if (ImGui::MenuItem("Clear")) {
                 engine->executeBtnAction(ConsoleActions::CLEAR);
+                selectionCtx.clear(); 
             }
             ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
 

@@ -48,7 +48,6 @@ public:
     static void Text(const std::string& rawText); 
     static void Text(const std::string& rawText, std::function<void()> drawCallback);
     static void End(); 
-// Change this inside the TextSelector class:
     static void copyText(const TextSelectionCtx& ctx, int totalRows, std::function<std::string(int, bool&)> fetchLine);    
 private:
     struct CurrentState {
@@ -63,8 +62,6 @@ private:
 
     static void handleInput(int totalRows, TextSelectionCtx& ctx, const TextSelectorLayout& layout);
     static void getWordUnderCursor(const std::string& text, int col, int& outStart, int& outEnd);
-    
-    // NEW: Helper to find exact character index from pixel offset
     static int getExactColumn(const std::string& text, float targetX);
 
     static bool isWhiteSpace(char c); 

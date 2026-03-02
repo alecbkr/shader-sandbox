@@ -8,6 +8,8 @@ TextSelector::CurrentState TextSelector::state;
 
 // setups the draw state to begin drawing the selection boxes 
 bool TextSelector::Begin(const char* id, int totalRows, TextSelectionCtx& ctx, TextSelectorLayout& layout) {
+    if (totalRows <= 0) return false; 
+    
     ImGui::PushID(id); 
 
     layout.lineHeight = std::max(1.0f, ImGui::GetTextLineHeightWithSpacing()); 
