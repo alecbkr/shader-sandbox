@@ -1,7 +1,10 @@
 #include "UniformParser.hpp"
 #include "core/UniformTypes.hpp"
 #include "core/logging/LogSink.hpp"
+#include "core/logging/Logger.hpp"
+#include "engine/Errorlog.hpp"
 #include <sys/stat.h>
+#include <unordered_map>
 #include <vector>
 #include <stack>
 
@@ -18,7 +21,9 @@ std::unordered_map<std::string, Uniform> UniformParser::parseUniforms(const Shad
     // This code assumes the shader file is valid, and thus doesn't check syntax
 
     std::vector<std::string> tokens = tokenizeShaderCode(program);
+    tokens = processDefines(tokens);
     std::unordered_map<std::string, std::vector<UniformInStruct>> structDefinitions;
+    std::unordered_map<std::string, std::string> defineMap;
     std::string currentStructName;
     std::string typeName;
     
@@ -304,4 +309,43 @@ void UniformParser::handleUniformName(
         handleUniformName(programUniforms, uniName, uni.typeName, structDefinitions, tokens, tokenIndex, structName);
     }
     return;
+}
+
+// return a new vector of tokens
+std::vector<std::string>  UniformParser::processDefines(const std::vector<std::string>& tokens) {
+    std::unordered_map<std::string, std::vector<std::string>> defines; 
+    std::vector<std::string> newTokens;  
+    for (int i = 0; i < tokens.size(); i++) {
+        const std::string& token = tokens[i];
+        if (token != "define") {
+            continue;
+        }
+
+        i++;
+        const std::string& defineName = tokens[i];
+        i++;
+        const std::string& defineToken1 = tokens[i];
+        if (defineToken1 == "(") {
+            // Not supported. no need to log this since it is never relevant for our purpose.
+            // loggerPtr->addLog(LogLevel::INFO, "UniformParser::processDefines", "defines with multiple tokens not supported yet");
+        }
+        else {
+            defines[defineName] = {defineToken1};
+        }
+    }
+
+    for (int i = 0; i < tokens.size(); i++) {
+        const std::string& token = tokens[i];
+        if (!defines.contains(token)) {
+            newTokens.push_back(token);
+            continue;
+        }
+        else {
+            for (const std::string& defToken : defines[token]) {
+                newTokens.push_back(defToken);
+            }
+        }
+    }
+
+    return newTokens;
 }
