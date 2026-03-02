@@ -1,17 +1,18 @@
 #include "Material.hpp"
+#include "MaterialCache.hpp"
 #include "texture/TextureCache.hpp"
 #include "../core/logging/Logger.hpp"
 
 
-Material::Material(MaterialType type, unsigned int materialID) : ID(materialID) {
+Material::Material(MaterialType type, MaterialCache* materialCachePtr) : ID(materialCachePtr->getNextMaterialID()) {
     this->type = type;
 }
 
 
 Material::Material(MaterialProperties props, 
     std::vector<unsigned int> textureIDs, 
-    MaterialType type, unsigned int materialID
-) : ID(materialID)
+    MaterialType type, MaterialCache* materialCachePtr
+) : ID(materialCachePtr->getNextMaterialID())
 {
     this->properties = props;
     this->textureIDs = textureIDs;

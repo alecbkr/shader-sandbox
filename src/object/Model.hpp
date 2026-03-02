@@ -11,10 +11,12 @@
 #include "../texture/Texture.hpp"
 #include "Material.hpp"
 #include "ModelPrimitive.hpp"
+#include "object/MaterialCache.hpp"
 
 class ShaderRegistry;
 class TextureCache;
 class Logger;
+class MaterialCache;
 
 class Model {
     private:
@@ -33,8 +35,9 @@ class Model {
         ShaderRegistry* shaderRegPtr = nullptr;
         TextureCache* textureCachePtr = nullptr;
         Logger* loggerPtr = nullptr;
+        MaterialCache* materialCachePtr = nullptr;
 
-        Model(const unsigned int ID, TextureCache* _textureCachePtr, Logger* _loggerPtr);
+        Model(const unsigned int ID, TextureCache* _textureCachePtr, Logger* _loggerPtr, MaterialCache* _materialCachePtr);
         virtual ~Model() = default;
         // FUNCTIONALITY
         void renderPrimitive(unsigned int meshID);
@@ -56,6 +59,7 @@ class Model {
         void setMaterialType(unsigned int materialID, MaterialType type);
 
         // GETTERS
+        const std::vector<unsigned int>& getAllMaterialIDs() const;
         std::string getMaterialProgramID(unsigned int materialID) const;
         MaterialType getMaterialType(unsigned int materialID) const;
         glm::mat4 getModelMatrix() const;
@@ -69,10 +73,9 @@ class Model {
 
     protected:
         unsigned int nextMeshID = 0;
-        unsigned int nextMaterialID = 0;
         ModelFlags properties;
         std::vector<std::unique_ptr<MeshA>>    all_meshes;
-        std::vector<std::unique_ptr<Material>> all_materials;
+        std::vector<unsigned int> all_material_ids;
 
     private:
         glm::mat4 modelM      = glm::mat4(1.0f);

@@ -30,6 +30,7 @@
 #include "application/Project.hpp"
 #include "core/ui/modals/ModalManager.hpp"
 #include "core/ui/modals/SettingsModal.hpp"
+#include "object/MaterialCache.hpp"
 
 struct AppContext {
     AppContext(const char* _app_title) : app_title(_app_title) {};
@@ -66,4 +67,5 @@ struct AppContext {
     InspectorUI inspector_ui;
     ModalManager modals;
     SettingsModal settingsModal;
+    MaterialCache material_cache;
 };
