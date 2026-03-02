@@ -10,5 +10,6 @@ out vec3 worldPos;
 void main() {
     vec4 wp = model * vec4(aPos, 1.0f);
     worldPos = wp.xyz;
-    gl_Position = projection * model * wp;
+
+    gl_Position = projection*view*wp;
 }

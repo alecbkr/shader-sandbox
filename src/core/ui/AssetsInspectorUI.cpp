@@ -1,7 +1,7 @@
 #include "core/ui/AssetsInspectorUI.hpp"
 
 #include "core/TextureRegistry.hpp"
-#include "object/Texture.hpp"
+#include "texture/Texture.hpp"
 
 void AssetsInspectorUI::draw(TextureRegistry* textureRegPtr) {
     for (const Texture* texPtr : textureRegPtr->readTextures()) {

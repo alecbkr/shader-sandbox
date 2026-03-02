@@ -7,7 +7,8 @@
 #include "engine/ShaderProgram.hpp"
 #include "object/Model.hpp"
 #include "object/ModelCache.hpp"
-#include "object/Texture.hpp"
+#include "presets/PresetAssets.hpp"
+#include "texture/Texture.hpp"
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>
@@ -125,18 +126,18 @@ void ObjectsInspectorUI::drawAddObjectMenu(Logger* loggerPtr, InspectorEngine* i
     ShaderProgram& defaultProgram = *programs.begin()->second;
 
     if (ImGui::Button("Add Plane")) {
-        unsigned int planeID = modelCachePtr->createModel(gridPlane_verts, gridPlane_indices, true, false, true);
-        modelCachePtr->setProgram(planeID, defaultProgram);
+        unsigned int id = modelCachePtr->createPreset(MeshPreset::PLANE);
+        modelCachePtr->getModel(id)->setModelProgram(defaultProgram.name);
         inspectorEngPtr->refreshUniforms();
     }
     if (ImGui::Button("Add Pyramid")) {
-        unsigned int pyramidID = modelCachePtr->createModel(pyramidVerts, pyramidIndices, true, false, true);
-        modelCachePtr->setProgram(pyramidID, defaultProgram);
+        unsigned int id = modelCachePtr->createPreset(MeshPreset::PYRAMID);
+        modelCachePtr->getModel(id)->setModelProgram(defaultProgram.name);
         inspectorEngPtr->refreshUniforms();
     }
     if (ImGui::Button("Add Cube")) {
-        unsigned int cubeID = modelCachePtr->createModel(cubeVerts, cubeIndices, true, false, true);
-        modelCachePtr->setProgram(cubeID, defaultProgram);
+        unsigned int id = modelCachePtr->createPreset(MeshPreset::CUBE);
+        modelCachePtr->getModel(id)->setModelProgram(defaultProgram.name);
         inspectorEngPtr->refreshUniforms();
     }
 }
@@ -183,7 +184,7 @@ bool ObjectsInspectorUI::drawShaderProgramMenu(ModelShaderMenu& menu, const std:
     if (!changed) return false;
 
     ShaderProgram& selectedShader = *shaderRegPtr->getProgram(shaderChoices[menu.selection]);
-    modelCachePtr->setProgram(menu.modelID, selectedShader);
+    modelCachePtr->getModel(menu.modelID)->setModelProgram(selectedShader.name);
     inspectorEngPtr->refreshUniforms();
     return true;
 }

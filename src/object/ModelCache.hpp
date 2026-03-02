@@ -1,59 +1,70 @@
 #pragma once
 
 #include <vector>
+
+#include "Model.hpp"
 #include "CustomModel.hpp"
 #include "ImportedModel.hpp"
+#include "ModelPrimitive.hpp"
+#include "presets/PresetAssets.hpp"
 
 class Logger;
 class InspectorEngine;
 class EventDispatcher;
 class ShaderRegistry;
+class TextureCache;
 class UniformRegistry;
-class ModelImporter;
+class PresetAssets;
 
 static constexpr unsigned int INVALID_MODEL = UINT_MAX;
 
+
 class ModelCache {
-public:
-    ModelCache();
-    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, ModelImporter* _modelImporterPtr);
-    void shutdown();
-    unsigned int createModel(std::vector<float>, std::vector<unsigned int>, 
-                                                    bool hasPos, bool hasNorms, bool hasUVs);
-    unsigned int createModel(std::string pathname);
-    
-    void setTexture(unsigned int ID, std::string pathname, std::string uniformName);
-    void setProgram(unsigned int ID, ShaderProgram& program);
+    public:
+        std::unordered_map<unsigned int, std::unique_ptr<Model>> modelIDMap; 
+        
+        ModelCache();
+        bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, TextureCache* _textureCachePtr, UniformRegistry* _uniformRegPtr, InspectorEngine* _inspectorEngPtr, PresetAssets* _presetsPtr);
+        void shutdown();
+       
 
-    void translateModel(unsigned int ID, glm::vec3 pos);
-    void scaleModel(unsigned int ID, glm::vec3 scale);
-    void rotateModel(unsigned int ID, float angle, glm::vec3 axis);
-    
-    void renderModel(unsigned int ID, glm::mat4 projection, glm::mat4 view);
-    void renderAll(glm::mat4 projection, glm::mat4 view);
+        unsigned int createCustom(std::vector<float>, std::vector<unsigned int>, 
+                                                        bool hasPos, bool hasNorms, bool hasUVs);
+        unsigned int createImported(std::string model_path);
+        unsigned int createPreset(MeshPreset type);
+        unsigned int createSkybox(std::string cubemap_dir);
 
-    int getNumberOfModels();
-    
-    std::unordered_map<unsigned int, std::unique_ptr<Model>> modelIDMap; 
-    
-    Model* getModel(unsigned int ID);
+        void renderAll(glm::mat4 projection, glm::mat4 view, glm::vec3 camPos);
+        void renderModel(unsigned int modelID, glm::mat4 projection, glm::mat4 view, glm::vec3 camPos);
+        void renderPrimitive(unsigned int modelID, unsigned int meshID, glm::mat4 projection, glm::mat4 view, glm::vec3 camPos);
+        void deleteModel(unsigned int modelID);
+        Model* getModel(unsigned int modelID);
+        void setModelMaterialType(unsigned int modelID, unsigned int materialID, MaterialType type);
+        
+        // DEBUG
+        int getNumberOfModels();
+        void printPrimRelations(unsigned int modelID);
+        void renderPrim(unsigned int modelID, unsigned int meshID, glm::mat4 perspective, glm::mat4 view);
+        void setInspectorEnginePtr(InspectorEngine* _inspectorEngPtr);
 
-    // DEBUG
-    void printOrder();
+    private:
+        unsigned int nextModelID = 0;
+        std::vector<ModelPrimitive*> opaquePrims;
+        std::vector<ModelPrimitive*> translucentPrims;
+        std::vector<ModelPrimitive*> cutoutPrims;
+        ModelPrimitive* skyboxPrim = nullptr;
 
-    void setInspectorEnginePtr(InspectorEngine* _inspectorEngPtr);
+        // static void reorderByProgram();
+        void placeInCache(unsigned int modelID);
 
-private:
-    bool initialized = false;
-    bool inspectorEngPtrSet = false;
-    Logger* loggerPtr = nullptr;
-    InspectorEngine* inspectorEngPtr = nullptr;
-    EventDispatcher* eventsPtr = nullptr;
-    ShaderRegistry* shaderRegPtr = nullptr;
-    UniformRegistry* uniformRegPtr = nullptr;
-    ModelImporter* modelImporterPtr = nullptr;
-    unsigned int nextModelID = 0;
-    void reorderByProgram();
-    std::vector<std::unique_ptr<Model>> modelCache; 
-    
+        //SYSTEM POINTERS
+        bool initialized = false;
+        bool inspectorEngPtrSet = false;
+        Logger* loggerPtr                = nullptr;
+        InspectorEngine* inspectorEngPtr = nullptr;
+        EventDispatcher* eventsPtr       = nullptr;
+        TextureCache* textureCachePtr    = nullptr;
+        ShaderRegistry* shaderRegPtr     = nullptr;
+        UniformRegistry* uniformRegPtr   = nullptr;
+        PresetAssets* presetsPtr         = nullptr;
 };

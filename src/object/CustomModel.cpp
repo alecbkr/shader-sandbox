@@ -1,15 +1,19 @@
 #include "CustomModel.hpp"
+#include "texture/TextureCache.hpp"
+// #include "texture/CubeMap.hpp"
 
 #include "core/logging/Logger.hpp"
 
-CustomModel::CustomModel(const unsigned int ID, ShaderRegistry* shaderRegPtr, Logger* _loggerPtr)
-    : Model(ID, shaderRegPtr, _loggerPtr), loggerPtr(_loggerPtr) {
-    all_meshes.push_back(MeshA());
-    meshptr = &all_meshes.back();
+CustomModel::CustomModel(const unsigned int modelID, TextureCache* _textureCachePtr, Logger* _loggerPtr) 
+    : Model(modelID, _textureCachePtr, _loggerPtr) {
+    primitives.emplace_back(modelID, 0, 0);
+    
+    all_materials.push_back(std::make_unique<Material>(MaterialType::Opaque, nextMaterialID));
+    all_meshes.emplace_back(std::make_unique<MeshA>(nextMeshID));
 }
 
 void CustomModel::setMesh(std::vector<float> raw_vertices, std::vector<unsigned int> indices, bool hasPos, bool hasNorm, bool hasUV) {
-    meshptr->unloadFromGPU();
+    all_meshes[0]->unloadFromGPU();
 
     unsigned int rowstride = 0;
     rowstride += 3*hasPos;
@@ -53,17 +57,15 @@ void CustomModel::setMesh(std::vector<float> raw_vertices, std::vector<unsigned 
         vertices.push_back(vertex);
     }
 
-    meshptr->vertices = vertices;
-    meshptr->indices = indices;
-
-    meshptr->meshflags.hasPositions = hasPos;
-    meshptr->meshflags.hasNormals = hasNorm;
-    meshptr->meshflags.hasUVs = hasUV;
-
+    all_meshes[0]->vertices = vertices;
+    all_meshes[0]->indices = indices;
+    all_meshes[0]->meshflags.hasPositions = hasPos;
+    all_meshes[0]->meshflags.hasNormals = hasNorm;
+    all_meshes[0]->meshflags.hasUVs = hasUV;
     properties.hasMeshes = true;
 }
 
 
-void CustomModel::addTexture(std::string filepath) {
-
+void CustomModel::addTexture(std::string texture_path, TextureType type) {
+    all_materials[0]->assignTexture(textureCachePtr->addTexture(texture_path, type));
 }

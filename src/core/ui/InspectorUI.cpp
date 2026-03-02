@@ -14,7 +14,8 @@
 #include "core/ShaderRegistry.hpp"
 #include "core/FileRegistry.hpp"
 #include "object/ModelCache.hpp"
-#include "object/Texture.hpp"
+#include "texture/Texture.hpp"
+#include "core/FileRegistry.hpp"
 #include "engine/ShaderProgram.hpp"
 #include <string>
 
@@ -106,4 +107,3 @@ void InspectorUI::render() {
     }
     ImGui::End();
 }
-

@@ -8,6 +8,7 @@
 #include <string>
 #include <glm/gtc/matrix_transform.hpp>
 #include "platform/Platform.hpp"
+#include "core/logging/Logger.hpp"
 
 #define TARGET_WIDTH 0.4f
 #define TARGET_HEIGHT 1.0f
@@ -117,9 +118,9 @@ void ViewportUI::render() {
 
     glm::mat4 perspective = glm::perspective(glm::radians(45.0f), ViewportUI::getAspect(), 0.1f, 100.0f);
     glm::mat4 view = camPtr->GetViewMatrix();
-    modelCachePtr->renderAll(perspective, view);
+    modelCachePtr->renderAll(perspective, view, camPtr->Position);
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    
     ViewportUI::draw();
 }
 

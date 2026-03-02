@@ -6,6 +6,7 @@
 #include "core/ui/ViewportUI.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "core/UniformTypes.hpp"
+#include "../object/ModelPrimitive.hpp"
 
 class Logger;
 class ShaderRegistry;
@@ -25,6 +26,12 @@ public:
     bool handleEditShaderProgram(const std::string& vertex_file, const std::string& fragment_file, const std::string& programName);
     void assignDefaultValue(Uniform& uniform);
     UniformValue getDefaultValue(UniformType type);
+
+    // ALECS TEST JUNK
+    void applyAllUniformsForPrimitive(ModelPrimitive prim);
+    void applySceneUniforms(ShaderProgram& program);
+    void applyModelUniforms(ShaderProgram& program, unsigned int modelID);
+    void applyMaterialUniforms(ShaderProgram& program, unsigned int modelID, unsigned int materialID);
 
 private:
     void applyFunction(ShaderProgram& program, const Uniform& uniform, const InspectorReference& function);

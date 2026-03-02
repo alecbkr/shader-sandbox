@@ -1,19 +1,24 @@
 #include "MeshAssimp.hpp"
 #include "../engine/Errorlog.hpp"
-#include "TextureType.hpp"
+#include "../texture/TextureType.hpp"
+#include "core/logging/Logger.hpp"
 
 
-MeshA::MeshA(std::vector<Vertex> vertices, std::vector<unsigned int> indices, 
-             std::vector<std::shared_ptr<Texture>> textures, MeshFlags meshflags) {
+MeshA::MeshA(std::vector<Vertex> vertices, std::vector<unsigned int> indices, MeshFlags meshflags, unsigned int id) : ID(id) {
     this->vertices = vertices;
     this->indices = indices;
-    this->textures = textures;
     this->meshflags = meshflags;
 }
 
 
-MeshA::MeshA() {
+MeshA::MeshA(unsigned int id) : ID(id) {
 
+}
+
+
+MeshA::~MeshA() {
+    // Logger::addLog(LogLevel::INFO, "MESH", "Deleting mesh...");
+    unloadFromGPU();
 }
 
 
@@ -31,6 +36,7 @@ void MeshA::unbind() {
 void MeshA::loadToGPU() {
     if (isLoadedInGPU) return;
     
+    // Logger::addLog(LogLevel::INFO, "MESH", "Loading mesh...");
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
@@ -68,6 +74,7 @@ void MeshA::loadToGPU() {
 void MeshA::unloadFromGPU() {
     if (!isLoadedInGPU) return;
 
+    // Logger::addLog(LogLevel::INFO, "MESH", "Unloading mesh...");
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);

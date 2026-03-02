@@ -209,6 +209,8 @@ public:
 	int GetTotalLines() const { return (int)mLines.size(); }
 	bool IsOverwrite() const { return mOverwrite; }
 
+	std::string GetAutoCompletePrefix() const;
+
 	void SetReadOnly(bool aValue);
 	bool IsReadOnly() const { return mReadOnly; }
 	bool IsTextChanged() const { return mTextChanged; }
@@ -313,6 +315,22 @@ private:
 		EditorState mAfter;
 	};
 
+	struct CompletionItem {
+		std::string label; // what user sees
+		std::string insertText; // what is inserted
+		std::string detail; // optional: "keyword", "builtin fn", "var", "snippet"
+		TextEditor::PaletteIndex color;
+		int priority = 0; // sort weight
+	};
+
+	struct AutoCompleteState {
+		bool open = false;
+		TextEditor::Coordinates start; // where the current prefix begins
+		std::string prefix;
+		std::vector<CompletionItem> items;
+		int selectedIndex = 0;
+	};
+
 	typedef std::vector<UndoRecord> UndoBuffer;
 
 	void ProcessInputs();
@@ -346,13 +364,19 @@ private:
 	void Backspace();
 	void DeleteSelection();
 	std::string GetWordUnderCursor() const;
+	bool GetAutoCompletePrefix(Coordinates& outStart, std::string& outPrefix);
+	std::vector<CompletionItem> BuildAutoCompleteSuggestions(const std::string& prefix) const;
+	void UpdateAutoComplete();
+	void AcceptAutoComplete();
 	std::string GetWordAt(const Coordinates& aCoords) const;
 	ImU32 GetGlyphColor(const Glyph& aGlyph) const;
 
 	void HandleKeyboardInputs();
 	void HandleMouseInputs();
 	void Render(SearchText* searcher);
+	void RenderAutoCompletePopup();
 
+	AutoCompleteState mAutoComplete;
 	float mLineSpacing;
 	Lines mLines;
 	EditorState mState;
@@ -376,6 +400,7 @@ private:
 	bool mHandleMouseInputs;
 	bool mIgnoreImGuiChild;
 	bool mShowWhitespaces;
+	ImVec2 mEditorScreenOrigin = ImVec2(0, 0);
 
 	Palette mPaletteBase;
 	Palette mPalette;
