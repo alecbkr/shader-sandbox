@@ -125,7 +125,7 @@ void loadPresetAssets(AppContext& ctx) {
     unsigned int testPlane = ctx.model_cache.createPreset(MeshPreset::PLANE);
     Model* testPlaneModel = ctx.model_cache.getModel(testPlane);
     testPlaneModel->addTexture("../assets/textures/grass.png", TextureType::TEX_DIFFUSE);
-    testPlaneModel->setMaterialType(testPlaneModel->getAllMaterialIDs()[0], MaterialType::Translucent);
+    ctx.model_cache.setModelMaterialType(testPlane, testPlaneModel->getAllMaterialIDs()[0], MaterialType::Translucent);
     testPlaneModel->setModelProgram(texPtr->name);
     testPlaneModel->rotate(90.0, glm::vec3(1.0f, 0.0f, 0.0f));
     testPlaneModel->translate(glm::vec3(0.0f, 1.0f, 0.0f));
@@ -133,7 +133,7 @@ void loadPresetAssets(AppContext& ctx) {
     unsigned int testPlane2 = ctx.model_cache.createPreset(MeshPreset::PLANE);
     Model* testPlane2Model = ctx.model_cache.getModel(testPlane2);
     testPlane2Model->addTexture("../assets/textures/window.png", TextureType::TEX_DIFFUSE);
-    testPlane2Model->setMaterialType(testPlane2Model->getAllMaterialIDs()[0], MaterialType::Translucent);
+    ctx.model_cache.setModelMaterialType(testPlane2, testPlane2Model->getAllMaterialIDs()[0], MaterialType::Translucent);
     testPlane2Model->setModelProgram(texPtr->name);
     testPlane2Model->rotate(90.0, glm::vec3(1.0f, 0.0f, 0.0f));
     testPlane2Model->translate(glm::vec3(-3.0f, 0.0f, 0.0f));
