@@ -1,5 +1,5 @@
 #include "presets/PresetAssets.hpp"
-#include "object/TextureType.hpp"
+#include "texture/TextureType.hpp"
 #include "core/logging/Logger.hpp"
 #include "platform/Platform.hpp"
 
@@ -12,10 +12,10 @@ PresetAssets::PresetAssets() {
     pyramidMesh.indices.clear();
     cubeMesh.verts.clear();
     cubeMesh.indices.clear();
-    waterTex = Texture{"", TEX_DIFFUSE, nullptr};
-    faceTex = Texture{"", TEX_DIFFUSE, nullptr};
-    metalTex = Texture{"", TEX_DIFFUSE, nullptr};
-    gridTex = Texture{"", TEX_DIFFUSE, nullptr};
+    // waterTex = Texture{"", TEX_DIFFUSE, nullptr};
+    // faceTex = Texture{"", TEX_DIFFUSE, nullptr};
+    // metalTex = Texture{"", TEX_DIFFUSE, nullptr};
+    // gridTex = Texture{"", TEX_DIFFUSE, nullptr};
 }
 
 bool PresetAssets::initialize(Logger* _loggerPtr, Platform* _platformPtr) {
@@ -26,10 +26,10 @@ bool PresetAssets::initialize(Logger* _loggerPtr, Platform* _platformPtr) {
 
     loggerPtr = _loggerPtr;
 
-    waterTex = Texture{(_platformPtr->getExeDir() / ".." / "assets/textures/water.png").string().c_str(), TEX_DIFFUSE, loggerPtr};
-    faceTex = Texture{(_platformPtr->getExeDir() / ".." / "assets/textures/bigface.jpg").string().c_str(), TEX_DIFFUSE, loggerPtr};
-    metalTex = Texture{(_platformPtr->getExeDir() / ".." / "assets/textures/rim.png").string().c_str(), TEX_DIFFUSE, loggerPtr};
-    gridTex = Texture{(_platformPtr->getExeDir() / ".." / "assets/textures/grid.png").string().c_str(), TEX_DIFFUSE, loggerPtr};
+    // waterTex = Texture{(_platformPtr->getExeDir() / ".." / "assets/textures/water.png").string().c_str(), TEX_DIFFUSE, loggerPtr};
+    // faceTex = Texture{(_platformPtr->getExeDir() / ".." / "assets/textures/bigface.jpg").string().c_str(), TEX_DIFFUSE, loggerPtr};
+    // metalTex = Texture{(_platformPtr->getExeDir() / ".." / "assets/textures/rim.png").string().c_str(), TEX_DIFFUSE, loggerPtr};
+    // gridTex = Texture{(_platformPtr->getExeDir() / ".." / "assets/textures/grid.png").string().c_str(), TEX_DIFFUSE, loggerPtr};
 
     PresetAssets::planeMesh.verts = {
         -1.0f, 0.0f, -1.0f,  0.0f, 0.0f,
@@ -108,18 +108,18 @@ MeshData& PresetAssets::getPresetMesh(MeshPreset preset) {
     }
 }
 
-Texture& PresetAssets::getPresetTexture(TexturePreset preset) {
-    switch (preset) {
-        case TexturePreset::WATER:
-            return PresetAssets::waterTex;
+// Texture& PresetAssets::getPresetTexture(TexturePreset preset) {
+//     switch (preset) {
+//         case TexturePreset::WATER:
+//             return PresetAssets::waterTex;
         
-        case TexturePreset::FACE:
-            return PresetAssets::faceTex;
+//         case TexturePreset::FACE:
+//             return PresetAssets::faceTex;
         
-        case TexturePreset::METAL:
-            return PresetAssets::metalTex;
+//         case TexturePreset::METAL:
+//             return PresetAssets::metalTex;
         
-        case TexturePreset::GRID:
-            return PresetAssets::gridTex;
-    }
-}
+//         case TexturePreset::GRID:
+//             return PresetAssets::gridTex;
+//     }
+// }

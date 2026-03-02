@@ -11,34 +11,38 @@ is for now.
 
 #pragma once
 
+
+// #include <GLFW/glfw3.h>
+#include <glad/glad.h>
 #include "platform/GL.hpp"
 #include "TextureType.hpp"
 #include <string>
+#include <vector>
 
 class Logger;
 
 class Texture {
     
     public:
-        mutable GLuint ID;
+        mutable GLuint ID = 0;
         std::string path;
-        unsigned char* pixels;
-        Logger* loggerPtr;
         
-        int width;
-        int height;
-        GLenum format;
-        Texture(const char *texture_path, TextureType type, Logger* _loggerPtr);
-        // ~Texture();
-        void bind(int texNum);
-        void unbind(int texNum);
+        Logger* loggerPtr;
+        Texture(std::string texture_path, TextureType type, Logger* _loggerPtr);
+        virtual ~Texture();
+        virtual void bind(unsigned int texNum) = 0;
+        void unbind();
+        void unloadFromGPU();
         bool isValid() const;
         TextureType getType();
+
+    protected:
+        TextureType type = TEX_UNDEFINED;
+        unsigned int texNum;
+        bool valid = false;
+        bool isInitialized = false;
+        bool isLoadedInGPU = false;
     
     private:
-        TextureType type = TEX_UNDEFINED;
-        bool valid = false;
-        bool isLoadedInGPU = false;
-        void loadToGPU();
-        void unloadFromGPU();
+        
 };

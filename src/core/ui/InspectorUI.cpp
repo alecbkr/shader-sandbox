@@ -14,7 +14,7 @@
 #include "core/ShaderRegistry.hpp"
 #include "engine/Errorlog.hpp"
 #include "object/ModelCache.hpp"
-#include "object/Texture.hpp"
+#include "texture/Texture.hpp"
 #include "core/FileRegistry.hpp"
 #include "engine/ShaderProgram.hpp"
 #include <ostream>
@@ -273,21 +273,20 @@ static const std::vector<float> gridPlane_verts {
     ShaderProgram& defaultProgram = *programs.begin()->second;
 
     if (ImGui::Button("Add Plane")) {
-        unsigned int planeID = modelCachePtr->createModel(gridPlane_verts, gridPlane_indices, true, false, true);
-        modelCachePtr->setProgram(planeID, defaultProgram);
+        unsigned int planeID = modelCachePtr->createPreset(MeshPreset::PLANE);
+        modelCachePtr->getModel(planeID)->setModelProgram(defaultProgram.name);
         inspectorEngPtr->refreshUniforms();
     }
     if (ImGui::Button("Add Pyramid")) {
-        unsigned int pyramidID = modelCachePtr->createModel(pyramidVerts, pyramidIndices, true, false, true);
-        modelCachePtr->setProgram(pyramidID, defaultProgram);
+        unsigned int pyramidID = modelCachePtr->createPreset(MeshPreset::PYRAMID);
+        modelCachePtr->getModel(pyramidID)->setModelProgram(defaultProgram.name);
         inspectorEngPtr->refreshUniforms();
     }
     if (ImGui::Button("Add Cube")) {
-        unsigned int cubeID = modelCachePtr->createModel(cubeVerts, cubeIndices, true, false, true);
-        modelCachePtr->setProgram(cubeID, defaultProgram);
+        unsigned int cubeID = modelCachePtr->createPreset(MeshPreset::CUBE);
+        modelCachePtr->getModel(cubeID)->setModelProgram(defaultProgram.name);
         inspectorEngPtr->refreshUniforms();
-    }
-}
+    }}
 
 void InspectorUI::drawAssetsInspector() {
     for (const Texture* texPtr : textureRegPtr->readTextures()) {
@@ -617,7 +616,7 @@ bool InspectorUI::drawShaderProgramMenu(ModelShaderMenu& menu, const std::vector
     
     // add check in case we get more types
     ShaderProgram& selectedShader = *shaderRegPtr->getProgram(shaderChoices[menu.selection]);
-    modelCachePtr->setProgram(menu.modelID, selectedShader); 
+    modelCachePtr->getModel(menu.modelID)->setModelProgram(selectedShader.name);
     inspectorEngPtr->refreshUniforms();
     return true;
 }
@@ -893,6 +892,11 @@ void InspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID) {
 
 
 bool InspectorUI::drawModelPositionInput(Model* model) {
+    if (model == nullptr) {
+        loggerPtr->addLog(LogLevel::WARNING, "drawModelPosition", "model does not exist!");
+        return false;
+    }
+
     bool changed = false;
     ImGui::PushID(model);
 
@@ -908,6 +912,11 @@ bool InspectorUI::drawModelPositionInput(Model* model) {
 
 
 bool InspectorUI::drawModelScaleInput(Model* model) {
+    if (model == nullptr) {
+        loggerPtr->addLog(LogLevel::WARNING, "drawModelScaleInput", "model does not exist!");
+        return false;
+    }
+
     bool changed = false;
     ImGui::PushID(model);
 
@@ -923,6 +932,11 @@ bool InspectorUI::drawModelScaleInput(Model* model) {
 
 
 bool InspectorUI::drawModelOrientationInput(Model* model) {
+    if (model == nullptr) {
+        loggerPtr->addLog(LogLevel::WARNING, "drawModelOrientationInput", "model does not exist!");
+        return false;
+    }
+
     bool changed = false;
     ImGui::PushID(model);
 

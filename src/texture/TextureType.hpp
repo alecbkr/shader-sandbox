@@ -14,5 +14,6 @@ enum TextureType {
     TEX_ROUGHNESS,
     TEX_AO,
     TEX_EMISSION,
+    TEX_CUBEMAP,
     TEX_MAXTYPE
 };

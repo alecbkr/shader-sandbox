@@ -120,4 +120,57 @@ void UniformRegistry::eraseUniform(unsigned int modelID, const std::string& unif
 }
 
 
+// ALECS TEST JUNK
+void UniformRegistry::registerSceneUniform(Uniform uniform) {
+    scene_uniforms[uniform.name] = uniform;
+}
 
+
+void UniformRegistry::registerModelUniform(unsigned int modelID, Uniform uniform) {
+    model_uniforms[modelID][uniform.name] = uniform;
+}
+
+
+
+void UniformRegistry::registerMaterialUniform(unsigned int modelID, unsigned int materialID, Uniform uniform) {
+    material_uniforms[std::make_pair(modelID, materialID)][uniform.name] = uniform;
+}
+
+
+const std::unordered_map<std::string, Uniform>* UniformRegistry::tryReadSceneUniforms() const {
+    if (scene_uniforms.size() <= 0) {
+        // Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniforms", "No object found in Uniform Registry with ID");
+        return nullptr;
+    }
+
+    //std::unordered_map<std::string, Uniform>* programUniforms = &uniforms[modelID];
+    const std::unordered_map<std::string, Uniform> *sceneUniforms = &(scene_uniforms);
+
+    return sceneUniforms;
+}
+
+
+const std::unordered_map<std::string, Uniform>* UniformRegistry::tryReadModelUniforms(unsigned int modelID) const {
+    if (model_uniforms.count(modelID) <= 0) {
+        // Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniforms", "No object found in Uniform Registry with ID", modelID );
+        return nullptr;
+    }
+
+    //std::unordered_map<std::string, Uniform>* programUniforms = &uniforms[modelID];
+    const std::unordered_map<std::string, Uniform> *modelUniforms = &(model_uniforms.at(modelID));
+
+    return modelUniforms;
+}
+
+
+const std::unordered_map<std::string, Uniform>* UniformRegistry::tryReadMaterialUniforms(unsigned int modelID, unsigned int materialID) const {
+    if (material_uniforms.count(std::make_pair(modelID, materialID)) <= 0) {
+        // Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniforms", "No object found in Uniform Registry with ID", modelID );
+        return nullptr;
+    }
+
+    //std::unordered_map<std::string, Uniform>* programUniforms = &uniforms[modelID];
+    const std::unordered_map<std::string, Uniform> *materialUniforms = &(material_uniforms.at(std::make_pair(modelID, materialID)));
+
+    return materialUniforms;
+}
