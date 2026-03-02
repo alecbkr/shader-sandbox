@@ -6,6 +6,7 @@
 #include "CustomModel.hpp"
 #include "ImportedModel.hpp"
 #include "ModelPrimitive.hpp"
+#include "object/MaterialCache.hpp"
 #include "presets/PresetAssets.hpp"
 
 class Logger;
@@ -24,7 +25,7 @@ class ModelCache {
         std::unordered_map<unsigned int, std::unique_ptr<Model>> modelIDMap; 
         
         ModelCache();
-        bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, TextureCache* _textureCachePtr, UniformRegistry* _uniformRegPtr, InspectorEngine* _inspectorEngPtr, PresetAssets* _presetsPtr);
+        bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, TextureCache* _textureCachePtr, UniformRegistry* _uniformRegPtr, InspectorEngine* _inspectorEngPtr, PresetAssets* _presetsPtr, MaterialCache* _materialCachePtr);
         void shutdown();
        
 
@@ -67,4 +68,5 @@ class ModelCache {
         ShaderRegistry* shaderRegPtr     = nullptr;
         UniformRegistry* uniformRegPtr   = nullptr;
         PresetAssets* presetsPtr         = nullptr;
+        MaterialCache* materialCachePtr  = nullptr;
 };

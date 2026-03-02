@@ -6,6 +6,7 @@
 
 #include "../texture/Texture.hpp"
 #include "../engine/ShaderProgram.hpp"
+#include "object/MaterialCache.hpp"
 
 enum class MaterialType {
     Opaque,
@@ -27,12 +28,12 @@ class Material {
         MaterialType type;
         MaterialProperties properties;
 
-        Material(MaterialType type, unsigned int materialID);
+        Material(MaterialType type, MaterialCache* materialCachePtr);
         Material(
             MaterialProperties props, 
             std::vector<unsigned int> textures, 
             MaterialType type, 
-            unsigned int materialID
+            MaterialCache* matericalCachePtr
         );
         std::vector<unsigned int> getMaterialTextureIDs();
         void assignTexture(unsigned int textureID);

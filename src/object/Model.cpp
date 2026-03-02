@@ -1,20 +1,27 @@
 #include "Model.hpp"
 
+#include "core/logging/LogSink.hpp"
 #include "core/logging/Logger.hpp"
 #include "engine/ShaderProgram.hpp"
+#include "object/Material.hpp"
 #include "texture/TextureCache.hpp"
 
 
 
-Model::Model(const unsigned int ID, TextureCache* _textureCachePtr, Logger* _loggerPtr)
-    : ID(ID), textureCachePtr(_textureCachePtr), loggerPtr(_loggerPtr) {}
+Model::Model(const unsigned int ID, TextureCache* _textureCachePtr, Logger* _loggerPtr, MaterialCache* _materialCachePtr)
+    : ID(ID), textureCachePtr(_textureCachePtr), loggerPtr(_loggerPtr), materialCachePtr(_materialCachePtr) {}
 
 
 // -----FUNCTIONALITY
 void Model::renderPrimitive(unsigned int meshID) {
     ModelPrimitive& prim = primitives[meshID];
     MeshA* mesh = all_meshes[prim.meshID].get();
-    Material* mat = all_materials[prim.materialID].get();
+    Material* mat = materialCachePtr->getMaterial(prim.materialID);
+
+    if (mat == nullptr) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "Model::renderPrimitive", "Material not found!");
+        return;
+    }
 
     mesh->bind();
 
@@ -105,27 +112,33 @@ void Model::setMesh(std::vector<float> vertices, std::vector<unsigned int> indic
 
 
 void Model::setModelProgram(std::string& programID) {
-    for (auto& mat : all_materials) {
+    for (auto matID : all_material_ids) {
+        Material* mat = materialCachePtr->getMaterial(matID);
+        if (mat == nullptr) {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "Model::setModelProgram", "material not found");
+        }
         mat->setProgramID(programID);
     }
 }
 
 
 void Model::setMaterialProgram(unsigned int materialID, std::string& programID) {
-    if (all_materials.size() - 1 < materialID) {
+    Material* mat = materialCachePtr->getMaterial(materialID);
+    if (mat == nullptr) {
         loggerPtr->Logger::addLog(LogLevel::LOG_ERROR, "MODEL | setMaterialProgram()", "Material doesn't exist at index ", std::to_string(materialID));
         return;
     }
-    all_materials[materialID]->setProgramID(programID);
+    mat->setProgramID(programID);
 }
 
 
 void Model::setMaterialType(unsigned int materialID, MaterialType type) {
-    if (all_materials.size() - 1 < materialID) {
+    Material* mat = materialCachePtr->getMaterial(materialID);
+    if (mat == nullptr) {
         loggerPtr->Logger::addLog(LogLevel::LOG_ERROR, "MODEL | setMaterialType()", "Material doesn't exist at index ", std::to_string(materialID));
         return;
     }
-    all_materials[materialID]->type = type;
+    mat->type = type;
 }
 
 
@@ -137,15 +150,26 @@ void Model::calcModelM() {
     this->modelM = model;
 }
 
+const std::vector<unsigned int>& Model::getAllMaterialIDs() const {
+    return all_material_ids;
+}
 
 MaterialType Model::getMaterialType(unsigned int materialID) const {
-    Material* mat = all_materials[materialID].get();
+    Material* mat = materialCachePtr->getMaterial(materialID);
+    if (mat == nullptr) {
+        loggerPtr->Logger::addLog(LogLevel::LOG_ERROR, "MODEL | getMaterialType()", "Returning Cutout: Material doesn't exist at index ", std::to_string(materialID));
+        return MaterialType::Cutout;
+    }
     return mat->type;
 }
 
 
 std::string Model::getMaterialProgramID(unsigned int materialID) const {
-    Material *mat = all_materials[materialID].get();
+    Material* mat = materialCachePtr->getMaterial(materialID);
+    if (mat == nullptr) {
+        loggerPtr->Logger::addLog(LogLevel::LOG_ERROR, "MODEL | getMaterialProgramID()", "Returning Cutout: Material doesn't exist at index ", std::to_string(materialID));
+        return "";
+    }
     return mat->getProgramID();
 }
 

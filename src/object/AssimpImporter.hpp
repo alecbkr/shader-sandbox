@@ -11,6 +11,7 @@
 #include "core/logging/Logger.hpp"
 #include "MeshAssimp.hpp"
 #include "Material.hpp"
+#include "MaterialCache.hpp"
 #include "ImportedModel.hpp"
 #include "texture/TextureCache.hpp"
 
@@ -41,14 +42,14 @@ static const aiTextureType TexMap[TEX_MAXTYPE] {
 };
 
 
-inline bool importModel(std::string path, ImportedModel& model, TextureCache* textureCachePtr, Logger* loggerPtr);
-static void processNode(aiNode *node, const aiScene *scene, ImportedModel& model, ImportContext& ctx);
+inline bool importModel(std::string path, ImportedModel& model, TextureCache* textureCachePtr, Logger* loggerPtr, MaterialCache* materialCachePtr);
+static void processNode(aiNode *node, const aiScene *scene, ImportedModel& model, ImportContext& ctx, MaterialCache* materialCachePtr);
 static void processMesh(aiMesh *aimesh, ImportedModel& model, ImportContext& ctx);
 static void processMaterial(aiMaterial *aimat, ImportedModel& model, ImportContext& ctx);
 static void getTextures(aiMaterial *mat, std::vector<unsigned int>& textureIDs, ImportedModel& model, ImportContext& ctx);
 
 
-inline bool importModel(std::string path, ImportedModel& model, TextureCache* textureCachePtr, Logger* loggerPtr) {
+inline bool importModel(std::string path, ImportedModel& model, TextureCache* textureCachePtr, Logger* loggerPtr, MaterialCache* materialCachePtr) {
     Assimp::Importer import;
     const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
 
@@ -68,18 +69,18 @@ inline bool importModel(std::string path, ImportedModel& model, TextureCache* te
     }
 
     // PROCESS MESHES
-    processNode(scene->mRootNode, scene, model, ctx);
+    processNode(scene->mRootNode, scene, model, ctx, materialCachePtr);
     return true;
 }
 
 
-static void processNode(aiNode *node, const aiScene *scene, ImportedModel& model, ImportContext &ctx) {
+static void processNode(aiNode *node, const aiScene *scene, ImportedModel& model, ImportContext &ctx, MaterialCache* materialCachePtr) {
     for (unsigned int i = 0; i < node->mNumMeshes; i++) {
         
         aiMesh *aimesh = scene->mMeshes[node->mMeshes[i]];
         processMesh(aimesh, model, ctx);
 
-        Material *mat = model.getMatVec()[aimesh->mMaterialIndex].get();
+        Material *mat = materialCachePtr->getMaterial(model.getMatVec()[aimesh->mMaterialIndex]);
 
         model.primitives.emplace_back(
             model.getID(),                       // MODEL ID
@@ -89,7 +90,7 @@ static void processNode(aiNode *node, const aiScene *scene, ImportedModel& model
     }
 
     for (unsigned int i = 0; i < node->mNumChildren; i++) {
-        processNode(node->mChildren[i], scene, model, ctx);
+        processNode(node->mChildren[i], scene, model, ctx, materialCachePtr);
     }
 }
 

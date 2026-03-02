@@ -123,18 +123,20 @@ void loadPresetAssets(AppContext& ctx) {
     ctx.model_cache.getModel(backpackID)->setModelProgram(texPtr->name);
 
     unsigned int testPlane = ctx.model_cache.createPreset(MeshPreset::PLANE);
-    ctx.model_cache.getModel(testPlane)->addTexture("../assets/textures/grass.png", TextureType::TEX_DIFFUSE);
-    ctx.model_cache.setModelMaterialType(testPlane, 0, MaterialType::Translucent);
-    ctx.model_cache.getModel(testPlane)->setModelProgram(texPtr->name);
-    ctx.model_cache.getModel(testPlane)->rotate(90.0, glm::vec3(1.0f, 0.0f, 0.0f));
-    ctx.model_cache.getModel(testPlane)->translate(glm::vec3(0.0f, 1.0f, 0.0f));
+    Model* testPlaneModel = ctx.model_cache.getModel(testPlane);
+    testPlaneModel->addTexture("../assets/textures/grass.png", TextureType::TEX_DIFFUSE);
+    testPlaneModel->setMaterialType(testPlaneModel->getAllMaterialIDs()[0], MaterialType::Translucent);
+    testPlaneModel->setModelProgram(texPtr->name);
+    testPlaneModel->rotate(90.0, glm::vec3(1.0f, 0.0f, 0.0f));
+    testPlaneModel->translate(glm::vec3(0.0f, 1.0f, 0.0f));
 
     unsigned int testPlane2 = ctx.model_cache.createPreset(MeshPreset::PLANE);
-    ctx.model_cache.getModel(testPlane2)->addTexture("../assets/textures/window.png", TextureType::TEX_DIFFUSE);
-    ctx.model_cache.setModelMaterialType(testPlane2, 0, MaterialType::Translucent);
-    ctx.model_cache.getModel(testPlane2)->setModelProgram(texPtr->name);
-    ctx.model_cache.getModel(testPlane2)->rotate(90.0, glm::vec3(1.0f, 0.0f, 0.0f));
-    ctx.model_cache.getModel(testPlane2)->translate(glm::vec3(-3.0f, 0.0f, 0.0f));
+    Model* testPlane2Model = ctx.model_cache.getModel(testPlane2);
+    testPlane2Model->addTexture("../assets/textures/window.png", TextureType::TEX_DIFFUSE);
+    testPlane2Model->setMaterialType(testPlane2Model->getAllMaterialIDs()[0], MaterialType::Translucent);
+    testPlane2Model->setModelProgram(texPtr->name);
+    testPlane2Model->rotate(90.0, glm::vec3(1.0f, 0.0f, 0.0f));
+    testPlane2Model->translate(glm::vec3(-3.0f, 0.0f, 0.0f));
     
 }
 
@@ -183,6 +185,10 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Uniform Registry was not initialized successfully.");
         return false;
     }
+    if (!ctx.material_cache.initialize(&ctx.logger)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Material Cache was not initialized successfully.");
+        return false;
+    }
     if (!ctx.texture_cache.initialize(&ctx.logger)) {
         std::cout << "Texture Cache was not initialized successfully." << std::endl;
         return false;
@@ -195,7 +201,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Importer was not initialized successfully.");
         return false;
     }
-    if (!ctx.model_cache.initialize(&ctx.logger, &ctx.events, &ctx.shader_registry, &ctx.texture_cache, &ctx.uniform_registry, &ctx.inspector_engine, &ctx.preset_assets)) {
+    if (!ctx.model_cache.initialize(&ctx.logger, &ctx.events, &ctx.shader_registry, &ctx.texture_cache, &ctx.uniform_registry, &ctx.inspector_engine, &ctx.preset_assets, &ctx.material_cache)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
         return false;
     }
