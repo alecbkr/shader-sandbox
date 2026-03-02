@@ -8,10 +8,15 @@ bool ConsoleEngine::initialize(Logger* _loggerPtr) {
     }
 
     logSrc = _loggerPtr->getConsoleSinkPtr();
+    loggerPtr = _loggerPtr; 
 
     // Register Buttons
     registerButton(ConsoleActions::CLEAR, [this](){
         if (logSrc) logSrc->clearLogs();
+    });
+
+    registerButton(ConsoleActions::OPEN_LOG_HISTORY, [this](){
+        if (loggerPtr) openLogFile(loggerPtr->getLogPath().string());
     });
 
     // Register Toggles
@@ -57,4 +62,45 @@ void ConsoleEngine::executeBtnAction(std::string_view name) {
 
 ConsoleToggles& ConsoleEngine::getToggles() {
     return toggles;
+}
+
+void ConsoleEngine::openLogFile(const std::string logPath) {
+    if(logPath.empty()) {
+        loggerPtr->addLog(LogLevel::WARNING, "ConsoleUI", "Cannot open empty log path."); 
+        return; 
+    }
+
+    std::filesystem::path p(logPath); 
+    std::error_code ec; 
+
+    if (!std::filesystem::exists(p, ec)) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "ConsoleUI", "Log directory not found at: " + logPath);
+        return; 
+    }
+
+    std::filesystem::path absPath = std::filesystem::absolute(p, ec); 
+    if (ec) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "ConsoleUI", "Failed to obtain absolute path.");
+        return;  
+    }
+
+    absPath.make_preferred(); 
+    std::string finalPath = absPath.string(); 
+    std::string folderPath; 
+
+    #if defined(_WIN32) || defined(__CYGWIN__) 
+        folderPath = "explorer.exe /e, \"" + finalPath +"\"";
+
+    // TODO: Test these the unix os's to see if they work 
+    #elif defined(__APPLE__)
+        folderPath = "open \"" + finalPath + "\""; 
+
+    #elif defined(__linux__)
+        fodlerPath = "xdg-open \"" + finalPath + "\""; 
+    #else 
+        loggerPtr(LogLevel::Error, "Console", "Macro not defined or unsupported os"); 
+        return; 
+    #endif
+
+    std::system(folderPath.c_str()); 
 }

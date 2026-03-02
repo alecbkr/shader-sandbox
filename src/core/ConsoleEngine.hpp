@@ -1,4 +1,4 @@
-#pragma once
+    #pragma once
 #include <string_view>
 #include <unordered_map>
 #include <memory>
@@ -13,6 +13,7 @@ namespace ConsoleActions {
     inline constexpr std::string_view CLEAR = "clear";
     inline constexpr std::string_view AUTO_SCROLL = "autoscroll";
     inline constexpr std::string_view COLLAPSE_LOGS = "collapse_logs";
+    inline constexpr std::string_view OPEN_LOG_HISTORY = "open_log_history"; 
     inline constexpr std::string_view SHOW_ERRORS = "show_errors";
     inline constexpr std::string_view SHOW_WARNINGS = "show_warnings";
     inline constexpr std::string_view SHOW_INFO = "show_info";
@@ -58,6 +59,8 @@ private:
     std::deque<LogEntry> logs;
     ConsoleToggles toggles;
     std::shared_ptr<ConsoleSink> logSrc = nullptr;
+    Logger* loggerPtr; 
     std::unordered_map<std::string_view, std::function<void()>> btnRegistry;
     std::unordered_map<std::string_view, std::function<void(bool)>> toggleRegistry;
+    void openLogFile(const std::string logPath); 
 };

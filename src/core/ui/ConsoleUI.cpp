@@ -46,6 +46,9 @@ bool ConsoleUI::initialize(Logger* _loggerPtr) {
         return false;
     }
     engine = std::make_shared<ConsoleEngine>();
+
+    if (!engine->initialize(_loggerPtr)) return false; 
+
     logSrc = _loggerPtr->getConsoleSinkPtr();
     loggerPtr = _loggerPtr;
 
@@ -167,8 +170,9 @@ void ConsoleUI::drawLogs() {
 
             }
             if (ImGui::MenuItem("Open Log History")) {
-                std::string p = loggerPtr->getLogPath().string();                
-                openLogFile(p);
+                // std::string p = loggerPtr->getLogPath().string();      
+                engine->executeBtnAction(ConsoleActions::OPEN_LOG_HISTORY);           
+                // openLogFile(p);
             } 
             ImGui::PopItemFlag();
             ImGui::EndMenu(); 
@@ -196,28 +200,28 @@ void ConsoleUI::drawLogs() {
             ImGui::EndMenu(); 
         }
 
-        // if (ImGui::BeginMenu("Spawn New Log")) {
-        //     ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
-        //     if (ImGui::MenuItem("Spawn 1 Error Log")) {
-        //         loggerPtr->addLog(LogLevel::LOG_ERROR, "Console Menu", "This is an error test", "Additional"); 
-        //     }
-        //     if (ImGui::MenuItem("Spawn 1 Warning Log")) {
-        //         loggerPtr->addLog(LogLevel::WARNING, "Console Menu", "This is a test warning", "Additional"); 
-        //     }
-        //     if (ImGui::MenuItem("Spawn 1 Info Log")) {
-        //         loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
-        //     }
-        //     if (ImGui::MenuItem("Spawn 1 Overflow Log Test")) {
-        //         loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console", "Additional"); 
-        //     }
-        //     if (ImGui::MenuItem("Spawn 10 Info Logs")) {
-        //         for (int i = 0; i < 10; i++)
-        //             loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
-        //     }
+        if (ImGui::BeginMenu("Spawn New Log")) {
+            ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
+            if (ImGui::MenuItem("Spawn 1 Error Log")) {
+                loggerPtr->addLog(LogLevel::LOG_ERROR, "Console Menu", "This is an error test", "Additional"); 
+            }
+            if (ImGui::MenuItem("Spawn 1 Warning Log")) {
+                loggerPtr->addLog(LogLevel::WARNING, "Console Menu", "This is a test warning", "Additional"); 
+            }
+            if (ImGui::MenuItem("Spawn 1 Info Log")) {
+                loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
+            }
+            if (ImGui::MenuItem("Spawn 1 Overflow Log Test")) {
+                loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console", "Additional"); 
+            }
+            if (ImGui::MenuItem("Spawn 10 Info Logs")) {
+                for (int i = 0; i < 10; i++)
+                    loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
+            }
 
-        //     ImGui::PopItemFlag(); 
-        //     ImGui::EndMenu(); 
-        // }
+            ImGui::PopItemFlag(); 
+            ImGui::EndMenu(); 
+        }
 
         if (ImGui::BeginMenu("Find")) {
             searcher.drawSearchUI();
@@ -456,43 +460,44 @@ std::vector<ConsoleUI::DisplayLine> ConsoleUI::wrapLogText(const std::string& fu
     return result;
 }
 
-void ConsoleUI::openLogFile(const std::string logPath) {
-    if(logPath.empty()) {
-        loggerPtr->addLog(LogLevel::WARNING, "ConsoleUI", "Cannot open empty log path."); 
-        return; 
-    }
 
-    std::filesystem::path p(logPath); 
-    std::error_code ec; 
+// void ConsoleUI::openLogFile(const std::string logPath) {
+//     if(logPath.empty()) {
+//         loggerPtr->addLog(LogLevel::WARNING, "ConsoleUI", "Cannot open empty log path."); 
+//         return; 
+//     }
 
-    if (!std::filesystem::exists(p, ec)) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "ConsoleUI", "Log directory not found at: " + logPath);
-        return; 
-    }
+//     std::filesystem::path p(logPath); 
+//     std::error_code ec; 
 
-    std::filesystem::path absPath = std::filesystem::absolute(p, ec); 
-    if (ec) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "ConsoleUI", "Failed to obtain absolute path.");
-        return;  
-    }
+//     if (!std::filesystem::exists(p, ec)) {
+//         loggerPtr->addLog(LogLevel::LOG_ERROR, "ConsoleUI", "Log directory not found at: " + logPath);
+//         return; 
+//     }
 
-    absPath.make_preferred(); 
-    std::string finalPath = absPath.string(); 
-    std::string folderPath; 
+//     std::filesystem::path absPath = std::filesystem::absolute(p, ec); 
+//     if (ec) {
+//         loggerPtr->addLog(LogLevel::LOG_ERROR, "ConsoleUI", "Failed to obtain absolute path.");
+//         return;  
+//     }
 
-    #if defined(_WIN32) || defined(__CYGWIN__) 
-        folderPath = "explorer.exe /e, \"" + finalPath +"\"";
+//     absPath.make_preferred(); 
+//     std::string finalPath = absPath.string(); 
+//     std::string folderPath; 
 
-    // TODO: Test these the unix os's to see if they work 
-    #elif defined(__APPLE__)
-        folderPath = "open \"" + finalPath + "\""; 
+//     #if defined(_WIN32) || defined(__CYGWIN__) 
+//         folderPath = "explorer.exe /e, \"" + finalPath +"\"";
 
-    #elif defined(__linux__)
-        fodlerPath = "xdg-open \"" + finalPath + "\""; 
-    #else 
-        loggerPtr(LogLevel::Error, "Console", "Macro not defined or unsupported os"); 
-        return; 
-    #endif
+//     // TODO: Test these the unix os's to see if they work 
+//     #elif defined(__APPLE__)
+//         folderPath = "open \"" + finalPath + "\""; 
 
-    std::system(folderPath.c_str()); 
-}
+//     #elif defined(__linux__)
+//         fodlerPath = "xdg-open \"" + finalPath + "\""; 
+//     #else 
+//         loggerPtr(LogLevel::Error, "Console", "Macro not defined or unsupported os"); 
+//         return; 
+//     #endif
+
+//     std::system(folderPath.c_str()); 
+// }
