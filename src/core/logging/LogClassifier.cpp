@@ -16,9 +16,9 @@ namespace {
         CategoryRule{ "Render", LogCategory::SHADER}, 
         CategoryRule { "Uniform", LogCategory::SHADER},
 
-        CategoryRule{ "application/", LogCategory::SYSTEM},
-        CategoryRule{ "input/", LogCategory::SYSTEM},
-        CategoryRule{ "logging/", LogCategory::SYSTEM},
+        CategoryRule{ "application", LogCategory::SYSTEM},
+        CategoryRule{ "input", LogCategory::SYSTEM},
+        CategoryRule{ "logging", LogCategory::SYSTEM},
         CategoryRule{ "Engine", LogCategory::SYSTEM}, 
         CategoryRule { "Event", LogCategory::SYSTEM}, 
         CategoryRule { "File", LogCategory::SYSTEM},
@@ -26,11 +26,11 @@ namespace {
         CategoryRule{ "Event", LogCategory::SYSTEM},
         CategoryRule{ "Camera", LogCategory::SYSTEM},
         CategoryRule{ "HotReloader", LogCategory::SYSTEM},
-        CategoryRule { "engine/", LogCategory::SYSTEM},
+        CategoryRule { "engine", LogCategory::SYSTEM},
 
-        CategoryRule{"ui/", LogCategory::UI},
+        CategoryRule{"ui", LogCategory::UI},
 
-        CategoryRule{"object/", LogCategory::ASSETS},
+        CategoryRule{"object", LogCategory::ASSETS},
     }; 
 }
 
