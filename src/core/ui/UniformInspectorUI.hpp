@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/UniformTypes.hpp"
+#include "object/MaterialCache.hpp"
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
@@ -16,12 +17,13 @@ class ShaderProgram;
 
 class UniformInspectorUI {
 public:
-    void draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr);
+    void draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr);
 
 private:
     Logger* loggerPtr_ = nullptr;
     UniformRegistry* uniformRegPtr_ = nullptr;
     ModelCache* modelCachePtr_ = nullptr;
+    MaterialCache* materialCachePtr_ = nullptr;
 
     bool drawTextInput(std::string* value, const char* label);
     bool drawUniformInputValue(int* value, Uniform* uniform = nullptr);

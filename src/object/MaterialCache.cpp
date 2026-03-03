@@ -40,6 +40,20 @@ bool MaterialCache::contains(unsigned int materialID) {
     return materials.contains(materialID);
 };
 
+std::vector<unsigned int> MaterialCache::getAllMaterialIDs() {
+    std::vector<unsigned int> matIds;
+    matIds.reserve(getSize());
+    for (auto& [id, mat] : materials) {
+        matIds.push_back(id);
+    }
+
+    return matIds;
+}
+
+int MaterialCache::getSize() {
+    return materials.size();
+}
+
 unsigned int MaterialCache::getNextMaterialID() {
     unsigned int retVal = nextMaterialID;
     nextMaterialID++;

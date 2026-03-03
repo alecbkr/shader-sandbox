@@ -24,7 +24,7 @@ void ImportedModel::addMesh(std::vector<Vertex> vertices, std::vector<unsigned i
 
 void ImportedModel::addMaterial(MaterialProperties properties, std::vector<unsigned int> textureIDs, MaterialType type) {
 
-    auto mat = std::make_unique<Material>(properties, textureIDs, type, materialCachePtr);
+    auto mat = std::make_unique<Material>(properties, textureIDs, type, materialCachePtr, ID);
     all_material_ids.emplace_back(mat->ID);
     materialCachePtr->createMaterial(std::move(mat));
 }

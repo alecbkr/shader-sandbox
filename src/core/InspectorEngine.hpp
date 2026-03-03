@@ -2,21 +2,22 @@
 
 #include <string>
 #include <glm/glm.hpp>
-#include "core/ui/InspectorUI.hpp"
+#include "UniformTypes.hpp"
 #include "core/ui/ViewportUI.hpp"
-#include "engine/ShaderProgram.hpp"
-#include "core/UniformTypes.hpp"
-#include "../object/ModelPrimitive.hpp"
 
 class Logger;
 class ShaderRegistry;
+class ShaderProgram;
 class UniformRegistry;
 class ModelCache;
+class MaterialCache;
+class ViewportUI;
+struct ModelPrimitive;
 
 class InspectorEngine {
 public:
     InspectorEngine();
-    bool initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, ModelCache* _modelCachePtr, ViewportUI* _viewportUIPtr);
+    bool initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, ModelCache* _modelCachePtr, ViewportUI* _viewportUIPtr, MaterialCache* _materialCachePtr);
     void shutdown();
     void refreshUniforms();
     void applyAllUniformsForObject(unsigned int modelID);
@@ -41,6 +42,7 @@ private:
     UniformRegistry* uniformRegPtr = nullptr;
     ModelCache* modelCachePtr = nullptr;
     ViewportUI* viewportUIPtr = nullptr;
+    MaterialCache* materialCachePtr = nullptr;
     void applyUniform(unsigned int modelID, const Uniform& uniform);
     void applyUniform(ShaderProgram& program, const Uniform& uniform);
 };

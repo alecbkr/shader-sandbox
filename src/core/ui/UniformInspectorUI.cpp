@@ -6,6 +6,7 @@
 #include "core/UniformTypes.hpp"
 #include "core/ShaderRegistry.hpp"
 #include "engine/ShaderProgram.hpp"
+#include "object/MaterialCache.hpp"
 #include "object/ModelCache.hpp"
 #include <string>
 #include <unordered_map>
@@ -17,10 +18,11 @@ const float kInputWidth = 72.0f;
 const float kColorPickerSize = 100.0f;
 }
 
-void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr) {
+void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr) {
     loggerPtr_ = loggerPtr;
     uniformRegPtr_ = uniformRegPtr;
     modelCachePtr_ = modelCachePtr;
+    materialCachePtr_ = materialCachePtr;
 
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 6.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
@@ -33,24 +35,26 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
         }
         std::string label = "Model " + std::to_string(modelID) + "##uniform_model_" + std::to_string(modelID);
         if (ImGui::TreeNodeEx(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed)) {
-            const std::unordered_map<std::string, Uniform>* uniformMap = uniformRegPtr->tryReadUniforms(modelID);
+            for (unsigned int matID : model->getAllMaterialIDs()) {
+                const std::unordered_map<std::string, Uniform>* uniformMap = uniformRegPtr->tryReadUniforms(matID);
 
-            if (uniformMap == nullptr) {
-                loggerPtr_->addLog(LogLevel::WARNING, "drawUniformInspector", "Model not found in registry: ", std::to_string(modelID));
+                if (uniformMap == nullptr) {
+                    loggerPtr_->addLog(LogLevel::WARNING, "drawUniformInspector", "Model not found in registry: ", std::to_string(modelID));
+                    ImGui::TreePop();
+                    continue;
+                }
+
+                ImGui::Indent(6.0f);
+                for (auto& [uniformName, uniformRef] : *uniformMap) {
+                    ImGui::PushID(imGuiID);
+                    Uniform uniformCopy = uniformRef;
+                    drawUniformInput(uniformCopy, modelID, inspectorEngPtr);
+                    ImGui::PopID();
+                    imGuiID++;
+                }
+                ImGui::Unindent(6.0f);
                 ImGui::TreePop();
-                continue;
             }
-
-            ImGui::Indent(6.0f);
-            for (auto& [uniformName, uniformRef] : *uniformMap) {
-                ImGui::PushID(imGuiID);
-                Uniform uniformCopy = uniformRef;
-                drawUniformInput(uniformCopy, modelID, inspectorEngPtr);
-                ImGui::PopID();
-                imGuiID++;
-            }
-            ImGui::Unindent(6.0f);
-            ImGui::TreePop();
         }
     }
 
@@ -213,13 +217,13 @@ bool UniformInspectorUI::drawUniformInputValue(InspectorReference* value, Unifor
     }
 
     int i = 0;
-    for (auto& [modelID, model] : modelCachePtr_->modelIDMap) {
-        if (modelID == uniform->modelID) {
+    for (unsigned int matID : materialCachePtr_->getAllMaterialIDs()) {
+        if (matID == uniform->materialID) {
             continue;
         }
-        modelNames.push_back("Model " + std::to_string(modelID));
+        modelNames.push_back("Model " + std::to_string(matID));
         modelChoices.push_back(modelNames[i].c_str());
-        modelIDs.push_back(modelID);
+        modelIDs.push_back(matID);
         i++;
     }
 
@@ -240,15 +244,15 @@ bool UniformInspectorUI::drawUniformInputValue(InspectorReference* value, Unifor
     if (std::string(modelChoices[value->modelSelection]) == "Camera") {
         value->useCamaraData = true;
     } else {
-        value->referencedModelID = modelIDs[value->modelSelection];
+        value->referencedMaterialID = modelIDs[value->modelSelection];
     }
 
     std::vector<const char*> uniformChoices{""};
 
     if (!value->useWorldData) {
-        const auto modelUniforms = uniformRegPtr_->tryReadUniforms(value->referencedModelID);
+        const auto modelUniforms = uniformRegPtr_->tryReadUniforms(value->referencedMaterialID);
         if (modelUniforms == nullptr) {
-            loggerPtr_->addLog(LogLevel::LOG_ERROR, "drawUniformInputValue", "modelID " + std::to_string(value->referencedModelID) + " not found in Uniform Registry!");
+            loggerPtr_->addLog(LogLevel::LOG_ERROR, "drawUniformInputValue", "modelID " + std::to_string(value->referencedMaterialID) + " not found in Uniform Registry!");
             return false;
         }
 

@@ -9,7 +9,7 @@
 CustomModel::CustomModel(const unsigned int modelID, TextureCache* _textureCachePtr, Logger* _loggerPtr, MaterialCache* _materialCachePtr) 
     : Model(modelID, _textureCachePtr, _loggerPtr, _materialCachePtr) {
     
-    auto mat = std::make_unique<Material>(MaterialType::Opaque, _materialCachePtr);
+    auto mat = std::make_unique<Material>(MaterialType::Opaque, _materialCachePtr, ID);
     all_material_ids.push_back(mat->ID);
     primitives.emplace_back(modelID, 0, mat->ID);
     materialCachePtr->createMaterial(std::move(mat));

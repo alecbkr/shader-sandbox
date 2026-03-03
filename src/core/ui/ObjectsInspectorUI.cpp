@@ -5,6 +5,7 @@
 #include "core/TextureRegistry.hpp"
 #include "core/logging/Logger.hpp"
 #include "engine/ShaderProgram.hpp"
+#include "imgui.h"
 #include "object/Model.hpp"
 #include "object/ModelCache.hpp"
 #include "presets/PresetAssets.hpp"
@@ -15,6 +16,7 @@
 
 void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, TextureRegistry* textureRegPtr, ModelCache* modelCachePtr) {
     drawAddObjectMenu(loggerPtr, inspectorEngPtr, shaderRegPtr, modelCachePtr);
+    int i = 0;
     for (auto& [modelID, model] : modelCachePtr->modelIDMap) {
         if (!modelShaderMenus.contains(modelID)) {
             modelShaderMenus[modelID] = ModelShaderMenu{
@@ -36,27 +38,40 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
         ModelTextureMenu& textureMenu = modelTextureMenus[modelID];
 
         std::string label = "model " + std::to_string(modelID);
-        if (ImGui::TreeNode(label.c_str())) {
-            if (ImGui::TreeNode("position")) {
+        ImGui::PushID(label.c_str());
+        auto bgColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
+        auto bgColorHovered = ImVec4(bgColor.x * 1.5, bgColor.y * 1.5, bgColor.z * 1.5, 1.0f);
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, bgColor); // Blue-ish background
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);   // <-- rounding radius
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f); // optional
+        ImGui::PushStyleColor(ImGuiCol_Header,        bgColor);
+        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, bgColorHovered);
+        ImGui::PushStyleColor(ImGuiCol_HeaderActive,  bgColor);
+        ImGui::BeginChild("Container##", ImVec2(0, 0),  ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders);
+
+        float indentSize = 10;
+
+        if (ImGui::CollapsingHeader(label.c_str())) {
+            ImGui::Separator();
+            ImGui::Indent(indentSize);
+
+            if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth)) {
+                ImGui::Indent(indentSize);
                 drawModelPositionInput(model.get());
-                ImGui::TreePop();
-            }
-            if (ImGui::TreeNode("scale")) {
+                ImGui::Separator();
                 drawModelScaleInput(model.get());
-                ImGui::TreePop();
-            }
-            if (ImGui::TreeNode("orientation")) {
+                ImGui::Separator();
                 drawModelOrientationInput(model.get());
-                ImGui::TreePop();
+                ImGui::Unindent(indentSize);
             }
-            if (ImGui::TreeNode("textures")) {
+            if (ImGui::CollapsingHeader("Material")) {
                 if (!textureMenu.initialized) {
                     // initializeMenu(textureMenu);
                 }
                 // drawTextureMenu(textureMenu);
-                ImGui::TreePop();
             }
-            if (ImGui::TreeNode("shader program")) {
+            if (ImGui::CollapsingHeader("Shader Program")) {
+                ImGui::Indent(indentSize);
                 std::vector<const char*> shaderChoices;
                 shaderChoices.reserve(shaderRegPtr->getNumberOfPrograms());
                 const auto& shaders = shaderRegPtr->getPrograms();
@@ -67,9 +82,21 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                     initializeMenu(shaderMenu, shaderChoices, loggerPtr, shaderRegPtr, modelCachePtr);
                 }
                 drawShaderProgramMenu(shaderMenu, shaderChoices, shaderRegPtr, modelCachePtr, inspectorEngPtr);
-                ImGui::TreePop();
+                ImGui::Unindent(indentSize);
             }
-            ImGui::TreePop();
+
+            ImGui::Unindent(indentSize);
+        }
+        ImGui::EndChild();
+        ImGui::PopStyleColor(3);
+        ImGui::PopStyleColor();
+        ImGui::PopStyleVar(2);
+        ImGui::PopID();
+        i++;
+        if (i < modelCachePtr->getNumberOfModels()) {
+            ImGui::Dummy(ImVec2(0, 2));
+            ImGui::Separator();
+            ImGui::Dummy(ImVec2(0, 2));
         }
     }
 }
@@ -230,9 +257,9 @@ bool ObjectsInspectorUI::drawModelPositionInput(Model* model) {
     ImGui::PushID(model);
 
     glm::vec3 position = model->getPosition();
-    changed |= ImGui::InputFloat("x", &position.x);
-    changed |= ImGui::InputFloat("y", &position.y);
-    changed |= ImGui::InputFloat("z", &position.z);
+    ImGui::Text("Position");
+    ImGui::SameLine();
+    changed |= ImGui::DragFloat3("##Position##xx", &position.x, .05f);
 
     ImGui::PopID();
     if (changed) model->setPosition(position);
@@ -244,9 +271,9 @@ bool ObjectsInspectorUI::drawModelScaleInput(Model* model) {
     ImGui::PushID(model);
 
     glm::vec3 scale = model->getScale();
-    changed |= ImGui::InputFloat("x", &scale.x);
-    changed |= ImGui::InputFloat("y", &scale.y);
-    changed |= ImGui::InputFloat("z", &scale.z);
+    ImGui::Text("Scale");
+    ImGui::SameLine();
+    changed |= ImGui::DragFloat3("##Scale##xx", &scale.x,  .05f);
 
     ImGui::PopID();
     if (changed) model->setScale(scale);
@@ -258,10 +285,9 @@ bool ObjectsInspectorUI::drawModelOrientationInput(Model* model) {
     ImGui::PushID(model);
 
     glm::vec4 rotation = model->getRotation();
-    changed |= ImGui::InputFloat("angle", &rotation.x);
-    changed |= ImGui::InputFloat("x-axis", &rotation.y);
-    changed |= ImGui::InputFloat("y-axis", &rotation.z);
-    changed |= ImGui::InputFloat("z-axis", &rotation.w);
+    ImGui::Text("Orientation");
+    ImGui::SameLine();
+    changed |= ImGui::DragFloat4("##Orientation##xx", &rotation.x,  .05f);
 
     ImGui::PopID();
     if (changed) model->setRotation(rotation.x, glm::vec3(rotation.y, rotation.z, rotation.w));
