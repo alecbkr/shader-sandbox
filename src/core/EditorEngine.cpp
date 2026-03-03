@@ -93,6 +93,7 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
     modelCachePtr = _modelCachePtr;
     shaderRegPtr = _shaderRegPtr;
     stylesPtr = styles;
+    projectPtr = project;
     editors.clear();
     activeEditor = 0;
 
@@ -167,7 +168,7 @@ bool EditorEngine::spawnEditor(const EventPayload& payload) {
     } else if (std::get_if<std::monostate>(&payload)) {
         try {
             const std::string fileName = "Untitled " + findNextUntitledNumber();
-            const std::string filePath = "../shaders/" + fileName;
+            const std::string filePath = (projectPtr->projectShadersDir /  fileName).string();
             createFile(filePath);
             editors.push_back(new Editor(filePath, fileName, 0, stylesPtr));
             return true;
@@ -224,6 +225,6 @@ void EditorEngine::createFile(const std::string& filePath) {
 
 std::string EditorEngine::findNextUntitledNumber() {
     int i = 0;
-    while (std::filesystem::exists("../shaders/Untitled " + std::to_string(i))) i++;
+    while (std::filesystem::exists(projectPtr->projectShadersDir / ("Untitled " + std::to_string(i)))) i++;
     return std::to_string(i);
 }

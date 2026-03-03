@@ -2,6 +2,7 @@
 
 #include <string>
 #include <filesystem>
+#include <vector>
 
 struct Project {
     std::string projectTitle;
