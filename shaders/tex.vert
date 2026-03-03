@@ -18,3 +18,4 @@ void main() {
     fragColor = aColor;
 
 }
+

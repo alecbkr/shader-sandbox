@@ -31,6 +31,41 @@ set(ASSIMP_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(lib/assimp)
 
 # ---------------------------------------------------------
+# NFD (Native File Dialog Extended)
+# ---------------------------------------------------------
+set(NFD_SRC)
+
+if (WIN32)
+    list(APPEND NFD_SRC ${CMAKE_SOURCE_DIR}/lib/nfd/nfd_win.cpp)
+elseif (APPLE)
+    list(APPEND NFD_SRC ${CMAKE_SOURCE_DIR}/lib/nfd/nfd_cocoa.m)
+else()
+    # Linux: GTK backend
+    list(APPEND NFD_SRC ${CMAKE_SOURCE_DIR}/lib/nfd/nfd_gtk.cpp)
+endif()
+
+add_library(nfd STATIC ${NFD_SRC})
+
+target_include_directories(nfd PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/lib/nfd
+)
+
+if (WIN32)
+    target_link_libraries(nfd PUBLIC ole32 uuid comdlg32)
+elseif (APPLE)
+    target_link_libraries(nfd PUBLIC
+        "-framework AppKit"
+        "-framework Foundation"
+    )
+else()
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+    target_include_directories(nfd PUBLIC ${GTK3_INCLUDE_DIRS})
+    target_link_libraries(nfd PUBLIC ${GTK3_LIBRARIES})
+endif()
+
+# ---------------------------------------------------------
 # RECURSIVE SOURCE COLLECTION
 # ---------------------------------------------------------
 file(GLOB_RECURSE ENGINE_CPP "${CMAKE_SOURCE_DIR}/src/*.cpp")
@@ -68,7 +103,7 @@ target_include_directories(sandbox_engine PUBLIC
     ${CMAKE_SOURCE_DIR}/lib/glfw/include
 )
 
-target_link_libraries(sandbox_engine PUBLIC glfw assimp)
+target_link_libraries(sandbox_engine PUBLIC glfw assimp nfd)
 
 if (WIN32)
     target_link_libraries(sandbox_engine PUBLIC
