@@ -209,7 +209,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "File Registry was not initialized successfully.");
         return false;
     }
-    if (!ctx.editor_engine.initialize(&ctx.logger, &ctx.events, &ctx.model_cache, &ctx.shader_registry, &ctx.settings.styles)) {
+    if (!ctx.editor_engine.initialize(&ctx.logger, &ctx.events, &ctx.model_cache, &ctx.shader_registry, &ctx.settings.styles, &ctx.project)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Editor Engine was not initialized successfully.");
         return false;
     }
@@ -301,6 +301,8 @@ void Application::renderUI(AppContext& ctx) {
 }
 
 void Application::shutdown(AppContext& ctx) {
+    ctx.editor_engine.shutdown(&ctx.project);
+
     ctx.settings.styles.captureFromImGui(ImGui::GetStyle());
     ctx.settings.fontIdx = ctx.fonts.getFontIndex();
     ctx.platform.terminate();

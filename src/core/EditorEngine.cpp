@@ -2,6 +2,8 @@
 #include <fstream>
 #include <filesystem>
 #include <limits>
+
+#include "application/Project.hpp"
 #include "core/logging/Logger.hpp"
 #include "core/EventDispatcher.hpp"
 #include "object/ModelCache.hpp"
@@ -80,7 +82,7 @@ EditorEngine::EditorEngine() {
     activeEditor = 0;
 }
 
-bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, ShaderRegistry* _shaderRegPtr, SettingsStyles* styles) {
+bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, ShaderRegistry* _shaderRegPtr, SettingsStyles* styles, Project* project) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Editor Engine Initialization", "Editor Engine was already initialized.");
         return false;
@@ -99,6 +101,17 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
     eventsPtr->Subscribe(EventType::RenameFile, std::bind(&EditorEngine::renameEditor, this, std::placeholders::_1));
     eventsPtr->Subscribe(EventType::ET_DeleteFile, std::bind(&EditorEngine::deleteEditor, this, std::placeholders::_1));
 
+    for (const auto& filePath : project->openShaderFiles) {
+        eventsPtr->TriggerEvent(
+            Event{
+                EventType::OpenFile,
+                false,
+                OpenFilePayload{ filePath.string(), filePath.filename().string(), 0 }
+            }
+        );
+    }
+    project->openShaderFiles.clear();
+
     // syncing styles with settings if no loaded settings
     if (!stylesPtr->hasLoadedPalette) {
         const auto& dark = TextEditor::GetDarkPalette();
@@ -114,8 +127,14 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
     return true;
 }
 
-void EditorEngine::shutdown() {
+void EditorEngine::shutdown(Project* project) {
     if (!initialized) return;
+
+    project->openShaderFiles.clear();
+    for (const auto& editor : editors) {
+        project->openShaderFiles.push_back(editor->fileName);
+    }
+
     loggerPtr = nullptr;
     eventsPtr = nullptr;
     modelCachePtr = nullptr;
@@ -141,10 +160,8 @@ bool EditorEngine::spawnEditor(const EventPayload& payload) {
                 }
             }
         }
-        if (!data->filePath.empty()) {
+        if (!data->filePath.empty() && std::filesystem::exists(data->filePath)) {
             editors.push_back(new Editor(data->filePath, data->fileName, linkedID, stylesPtr));
-        } else {
-            editors.push_back(new Editor("../shaders/tex.frag", "tex.frag", linkedID, stylesPtr));
         }
         return true;
     } else if (std::get_if<std::monostate>(&payload)) {

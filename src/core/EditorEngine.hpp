@@ -4,8 +4,7 @@
 #include <types.hpp>
 
 #include "EventTypes.hpp"
-#include "imgui.h"
-//#include "ui/EditorUI.hpp"
+#include "application/Project.hpp"
 #include "ui/TextEditor.h"
 
 class Logger;
@@ -34,8 +33,8 @@ public:
     EditorEngine();
     std::vector<Editor*> editors;
     int activeEditor;
-    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, ShaderRegistry* _shaderRegPtr, SettingsStyles* styles);
-    void shutdown();
+    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, ShaderRegistry* _shaderRegPtr, SettingsStyles* styles, Project* project);
+    void shutdown(Project* project);
     void createFile(const std::string& filePath);
     std::string findNextUntitledNumber();
 private:
