@@ -4,15 +4,15 @@
 #include "../core/logging/Logger.hpp"
 
 
-Material::Material(MaterialType type, MaterialCache* materialCachePtr) : ID(materialCachePtr->getNextMaterialID()) {
+Material::Material(MaterialType type, MaterialCache* materialCachePtr, unsigned int _modelID) : ID(materialCachePtr->getNextMaterialID()), modelID(_modelID) {
     this->type = type;
 }
 
 
 Material::Material(MaterialProperties props, 
     std::vector<unsigned int> textureIDs, 
-    MaterialType type, MaterialCache* materialCachePtr
-) : ID(materialCachePtr->getNextMaterialID())
+    MaterialType type, MaterialCache* materialCachePtr, unsigned int _modelID
+) : ID(materialCachePtr->getNextMaterialID()), modelID(_modelID)
 {
     this->properties = props;
     this->textureIDs = textureIDs;

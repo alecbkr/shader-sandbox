@@ -13,6 +13,7 @@
 #include "core/UniformRegistry.hpp"
 #include "core/ShaderRegistry.hpp"
 #include "core/FileRegistry.hpp"
+#include "object/MaterialCache.hpp"
 #include "object/ModelCache.hpp"
 #include "texture/Texture.hpp"
 #include "core/FileRegistry.hpp"
@@ -29,6 +30,7 @@ InspectorUI::InspectorUI() {
     eventsPtr = nullptr;
     modelCachePtr = nullptr;
     fileRegPtr = nullptr;
+    materialCachePtr = nullptr;
     height = 0;
     width = 0;
     uniformInspectorUI = std::make_unique<UniformInspectorUI>();
@@ -37,7 +39,7 @@ InspectorUI::InspectorUI() {
     fileInspectorUI = std::make_unique<FileInspectorUI>();
 }
 
-bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr) {
+bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr) {
     if (intitialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Inspector UI Initialization", "Inspector UI was already initialized.");
         return false;
@@ -50,6 +52,7 @@ bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngP
     eventsPtr = _eventsPtr;
     modelCachePtr = _modelCachePtr;
     fileRegPtr = _fileRegPtr;
+    materialCachePtr = _materialCachePtr;
     intitialized = true;
     return true;
 }
@@ -65,6 +68,7 @@ void InspectorUI::shutdown() {
     uniformRegPtr = nullptr;
     eventsPtr = nullptr;
     modelCachePtr = nullptr;
+    materialCachePtr = nullptr;
     intitialized = false;
 }
 
@@ -87,7 +91,7 @@ void InspectorUI::render() {
         if (ImGui::BeginTabBar("Inspector tabs")) {
             
             if (ImGui::BeginTabItem("Uniforms")) {
-                uniformInspectorUI->draw(loggerPtr, inspectorEngPtr, shaderRegPtr, uniformRegPtr, modelCachePtr);
+                uniformInspectorUI->draw(loggerPtr, inspectorEngPtr, shaderRegPtr, uniformRegPtr, modelCachePtr, materialCachePtr);
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Objects")) {
