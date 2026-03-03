@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 class Material;
 class Logger;
@@ -14,6 +15,7 @@ class MaterialCache {
         void createMaterial(std::unique_ptr<Material>);
         void deleteMaterial(unsigned int materialID);
         Material* getMaterial(unsigned int materialID);
+        std::vector<unsigned int> getAllMaterialIDs();
         bool contains(unsigned int materialID);
         unsigned int getNextMaterialID();
         int getSize();

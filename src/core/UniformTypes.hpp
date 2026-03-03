@@ -37,7 +37,8 @@ const std::unordered_map<std::string, UniformType> glslTypeMap = {
     {"int", UniformType::Int},
     {"float", UniformType::Float},
     {"mat4", UniformType::Mat4},
-    {"sampler2D", UniformType::Sampler2D}
+    {"sampler2D", UniformType::Sampler2D},
+    {"samplerCube", UniformType::SamplerCube}
 };
 
 
@@ -49,7 +50,7 @@ struct InspectorSampler2D {
 struct InspectorReference {
     int modelSelection = 0; 
     int uniformSelection = 0;
-    unsigned int referencedModelID;
+    unsigned int referencedMaterialID;
     std::string referencedUniformName;
     UniformType returnType;
     bool useWorldData = false;
@@ -63,7 +64,7 @@ struct Uniform {
     std::string name;
     UniformType type;
     UniformValue value;
-    unsigned int modelID; // set automatically when you register the uniform
+    unsigned int materialID; // set automatically when you register the uniform
     bool isFunction = false;
     bool isReadOnly = false;
     bool useAlternateEditor = false; // This setting is for the color picker, etc.

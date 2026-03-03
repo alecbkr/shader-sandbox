@@ -25,15 +25,17 @@ struct MaterialProperties {
 class Material {
     public:
         const unsigned int ID;
+        const unsigned int modelID;
         MaterialType type;
         MaterialProperties properties;
 
-        Material(MaterialType type, MaterialCache* materialCachePtr);
+        Material(MaterialType type, MaterialCache* materialCachePtr, unsigned int _modelID);
         Material(
             MaterialProperties props, 
             std::vector<unsigned int> textures, 
             MaterialType type, 
-            MaterialCache* matericalCachePtr
+            MaterialCache* matericalCachePtr,
+            unsigned int _modelID
         );
         std::vector<unsigned int> getMaterialTextureIDs();
         void assignTexture(unsigned int textureID);
