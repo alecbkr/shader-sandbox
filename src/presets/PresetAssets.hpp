@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <vector>
-#include "object/Texture.hpp"
+#include "texture/Texture.hpp"
 
 class Logger;
 class Platform;
@@ -39,8 +39,8 @@ private:
     MeshData pyramidMesh;
     MeshData cubeMesh;
 
-    Texture waterTex = Texture{"", TEX_DIFFUSE, nullptr};
-    Texture faceTex = Texture{"", TEX_DIFFUSE, nullptr};
-    Texture metalTex = Texture{"", TEX_DIFFUSE, nullptr};
-    Texture gridTex = Texture{"", TEX_DIFFUSE, nullptr};
+    // Texture waterTex = Texture{"", TEX_DIFFUSE, nullptr};
+    // Texture faceTex = Texture{"", TEX_DIFFUSE, nullptr};
+    // Texture metalTex = Texture{"", TEX_DIFFUSE, nullptr};
+    // Texture gridTex = Texture{"", TEX_DIFFUSE, nullptr};
 };

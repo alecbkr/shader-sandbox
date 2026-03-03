@@ -3,6 +3,7 @@
 #include <string>
 #include <regex>
 #include <cmath>
+#include <algorithm>
 
 #include "TextEditor.h"
 
@@ -658,6 +659,151 @@ std::string TextEditor::GetWordUnderCursor() const
 	return GetWordAt(c);
 }
 
+static bool IsIdentifierChar(char c)
+{
+	return (c == '_') || std::isalnum((unsigned char)c);
+}
+
+bool TextEditor::GetAutoCompletePrefix(Coordinates& outStart, std::string& outPrefix) {
+	Coordinates cursor = GetActualCursorCoordinates();
+
+	if (cursor.mLine < 0 || cursor.mLine >= (int)mLines.size()) return false;
+
+	auto& line = mLines[cursor.mLine];
+	int index = GetCharacterIndex(cursor);
+
+	if (index <= 0 || line.empty()) return false;
+
+	int startIndex = index;
+
+	while (startIndex > 0)
+	{
+		char c = line[startIndex - 1].mChar;
+		if (!IsIdentifierChar(c)) break;
+		startIndex--;
+	}
+
+	if (startIndex == index) return false;
+
+	outStart = Coordinates(cursor.mLine, GetCharacterColumn(cursor.mLine, startIndex));
+
+	outPrefix.clear();
+	for (int i = startIndex; i < index; ++i) outPrefix.push_back(line[i].mChar);
+
+	return true;
+}
+
+static inline bool StartsWithCaseSensitive(const std::string& s, const std::string& prefix)
+{
+    return s.size() >= prefix.size() && std::equal(prefix.begin(), prefix.end(), s.begin());
+}
+
+std::vector<TextEditor::CompletionItem> TextEditor::BuildAutoCompleteSuggestions(const std::string& prefix) const
+{
+    std::vector<CompletionItem> out;
+
+    // If prefix is empty, you can choose to show nothing for now (keeps it clean).
+    if (prefix.empty())
+        return out;
+
+    // 1) Keywords
+    for (const auto& kw : mLanguageDefinition.mKeywords)
+    {
+		if (kw == prefix) continue;
+        // mKeywords is likely a std::set<std::string>
+        if (StartsWithCaseSensitive(kw, prefix)) {
+			CompletionItem item;
+			item.label = kw;
+			item.insertText = kw;
+			item.detail = "keyword";
+			item.color = PaletteIndex::Keyword;
+			item.priority = 100;
+
+			out.push_back(item);
+		}
+    }
+
+    // 2) Known identifiers (built-in functions/vars you inserted into mIdentifiers)
+    for (const auto& it : mLanguageDefinition.mIdentifiers)
+    {
+        const std::string& name = it.first;
+		if (name == prefix) continue;
+        if (StartsWithCaseSensitive(name, prefix)) {
+			CompletionItem item;
+			item.label = name;
+			item.insertText = name;
+			item.detail = "builtin";
+			item.color = PaletteIndex::KnownIdentifier;
+			item.priority = 90;
+
+			out.push_back(item);
+		}
+    }
+
+    // Optional: limit + sort (small quality-of-life)
+    std::sort(out.begin(), out.end(), [](const CompletionItem& a, const CompletionItem& b) {
+        return a.label < b.label;
+    });
+
+    // Optional cap to avoid huge popups
+    const size_t kMax = 50;
+    if (out.size() > kMax)
+        out.resize(kMax);
+
+    return out;
+}
+
+void TextEditor::UpdateAutoComplete()
+{
+    Coordinates start;
+    std::string prefix;
+
+    // Clear previous suggestions
+    mAutoComplete.items.clear();
+
+    if (!GetAutoCompletePrefix(start, prefix))
+    {
+        mAutoComplete.open = false;
+        return;
+    }
+
+    mAutoComplete.start = start;
+    mAutoComplete.prefix = prefix;
+
+    mAutoComplete.items = BuildAutoCompleteSuggestions(prefix);
+
+	int itemsSize = (int)mAutoComplete.items.size();
+	if (mAutoComplete.selectedIndex >= itemsSize)
+		mAutoComplete.selectedIndex = (itemsSize == 0) ? 0 : itemsSize - 1;
+
+    mAutoComplete.open = !mAutoComplete.items.empty();
+}
+
+void TextEditor::AcceptAutoComplete()
+{
+    if (!mAutoComplete.open) return;
+    if (mAutoComplete.items.empty()) return;
+
+    const int idx = std::clamp(mAutoComplete.selectedIndex, 0, (int)mAutoComplete.items.size() - 1);
+    const CompletionItem& choice = mAutoComplete.items[idx];
+
+    // selection range = [start of prefix .. cursor]
+    Coordinates a = mAutoComplete.start;
+    Coordinates b = mState.mCursorPosition;
+
+    // safety: ensure a <= b
+    if (b < a) std::swap(a, b);
+
+    // Replace prefix with insertText
+    SetSelection(a, b, SelectionMode::Normal);
+    DeleteSelection();
+
+    for (char c : choice.insertText)
+        EnterCharacter((ImWchar)c, false);
+
+    mAutoComplete.open = false;
+}
+
 std::string TextEditor::GetWordAt(const Coordinates & aCoords) const
 {
 	auto start = FindWordStart(aCoords);
@@ -711,16 +857,26 @@ void TextEditor::HandleKeyboardInputs()
 		io.WantCaptureKeyboard = true;
 		io.WantTextInput = true;
 
+		const int count = (int)mAutoComplete.items.size();
+
 		if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Z))
 			Undo();
 		else if (!IsReadOnly() && !ctrl && !shift && alt && ImGui::IsKeyPressed(ImGuiKey_Backspace))
 			Undo();
 		else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Y))
 			Redo();
-		else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGuiKey_UpArrow))
-			MoveUp(1, shift);
-		else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGuiKey_DownArrow))
-			MoveDown(1, shift);
+		else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Space)) {
+			mAutoComplete.open = true;
+			io.InputQueueCharacters.resize(0);
+		}
+		else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGuiKey_UpArrow)) {
+			if (mAutoComplete.open && count > 0) mAutoComplete.selectedIndex = (mAutoComplete.selectedIndex - 1 + count) % count;
+			else MoveUp(1, shift);
+		}
+		else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGuiKey_DownArrow)) {
+			if (mAutoComplete.open && count > 0) mAutoComplete.selectedIndex = (mAutoComplete.selectedIndex + 1) % count;
+			else MoveDown(1, shift);
+		}
 		else if (!alt && ImGui::IsKeyPressed(ImGuiKey_LeftArrow))
 			MoveLeft(1, shift, ctrl);
 		else if (!alt && ImGui::IsKeyPressed(ImGuiKey_RightArrow))
@@ -740,7 +896,10 @@ void TextEditor::HandleKeyboardInputs()
 		else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Delete))
 			Delete();
 		else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Backspace))
+		{
 			Backspace();
+			mAutoComplete.open = false;
+		}
 		else if (!ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Insert))
 			mOverwrite ^= true;
 		else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Insert))
@@ -757,18 +916,35 @@ void TextEditor::HandleKeyboardInputs()
 			Cut();
 		else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_A))
 			SelectAll();
-		else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Enter))
-			EnterCharacter('\n', false);
-		else if (!IsReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed(ImGuiKey_Tab))
-			EnterCharacter('\t', shift);
-
+		else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGuiKey_Enter)) {
+			if (mAutoComplete.open) AcceptAutoComplete();
+			else EnterCharacter('\n', false);
+		}
+		else if (!IsReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed(ImGuiKey_Tab)) {
+			if (mAutoComplete.open) AcceptAutoComplete();
+			else EnterCharacter('\t', shift);
+		}
 		if (!IsReadOnly() && !io.InputQueueCharacters.empty())
 		{
 			for (int i = 0; i < io.InputQueueCharacters.Size; i++)
 			{
-				auto c = io.InputQueueCharacters[i];
+				ImWchar c = io.InputQueueCharacters[i];
 				if (c != 0 && (c == '\n' || c >= 32))
+				{
 					EnterCharacter(c, shift);
+
+					// Open autocomplete on identifier-ish characters
+					if ((c >= 'a' && c <= 'z') ||
+						(c >= 'A' && c <= 'Z') ||
+						(c >= '0' && c <= '9') ||
+						(c == '_'))
+					{
+						mAutoComplete.open = true;
+					}
+					else {
+						mAutoComplete.open = false;
+					}
+				}
 			}
 			io.InputQueueCharacters.resize(0);
 		}
@@ -1137,16 +1313,63 @@ void TextEditor::Render(SearchText* searcher)
 	}
 }
 
+void TextEditor::RenderAutoCompletePopup()
+{
+    if (!mAutoComplete.open) return;
+
+    ImVec2 origin = mEditorScreenOrigin;
+    float scrollY = ImGui::GetScrollY();
+    float scrollX = ImGui::GetScrollX();
+
+    int firstLine = (int)floor(scrollY / mCharAdvance.y);
+
+    float cursorX = mTextStart + TextDistanceToLineStart(mState.mCursorPosition) - scrollX;
+    float cursorY = (mState.mCursorPosition.mLine - firstLine + 1) * mCharAdvance.y; // below current line
+
+    ImGui::SetNextWindowPos(ImVec2(origin.x + cursorX, origin.y + cursorY), ImGuiCond_Always);
+    ImGui::SetNextWindowSizeConstraints(ImVec2(220, 0), ImVec2(420, 260));
+
+    ImGuiWindowFlags wf =
+        ImGuiWindowFlags_NoDecoration |
+        ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_NoFocusOnAppearing |
+        ImGuiWindowFlags_NoNavFocus |
+        ImGuiWindowFlags_AlwaysAutoResize |
+		ImGuiWindowFlags_Tooltip;
+
+    // NOTE: no BeginPopup/OpenPopup at all
+    ImGui::Begin("##AutoComplete", nullptr, wf);
+    for (int i = 0; i < (int)mAutoComplete.items.size(); ++i)
+	{
+		const CompletionItem& item = mAutoComplete.items[i];
+
+		bool selected = (i == mAutoComplete.selectedIndex);
+
+		if (ImGui::Selectable(item.label.c_str(), selected))
+		{
+			mAutoComplete.selectedIndex = i;
+		}
+	}
+    ImGui::End();
+}
+
 void TextEditor::Render(const char* aTitle, SearchText* searcher, const ImVec2& aSize, bool aBorder)
 {
 	mWithinRender = true;
 	mTextChanged = false;
 	mCursorPositionChanged = false;
+	mEditorScreenOrigin = ImGui::GetCursorScreenPos();
 
 	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4(mPalette[(int)PaletteIndex::Background]));
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 	if (!mIgnoreImGuiChild)
 		ImGui::BeginChild(aTitle, aSize, aBorder, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_NoMove);
+
+	const bool editorFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+
+	if (editorFocused) UpdateAutoComplete();
+	else mAutoComplete.open = false;
 
 	if (mHandleKeyboardInputs)
 	{
@@ -1159,6 +1382,7 @@ void TextEditor::Render(const char* aTitle, SearchText* searcher, const ImVec2& 
 
 	ColorizeInternal();
 	Render(searcher);
+	RenderAutoCompletePopup();
 
 	if (mHandleKeyboardInputs)
 		ImGui::PopItemFlag();
@@ -1403,6 +1627,39 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift)
 	EnsureCursorVisible();
 }
 
+std::string TextEditor::GetAutoCompletePrefix() const
+{
+    auto cur = GetActualCursorCoordinates();
+    if (cur.mLine < 0 || cur.mLine >= (int)mLines.size())
+        return {};
+
+    const auto& line = mLines[cur.mLine];
+
+    int cursorIndex = GetCharacterIndex(cur); // index into glyph array (byte-ish, but ok for ASCII identifiers)
+    cursorIndex = std::max(0, std::min(cursorIndex, (int)line.size()));
+
+    // Walk left while we're on identifier chars: [A-Za-z0-9_]
+    int start = cursorIndex;
+    while (start > 0)
+    {
+        unsigned char c = (unsigned char)line[start - 1].mChar;
+        if (!IsIdentifierChar(c))
+            break;
+        start--;
+    }
+
+    // If there's no identifier fragment, return empty.
+    if (start == cursorIndex)
+        return {};
+
+    std::string out;
+    out.reserve((size_t)(cursorIndex - start));
+    for (int i = start; i < cursorIndex; ++i)
+        out.push_back(line[i].mChar);
+
+    return out;
+}
+
 void TextEditor::SetReadOnly(bool aValue)
 {
 	mReadOnly = aValue;
@@ -1502,21 +1759,31 @@ void TextEditor::InsertText(const char * aValue)
 }
 
 void TextEditor::ReplaceMatch(const SearchText::Match& match, const char* replace) {
+	if (IsReadOnly())
+		return;
+
 	int startColumn = GetCharacterColumn(match.itemIdx, match.charIdx);
 	Coordinates startCoord(match.itemIdx, startColumn);
 
 	int endColumn = GetCharacterColumn(match.itemIdx, match.charIdx + match.length);
 	Coordinates endCoord(match.itemIdx, endColumn);
 
-	DeleteRange(startCoord, endCoord);
-	InsertTextAt(startCoord, replace);
+	UndoRecord u;
+	u.mBefore = mState;
 
-	mState.mCursorPosition = startCoord;
-	mState.mSelectionStart = startCoord;
-	mState.mSelectionEnd = startCoord;
-	mScrollToCursor = true;
-	Colorize();
-	mTextChanged = true;
+	SetSelection(startCoord, endCoord);
+	u.mRemoved = GetSelectedText();
+	u.mRemovedStart = mState.mSelectionStart;
+	u.mRemovedEnd = mState.mSelectionEnd;
+	DeleteSelection();
+
+	u.mAdded = replace;
+	u.mAddedStart = GetActualCursorCoordinates();
+	InsertText(replace);
+
+	u.mAddedEnd = GetActualCursorCoordinates();
+	u.mAfter = mState;
+	AddUndo(u);
 }
 
 void TextEditor::DeleteSelection()

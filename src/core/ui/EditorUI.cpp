@@ -15,10 +15,10 @@ void EditorUI::render() {
 
     float menuBarHeight = ImGui::GetFrameHeight();
 
-    int displayWidth = ImGui::GetIO().DisplaySize.x;
-    int displayHeight = ImGui::GetIO().DisplaySize.y - menuBarHeight;
-    float width = (float)displayWidth * targetWidth;
-    float height = (float)displayHeight * targetHeight;
+    float displayWidth = ImGui::GetIO().DisplaySize.x;
+    float displayHeight = ImGui::GetIO().DisplaySize.y - menuBarHeight;
+    float width = displayWidth * targetWidth;
+    float height = displayHeight * targetHeight;
 
     ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_Always);
     ImGui::SetNextWindowPos(ImVec2(windowPos.x, windowPos.y + menuBarHeight), ImGuiCond_Always);
@@ -38,7 +38,7 @@ void EditorUI::render() {
 
         ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyScroll;
         if (ImGui::BeginTabBar("EditorTabs", tabBarFlags)) {
-            for (int i = 0; i < editorEngPtr->editors.size(); i++) {
+            for (int i = 0; i < static_cast<int>(editorEngPtr->editors.size()); i++) {
                 std::string tabTitle = editorEngPtr->editors[i]->fileName + "##" + std::to_string(i + 1);
                 bool openTab = true;
 

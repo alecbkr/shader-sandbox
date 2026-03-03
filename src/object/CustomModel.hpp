@@ -1,15 +1,19 @@
 #pragma once
 #include "Model.hpp"
+#include "object/MaterialCache.hpp"
 
 class ShaderRegistry;
+class TextureCache;
 class Logger;
+class MaterialCache;
 
-class CustomModel : public Model {
+class CustomModel final : public Model {
     public:
-        MeshA* meshptr;
-        Logger* loggerPtr = nullptr;
-        CustomModel(const unsigned int ID, ShaderRegistry* shaderRegPtr, Logger* _loggerPtr);
+        // Logger* loggerPtr = nullptr;
+        // TextureCache* textureCachePtr = nullptr;
+        CustomModel(const unsigned int ID, TextureCache* _textureCachePtr, Logger* _loggerPtr, MaterialCache* _materialCachePtr);
+        ~CustomModel() = default;
         void setMesh(std::vector<float> vertices, std::vector<unsigned int> indices, 
                      bool hasPos, bool hasNorm, bool hasUV) override;
-        void addTexture(std::string filepath) override;
+        void addTexture(std::string texture_path, TextureType type) override;
 };

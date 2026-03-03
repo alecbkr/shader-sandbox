@@ -14,6 +14,7 @@
 #include "core/UniformRegistry.hpp"
 #include "core/EditorEngine.hpp"
 #include "object/ModelCache.hpp"
+#include "texture/TextureCache.hpp"
 #include "core/InspectorEngine.hpp"
 #include "core/HotReloader.hpp"
 #include "core/FileRegistry.hpp"
@@ -25,11 +26,11 @@
 #include "core/ui/MenuUI.hpp"
 #include "core/ui/EditorUI.hpp"
 #include "core/ui/InspectorUI.hpp"
-#include "object/ModelImporter.hpp"
 #include "application/AppSettings.hpp"
 #include "application/Project.hpp"
 #include "core/ui/modals/ModalManager.hpp"
 #include "core/ui/modals/SettingsModal.hpp"
+#include "object/MaterialCache.hpp"
 
 struct AppContext {
     AppContext(const char* _app_title) : app_title(_app_title) {};
@@ -51,6 +52,7 @@ struct AppContext {
     ShaderRegistry shader_registry;
     UniformRegistry uniform_registry;
     ModelCache model_cache;
+    TextureCache texture_cache;
     InspectorEngine inspector_engine;
     HotReloader hot_reloader;
     FileRegistry file_registry;
@@ -58,7 +60,6 @@ struct AppContext {
     EditorEngine editor_engine;
     PresetAssets preset_assets;
     TextureRegistry texture_registry;
-    ModelImporter model_importer;
     ConsoleUI console_ui;
     ViewportUI viewport_ui;
     MenuUI menu_ui;
@@ -66,4 +67,5 @@ struct AppContext {
     InspectorUI inspector_ui;
     ModalManager modals;
     SettingsModal settingsModal;
+    MaterialCache material_cache;
 };
