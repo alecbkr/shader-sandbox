@@ -1,7 +1,5 @@
 #pragma once
 
-#include <filesystem>
-#include <types.hpp>
 #include "core/logging/Logger.hpp"
 #include "core/input/ActionRegistry.hpp"
 #include "core/input/ContextManager.hpp"
@@ -18,7 +16,6 @@
 #include "core/InspectorEngine.hpp"
 #include "core/HotReloader.hpp"
 #include "core/FileRegistry.hpp"
-#include "core/EditorEngine.hpp"
 #include "presets/PresetAssets.hpp"
 #include "core/TextureRegistry.hpp"
 #include "core/ui/ConsoleUI.hpp"

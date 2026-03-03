@@ -28,6 +28,16 @@ bool ProjectLoader::load(Project& project) {
 
         ProjectLoader::version = j.value("version", 1);
         project.projectTitle = j.value("projectTitle", project.projectTitle);
+
+        if (j.contains("openShaderFiles") && j["openShaderFiles"].is_array()) {
+            const auto& saved = j["openShaderFiles"];
+
+            for (auto& fileName : saved) {
+                if (fileName.is_string()) {
+                    project.openShaderFiles.push_back(project.projectShadersDir / fileName);
+                }
+            }
+        }
     } catch (...) {
         std::cerr << "Error while loading projectJSON" << std::endl;
         return false;
@@ -43,6 +53,12 @@ void ProjectLoader::save(const Project& project) {
     json j;
     j["version"] = version;
     j["projectTitle"] = project.projectTitle;
+
+    json openShaderFiles = json::array();
+    for (const auto& filePath : project.openShaderFiles) {
+        openShaderFiles.push_back(filePath);
+    }
+    j["openShaderFiles"] = openShaderFiles;
 
     std::ofstream out(project.projectJSON);
     out << j.dump(4);
