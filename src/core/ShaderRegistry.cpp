@@ -10,20 +10,21 @@ ShaderRegistry::ShaderRegistry() {
     };
 }
 
-bool ShaderRegistry::initialize(Logger* _loggerPtr, bool registerDefaults) {
+bool ShaderRegistry::initialize(Logger* _loggerPtr, Project* _projectPtr, bool registerDefaults) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Shader Registry", "Shader Registry was already initialized.");
         return false;
     }
 
     loggerPtr = _loggerPtr;
+    projectPtr = _projectPtr;
     programs.clear();
 
     if (registerDefaults) {
-        if (!registerProgram("../shaders/tex.vert", "../shaders/tex.frag", "tex")) return false;
-        if (!registerProgram("../shaders/color.vert", "../shaders/color.frag", "color")) return false;
-        if (!registerProgram("../shaders/scene/gridplane.vert", "../shaders/scene/gridplane.frag", "gridplane")) return false;
-        if (!registerProgram("../shaders/scene/skybox.vert", "../shaders/scene/skybox.frag", "skybox")) return false;
+        if (!registerProgram(projectPtr->projectShadersDir / "tex.vert", projectPtr->projectShadersDir / "tex.frag", "tex")) return false;
+        if (!registerProgram(projectPtr->projectShadersDir / "color.vert", projectPtr->projectShadersDir / "color.frag", "color")) return false;
+        if (!registerProgram(projectPtr->projectShadersDir / "gridplane.vert", projectPtr->projectShadersDir / "gridplane.frag", "gridplane")) return false;
+        if (!registerProgram(projectPtr->projectShadersDir / "skybox.vert", projectPtr->projectShadersDir / "skybox.frag", "skybox")) return false;
     }
 
     initialized = true;
@@ -39,7 +40,7 @@ void ShaderRegistry::shutdown() {
 }
 
 
-bool ShaderRegistry::registerProgram(const std::string& vertex_file, const std::string& fragment_file, const std::string& programName) {
+bool ShaderRegistry::registerProgram(const std::filesystem::path& vertex_file, const std::filesystem::path& fragment_file, const std::string& programName) {
     if (programName.empty()) {
         if (loggerPtr) loggerPtr->addLog(LogLevel::WARNING, "registerProgram", "Shader name cannot be empty");
         return false;
@@ -53,7 +54,7 @@ bool ShaderRegistry::registerProgram(const std::string& vertex_file, const std::
     programs.emplace(
         programName,
         std::unique_ptr<ShaderProgram>(
-            factory_(vertex_file.c_str(), fragment_file.c_str(), programName.c_str(), loggerPtr)
+            factory_(vertex_file.string().c_str(), fragment_file.string().c_str(), programName.c_str(), loggerPtr)
         )
     );
 

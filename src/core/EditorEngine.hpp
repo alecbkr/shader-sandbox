@@ -44,6 +44,7 @@ private:
     ModelCache* modelCachePtr = nullptr;
     ShaderRegistry* shaderRegPtr = nullptr;
     SettingsStyles* stylesPtr = nullptr;
+    Project* projectPtr = nullptr;
     bool spawnEditor(const EventPayload& payload);
     bool renameEditor(const EventPayload& payload);
     bool deleteEditor(const EventPayload& payload); 
