@@ -16,12 +16,13 @@ class UniformInspectorUI;
 class ObjectsInspectorUI;
 class AssetsInspectorUI;
 class FileInspectorUI;
+struct Project;
 
 class InspectorUI {
 public:
     InspectorUI();
     ~InspectorUI();
-    bool initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, std::filesystem::path _projectRoot);
+    bool initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, Project* _project);
     void shutdown();
     void render();
   

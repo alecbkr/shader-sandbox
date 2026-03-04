@@ -33,6 +33,8 @@ bool ProjectLoader::load(Project& project) {
         return false;
     }
 
+    project.assetsRoot = project.buildAssetsDirectory();
+
     return true;
 }
 

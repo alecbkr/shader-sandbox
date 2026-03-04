@@ -17,6 +17,7 @@
 #include "texture/Texture.hpp"
 #include "core/FileRegistry.hpp"
 #include "engine/ShaderProgram.hpp"
+#include "application/Project.hpp"
 #include <string>
 
 InspectorUI::InspectorUI() {
@@ -36,7 +37,7 @@ InspectorUI::InspectorUI() {
     fileInspectorUI = std::make_unique<FileInspectorUI>();
 }
 
-bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, std::filesystem::path _projectRoot) {
+bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, Project* _project) {
     if (intitialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Inspector UI Initialization", "Inspector UI was already initialized.");
         return false;
@@ -49,7 +50,7 @@ bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngP
     eventsPtr = _eventsPtr;
     modelCachePtr = _modelCachePtr;
     fileRegPtr = _fileRegPtr;
-    assetsInspectorUI = std::make_unique<AssetsInspectorUI>(_projectRoot);
+    assetsInspectorUI = std::make_unique<AssetsInspectorUI>(_project);
     intitialized = true;
     return true;
 }
@@ -95,7 +96,7 @@ void InspectorUI::render() {
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Assets")) {
-                assetsInspectorUI->draw(textureRegPtr);
+                assetsInspectorUI->draw();
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Shader Files")) {

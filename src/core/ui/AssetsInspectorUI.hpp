@@ -8,41 +8,23 @@
 #include <vector>
 #include <types.hpp>
 
+#include "application/Project.hpp"
+#include "core/ui/AssetsManager.hpp"
+
 class TextureRegistry;
-
-enum AssetType {
-    AT_NOTYPE,
-    AT_MODEL,
-    AT_TEXTURE
-};
-
-struct Asset;
-struct Directory {
-    u32 ID;
-    std::string name;
-    Directory* parent = nullptr;
-    std::filesystem::path path;
-    std::vector<Directory> childrenDirs;
-    std::vector<Asset> childrenAssets;
-};
-
-struct Asset {
-    u32 ID;
-    std::string name;
-    Directory* parent = nullptr;
-    std::filesystem::path path;
-    AssetType type = AssetType::AT_NOTYPE;
-};
 
 class AssetsInspectorUI {
 public:
     AssetsInspectorUI() = delete;
-    AssetsInspectorUI(std::filesystem::path projectRoot);
-    void draw(TextureRegistry* textureRegPtr);
+    AssetsInspectorUI(Project* project);
+    void draw();
 
 private:
+    void BeginRename(u32 id, const std::string& currentName);
+    bool DrawRenameField(u32 id, std::string& name, const std::filesystem::path& oldPath, std::filesystem::path newPath);
     void AssetRow(Asset& asset);
     void DirectoryRow(Directory& dir);
+    void HandlePendingDeletes();
 
     u32 renamingID = 0;
     char renameBuf[256] = {};
@@ -57,10 +39,9 @@ private:
     bool removeAsset(Asset& asset);
     void addDirectory(Directory& parent);
     bool removeDirectory(Directory& dir);
-    Directory root = Directory{0, "assets"};
+    Directory* root = nullptr;
     std::vector<std::string> buildRelativePath(Directory* dir);
-
-    std::filesystem::path projectRoot;
+    Project* project;
 };
 
 std::filesystem::path copyAssetIntoProject(const std::filesystem::path& src, const std::filesystem::path& destDir);
