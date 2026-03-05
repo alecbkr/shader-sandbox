@@ -1,7 +1,6 @@
 #include "core/ui/AssetsInspectorUI.hpp"
 
-#include "core/TextureRegistry.hpp"
-#include "texture/Texture.hpp"
+#include "core/ui/Fonts.hpp"
 
 #include <algorithm>
 #include <string>
@@ -12,7 +11,7 @@
 
 namespace fs = std::filesystem;
 
-AssetsInspectorUI::AssetsInspectorUI(Project* project) : project(project) {}
+AssetsInspectorUI::AssetsInspectorUI(Fonts* fonts, Project* project) : fonts(fonts), project(project) {}
 
 void AssetsInspectorUI::BeginRename(u32 id, const std::string& currentName) {
     renamingID = id;
@@ -151,24 +150,142 @@ void AssetsInspectorUI::HandlePendingDeletes() {
     }
 }
 
+void drawDirectory(std::filesystem::directory_entry entry) {
+    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(180, 185, 175, 255));
+    if (ImGui::TreeNode((entry.path().stem().string() + "##" + entry.path().string()).c_str())) {
+        ImGui::Dummy(ImVec2(0, 12)); // TODO: keep filling out the tree and then finish drawAsset
+        ImGui::TreePop();
+    }
+    ImGui::PopStyleColor();
+}
+
+void drawAsset(std::filesystem::directory_entry entry) {
+
+}
+
 void AssetsInspectorUI::draw() {
-    if (ImGui::BeginChild("AssetsContent", ImVec2(0, 0))) {
-        ImVec2 avail = ImGui::GetContentRegionAvail();
-        ImVec2 contentSize(10, avail.y);
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(255, 105, 180, 255));
-        if (ImGui::BeginChild("Test", ImVec2(0, 0))) {
-            ImGui::Text("This child has a pink background.");
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(26, 27, 33, 255));
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.0f);
+    float window_padding = 12.0f;
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(window_padding, window_padding));
+    if (ImGui::BeginChild("AssetsContent", ImVec2(0, 0), ImGuiChildFlags_AlwaysUseWindowPadding)) {
+        float inner_padding = 1.0f;
+        ImGui::PushFont(fonts->getL4());
+        float directory_height = window_padding * 2 + inner_padding * 2 + ImGui::CalcTextSize("Assets").y;
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(0,0,0,0));
+        if (ImGui::BeginChild("AssetsTitle", ImVec2(0, directory_height), ImGuiChildFlags_AlwaysUseWindowPadding)) {
+            ImVec2 p = ImGui::GetWindowPos();
+            ImVec2 s = ImGui::GetWindowSize();
+
+            ImGui::GetWindowDrawList()->AddRectFilled(
+                p,
+                ImVec2(p.x + s.x, p.y + s.y),
+                IM_COL32(31, 32, 42, 255),
+                6.0f,
+                ImDrawFlags_RoundCornersTop
+            );
+
+            ImGui::GetWindowDrawList()->AddRect(
+                p,
+                ImVec2(p.x + s.x, p.y + s.y),
+                IM_COL32(45, 47, 63, 255),   // border color
+                6.0f,
+                ImDrawFlags_RoundCornersTop,
+                1.0f                          // thickness
+            );
+
+            ImGui::SetCursorPosY(inner_padding + window_padding);
+            ImGui::Dummy(ImVec2(6.0f, 0.0f));
+            ImGui::SameLine();
+            ImGui::TextUnformatted("Assets");
         }
         ImGui::EndChild();
         ImGui::PopStyleColor();
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(100, 240, 180, 255));
-        if (ImGui::BeginChild("Test2", ImVec2(0, 0))) {
-            ImGui::Text("This child has a pink background.");
+        ImGui::PopFont();
+
+        if (ImGui::BeginChild("AssetsTree", ImVec2(0, 0), ImGuiChildFlags_AlwaysUseWindowPadding)) {
+            ImVec2 p = ImGui::GetWindowPos();
+            ImVec2 s = ImGui::GetWindowSize();
+
+            ImGui::GetWindowDrawList()->AddRectFilled(
+                p,
+                ImVec2(p.x + s.x, p.y + s.y),
+                IM_COL32(28, 30, 38, 255),
+                6.0f,
+                ImDrawFlags_RoundCornersBottom
+            );
+
+            ImGui::GetWindowDrawList()->AddRect(
+                p,
+                ImVec2(p.x + s.x, p.y + s.y),
+                IM_COL32(45, 47, 63, 255),   // border color
+                6.0f,
+                ImDrawFlags_RoundCornersBottom,
+                1.0f                          // thickness
+            );
+
+            //drawDirectory(project->projectRoot / "assets");
+            for (auto& entry : std::filesystem::directory_iterator(project->projectRoot / "assets")) {
+                if (entry.is_directory()) drawDirectory(entry);
+                else if (entry.is_regular_file()) drawAsset(entry);
+            }
+
+            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(180, 185, 175, 255));
+
+            if (ImGui::TreeNode("Models")) {
+                ImGui::Dummy(ImVec2(0, 12));
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 8.0f));
+                ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(248, 248, 242, 255));
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(40, 42, 54, 255));
+                if (ImGui::BeginChild("Backpack", ImVec2(0, (window_padding * 2 + ImGui::CalcTextSize("backpack.fbx").y)), ImGuiChildFlags_AlwaysUseWindowPadding)) {
+                    ImVec2 p = ImGui::GetWindowPos();
+                    ImVec2 s = ImGui::GetWindowSize();
+
+                    ImGui::GetWindowDrawList()->AddRect(
+                        p,
+                        ImVec2(p.x + s.x, p.y + s.y),
+                        IM_COL32(45, 47, 63, 255),   // border color
+                        3.0f,
+                        ImDrawFlags_RoundCornersAll,
+                        1.0f                          // thickness
+                    );
+
+                    ImGui::Text("backpack.fbx");
+                }
+                ImGui::EndChild();
+
+                if (ImGui::BeginChild("tree", ImVec2(0, (window_padding * 2 + ImGui::CalcTextSize("tree_model.obj").y)), ImGuiChildFlags_AlwaysUseWindowPadding)) {
+                    ImVec2 p = ImGui::GetWindowPos();
+                    ImVec2 s = ImGui::GetWindowSize();
+
+                    ImGui::GetWindowDrawList()->AddRect(
+                        p,
+                        ImVec2(p.x + s.x, p.y + s.y),
+                        IM_COL32(45, 47, 63, 255),   // border color
+                        3.0f,
+                        ImDrawFlags_RoundCornersAll,
+                        1.0f                          // thickness
+                    );
+
+                    ImGui::Text("tree_model.obj");
+                }
+                ImGui::EndChild();
+                
+                ImGui::PopStyleColor(2);
+                ImGui::PopStyleVar(2);
+                ImGui::TreePop();
+            }
+            ImGui::PopStyleColor();
         }
         ImGui::EndChild();
-        ImGui::PopStyleColor();
+        ImGui::PopStyleVar();
     }
     ImGui::EndChild();
+    ImGui::PopStyleVar();
+    ImGui::PopStyleVar();
+    ImGui::PopStyleColor();
     // const float bottomBarH = 44.0f;
     // const float importBtnW = 120.0f;
     // const float importBtnH = 32.0f;

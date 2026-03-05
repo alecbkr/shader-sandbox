@@ -11,12 +11,12 @@
 #include "application/Project.hpp"
 #include "core/ui/AssetsManager.hpp"
 
-class TextureRegistry;
+class Fonts;
 
 class AssetsInspectorUI {
 public:
     AssetsInspectorUI() = delete;
-    AssetsInspectorUI(Project* project);
+    AssetsInspectorUI(Fonts* fonts, Project* project);
     void draw();
 
 private:
@@ -41,6 +41,7 @@ private:
     bool removeDirectory(Directory& dir);
     Directory* root = nullptr;
     std::vector<std::string> buildRelativePath(Directory* dir);
+    Fonts* fonts;
     Project* project;
 };
 
