@@ -20,27 +20,17 @@ public:
     void draw();
 
 private:
-    void BeginRename(u32 id, const std::string& currentName);
-    bool DrawRenameField(u32 id, std::string& name, const std::filesystem::path& oldPath, std::filesystem::path newPath);
-    void AssetRow(Asset& asset);
-    void DirectoryRow(Directory& dir);
-    void HandlePendingDeletes();
+    void beginRename(const std::string& id, const std::string& currentName);
+    bool drawRenameField(std::string id, std::string& name, const std::filesystem::path& oldPath, std::filesystem::path newPath);
+    void handlePendingDeletes();
 
-    u32 renamingID = 0;
+    std::string renamingID = "";
     char renameBuf[256] = {};
     bool renameJustStarted = false;
-    u32 pendingDeleteDirID = 0;
-    Directory* pendingDeleteDir = nullptr;
-    u32 pendingDeleteAssetID = 0;
-    Asset* pendingDeleteAsset = nullptr;
+    std::string pendingDeleteID = "";
 
-    u32 idCount = 1;
-    void addAsset(Directory& parent);
-    bool removeAsset(Asset& asset);
-    void addDirectory(Directory& parent);
-    bool removeDirectory(Directory& dir);
-    Directory* root = nullptr;
-    std::vector<std::string> buildRelativePath(Directory* dir);
+    void drawDirectory(std::filesystem::directory_entry entry, float padding);
+    void drawAsset(std::filesystem::directory_entry entry, float padding);
     Fonts* fonts;
     Project* project;
 };

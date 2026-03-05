@@ -13,20 +13,20 @@ namespace fs = std::filesystem;
 
 AssetsInspectorUI::AssetsInspectorUI(Fonts* fonts, Project* project) : fonts(fonts), project(project) {}
 
-void AssetsInspectorUI::BeginRename(u32 id, const std::string& currentName) {
+void AssetsInspectorUI::beginRename(const std::string& id, const std::string& currentName) {
     renamingID = id;
     std::snprintf(renameBuf, sizeof(renameBuf), "%s", currentName.c_str());
     renameJustStarted = true;
 }
 
-bool AssetsInspectorUI::DrawRenameField(u32 id, std::string& name, const fs::path& oldPath, fs::path newPath) {
+bool AssetsInspectorUI::drawRenameField(std::string id, std::string& name, const std::filesystem::path& oldPath, std::filesystem::path newPath) {
     if (renameJustStarted) {
         ImGui::SetKeyboardFocusHere();
         renameJustStarted = false;
     }
 
     ImGui::SetNextItemWidth(180.0f);
-    const std::string inputId = "##rename_" + std::to_string(id);
+    const std::string inputId = "##rename_" + id;
 
     const bool enter = ImGui::InputText(
         inputId.c_str(),
@@ -38,7 +38,7 @@ bool AssetsInspectorUI::DrawRenameField(u32 id, std::string& name, const fs::pat
     const bool deactivatedAfterEdit = ImGui::IsItemDeactivatedAfterEdit();
 
     if (ImGui::IsItemActive() && ImGui::IsKeyPressed(ImGuiKey_Escape)) {
-        renamingID = 0;
+        renamingID = "";
         return false;
     }
 
@@ -46,130 +46,68 @@ bool AssetsInspectorUI::DrawRenameField(u32 id, std::string& name, const fs::pat
         if (renameBuf[0] != '\0') name = renameBuf;
 
         fs::rename(oldPath, newPath);
-        renamingID = 0;
+        renamingID = "";
         return true;
     }
 
     return false;
 }
 
-void AssetsInspectorUI::AssetRow(Asset& asset) {
-    ImGui::PushID((int)asset.ID);
-
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 8));
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 8));
-
-    const float rowH = 44.0f;
-    ImGui::BeginChild("##assetnode", ImVec2(0, rowH), true, ImGuiWindowFlags_NoScrollbar);
-
-    // Right-click context (on the row child window)
-    if (ImGui::BeginPopupContextWindow("##asset_ctx", ImGuiPopupFlags_MouseButtonRight)) {
-        if (ImGui::MenuItem("Rename")) BeginRename(asset.ID, asset.name);
-
-        if (ImGui::MenuItem("Delete")) {
-            pendingDeleteAssetID = asset.ID;
-            pendingDeleteAsset   = &asset;
-        }
-
-        ImGui::EndPopup();
-    }
-
-    const bool isRenaming = (renamingID == asset.ID);
-
-    if (!isRenaming) {
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 2);
-        ImGui::TextUnformatted(asset.name.c_str());
-    } else {
-        const fs::path newPath = asset.path.parent_path() / (asset.name + asset.path.extension().string());
-        const bool renamed = DrawRenameField(asset.ID, asset.name, asset.path, newPath);
-        if (renamed) asset.path = newPath;
-    }
-
-    ImGui::EndChild();
-    ImGui::PopStyleVar(2);
-    ImGui::PopID();
-}
-
-void AssetsInspectorUI::DirectoryRow(Directory& dir) {
-    ImGui::PushID((int)dir.ID);
-
-    const ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth;
-    const bool open = ImGui::TreeNodeEx("##node", flags, "%s", "");
-
-    ImGui::SameLine();
-
-    const bool isRenaming = (renamingID == dir.ID);
-
-    if (!isRenaming) {
-        ImGui::TextUnformatted(dir.name.c_str());
-    } else {
-        const fs::path newPath = dir.path.parent_path() / dir.name;
-        const bool renamed = DrawRenameField(dir.ID, dir.name, dir.path, newPath);
-        if (renamed) dir.path = newPath;
-    }
-
-    // Context menu attached to the tree item
-    if (ImGui::BeginPopupContextItem("##dir_ctx")) {
-        if (ImGui::MenuItem("New Folder")) addDirectory(dir);
-        if (ImGui::MenuItem("Rename")) BeginRename(dir.ID, dir.name);
-        if (ImGui::MenuItem("Import Asset")) addAsset(dir);
-        if (ImGui::MenuItem("Delete")) {
-            pendingDeleteDirID = dir.ID;
-            pendingDeleteDir   = &dir;
-        }
-        ImGui::EndPopup();
-    }
-
-    if (open) {
-        for (auto& childDir : dir.childrenDirs) DirectoryRow(*childDir);
-        for (auto& asset : dir.childrenAssets) AssetRow(asset);
-
-        ImGui::TreePop();
-    }
-
-    ImGui::PopID();
-}
-
-void AssetsInspectorUI::HandlePendingDeletes() {
-    if (pendingDeleteDirID != 0 && pendingDeleteDir != nullptr) {
-        const fs::path removingPath = pendingDeleteDir->path;
-        const bool removedFromTree = removeDirectory(*pendingDeleteDir);
-        if (removedFromTree) fs::remove_all(removingPath);
-
-        pendingDeleteDirID = 0;
-        pendingDeleteDir   = nullptr;
-    }
-
-    if (pendingDeleteAssetID != 0 && pendingDeleteAsset != nullptr) {
-        const fs::path removingPath = pendingDeleteAsset->path;
-        const bool removedFromTree = removeAsset(*pendingDeleteAsset);
-        if (removedFromTree) fs::remove(removingPath);
-
-        pendingDeleteAssetID = 0;
-        pendingDeleteAsset   = nullptr;
+void AssetsInspectorUI::handlePendingDeletes() {
+    if (pendingDeleteID != "") {
+        const std::filesystem::path removingPath(pendingDeleteID);
+        std::filesystem::remove(removingPath);
+        pendingDeleteID = "";
     }
 }
 
-void drawDirectory(std::filesystem::directory_entry entry) {
+void AssetsInspectorUI::drawDirectory(std::filesystem::directory_entry entry, float padding) {
     ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(180, 185, 175, 255));
     if (ImGui::TreeNode((entry.path().stem().string() + "##" + entry.path().string()).c_str())) {
-        ImGui::Dummy(ImVec2(0, 12)); // TODO: keep filling out the tree and then finish drawAsset
+            for (auto& entry : std::filesystem::directory_iterator(entry.path())) {
+                if (entry.is_directory()) drawDirectory(entry, padding);
+                else if (entry.is_regular_file()) drawAsset(entry, padding);
+            }
         ImGui::TreePop();
     }
     ImGui::PopStyleColor();
 }
 
-void drawAsset(std::filesystem::directory_entry entry) {
+void AssetsInspectorUI::drawAsset(std::filesystem::directory_entry entry, float padding) {
+    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(248, 248, 242, 255)); // TODO: pull this color from already existing settings // normal text color
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(40, 42, 54, 255)); // TODO: add this color to settings // asset file background
+    if (ImGui::BeginChild(entry.path().string().c_str(), ImVec2(0, (padding * 2 + ImGui::CalcTextSize(entry.path().filename().string().c_str()).y)), ImGuiChildFlags_AlwaysUseWindowPadding)) {
+        ImVec2 p = ImGui::GetWindowPos();
+        ImVec2 s = ImGui::GetWindowSize();
 
+        ImGui::GetWindowDrawList()->AddRect(
+            p,
+            ImVec2(p.x + s.x, p.y + s.y),
+            IM_COL32(45, 47, 63, 255),// TODO: add this color to settings   // assets border color
+            3.0f,
+            ImDrawFlags_RoundCornersAll,
+            1.0f                      // TODO: add this value to settings    // assets border thickness
+        );
+
+        ImGui::Text(entry.path().filename().string().c_str());
+
+        if (ImGui::BeginPopupContextWindow("##asset_ctx", ImGuiPopupFlags_MouseButtonRight)) {
+            if (ImGui::MenuItem("Rename")) beginRename(entry.path().string(), entry.path().filename().string());
+            if (ImGui::MenuItem("Delete")) pendingDeleteID = entry.path().string();
+            ImGui::EndPopup();
+        }
+    }
+    ImGui::EndChild();
+    ImGui::PopStyleColor(2);
 }
 
 void AssetsInspectorUI::draw() {
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(26, 27, 33, 255));
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(26, 27, 33, 255)); // TODO: add this color to settings // assets background
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.0f);
-    float window_padding = 12.0f;
+    float window_padding = 12.0f; // TODO: add this value to settings // assets body padding
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(window_padding, window_padding));
     if (ImGui::BeginChild("AssetsContent", ImVec2(0, 0), ImGuiChildFlags_AlwaysUseWindowPadding)) {
-        float inner_padding = 1.0f;
+        float inner_padding = 1.0f; // TODO: add this value to settings // assets title inner padding
         ImGui::PushFont(fonts->getL4());
         float directory_height = window_padding * 2 + inner_padding * 2 + ImGui::CalcTextSize("Assets").y;
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
@@ -181,22 +119,22 @@ void AssetsInspectorUI::draw() {
             ImGui::GetWindowDrawList()->AddRectFilled(
                 p,
                 ImVec2(p.x + s.x, p.y + s.y),
-                IM_COL32(31, 32, 42, 255),
-                6.0f,
+                IM_COL32(31, 32, 42, 255), // TODO: add this color to settings // assets title background
+                6.0f, // TODO: add this value to settings // assets body rounding
                 ImDrawFlags_RoundCornersTop
             );
 
             ImGui::GetWindowDrawList()->AddRect(
                 p,
                 ImVec2(p.x + s.x, p.y + s.y),
-                IM_COL32(45, 47, 63, 255),   // border color
-                6.0f,
+                IM_COL32(45, 47, 63, 255), // TODO: add this color to settings   // assets body border color
+                6.0f, // TODO: add this value to settings // assets body rounding
                 ImDrawFlags_RoundCornersTop,
-                1.0f                          // thickness
+                1.0f                       // TODO: add this value to settings   // assets body border thickness
             );
 
             ImGui::SetCursorPosY(inner_padding + window_padding);
-            ImGui::Dummy(ImVec2(6.0f, 0.0f));
+            ImGui::Dummy(ImVec2(6.0f, 0.0f)); // TODO: add this value to settings // assets title offset
             ImGui::SameLine();
             ImGui::TextUnformatted("Assets");
         }
@@ -211,73 +149,27 @@ void AssetsInspectorUI::draw() {
             ImGui::GetWindowDrawList()->AddRectFilled(
                 p,
                 ImVec2(p.x + s.x, p.y + s.y),
-                IM_COL32(28, 30, 38, 255),
-                6.0f,
+                IM_COL32(28, 30, 38, 255), // TODO: add this color to settings // tree body color
+                6.0f, // TODO: add this value to settings // assets body rounding
                 ImDrawFlags_RoundCornersBottom
             );
 
             ImGui::GetWindowDrawList()->AddRect(
                 p,
                 ImVec2(p.x + s.x, p.y + s.y),
-                IM_COL32(45, 47, 63, 255),   // border color
-                6.0f,
+                IM_COL32(45, 47, 63, 255), // TODO: add this color to settings   // assets body border color
+                6.0f, // TODO: add this value to settings // assets body rounding
                 ImDrawFlags_RoundCornersBottom,
-                1.0f                          // thickness
+                1.0f                       // TODO: add this value to settings   // assets body border thickness
             );
 
-            //drawDirectory(project->projectRoot / "assets");
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 8.0f));
+            ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
             for (auto& entry : std::filesystem::directory_iterator(project->projectRoot / "assets")) {
-                if (entry.is_directory()) drawDirectory(entry);
-                else if (entry.is_regular_file()) drawAsset(entry);
+                if (entry.is_directory()) drawDirectory(entry, window_padding);
+                else if (entry.is_regular_file()) drawAsset(entry, window_padding);
             }
-
-            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(180, 185, 175, 255));
-
-            if (ImGui::TreeNode("Models")) {
-                ImGui::Dummy(ImVec2(0, 12));
-                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 8.0f));
-                ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
-                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(248, 248, 242, 255));
-                ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(40, 42, 54, 255));
-                if (ImGui::BeginChild("Backpack", ImVec2(0, (window_padding * 2 + ImGui::CalcTextSize("backpack.fbx").y)), ImGuiChildFlags_AlwaysUseWindowPadding)) {
-                    ImVec2 p = ImGui::GetWindowPos();
-                    ImVec2 s = ImGui::GetWindowSize();
-
-                    ImGui::GetWindowDrawList()->AddRect(
-                        p,
-                        ImVec2(p.x + s.x, p.y + s.y),
-                        IM_COL32(45, 47, 63, 255),   // border color
-                        3.0f,
-                        ImDrawFlags_RoundCornersAll,
-                        1.0f                          // thickness
-                    );
-
-                    ImGui::Text("backpack.fbx");
-                }
-                ImGui::EndChild();
-
-                if (ImGui::BeginChild("tree", ImVec2(0, (window_padding * 2 + ImGui::CalcTextSize("tree_model.obj").y)), ImGuiChildFlags_AlwaysUseWindowPadding)) {
-                    ImVec2 p = ImGui::GetWindowPos();
-                    ImVec2 s = ImGui::GetWindowSize();
-
-                    ImGui::GetWindowDrawList()->AddRect(
-                        p,
-                        ImVec2(p.x + s.x, p.y + s.y),
-                        IM_COL32(45, 47, 63, 255),   // border color
-                        3.0f,
-                        ImDrawFlags_RoundCornersAll,
-                        1.0f                          // thickness
-                    );
-
-                    ImGui::Text("tree_model.obj");
-                }
-                ImGui::EndChild();
-                
-                ImGui::PopStyleColor(2);
-                ImGui::PopStyleVar(2);
-                ImGui::TreePop();
-            }
-            ImGui::PopStyleColor();
+            ImGui::PopStyleVar(2);
         }
         ImGui::EndChild();
         ImGui::PopStyleVar();
@@ -286,114 +178,6 @@ void AssetsInspectorUI::draw() {
     ImGui::PopStyleVar();
     ImGui::PopStyleVar();
     ImGui::PopStyleColor();
-    // const float bottomBarH = 44.0f;
-    // const float importBtnW = 120.0f;
-    // const float importBtnH = 32.0f;
 
-    // ImVec2 avail = ImGui::GetContentRegionAvail();
-    // ImVec2 contentSize(avail.x, std::max(0.0f, avail.y - bottomBarH));
-
-    // ImGui::BeginChild("AssetsContent", contentSize, false, ImGuiWindowFlags_NoScrollbar);
-
-    // // Root context menu (right click empty space)
-    // if (ImGui::BeginPopupContextWindow("##assets_ctx", ImGuiPopupFlags_MouseButtonRight)) {
-    //     if (ImGui::MenuItem("New Folder")) addDirectory(*root);
-    //     if (ImGui::MenuItem("Import Asset")) addAsset(*root);
-    //     ImGui::EndPopup();
-    // }
-
-    // for (auto& dir : root->childrenDirs) DirectoryRow(*dir);
-    // for (auto& asset : root->childrenAssets) AssetRow(asset);
-
-    // // Mutations happen once, after drawing the lists
-    // HandlePendingDeletes();
-
-    // ImGui::EndChild(); // AssetsContent
-
-    // // ---------- Bottom bar ----------
-    // ImGui::Separator();
-    // ImGui::BeginChild("AssetsBottomBar", ImVec2(0, bottomBarH), false, ImGuiWindowFlags_NoScrollbar);
-
-    // ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 8));
-    // ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10, 8));
-
-    // static char searchBuf[256] = "";
-    // const float spacing = ImGui::GetStyle().ItemSpacing.x;
-
-    // const float fullW = ImGui::GetContentRegionAvail().x;
-    // const float searchW = std::max(0.0f, fullW - importBtnW - spacing);
-
-    // ImGui::SetNextItemWidth(searchW);
-    // ImGui::InputTextWithHint("##AssetsSearch", "Search...", searchBuf, sizeof(searchBuf));
-
-    // ImGui::SameLine();
-
-    // ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 1);
-    // if (ImGui::Button("+ Import", ImVec2(importBtnW, importBtnH))) addAsset(*root);
-
-    // ImGui::PopStyleVar(2);
-    // ImGui::EndChild(); // AssetsBottomBar
-}
-
-void AssetsInspectorUI::addAsset(Directory& dir) {
-    std::vector<std::string> projectRelativePath = buildRelativePath(&dir);
-    NFD::UniquePath outPath;
-
-    nfdresult_t result = NFD::OpenDialog(outPath, nullptr, 0);
-    if (result != NFD_OKAY) return;
-
-    fs::path chosen = outPath.get();
-
-    fs::path assetDest = project->projectRoot;
-    for (auto& p : projectRelativePath) assetDest /= p;
-
-    fs::path copiedTo = copyAssetIntoProject(chosen, assetDest);
-
-    dir.childrenAssets.emplace_back(Asset{ idCount, copiedTo.stem().string(), &dir });
-    idCount++;
-}
-
-bool AssetsInspectorUI::removeAsset(Asset& _asset) {
-    Directory& parent = *_asset.parent;
-
-    auto it = std::find_if(parent.childrenAssets.begin(), parent.childrenAssets.end(),
-        [&_asset](const Asset& a) { return a.ID == _asset.ID; });
-
-    if (it == parent.childrenAssets.end()) return false;
-
-    parent.childrenAssets.erase(it);
-    return true;
-}
-
-void AssetsInspectorUI::addDirectory(Directory& parent) {
-    parent.childrenDirs.emplace_back(std::make_unique<Directory>(
-        Directory{ idCount, "Untitled", &parent }));
-    idCount++;
-}
-
-bool AssetsInspectorUI::removeDirectory(Directory& _dir) {
-    Directory& parent = *_dir.parent;
-
-    auto it = std::find_if(parent.childrenDirs.begin(), parent.childrenDirs.end(),
-        [&_dir](const std::unique_ptr<Directory>& d) { return d->ID == _dir.ID; });
-
-    if (it == parent.childrenDirs.end()) return false;
-
-    Directory& dir = *(*it);
-
-    if (!dir.childrenDirs.empty() || !dir.childrenAssets.empty()) return false;
-    if (dir.ID == root->ID) return false;
-
-    parent.childrenDirs.erase(it);
-    return true;
-}
-
-std::vector<std::string> AssetsInspectorUI::buildRelativePath(Directory* dir) {
-    std::vector<std::string> out;
-
-    for (Directory* node = dir; node != nullptr; node = node->parent)
-        out.emplace_back(node->name);
-
-    std::reverse(out.begin(), out.end());
-    return out;
+    handlePendingDeletes();
 }
