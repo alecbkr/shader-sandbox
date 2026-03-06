@@ -29,5 +29,3 @@ struct Asset {
     std::filesystem::path path;
     AssetType type = AssetType::AT_NOTYPE;
 };
-
-AssetType getAssetType(const std::filesystem::path& p);

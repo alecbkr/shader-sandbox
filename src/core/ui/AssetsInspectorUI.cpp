@@ -9,8 +9,6 @@
 #include <filesystem>
 #include <cstdio>
 
-namespace fs = std::filesystem;
-
 AssetsInspectorUI::AssetsInspectorUI(Fonts* fonts, Project* project) : fonts(fonts), project(project) {}
 
 void AssetsInspectorUI::beginRename(const std::string& id, const std::string& currentName) {
@@ -19,33 +17,50 @@ void AssetsInspectorUI::beginRename(const std::string& id, const std::string& cu
     renameJustStarted = true;
 }
 
-bool AssetsInspectorUI::drawRenameField(std::string id, std::string& name, const std::filesystem::path& oldPath, std::filesystem::path newPath) {
-    if (renameJustStarted) {
-        ImGui::SetKeyboardFocusHere();
-        renameJustStarted = false;
+bool AssetsInspectorUI::drawRenameField(const std::filesystem::directory_entry& entry) {
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+
+    if (entry.is_directory()) {
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(31, 32, 42, 255));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, IM_COL32(31, 32, 42, 255));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, IM_COL32(31, 32, 42, 255));
+    } else {
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(40, 42, 54, 255));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, IM_COL32(40, 42, 54, 255));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, IM_COL32(40, 42, 54, 255));
     }
 
-    ImGui::SetNextItemWidth(180.0f);
-    const std::string inputId = "##rename_" + id;
+    if (renameJustStarted) ImGui::SetKeyboardFocusHere();
 
     const bool enter = ImGui::InputText(
-        inputId.c_str(),
+        ("##" + entry.path().string()).c_str(),
         renameBuf,
         sizeof(renameBuf),
         ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll
     );
 
+    if (renameJustStarted && ImGui::IsItemActive()) renameJustStarted = false;
+
+    const bool hovered = ImGui::IsItemHovered();
+
+    ImGui::PopStyleColor(3);
+    ImGui::PopStyleVar();
+
     const bool deactivatedAfterEdit = ImGui::IsItemDeactivatedAfterEdit();
 
-    if (ImGui::IsItemActive() && ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+    if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
         renamingID = "";
         return false;
     }
 
-    if (enter || deactivatedAfterEdit) {
-        if (renameBuf[0] != '\0') name = renameBuf;
+    const bool clicked_elsewhere = (ImGui::IsMouseClicked(ImGuiMouseButton_Left) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)) && !hovered;
 
-        fs::rename(oldPath, newPath);
+    if ((enter || deactivatedAfterEdit || clicked_elsewhere) && renameBuf[0] != '\0') {
+        std::string newName = renameBuf;
+        std::filesystem::path newPath = entry.path().parent_path() / newName;
+        pendingRenamePaths[0] = entry.path();
+        pendingRenamePaths[1] = newPath;
         renamingID = "";
         return true;
     }
@@ -61,14 +76,64 @@ void AssetsInspectorUI::handlePendingDeletes() {
     }
 }
 
+void AssetsInspectorUI::handlePendingRenaming() {
+    if (!pendingRenamePaths[0].empty()) {
+        std::filesystem::rename(pendingRenamePaths[0], pendingRenamePaths[1]);
+        pendingRenamePaths[0] = std::filesystem::path{};
+        pendingRenamePaths[1] = std::filesystem::path{};
+    }
+}
+
+void AssetsInspectorUI::importAsset(const std::filesystem::path& destination) {
+    NFD::UniquePath outPath;
+
+    nfdfilteritem_t filters[] = {
+        { "Assets", "obj,fbx,gltf,glb,png,jpg,jpeg,tga,bmp,hdr" }
+    };
+
+    nfdresult_t result = NFD::OpenDialog(outPath, filters, 1);
+    if (result != NFD_OKAY) return;
+
+    std::filesystem::path chosen = outPath.get();
+    std::filesystem::copy_file(chosen, destination / chosen.filename(), std::filesystem::copy_options::overwrite_existing);
+}
+
 void AssetsInspectorUI::drawDirectory(std::filesystem::directory_entry entry, float padding) {
-    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(180, 185, 175, 255));
-    if (ImGui::TreeNode((entry.path().stem().string() + "##" + entry.path().string()).c_str())) {
-            for (auto& entry : std::filesystem::directory_iterator(entry.path())) {
-                if (entry.is_directory()) drawDirectory(entry, padding);
-                else if (entry.is_regular_file()) drawAsset(entry, padding);
+    const bool renaming = renamingID == entry.path().string();
+    
+    std::string label = renaming ? "" : entry.path().stem().string();
+
+    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(180, 185, 175, 255));// TODO: add this color to settings // assets directory text
+
+    if (renaming) ImGui::PushItemFlag(ImGuiItemFlags_NoNav, true);
+    const bool open = ImGui::TreeNodeEx((label + "##" + entry.path().string()).c_str());
+    if (renaming) ImGui::PopItemFlag();
+
+    if (!renaming && renamingID == "") {
+        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(248, 248, 242, 255));
+        if (ImGui::BeginPopupContextItem(("##directory_menu" + entry.path().string()).c_str())) {
+            if (ImGui::MenuItem("Import Asset")) importAsset(entry.path());
+            if (ImGui::MenuItem("New Folder")) {
+                std::filesystem::create_directory(entry.path() / "untitled");
+                beginRename((entry.path() / "untitled").string(), "untitled");
             }
+            if (ImGui::MenuItem("Rename")) beginRename(entry.path().string(), entry.path().filename().string());
+            if (ImGui::MenuItem("Delete")) pendingDeleteID = entry.path().string();
+            ImGui::EndPopup();
+        }
+        ImGui::PopStyleColor();
+    } else if (renaming) {
+        ImGui::SameLine();
+        drawRenameField(entry);
+    }
+
+    if (open) {
+        for (auto& entry : std::filesystem::directory_iterator(entry.path())) {
+            if (entry.is_directory()) drawDirectory(entry, padding);
+            else if (entry.is_regular_file()) drawAsset(entry, padding);
+        }
         ImGui::TreePop();
+
     }
     ImGui::PopStyleColor();
 }
@@ -89,12 +154,15 @@ void AssetsInspectorUI::drawAsset(std::filesystem::directory_entry entry, float 
             1.0f                      // TODO: add this value to settings    // assets border thickness
         );
 
-        ImGui::Text(entry.path().filename().string().c_str());
+        if (renamingID == entry.path().string()) drawRenameField(entry);
+        else ImGui::Text(entry.path().filename().string().c_str());
 
-        if (ImGui::BeginPopupContextWindow("##asset_ctx", ImGuiPopupFlags_MouseButtonRight)) {
-            if (ImGui::MenuItem("Rename")) beginRename(entry.path().string(), entry.path().filename().string());
-            if (ImGui::MenuItem("Delete")) pendingDeleteID = entry.path().string();
-            ImGui::EndPopup();
+        if (renamingID == "") {
+            if (ImGui::BeginPopupContextWindow("##asset_ctx", ImGuiPopupFlags_MouseButtonRight)) {
+                if (ImGui::MenuItem("Rename")) beginRename(entry.path().string(), entry.path().filename().string());
+                if (ImGui::MenuItem("Delete")) pendingDeleteID = entry.path().string();
+                ImGui::EndPopup();
+            }
         }
     }
     ImGui::EndChild();
@@ -165,6 +233,16 @@ void AssetsInspectorUI::draw() {
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 8.0f));
             ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
+
+            auto rootEntry = std::filesystem::directory_entry(project->projectRoot / "assets");
+            if (ImGui::BeginPopupContextWindow("##root_ctx", ImGuiPopupFlags_MouseButtonRight)) {
+                if (ImGui::MenuItem("Import Asset")) importAsset(rootEntry);
+                if (ImGui::MenuItem("New Folder")) {
+                    std::filesystem::create_directory(rootEntry.path() / "untitled");
+                    beginRename((rootEntry.path() / "untitled").string(), "untitled");
+                }
+                ImGui::EndPopup();
+            }
             for (auto& entry : std::filesystem::directory_iterator(project->projectRoot / "assets")) {
                 if (entry.is_directory()) drawDirectory(entry, window_padding);
                 else if (entry.is_regular_file()) drawAsset(entry, window_padding);
@@ -180,4 +258,5 @@ void AssetsInspectorUI::draw() {
     ImGui::PopStyleColor();
 
     handlePendingDeletes();
+    handlePendingRenaming();
 }
