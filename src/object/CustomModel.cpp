@@ -1,14 +1,19 @@
 #include "CustomModel.hpp"
+#include "core/logging/LogSink.hpp"
+#include "object/MaterialCache.hpp"
 #include "texture/TextureCache.hpp"
 // #include "texture/CubeMap.hpp"
 
 #include "core/logging/Logger.hpp"
 
-CustomModel::CustomModel(const unsigned int modelID, TextureCache* _textureCachePtr, Logger* _loggerPtr) 
-    : Model(modelID, _textureCachePtr, _loggerPtr) {
-    primitives.emplace_back(modelID, 0, 0);
+CustomModel::CustomModel(const unsigned int modelID, TextureCache* _textureCachePtr, Logger* _loggerPtr, MaterialCache* _materialCachePtr) 
+    : Model(modelID, _textureCachePtr, _loggerPtr, _materialCachePtr) {
     
-    all_materials.push_back(std::make_unique<Material>(MaterialType::Opaque, nextMaterialID));
+    auto mat = std::make_unique<Material>(MaterialType::Opaque, _materialCachePtr, ID);
+    all_material_ids.push_back(mat->ID);
+    primitives.emplace_back(modelID, 0, mat->ID);
+    materialCachePtr->createMaterial(std::move(mat));
+
     all_meshes.emplace_back(std::make_unique<MeshA>(nextMeshID));
 }
 
@@ -67,5 +72,10 @@ void CustomModel::setMesh(std::vector<float> raw_vertices, std::vector<unsigned 
 
 
 void CustomModel::addTexture(std::string texture_path, TextureType type) {
-    all_materials[0]->assignTexture(textureCachePtr->addTexture(texture_path, type));
+    Material* mat = materialCachePtr->getMaterial(all_material_ids[0]);
+    if (mat == nullptr) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "CustomModel::addTexture", "Material[0] not found");
+        return;
+    }
+    mat->assignTexture(textureCachePtr->addTexture(texture_path, type));
 }

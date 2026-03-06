@@ -1,4 +1,5 @@
 #pragma once
+#include "object/MaterialCache.hpp"
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
@@ -23,7 +24,7 @@ class InspectorUI {
 public:
     InspectorUI();
     ~InspectorUI();
-    bool initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, Fonts* _fontsPtr, Project* _project);
+    bool initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr, Fonts* _fontsPtr, Project* _project);
     void shutdown();
     void render();
   
@@ -37,6 +38,7 @@ private:
     EventDispatcher* eventsPtr = nullptr;
     ModelCache* modelCachePtr = nullptr;
     FileRegistry* fileRegPtr = nullptr;
+    MaterialCache* materialCachePtr = nullptr;
     std::unique_ptr<UniformInspectorUI> uniformInspectorUI;
     std::unique_ptr<ObjectsInspectorUI> objectsInspectorUI;
     std::unique_ptr<AssetsInspectorUI> assetsInspectorUI;

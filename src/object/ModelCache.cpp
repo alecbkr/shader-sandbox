@@ -9,6 +9,7 @@
 #include "core/EventDispatcher.hpp"
 #include "core/ShaderRegistry.hpp"
 #include "core/logging/Logger.hpp"
+#include "object/MaterialCache.hpp"
 #include "presets/PresetAssets.hpp"
 
 
@@ -24,7 +25,7 @@ ModelCache::ModelCache() {
     // modelCache.clear();
 }
 
-bool ModelCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, TextureCache* _textureCachePtr, UniformRegistry* _uniformRegPtr, InspectorEngine* _inspectorEngPtr, PresetAssets* _presetsPtr) {
+bool ModelCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, TextureCache* _textureCachePtr, UniformRegistry* _uniformRegPtr, InspectorEngine* _inspectorEngPtr, PresetAssets* _presetsPtr, MaterialCache* _materialCachePtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Model Cache Initialization", "Model Cache was already initialized.");
         return false;
@@ -36,8 +37,9 @@ bool ModelCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, Sha
     textureCachePtr = _textureCachePtr;
     uniformRegPtr   = _uniformRegPtr;
     presetsPtr      = _presetsPtr;
+    materialCachePtr = _materialCachePtr;
     // modelImporterPtr = _modelImporterPtr;
-    // modelCache.clear();
+   // modelCache.clear();
     
     eventsPtr->Subscribe(EventType::ReloadShader, [this](const EventPayload& payload) -> bool {
         
@@ -82,7 +84,7 @@ unsigned int ModelCache::createCustom(
         return INVALID_MODEL;
     }
     
-    std::unique_ptr<CustomModel> customModel = std::make_unique<CustomModel>(nextModelID, textureCachePtr, loggerPtr);
+    std::unique_ptr<CustomModel> customModel = std::make_unique<CustomModel>(nextModelID, textureCachePtr, loggerPtr, materialCachePtr);
     customModel->setMesh(vertices, indices, hasPos, hasNorms, hasUVs);
     Model* rawPointer = customModel.get();
 
@@ -101,7 +103,7 @@ unsigned int ModelCache::createImported(std::string model_path) {
         return INVALID_MODEL;
     }
 
-    std::unique_ptr<ImportedModel> importedModel = std::make_unique<ImportedModel>(nextModelID, model_path, textureCachePtr, loggerPtr);
+    std::unique_ptr<ImportedModel> importedModel = std::make_unique<ImportedModel>(nextModelID, model_path, textureCachePtr, loggerPtr, materialCachePtr);
     Model* rawPointer = importedModel.get();
     modelIDMap.emplace(nextModelID, std::move(importedModel));
     // modelCache.push_back(rawPointer);
@@ -114,7 +116,7 @@ unsigned int ModelCache::createImported(std::string model_path) {
 
 unsigned int ModelCache::createPreset(MeshPreset preset) {
     MeshData presetData = presetsPtr->getPresetMesh(preset);
-    std::unique_ptr<CustomModel> presetModel = std::make_unique<CustomModel>(nextModelID, textureCachePtr, loggerPtr);
+    std::unique_ptr<CustomModel> presetModel = std::make_unique<CustomModel>(nextModelID, textureCachePtr, loggerPtr, materialCachePtr);
     Model* rawPointer = presetModel.get();
     
     presetModel->setMesh(presetData.verts, presetData.indices, true, false, true);
@@ -127,12 +129,12 @@ unsigned int ModelCache::createPreset(MeshPreset preset) {
 
 unsigned int ModelCache::createSkybox(std::string cubemap_dir) {
     MeshData cube = presetsPtr->getPresetMesh(MeshPreset::CUBE);
-    std::unique_ptr<CustomModel> skyboxModel = std::make_unique<CustomModel>(nextModelID, textureCachePtr, loggerPtr);
+    std::unique_ptr<CustomModel> skyboxModel = std::make_unique<CustomModel>(nextModelID, textureCachePtr, loggerPtr, materialCachePtr);
     Model* rawPointer = skyboxModel.get();
 
     skyboxModel->setMesh(cube.verts, cube.indices, true, false, true);
     skyboxModel->addTexture(cubemap_dir, TEX_CUBEMAP);
-    skyboxModel->setMaterialType(0, MaterialType::Skybox);
+    skyboxModel->setMaterialType(skyboxModel->getAllMaterialIDs()[0], MaterialType::Skybox);
     modelIDMap.emplace(nextModelID, std::move(skyboxModel));
     placeInCache(nextModelID);
     nextModelID++;
@@ -146,9 +148,9 @@ void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camP
     uniformRegPtr->registerSceneUniform({"view", UniformType::Mat4, view});
 
     // REGISTER INDIVIDUAL MODEL UNIFORMS
-    for (auto& model : modelIDMap) {
-        if (model.second->getMaterialType(0) == MaterialType::Skybox) continue;
-        uniformRegPtr->registerModelUniform(model.second->ID, {"model", UniformType::Mat4, model.second->getModelMatrix()});
+    for (auto& [modelID, model] : modelIDMap) {
+        if (model->getMaterialType(model->getAllMaterialIDs()[0]) == MaterialType::Skybox) continue;
+        uniformRegPtr->registerModelUniform(model->ID, {"model", UniformType::Mat4, model->getModelMatrix()});
     }
 
     // RENDER SKYBOX PRIMITIVE

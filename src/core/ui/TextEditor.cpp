@@ -1759,21 +1759,31 @@ void TextEditor::InsertText(const char * aValue)
 }
 
 void TextEditor::ReplaceMatch(const SearchText::Match& match, const char* replace) {
+	if (IsReadOnly())
+		return;
+
 	int startColumn = GetCharacterColumn(match.itemIdx, match.charIdx);
 	Coordinates startCoord(match.itemIdx, startColumn);
 
 	int endColumn = GetCharacterColumn(match.itemIdx, match.charIdx + match.length);
 	Coordinates endCoord(match.itemIdx, endColumn);
 
-	DeleteRange(startCoord, endCoord);
-	InsertTextAt(startCoord, replace);
+	UndoRecord u;
+	u.mBefore = mState;
 
-	mState.mCursorPosition = startCoord;
-	mState.mSelectionStart = startCoord;
-	mState.mSelectionEnd = startCoord;
-	mScrollToCursor = true;
-	Colorize();
-	mTextChanged = true;
+	SetSelection(startCoord, endCoord);
+	u.mRemoved = GetSelectedText();
+	u.mRemovedStart = mState.mSelectionStart;
+	u.mRemovedEnd = mState.mSelectionEnd;
+	DeleteSelection();
+
+	u.mAdded = replace;
+	u.mAddedStart = GetActualCursorCoordinates();
+	InsertText(replace);
+
+	u.mAddedEnd = GetActualCursorCoordinates();
+	u.mAfter = mState;
+	AddUndo(u);
 }
 
 void TextEditor::DeleteSelection()

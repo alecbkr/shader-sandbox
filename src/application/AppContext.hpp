@@ -31,6 +31,7 @@
 #include "core/ui/modals/ModalManager.hpp"
 #include "core/ui/modals/SettingsModal.hpp"
 #include "core/ui/Fonts.hpp"
+#include "object/MaterialCache.hpp"
 
 struct AppContext {
     AppContext(const char* _app_title) : app_title(_app_title) {};
@@ -68,4 +69,5 @@ struct AppContext {
     ModalManager modals;
     Fonts fonts;
     SettingsModal settingsModal;
+    MaterialCache material_cache;
 };
