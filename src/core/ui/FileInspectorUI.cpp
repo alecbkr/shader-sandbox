@@ -14,12 +14,13 @@
 void FileInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, EventDispatcher* eventsPtr) {
     ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
 
-    ImGui::Text("--------------");
     ImGui::Text("Shader Files");
-    ImGui::Text("--------------");
+    ImGui::Separator();
+
     fileRegPtr->reloadMap();
 
     for (const auto& [fileName, fileData] : fileRegPtr->getFiles()) {
+        ImGui::Bullet();
         switch (fileData->state) {
             case RENAME:
                 drawRenameFileEntry(fileData, eventsPtr);
@@ -36,9 +37,18 @@ void FileInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, 
         }
     }
 
-    ImGui::Text("--------------");
+    ImGui::Separator();
+    ImGui::Text("Preset Shaders");
+    ImGui::Separator();
+
+    for (const auto& filePath : fileRegPtr->getPresetShaders()) {
+        ImGui::Bullet();
+        drawPresetShaderEntry(filePath, eventsPtr);
+    }
+
+    ImGui::Separator();
     ImGui::Text("Shader Programs");
-    ImGui::Text("--------------");
+    ImGui::Separator();
     static int newShaders = 0;
     if (ImGui::Button("+")) {
         shaderLinkMenus.emplace(std::make_pair("myShader_" + std::to_string(newShaders), ShaderLinkMenu{
@@ -111,12 +121,26 @@ void FileInspectorUI::drawStandardFileEntry(ShaderFile* fileData, EventDispatche
                 Event{
                     EventType::OpenFile,
                     false,
-                    OpenFilePayload{ fileData->filePath, fileData->fileName, 0 }
+                    OpenFilePayload{ fileData->filePath, fileData->fileName, 0, false }
                 }
             );
         }
     }
     drawContextMenu(fileData);
+}
+
+void FileInspectorUI::drawPresetShaderEntry(std::filesystem::path filePath, EventDispatcher* eventsPtr) {
+    if (ImGui::Selectable((filePath.filename().string() + "##1").c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
+        if (ImGui::IsMouseDoubleClicked(0)) {
+            eventsPtr->TriggerEvent(
+                Event{
+                    EventType::OpenFile,
+                    false,
+                    OpenFilePayload{ filePath.string(), filePath.filename().string(), 0, true }
+                }
+            );
+        }
+    }
 }
 
 void FileInspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, InspectorEngine* inspectorEngPtr) {

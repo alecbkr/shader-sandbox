@@ -31,9 +31,11 @@ public:
     bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, Platform* _platformPtr, Project* _projectPtr);
     void reloadMap();
     std::unordered_map<std::string, ShaderFile *> getFiles();
+    std::vector<std::filesystem::path> getPresetShaders();
 
 private:
     std::unordered_map<std::string, ShaderFile*> files;
+    std::vector<std::filesystem::path> presetShaders;
     bool initialized = false;
     EventDispatcher* eventsPtr = nullptr;
     Logger* loggerPtr = nullptr;

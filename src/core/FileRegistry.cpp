@@ -36,6 +36,10 @@ bool FileRegistry::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, P
     eventsPtr->Subscribe(EventType::ET_DeleteFile, [this](const EventPayload& payload) -> bool { return deleteFile(payload); });
     reloadMap();
 
+    for (const auto& dirEntry : std::filesystem::directory_iterator(platformPtr->getExeDir() / ".." / "shaders")) {
+        presetShaders.push_back(dirEntry.path());
+    }
+
     initialized = true;
     return true;
 }
@@ -116,4 +120,8 @@ bool FileRegistry::deleteFile(const EventPayload& payload) {
 
 std::unordered_map<std::string, ShaderFile *> FileRegistry::getFiles() {
     return files;
+}
+
+std::vector<std::filesystem::path> FileRegistry::getPresetShaders() {
+    return presetShaders;
 }
