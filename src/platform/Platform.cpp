@@ -287,6 +287,11 @@ bool Platform::enableBorderlessSnap() {
 #endif
 }
 
+void Platform::setCursorStatus(bool status) {
+    if (status) glfwSetInputMode(windowPtr->getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    else glfwSetInputMode(windowPtr->getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
 void Platform::terminate(){
     uninstallBorderlessWin32Hooks();
     glfwTerminate();

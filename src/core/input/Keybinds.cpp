@@ -146,6 +146,11 @@ bool Keybinds::comboPressedThisFrame(const KeyCombo& combo) {
     return false;
 }
 
+bool Keybinds::mouseMoved() {
+    if (inputsPtr->getMouseDeltaX() != 0 || inputsPtr->getMouseDeltaY() != 0) return true;
+    return false;
+}
+
 void Keybinds::gatherActionsForFrame(ControlCtx context) {
 
     for (const Binding& binding : bindings_) {
@@ -158,6 +163,10 @@ void Keybinds::gatherActionsForFrame(ControlCtx context) {
             if (comboDown(binding.combo)) actionRegPtr->addActionToProcess(binding.action);
         } else if (binding.trigger == Trigger::Pressed) {
             if (comboPressedThisFrame(binding.combo)) {
+                actionRegPtr->addActionToProcess(binding.action);
+            }
+        } else if (binding.trigger == Trigger::MouseMove) {
+            if (mouseMoved()) {
                 actionRegPtr->addActionToProcess(binding.action);
             }
         }

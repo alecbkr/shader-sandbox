@@ -29,7 +29,13 @@
 
 bool Application::initialized = false;
 
-void subscribeMenuButtons(AppContext& ctx) {
+void Application::addSubscriptions(AppContext& ctx) {
+    ctx.events.Subscribe(EventType::ContextSwitch, [&ctx](const EventPayload&) -> bool {
+        ctx.ctx_manager.toggleCtx();
+        if (ctx.ctx_manager.isCamera()) ctx.platform.setCursorStatus(false);
+        else ctx.platform.setCursorStatus(true);
+        return true;
+    });
     ctx.events.Subscribe(EventType::SaveProject, [&ctx](const EventPayload&) -> bool {
         ProjectLoader::save(ctx.project);
         return false;
@@ -51,7 +57,7 @@ bool Application::addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI
     actionRegPtr->bind(Action::CameraRight, [viewportUIPtr]() { viewportUIPtr->getCamera()->MoveRight(); });
     actionRegPtr->bind(Action::CameraUp, [viewportUIPtr]() { viewportUIPtr->getCamera()->MoveUp(); });
     actionRegPtr->bind(Action::CameraDown, [viewportUIPtr]() { viewportUIPtr->getCamera()->MoveDown(); });
-    actionRegPtr->bind(Action::SwitchControlContext, [contextManagerPtr]() { contextManagerPtr->toggleCtx(); });
+    actionRegPtr->bind(Action::SwitchControlContext, [eventsPtr]() { eventsPtr->TriggerEvent({ EventType::ContextSwitch, false, std::monostate{} }); });
     actionRegPtr->bind(Action::SaveActiveShaderFile, [eventsPtr]() { eventsPtr->TriggerEvent({ EventType::SaveActiveShaderFile, false, std::monostate{} }); });
     actionRegPtr->bind(Action::SaveProject, [eventsPtr]() { eventsPtr->TriggerEvent({ EventType::SaveProject, false, std::monostate{} }); });
     actionRegPtr->bind(Action::QuitApplication, [eventsPtr]() { eventsPtr->TriggerEvent({ EventType::Quit, false, std::monostate{} }); });
@@ -63,6 +69,7 @@ bool Application::addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI
     actionRegPtr->bind(Action::FormatActiveShader, [](){});
     actionRegPtr->bind(Action::ScreenshotViewport, [](){});
     actionRegPtr->bind(Action::FullscreenViewport, [](){});
+    actionRegPtr->bind(Action::MouseMove, [viewportUIPtr]() { viewportUIPtr->getCamera()->ProcessMouseMovement(); });
     return true;
 }
 
@@ -215,13 +222,13 @@ bool Application::initialize(AppContext& ctx) {
         return false;
     }
     loadPresetAssets(ctx);
-    subscribeMenuButtons(ctx);
+    addSubscriptions(ctx);
     initializeUI(ctx);
     if (!ctx.console_ui.initialize(&ctx.logger)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Console UI was not initialized successfully.");
         return false;
     }
-    if (!ctx.viewport_ui.initialize(&ctx.logger, &ctx.platform, &ctx.model_cache, &ctx.timer)) {
+    if (!ctx.viewport_ui.initialize(&ctx.logger, &ctx.platform, &ctx.model_cache, &ctx.timer, &ctx.inputs)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Viewport UI was not initialized successfully.");
         return false;
     }

@@ -16,6 +16,7 @@ enum class EventType {
     NewFile,
     RenameFile,
     ET_DeleteFile,
+    ContextSwitch
 };
 
 struct SaveActiveShaderFilePayload { std::string filePath; unsigned int modelID; };
