@@ -410,6 +410,22 @@ void SettingsModal::drawStylesPage() {
         ImGui::Separator();
     }
 
+    // ===== Inspector Tab =====
+    if (ImGui::CollapsingHeader("Inspector")) {
+        ImGui::Indent();
+        if (beginSectionTable("##style_inspector")) {
+            row("Assets Border Thickness", [&] { ImGui::SliderFloat("##AssetsBorderThickness", &settingsPtr->styles.assetsBorderThickness, 0.0f, 4.0f, "%0.1f"); });
+            row("Assets Body Padding", [&] { ImGui::SliderFloat("##AssetsBodyPadding", &settingsPtr->styles.assetsBodyPadding, 0.0f, 24.0f, "%0.5f"); });
+            row("Assets Title Inner Padding", [&] { ImGui::SliderFloat("##AssetsTitleInnerPadding", &settingsPtr->styles.assetsTitleInnerPadding, 0.0f, 4.0f, "%0.1f"); });
+            row("Assets Body Rounding", [&] { ImGui::SliderFloat("##AssetsBodyRounding", &settingsPtr->styles.assetsBodyRounding, 0.0f, 12.0f, "%0.5f"); });
+            row("Assets Title Offset", [&] { ImGui::SliderFloat("##AssetsTitleOffset", &settingsPtr->styles.assetsTitleOffset, 0.0f, 12.0f, "%0.5f"); });
+
+            endSectionTable();
+        }
+        ImGui::Unindent();
+        ImGui::Separator();
+    }
+
     // ===== Colors =====
     static const char* kColorNames[ImGuiCol_COUNT] = {
         "Text","TextDisabled","WindowBg","ChildBg","PopupBg","Border","BorderShadow","FrameBg","FrameBgHovered","FrameBgActive",
