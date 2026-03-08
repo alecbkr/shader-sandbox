@@ -19,4 +19,5 @@ private:
     static bool shouldClose(AppContext& ctx);
     static void initializeUI(AppContext& ctx);
     static bool addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI* viewportUIPtr, ContextManager* contextManagerPtr, EventDispatcher* eventsPtr, Fonts* fontsPtr);
+    static void addSubscriptions(AppContext& ctx);
 };

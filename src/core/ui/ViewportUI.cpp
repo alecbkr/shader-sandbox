@@ -31,7 +31,7 @@ ViewportUI::ViewportUI() {
     timerPtr = nullptr;
 }
 
-bool ViewportUI::initialize(Logger* _loggerPtr, Platform* _platformPtr, ModelCache* _modelCachePtr, AppTimer* _timerPtr) {
+bool ViewportUI::initialize(Logger* _loggerPtr, Platform* _platformPtr, ModelCache* _modelCachePtr, AppTimer* _timerPtr, InputState* _inputPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Viewport UI Initialization", "Viewport UI was already initialized.");
         return false;
@@ -96,7 +96,7 @@ bool ViewportUI::initialize(Logger* _loggerPtr, Platform* _platformPtr, ModelCac
 
     glEnable(GL_DEPTH_TEST);
 
-    ViewportUI::camPtr = std::make_unique<Camera>(timerPtr);
+    ViewportUI::camPtr = std::make_unique<Camera>(timerPtr, _inputPtr);
 
     ViewportUI::targetWidth = TARGET_WIDTH;
     ViewportUI::targetHeight = TARGET_HEIGHT;
