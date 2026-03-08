@@ -5,6 +5,7 @@
 
 #include "EventTypes.hpp"
 #include "application/Project.hpp"
+#include "application/Project.hpp"
 #include "ui/TextEditor.h"
 
 class Logger;
@@ -35,9 +36,9 @@ public:
     std::vector<Editor*> editors;
     int activeEditor;
     bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, ShaderRegistry* _shaderRegPtr, SettingsStyles* styles, Project* project);
-    void shutdown(Project* project);
+    void shutdown();
     void createFile(const std::string& filePath);
-    std::string findNextUntitledNumber();
+    std::string findNextFileNumber(const std::string& startingName);
 private:
     bool initialized = false;
     Logger* loggerPtr = nullptr;
@@ -48,5 +49,6 @@ private:
     Project* projectPtr = nullptr;
     bool spawnEditor(const EventPayload& payload);
     bool renameEditor(const EventPayload& payload);
-    bool deleteEditor(const EventPayload& payload); 
+    bool deleteEditor(const EventPayload& payload);
+    bool cloneFile(const EventPayload& payload);
 };

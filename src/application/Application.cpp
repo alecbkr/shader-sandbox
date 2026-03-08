@@ -236,7 +236,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Menu UI was not initialized successfully.");
         return false;
     }
-    if (!ctx.editor_ui.initialize(&ctx.logger, &ctx.editor_engine, &ctx.ctx_manager)) {
+    if (!ctx.editor_ui.initialize(&ctx.logger, &ctx.editor_engine, &ctx.ctx_manager, &ctx.events)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Editor UI was not initialized successfully.");
         return false;
     }
@@ -301,7 +301,7 @@ void Application::renderUI(AppContext& ctx) {
 }
 
 void Application::shutdown(AppContext& ctx) {
-    ctx.editor_engine.shutdown(&ctx.project);
+    ctx.editor_engine.shutdown();
 
     ctx.settings.styles.captureFromImGui(ImGui::GetStyle());
     ctx.settings.fontIdx = ctx.fonts.getFontIndex();

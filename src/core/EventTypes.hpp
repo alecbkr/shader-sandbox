@@ -16,6 +16,7 @@ enum class EventType {
     NewFile,
     RenameFile,
     ET_DeleteFile,
+    CloneFile,
     ContextSwitch
 };
 
@@ -79,3 +80,7 @@ inline Event RenameFileEvent(std::string oldName, std::string newName) {
 inline Event DeleteFileEvent(std::string fileName) {
     return { EventType::ET_DeleteFile, false, DeleteFilePayload{fileName} };
 }
+
+inline Event CloneFileEvent() {
+    return { EventType::CloneFile, false, std::monostate{} };
+};

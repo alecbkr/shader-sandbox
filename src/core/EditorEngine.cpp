@@ -84,7 +84,7 @@ EditorEngine::EditorEngine() {
     activeEditor = 0;
 }
 
-bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, ShaderRegistry* _shaderRegPtr, SettingsStyles* styles, Project* project) {
+bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, ShaderRegistry* _shaderRegPtr, SettingsStyles* styles, Project* _projectPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Editor Engine Initialization", "Editor Engine was already initialized.");
         return false;
@@ -94,8 +94,8 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
     eventsPtr = _eventsPtr;
     modelCachePtr = _modelCachePtr;
     shaderRegPtr = _shaderRegPtr;
+    projectPtr = _projectPtr;
     stylesPtr = styles;
-    projectPtr = project;
     editors.clear();
     activeEditor = 0;
 
@@ -103,8 +103,9 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
     eventsPtr->Subscribe(EventType::NewFile, std::bind(&EditorEngine::spawnEditor, this, std::placeholders::_1));
     eventsPtr->Subscribe(EventType::RenameFile, std::bind(&EditorEngine::renameEditor, this, std::placeholders::_1));
     eventsPtr->Subscribe(EventType::ET_DeleteFile, std::bind(&EditorEngine::deleteEditor, this, std::placeholders::_1));
+    eventsPtr->Subscribe(EventType::CloneFile, std::bind(&EditorEngine::cloneFile, this, std::placeholders::_1));
 
-    for (const auto& filePath : project->openShaderFiles) {
+    for (const auto& filePath : projectPtr->openShaderFiles) {
         eventsPtr->TriggerEvent(
             Event{
                 EventType::OpenFile,
@@ -113,7 +114,7 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
             }
         );
     }
-    project->openShaderFiles.clear();
+    projectPtr->openShaderFiles.clear();
 
     // syncing styles with settings if no loaded settings
     if (!stylesPtr->hasLoadedPalette) {
@@ -130,12 +131,12 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
     return true;
 }
 
-void EditorEngine::shutdown(Project* project) {
+void EditorEngine::shutdown() {
     if (!initialized) return;
 
-    project->openShaderFiles.clear();
+    projectPtr->openShaderFiles.clear();
     for (const auto& editor : editors) {
-        if (!editor->readOnly) project->openShaderFiles.push_back(editor->fileName);
+        if (!editor->readOnly) projectPtr->openShaderFiles.push_back(editor->fileName);
     }
 
     loggerPtr = nullptr;
@@ -166,10 +167,11 @@ bool EditorEngine::spawnEditor(const EventPayload& payload) {
         if (!data->filePath.empty() && std::filesystem::exists(data->filePath)) {
             editors.push_back(new Editor(data->filePath, data->fileName, linkedID, stylesPtr, data->readOnly));
         }
+
         return true;
     } else if (std::get_if<std::monostate>(&payload)) {
         try {
-            const std::string fileName = "Untitled " + findNextUntitledNumber();
+            const std::string fileName = findNextFileNumber("Untitled");
             const std::string filePath = (projectPtr->projectShadersDir /  fileName).string();
             createFile(filePath);
             editors.push_back(new Editor(filePath, fileName, 0, stylesPtr, false));
@@ -191,6 +193,11 @@ bool EditorEngine::renameEditor(const EventPayload& payload) {
                 editor->fileName = data->newName;
 
                 std::filesystem::path newPath = editor->filePath;
+                if (std::filesystem::exists(editor->filePath)) {
+                    loggerPtr->addLog(LogLevel::LOG_ERROR, "renameEditor", "File Name Already Exists");
+                    return false;
+                }
+
                 newPath.replace_filename(data->newName);
                 editor->filePath = newPath.string();
             }
@@ -218,6 +225,21 @@ bool EditorEngine::deleteEditor(const EventPayload& payload) {
     return false;
 }
 
+bool EditorEngine::cloneFile(const EventPayload& payload) {
+    if (std::get_if<std::monostate>(&payload) && !editors.empty()) {
+        const std::string fileName = findNextFileNumber(editors[activeEditor]->fileName);
+        const std::string filePath = (projectPtr->projectShadersDir  / fileName).string();
+
+        std::ofstream outfile(filePath);
+        outfile << editors[activeEditor]->textEditor.GetText();
+        outfile.close();
+
+        editors.push_back(new Editor(filePath, fileName, 0, stylesPtr, false));
+    }
+
+    return false;
+}
+
 void EditorEngine::createFile(const std::string& filePath) {
     std::ofstream outfile(filePath);
     outfile << "#version 330 core\n\n";
@@ -225,8 +247,18 @@ void EditorEngine::createFile(const std::string& filePath) {
     outfile.close();
 }
 
-std::string EditorEngine::findNextUntitledNumber() {
-    int i = 0;
-    while (std::filesystem::exists(projectPtr->projectShadersDir / ("Untitled " + std::to_string(i)))) i++;
-    return std::to_string(i);
+std::string EditorEngine::findNextFileNumber(const std::string& startingName) {
+    int i = 1;
+    std::string newName = startingName + "(" + std::to_string(i) + ")";
+
+    if (!std::filesystem::exists(projectPtr->projectShadersDir / startingName)) {
+        return startingName;
+    }
+
+    while (std::filesystem::exists(projectPtr->projectShadersDir / newName)) {
+        newName = startingName + "(" + std::to_string(i) + ")";
+        i++;
+    }
+    
+    return newName;
 }
