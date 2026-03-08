@@ -19,12 +19,13 @@ class AssetsInspectorUI;
 class FileInspectorUI;
 class Fonts;
 struct Project;
+struct SettingsStyles;
 
 class InspectorUI {
 public:
     InspectorUI();
     ~InspectorUI();
-    bool initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr, Fonts* _fontsPtr, Project* _project);
+    bool initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr, Fonts* _fontsPtr, Project* _project, SettingsStyles* _styles);
     void shutdown();
     void render();
   

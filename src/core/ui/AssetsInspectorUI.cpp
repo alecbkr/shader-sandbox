@@ -1,6 +1,7 @@
 #include "core/ui/AssetsInspectorUI.hpp"
 
 #include "core/ui/Fonts.hpp"
+#include "application/SettingsStyles.hpp"
 
 #include <algorithm>
 #include <string>
@@ -9,7 +10,7 @@
 #include <filesystem>
 #include <cstdio>
 
-AssetsInspectorUI::AssetsInspectorUI(Fonts* fonts, Project* project) : fonts(fonts), project(project) {}
+AssetsInspectorUI::AssetsInspectorUI(Fonts* fonts, Project* project, SettingsStyles* styles) : fonts(fonts), project(project), styles(styles) {}
 
 void AssetsInspectorUI::beginRename(const std::string& id, const std::string& currentName) {
     renamingID = id;
@@ -22,13 +23,13 @@ bool AssetsInspectorUI::drawRenameField(const std::filesystem::directory_entry& 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 
     if (entry.is_directory()) {
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(31, 32, 42, 255));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, IM_COL32(31, 32, 42, 255));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, IM_COL32(31, 32, 42, 255));
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, styles->assetsTreeBodyColor);
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, styles->assetsTreeBodyColor);
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, styles->assetsTreeBodyColor);
     } else {
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, IM_COL32(40, 42, 54, 255));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, IM_COL32(40, 42, 54, 255));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, IM_COL32(40, 42, 54, 255));
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, styles->assetsFileBackgroundColor);
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, styles->assetsFileBackgroundColor);
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, styles->assetsFileBackgroundColor);
     }
 
     if (renameJustStarted) ImGui::SetKeyboardFocusHere();
@@ -103,14 +104,17 @@ void AssetsInspectorUI::drawDirectory(std::filesystem::directory_entry entry, fl
     
     std::string label = renaming ? "" : entry.path().stem().string();
 
-    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(180, 185, 175, 255));// TODO: add this color to settings // assets directory text
+    ImGui::PushStyleColor(ImGuiCol_Text, styles->assetsDirectoryTextColor);
 
     if (renaming) ImGui::PushItemFlag(ImGuiItemFlags_NoNav, true);
     const bool open = ImGui::TreeNodeEx((label + "##" + entry.path().string()).c_str());
     if (renaming) ImGui::PopItemFlag();
+    
+    ImGui::PopStyleColor();
 
     if (!renaming && renamingID == "") {
-        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(248, 248, 242, 255));
+        ImVec4 textColor = ImGui::GetStyle().Colors[ImGuiCol_Text];
+        ImGui::PushStyleColor(ImGuiCol_Text, textColor);
         if (ImGui::BeginPopupContextItem(("##directory_menu" + entry.path().string()).c_str())) {
             if (ImGui::MenuItem("Import Asset")) importAsset(entry.path());
             if (ImGui::MenuItem("New Folder")) {
@@ -133,14 +137,13 @@ void AssetsInspectorUI::drawDirectory(std::filesystem::directory_entry entry, fl
             else if (entry.is_regular_file()) drawAsset(entry, padding);
         }
         ImGui::TreePop();
-
     }
-    ImGui::PopStyleColor();
 }
 
 void AssetsInspectorUI::drawAsset(std::filesystem::directory_entry entry, float padding) {
-    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(248, 248, 242, 255)); // TODO: pull this color from already existing settings // normal text color
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(40, 42, 54, 255)); // TODO: add this color to settings // asset file background
+    ImVec4 textColor = ImGui::GetStyle().Colors[ImGuiCol_Text];
+    ImGui::PushStyleColor(ImGuiCol_Text, textColor);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, styles->assetsFileBackgroundColor);
     if (ImGui::BeginChild(entry.path().string().c_str(), ImVec2(0, (padding * 2 + ImGui::CalcTextSize(entry.path().filename().string().c_str()).y)), ImGuiChildFlags_AlwaysUseWindowPadding)) {
         ImVec2 p = ImGui::GetWindowPos();
         ImVec2 s = ImGui::GetWindowSize();
@@ -148,10 +151,10 @@ void AssetsInspectorUI::drawAsset(std::filesystem::directory_entry entry, float 
         ImGui::GetWindowDrawList()->AddRect(
             p,
             ImVec2(p.x + s.x, p.y + s.y),
-            IM_COL32(45, 47, 63, 255),// TODO: add this color to settings   // assets border color
+            ImGui::ColorConvertFloat4ToU32(styles->assetsBorderColor),
             3.0f,
             ImDrawFlags_RoundCornersAll,
-            1.0f                      // TODO: add this value to settings    // assets border thickness
+            styles->assetsBorderThickness
         );
 
         if (renamingID == entry.path().string()) drawRenameField(entry);
@@ -170,12 +173,12 @@ void AssetsInspectorUI::drawAsset(std::filesystem::directory_entry entry, float 
 }
 
 void AssetsInspectorUI::draw() {
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(26, 27, 33, 255)); // TODO: add this color to settings // assets background
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, styles->assetsTabBackgroundColor);
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.0f);
-    float window_padding = 12.0f; // TODO: add this value to settings // assets body padding
+    float window_padding = styles->assetsBodyPadding;
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(window_padding, window_padding));
     if (ImGui::BeginChild("AssetsContent", ImVec2(0, 0), ImGuiChildFlags_AlwaysUseWindowPadding)) {
-        float inner_padding = 1.0f; // TODO: add this value to settings // assets title inner padding
+        float inner_padding = styles->assetsTitleInnerPadding;
         ImGui::PushFont(fonts->getL4());
         float directory_height = window_padding * 2 + inner_padding * 2 + ImGui::CalcTextSize("Assets").y;
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
@@ -187,22 +190,22 @@ void AssetsInspectorUI::draw() {
             ImGui::GetWindowDrawList()->AddRectFilled(
                 p,
                 ImVec2(p.x + s.x, p.y + s.y),
-                IM_COL32(31, 32, 42, 255), // TODO: add this color to settings // assets title background
-                6.0f, // TODO: add this value to settings // assets body rounding
+                ImGui::ColorConvertFloat4ToU32(styles->assetsTitleBackgroundColor),
+                styles->assetsBodyRounding,
                 ImDrawFlags_RoundCornersTop
             );
 
             ImGui::GetWindowDrawList()->AddRect(
                 p,
                 ImVec2(p.x + s.x, p.y + s.y),
-                IM_COL32(45, 47, 63, 255), // TODO: add this color to settings   // assets body border color
-                6.0f, // TODO: add this value to settings // assets body rounding
+                ImGui::ColorConvertFloat4ToU32(styles->assetsBorderColor),
+                styles->assetsBodyRounding,
                 ImDrawFlags_RoundCornersTop,
-                1.0f                       // TODO: add this value to settings   // assets body border thickness
+                styles->assetsBorderThickness
             );
 
             ImGui::SetCursorPosY(inner_padding + window_padding);
-            ImGui::Dummy(ImVec2(6.0f, 0.0f)); // TODO: add this value to settings // assets title offset
+            ImGui::Dummy(ImVec2(styles->assetsTitleOffset, 0.0f));
             ImGui::SameLine();
             ImGui::TextUnformatted("Assets");
         }
@@ -217,18 +220,18 @@ void AssetsInspectorUI::draw() {
             ImGui::GetWindowDrawList()->AddRectFilled(
                 p,
                 ImVec2(p.x + s.x, p.y + s.y),
-                IM_COL32(28, 30, 38, 255), // TODO: add this color to settings // tree body color
-                6.0f, // TODO: add this value to settings // assets body rounding
+                ImGui::ColorConvertFloat4ToU32(styles->assetsTreeBodyColor),
+                styles->assetsBodyRounding,
                 ImDrawFlags_RoundCornersBottom
             );
 
             ImGui::GetWindowDrawList()->AddRect(
                 p,
                 ImVec2(p.x + s.x, p.y + s.y),
-                IM_COL32(45, 47, 63, 255), // TODO: add this color to settings   // assets body border color
-                6.0f, // TODO: add this value to settings // assets body rounding
+                ImGui::ColorConvertFloat4ToU32(styles->assetsBorderColor),
+                styles->assetsBodyRounding,
                 ImDrawFlags_RoundCornersBottom,
-                1.0f                       // TODO: add this value to settings   // assets body border thickness
+                styles->assetsBorderThickness
             );
 
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 8.0f));

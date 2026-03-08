@@ -454,7 +454,7 @@ void SettingsModal::drawStylesPage() {
     if (ImGui::CollapsingHeader("Editor Colors")) {
         ImGui::Indent();
         if (beginSectionTable("##style_editorcolors")) {
-            row("Style Color", [&] { ImGui::Combo("##StyleColor", &selectedEditorStyleColor, kEditorPaletteNames, (int)TextEditor::PaletteIndex::Max); });
+            row("Style Color", [&] { ImGui::Combo("##StyleColorEitor", &selectedEditorStyleColor, kEditorPaletteNames, (int)TextEditor::PaletteIndex::Max); });
             endSectionTable();
         }
         ImGui::Spacing();
@@ -471,6 +471,43 @@ void SettingsModal::drawStylesPage() {
         )) {
             settingsPtr->styles.paletteVersion++;
         }
+        ImGui::PopItemWidth();
+        ImGui::Unindent();
+    }
+
+    // ===== Inspector Colors =====
+    static const char* kInspectorColorNames[] = {
+        "assetsDirectoryTextColor", "assetsFileBackgroundColor", "assetsBorderColor", "assetsTabBackgroundColor",
+        "assetsTitleBackgroundColor", "assetsTreeBodyColor"
+    };
+
+    static ImVec4* inspectorColorPtrs[] = {
+        &settingsPtr->styles.assetsDirectoryTextColor,
+        &settingsPtr->styles.assetsFileBackgroundColor,
+        &settingsPtr->styles.assetsBorderColor,
+        &settingsPtr->styles.assetsTabBackgroundColor,
+        &settingsPtr->styles.assetsTitleBackgroundColor,
+        &settingsPtr->styles.assetsTreeBodyColor
+    };
+
+    if (ImGui::CollapsingHeader("Inspector Colors")) {
+        ImGui::Indent();
+        if (beginSectionTable("##style_inspectorcolors")) {
+            row("Style Color", [&] { ImGui::Combo("##StyleColorInspector", &selectedInspectorStyleColor, kInspectorColorNames, 6); });
+            endSectionTable();
+        }
+        ImGui::Spacing();
+
+        const float pickerWidth = 240.0f;
+        float avail = ImGui::GetContentRegionAvail().x;
+        float x = ImGui::GetCursorPosX() + (avail - pickerWidth) * 0.5f;
+        if (x > ImGui::GetCursorPosX()) ImGui::SetCursorPosX(x);
+
+        ImGui::PushItemWidth(pickerWidth);
+        ImGui::ColorPicker4("##Picker", &(inspectorColorPtrs[selectedInspectorStyleColor]->x),
+            ImGuiColorEditFlags_NoSmallPreview |
+            ImGuiColorEditFlags_PickerHueBar
+        );
         ImGui::PopItemWidth();
         ImGui::Unindent();
     }
