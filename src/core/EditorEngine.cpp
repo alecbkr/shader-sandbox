@@ -24,18 +24,20 @@ std::string getFileContents(std::string filename) {
     return "";
 }
 
-Editor::Editor(std::string filePath, std::string fileName, unsigned int modelID, SettingsStyles* styles) {
+Editor::Editor(std::string filePath, std::string fileName, unsigned int modelID, SettingsStyles* styles, bool readOnly) {
     searcher.setSearchFlag(SearchUIFlags::ADVANCED | SearchUIFlags::REPLACE);
 
     this->filePath = std::move(filePath);
     this->fileName = std::move(fileName);
     this->modelID = modelID;
     this->stylesPtr = styles;
+    this->readOnly = readOnly;
     seenPaletteVersion = std::numeric_limits<u32>::max();
 
     TextEditor::LanguageDefinition lang = TextEditor::LanguageDefinition::GLSL();
     this->textEditor.SetLanguageDefinition(lang);
     this->textEditor.SetShowWhitespaces(false);
+    this->textEditor.SetReadOnly(readOnly);
     applyPaletteIfOutdated();
 
     this->textEditor.SetText(getFileContents(this->filePath));
@@ -107,7 +109,7 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
             Event{
                 EventType::OpenFile,
                 false,
-                OpenFilePayload{ filePath.string(), filePath.filename().string(), 0 }
+                OpenFilePayload{ filePath.string(), filePath.filename().string(), 0, false }
             }
         );
     }
@@ -133,7 +135,7 @@ void EditorEngine::shutdown(Project* project) {
 
     project->openShaderFiles.clear();
     for (const auto& editor : editors) {
-        project->openShaderFiles.push_back(editor->fileName);
+        if (!editor->readOnly) project->openShaderFiles.push_back(editor->fileName);
     }
 
     loggerPtr = nullptr;
@@ -162,7 +164,7 @@ bool EditorEngine::spawnEditor(const EventPayload& payload) {
             }
         }
         if (!data->filePath.empty() && std::filesystem::exists(data->filePath)) {
-            editors.push_back(new Editor(data->filePath, data->fileName, linkedID, stylesPtr));
+            editors.push_back(new Editor(data->filePath, data->fileName, linkedID, stylesPtr, data->readOnly));
         }
         return true;
     } else if (std::get_if<std::monostate>(&payload)) {
@@ -170,7 +172,7 @@ bool EditorEngine::spawnEditor(const EventPayload& payload) {
             const std::string fileName = "Untitled " + findNextUntitledNumber();
             const std::string filePath = (projectPtr->projectShadersDir /  fileName).string();
             createFile(filePath);
-            editors.push_back(new Editor(filePath, fileName, 0, stylesPtr));
+            editors.push_back(new Editor(filePath, fileName, 0, stylesPtr, false));
             return true;
         } catch (const std::filesystem::filesystem_error& e) {
             loggerPtr->addLog(LogLevel::LOG_ERROR, "EditorEngine::createFile", std::string("Filesystem error: ") + e.what());

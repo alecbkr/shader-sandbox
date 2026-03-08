@@ -35,6 +35,7 @@ private:
     void drawDeleteFileEntity(ShaderFile* fileData, EventDispatcher* eventsPtr);
     void drawContextMenu(ShaderFile* fileData);
     void drawStandardFileEntry(ShaderFile* fileData, EventDispatcher* eventsPtr);
+    void drawPresetShaderEntry(std::filesystem::path filePath, EventDispatcher* eventsPtr);
     void drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, InspectorEngine* inspectorEngPtr);
     void drawShaderLinkMenu(ShaderLinkMenu& menu, const std::vector<const char*>& vertChoices, const std::vector<const char*>& geoChoices, const std::vector<const char*>& fragChoices, InspectorEngine* inspectorEngPtr);
     void initializeMenu(ShaderLinkMenu& menu, const std::vector<const char*>& vertChoices, const std::vector<const char*>& geoChoices, const std::vector<const char*>& fragChoices, ShaderRegistry* shaderRegPtr);
