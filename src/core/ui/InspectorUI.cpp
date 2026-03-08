@@ -39,7 +39,7 @@ InspectorUI::InspectorUI() {
     fileInspectorUI = std::make_unique<FileInspectorUI>();
 }
 
-bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr, Fonts* _fontsPtr, Project* _project) {
+bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr, Fonts* _fontsPtr, Project* _project, SettingsStyles* _styles) {
     if (intitialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Inspector UI Initialization", "Inspector UI was already initialized.");
         return false;
@@ -52,7 +52,7 @@ bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngP
     eventsPtr = _eventsPtr;
     modelCachePtr = _modelCachePtr;
     fileRegPtr = _fileRegPtr;
-    assetsInspectorUI = std::make_unique<AssetsInspectorUI>(_fontsPtr, _project);
+    assetsInspectorUI = std::make_unique<AssetsInspectorUI>(_fontsPtr, _project, _styles);
     materialCachePtr = _materialCachePtr;
     intitialized = true;
     return true;

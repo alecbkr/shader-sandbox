@@ -13,11 +13,12 @@
 #include "core/ui/AssetsManager.hpp"
 
 class Fonts;
+struct SettingsStyles;
 
 class AssetsInspectorUI {
 public:
     AssetsInspectorUI() = delete;
-    AssetsInspectorUI(Fonts* fonts, Project* project);
+    AssetsInspectorUI(Fonts* fonts, Project* project, SettingsStyles* styles);
     void draw();
 
 private:
@@ -37,4 +38,5 @@ private:
     void drawAsset(std::filesystem::directory_entry entry, float padding);
     Fonts* fonts;
     Project* project;
+    SettingsStyles* styles;
 };
