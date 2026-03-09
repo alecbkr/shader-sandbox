@@ -24,6 +24,8 @@ bool ShaderRegistry::initialize(Logger* _loggerPtr, bool registerDefaults) {
         if (!registerProgram("../shaders/color.vert", "../shaders/color.frag", "color")) return false;
         if (!registerProgram("../shaders/scene/gridplane.vert", "../shaders/scene/gridplane.frag", "gridplane")) return false;
         if (!registerProgram("../shaders/scene/skybox.vert", "../shaders/scene/skybox.frag", "skybox")) return false;
+
+        if (!registerProgram("../shaders/instance.vert", "../shaders/instance.frag", "instance")) return false;
     }
 
     initialized = true;

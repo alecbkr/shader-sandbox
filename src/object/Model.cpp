@@ -13,16 +13,45 @@ Model::Model(const unsigned int ID, TextureCache* _textureCachePtr, Logger* _log
 
 
 // -----FUNCTIONALITY
+// void Model::renderPrimitive(unsigned int meshID) {
+//     ModelPrimitive& prim = primitives[meshID];
+//     MeshA* mesh = all_meshes[prim.meshID].get();
+//     Material* mat = materialCachePtr->getMaterial(prim.materialID);
+
+//     if (mat == nullptr) {
+//         loggerPtr->addLog(LogLevel::LOG_ERROR, "Model::renderPrimitive", "Material not found!");
+//         return;
+//     }
+
+//     mesh->bind();
+
+//     std::vector<unsigned int> textureIDs = mat->getMaterialTextureIDs();
+//     if (textureIDs.empty()) {
+//         textureCachePtr->bindDefault();
+//     }
+//     else {
+//         unsigned int texUnit = 0;
+//         for (unsigned int texID : textureIDs) {
+//             textureCachePtr->bindTexture(texID, texUnit++);
+//         }
+//     }
+//     glDrawElements(GL_TRIANGLES, mesh->indices.size(), GL_UNSIGNED_INT, 0);
+//     glBindTexture(GL_TEXTURE_2D, 0);
+// }
+
+
 void Model::renderPrimitive(unsigned int meshID) {
     ModelPrimitive& prim = primitives[meshID];
     MeshA* mesh = all_meshes[prim.meshID].get();
     Material* mat = materialCachePtr->getMaterial(prim.materialID);
 
     if (mat == nullptr) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "Model::renderPrimitive", "Material not found!");
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "Model::renderInstancedPrimitive", "Material not found!");
         return;
     }
 
+    
+    mesh->setInstanceVBO(modelInstanceCount);
     mesh->bind();
 
     std::vector<unsigned int> textureIDs = mat->getMaterialTextureIDs();
@@ -35,8 +64,14 @@ void Model::renderPrimitive(unsigned int meshID) {
             textureCachePtr->bindTexture(texID, texUnit++);
         }
     }
-    glDrawElements(GL_TRIANGLES, mesh->indices.size(), GL_UNSIGNED_INT, 0);
+    if (modelInstanceCount > 1) {
+        glDrawElementsInstanced(GL_TRIANGLES, mesh->indices.size(), GL_UNSIGNED_INT, 0, modelInstanceCount);
+    }
+    else {
+        glDrawElements(GL_TRIANGLES, mesh->indices.size(), GL_UNSIGNED_INT, 0);
+    }
     glBindTexture(GL_TEXTURE_2D, 0);
+
 }
 
 
@@ -105,6 +140,11 @@ void Model::rotate(float angle, glm::vec3 axis) {
 }
 
 
+void Model::setInstancePosition(unsigned int instanceNum, glm::vec3 position) {
+    // if (instanceNum > )
+}
+
+
 // -----SETTERS
 void Model::setMesh(std::vector<float> vertices, std::vector<unsigned int> indices, bool hasPos, bool hasNorm, bool hasUV) {
 
@@ -139,6 +179,15 @@ void Model::setMaterialType(unsigned int materialID, MaterialType type) {
         return;
     }
     mat->type = type;
+}
+
+
+void Model::setInstanceCount(unsigned int newInstanceCount) { 
+    if (newInstanceCount == 0 || 100 < newInstanceCount) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "setInstanceCount()", "invalid instance range, can be 1-100");
+        return;
+    }
+    modelInstanceCount = newInstanceCount;
 }
 
 

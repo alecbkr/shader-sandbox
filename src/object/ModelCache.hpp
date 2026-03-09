@@ -58,7 +58,7 @@ class ModelCache {
         // static void reorderByProgram();
         void placeInCache(unsigned int modelID);
 
-        //SYSTEM POINTERS
+        //SYSTEM FUNCTIONALITY
         bool initialized = false;
         bool inspectorEngPtrSet = false;
         Logger* loggerPtr                = nullptr;

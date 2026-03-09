@@ -166,7 +166,9 @@ void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camP
     // RENDER OPAQUE PRIMITIVES
     for (ModelPrimitive* prim : opaquePrims) {
         inspectorEngPtr->applyAllUniformsForPrimitive(*prim);
-        getModel(prim->ModelID)->renderPrimitive(prim->meshID);
+        // getModel(prim->ModelID)->renderPrimitive(prim->meshID);
+        getModel(prim->ModelID)->renderPrimitive(prim->meshID); //modelInstanceCount[prim->ModelID]
+        
     }
 
     // RENDER TRANSLUCENT PRIMITIVES

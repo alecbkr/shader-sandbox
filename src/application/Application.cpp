@@ -110,6 +110,7 @@ void loadPresetAssets(AppContext& ctx) {
     ShaderProgram* skyboxPtr = ctx.shader_registry.getProgram("skybox");
     ShaderProgram* texPtr = ctx.shader_registry.getProgram("tex");
     ShaderProgram* colorPtr = ctx.shader_registry.getProgram("color");
+    ShaderProgram* instancePtr = ctx.shader_registry.getProgram("instance");
     
 
     unsigned int skyboxID = ctx.model_cache.createSkybox("../assets/textures/skybox");
@@ -120,7 +121,8 @@ void loadPresetAssets(AppContext& ctx) {
     ctx.model_cache.getModel(gridID)->setScale(glm::vec3(50.0f));
 
     unsigned int backpackID = ctx.model_cache.createImported("../assets/models/backpack/backpack.obj");
-    ctx.model_cache.getModel(backpackID)->setModelProgram(texPtr->name);
+    ctx.model_cache.getModel(backpackID)->setModelProgram(instancePtr->name);
+    ctx.model_cache.getModel(backpackID)->setInstanceCount(5);
 
     unsigned int testPlane = ctx.model_cache.createPreset(MeshPreset::PLANE);
     Model* testPlaneModel = ctx.model_cache.getModel(testPlane);
@@ -129,14 +131,15 @@ void loadPresetAssets(AppContext& ctx) {
     testPlaneModel->setModelProgram(texPtr->name);
     testPlaneModel->rotate(90.0, glm::vec3(1.0f, 0.0f, 0.0f));
     testPlaneModel->translate(glm::vec3(0.0f, 1.0f, 0.0f));
+    ctx.model_cache.getModel(testPlane)->setInstanceCount(5);
 
-    unsigned int testPlane2 = ctx.model_cache.createPreset(MeshPreset::PLANE);
-    Model* testPlane2Model = ctx.model_cache.getModel(testPlane2);
-    testPlane2Model->addTexture("../assets/textures/window.png", TextureType::TEX_DIFFUSE);
-    ctx.model_cache.setModelMaterialType(testPlane2, testPlane2Model->getAllMaterialIDs()[0], MaterialType::Translucent);
-    testPlane2Model->setModelProgram(texPtr->name);
-    testPlane2Model->rotate(90.0, glm::vec3(1.0f, 0.0f, 0.0f));
-    testPlane2Model->translate(glm::vec3(-3.0f, 0.0f, 0.0f));
+    // unsigned int testPlane2 = ctx.model_cache.createPreset(MeshPreset::PLANE);
+    // Model* testPlane2Model = ctx.model_cache.getModel(testPlane2);
+    // testPlane2Model->addTexture("../assets/textures/window.png", TextureType::TEX_DIFFUSE);
+    // ctx.model_cache.setModelMaterialType(testPlane2, testPlane2Model->getAllMaterialIDs()[0], MaterialType::Translucent);
+    // testPlane2Model->setModelProgram(texPtr->name);
+    // testPlane2Model->rotate(90.0, glm::vec3(1.0f, 0.0f, 0.0f));
+    // testPlane2Model->translate(glm::vec3(-3.0f, 0.0f, 0.0f));
     
 }
 

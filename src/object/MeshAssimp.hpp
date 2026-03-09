@@ -2,6 +2,7 @@
 
 #include <glad/glad.h>
 #include "platform/GL.hpp"
+#include "InstanceData.hpp"
 // #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <vector>
@@ -43,6 +44,9 @@ class MeshA {
         MeshFlags meshflags;
         
         GLuint vao = 0, vbo = 0, ebo = 0;
+        unsigned int meshInstanceCount = 1;
+        GLuint instanceVBO = 0;
+        std::vector<InstanceData> instanceData;
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
         glm::vec4 baseColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
@@ -50,6 +54,7 @@ class MeshA {
         void unbind();
         void loadToGPU();
         void unloadFromGPU();
+        void setInstanceVBO(unsigned int modelInstanceCount);
 
         friend class Model;
         friend class CustomModel;

@@ -32,9 +32,9 @@ class Model {
         std::vector<ModelPrimitive> primitives;
 
         // SYSTEM POINTERS
-        ShaderRegistry* shaderRegPtr = nullptr;
-        TextureCache* textureCachePtr = nullptr;
-        Logger* loggerPtr = nullptr;
+        Logger* loggerPtr               = nullptr;
+        ShaderRegistry* shaderRegPtr    = nullptr;
+        TextureCache* textureCachePtr   = nullptr;
         MaterialCache* materialCachePtr = nullptr;
 
         Model(const unsigned int ID, TextureCache* _textureCachePtr, Logger* _loggerPtr, MaterialCache* _materialCachePtr);
@@ -50,6 +50,7 @@ class Model {
         void translate(glm::vec3 position);
         void rescale(glm::vec3 vector);
         void rotate(float angle, glm::vec3 axis);
+        void setInstancePosition(unsigned int instanceNum, glm::vec3 position);
 
         // SETTERS
         virtual void setMesh(std::vector<float> vertices, std::vector<unsigned int> indices, bool hasPos, bool hasNorm, bool hasUV);
@@ -57,6 +58,7 @@ class Model {
         virtual void addTexture(std::string texture_path, TextureType type) = 0;
         void setMaterialProgram(unsigned int materialID, std::string &programID);
         void setMaterialType(unsigned int materialID, MaterialType type);
+        void setInstanceCount(unsigned int newInstanceCount);
 
         // GETTERS
         const std::vector<unsigned int>& getAllMaterialIDs() const;
@@ -74,10 +76,11 @@ class Model {
     protected:
         unsigned int nextMeshID = 0;
         ModelFlags properties;
-        std::vector<std::unique_ptr<MeshA>>    all_meshes;
-        std::vector<unsigned int> all_material_ids;
+        std::vector<std::unique_ptr<MeshA>> all_meshes;
+        std::vector<unsigned int>           all_material_ids;
 
     private:
+        unsigned int modelInstanceCount = 1;
         glm::mat4 modelM      = glm::mat4(1.0f);
         glm::vec3 position    = glm::vec3(0.0f);
         glm::vec3 scale       = glm::vec3(1.0f);

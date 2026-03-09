@@ -8,6 +8,7 @@ bool TextureCache::initialize(Logger* _loggerPtr) {
     loggerPtr = _loggerPtr;
 
     defaultTexture = std::make_unique<Texture2D>(Texture2D("../assets/textures/default.jpeg", TEX_DIFFUSE, loggerPtr));
+    // defaultTexture = std::make_unique<Texture2D>(Texture2D("../assets/textures/water.png", TEX_DIFFUSE, loggerPtr));
     // if (defaultTexture->isValid() == false) {
     //     return false;
     // }

@@ -3,6 +3,7 @@
 #include "../texture/TextureType.hpp"
 #include "core/logging/Logger.hpp"
 
+#include <iostream>
 
 MeshA::MeshA(std::vector<Vertex> vertices, std::vector<unsigned int> indices, MeshFlags meshflags, unsigned int id) : ID(id) {
     this->vertices = vertices;
@@ -20,6 +21,35 @@ MeshA::~MeshA() {
     // Logger::addLog(LogLevel::INFO, "MESH", "Deleting mesh...");
     unloadFromGPU();
 }
+
+void MeshA::setInstanceVBO(unsigned int modelInstanceCount) {
+    if (meshInstanceCount == modelInstanceCount) return; 
+
+    if (meshInstanceCount < modelInstanceCount) {
+        for (int i = meshInstanceCount; i <= modelInstanceCount; i++) {
+            instanceData.emplace_back(1.0f * i, 0.0f, 0.0f);
+        }
+    }
+    else { //model count is less than mesh
+        for (int i = meshInstanceCount; i > modelInstanceCount; i--) {
+            instanceData.erase(instanceData.begin() + i);
+        }
+    }
+    meshInstanceCount = modelInstanceCount;
+
+    if (instanceVBO == 0) {
+        glGenBuffers(1, &instanceVBO);
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(
+        GL_ARRAY_BUFFER, 
+        instanceData.size() * sizeof(InstanceData),
+        instanceData.data(),
+        GL_STATIC_DRAW
+    );
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
 
 
 void MeshA::bind() {
@@ -66,6 +96,13 @@ void MeshA::loadToGPU() {
 
     glEnableVertexAttribArray(3);
     glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
+
+    if (meshInstanceCount > 1) {
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)0);
+        glVertexAttribDivisor(4, 1);
+    }
     
     isLoadedInGPU = true;
 }
