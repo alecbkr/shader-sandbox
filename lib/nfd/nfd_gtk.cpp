@@ -41,7 +41,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "nfd.h"
+#include "nfd/nfd.h"
 
 #include "nfd_linux_shared.hpp"
 

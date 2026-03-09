@@ -48,8 +48,6 @@ bool InspectorEngine::initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegP
     viewportUIPtr = _viewportUIPtr;
     materialCachePtr = _materialCachePtr;
     modelCachePtr = _modelCachePtr;
-    
-    refreshUniforms();
 
     initialized = true;
     return true;
