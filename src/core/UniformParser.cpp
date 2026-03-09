@@ -158,9 +158,10 @@ std::unordered_map<std::string, Uniform> UniformParser::parseUniforms(const Shad
                 lastTokenWas = LastTokenWas::TypeName;
                 break;
             }
-            case LastTokenWas::RightSqrBracket: {
+            case LastTokenWas::RightSqrBracket:
+            case LastTokenWas::LeftSqrBracket:
+            case LastTokenWas::RightCurlyBrace:
                 break;
-            }
         }
     }
 
