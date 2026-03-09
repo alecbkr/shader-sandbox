@@ -44,6 +44,7 @@ private:
     SettingsPage page = SettingsPage::Keybinds;
     KeybindCapture capture;
 
+    int selectedTheme = 0;
     int selectedStyleColor = 0;
     int selectedEditorStyleColor = 0;
     int selectedInspectorStyleColor = 0;

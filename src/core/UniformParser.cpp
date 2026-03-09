@@ -29,7 +29,7 @@ std::unordered_map<std::string, Uniform> UniformParser::parseUniforms(const Shad
     
     LastTokenWas lastTokenWas = LastTokenWas::IgnoreLastToken;
     ParseState state = ParseState::Default;
-    for (int i = 0; i < tokens.size(); i++) {
+    for (int i = 0; i < (int)tokens.size(); i++) {
         std::string& token = tokens[i];
         switch (lastTokenWas) {
             case LastTokenWas::IgnoreLastToken: {
@@ -158,6 +158,9 @@ std::unordered_map<std::string, Uniform> UniformParser::parseUniforms(const Shad
                 lastTokenWas = LastTokenWas::TypeName;
                 break;
             }
+            case LastTokenWas::RightSqrBracket: {
+                break;
+            }
         }
     }
 
@@ -246,7 +249,7 @@ void UniformParser::handleUniformName(
     else state = ParseState::StructDefinition;
 
     // rare case where we just handle tokens manually.
-    bool isArray = tokenIndex < tokens.size() - 4 && tokens[tokenIndex + 1] == "[";
+    bool isArray = tokenIndex < (int)tokens.size() - 4 && tokens[tokenIndex + 1] == "[";
     bool isStruct = structDefinitions.contains(typeName);
 
     // base case: simple glsl uniform.
@@ -269,7 +272,7 @@ void UniformParser::handleUniformName(
     // Handle array
     if (isArray) {
         const std::string& arraySizeToken = tokens[tokenIndex + 2];
-        const std::string& rightBracket = tokens[tokenIndex + 3];
+        //const std::string& rightBracket = tokens[tokenIndex + 3];
 
         bool isDigit = true;
         for (char a : arraySizeToken) {
@@ -315,7 +318,7 @@ void UniformParser::handleUniformName(
 std::vector<std::string>  UniformParser::processDefines(const std::vector<std::string>& tokens) {
     std::unordered_map<std::string, std::vector<std::string>> defines; 
     std::vector<std::string> newTokens;  
-    for (int i = 0; i < tokens.size(); i++) {
+    for (int i = 0; i < (int)tokens.size(); i++) {
         const std::string& token = tokens[i];
         if (token != "define") {
             continue;
@@ -334,7 +337,7 @@ std::vector<std::string>  UniformParser::processDefines(const std::vector<std::s
         }
     }
 
-    for (int i = 0; i < tokens.size(); i++) {
+    for (int i = 0; i < (int)tokens.size(); i++) {
         const std::string& token = tokens[i];
         if (!defines.contains(token)) {
             newTokens.push_back(token);

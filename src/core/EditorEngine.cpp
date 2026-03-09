@@ -183,7 +183,7 @@ bool EditorEngine::renameEditor(const EventPayload& payload) {
 
 bool EditorEngine::deleteEditor(const EventPayload& payload) {
     if (const auto* data = std::get_if<DeleteFilePayload>(&payload)) {
-        for (int i = 0; i < editors.size(); i++) {
+        for (int i = 0; i < (int)editors.size(); i++) {
             if (editors[i]->fileName == data->fileName) {
                 editors[i]->destroy();
                 editors.erase(editors.begin() + i);

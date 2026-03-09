@@ -100,7 +100,7 @@ void loadPresetAssets(AppContext& ctx) {
     ShaderProgram* gridplanePtr = ctx.shader_registry.getProgram("gridplane");
     ShaderProgram* skyboxPtr = ctx.shader_registry.getProgram("skybox");
     ShaderProgram* texPtr = ctx.shader_registry.getProgram("tex");
-    ShaderProgram* colorPtr = ctx.shader_registry.getProgram("color");
+    //ShaderProgram* colorPtr = ctx.shader_registry.getProgram("color");
     
 
     unsigned int skyboxID = ctx.model_cache.createSkybox("../assets/textures/skybox");
