@@ -229,6 +229,7 @@ bool Application::initialize(AppContext& ctx) {
     loadPresetAssets(ctx);
     addSubscriptions(ctx);
     initializeUI(ctx);
+    ctx.inspector_engine.refreshUniforms();
     if (!ctx.console_ui.initialize(&ctx.logger)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Console UI was not initialized successfully.");
         return false;
