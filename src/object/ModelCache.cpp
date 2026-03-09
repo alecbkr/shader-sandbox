@@ -314,6 +314,9 @@ void ModelCache::setModelMaterialType(unsigned int modelID, unsigned int materia
                 }
             }
             break;
+
+        case MaterialType::Skybox:
+            break;
     }
 
     model->setMaterialType(materialID, type);
@@ -330,6 +333,9 @@ void ModelCache::setModelMaterialType(unsigned int modelID, unsigned int materia
         case MaterialType::Cutout: 
             cutoutPrims.insert(cutoutPrims.end(), primsWithMaterialID.begin(), primsWithMaterialID.end());
             break;
+
+        case MaterialType::Skybox:
+            break;
     }
 }
 
@@ -341,7 +347,8 @@ void ModelCache::placeInCache(unsigned int modelID) {
             case MaterialType::Opaque:      opaquePrims.push_back(&prim); break;
             // case MaterialType::Cutout:      opaquePrims.push_back(&prim); break;
             case MaterialType::Translucent: translucentPrims.push_back(&prim); break;
-            case MaterialType::Skybox:      skyboxPrim = &prim;
+            case MaterialType::Skybox:      skyboxPrim = &prim; break;
+            case MaterialType::Cutout: break;
         }
     }
 }
