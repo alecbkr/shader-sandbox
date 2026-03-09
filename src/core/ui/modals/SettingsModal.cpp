@@ -434,9 +434,8 @@ void SettingsModal::drawStylesPage() {
     using ThemeApplyFn = void(*)(SettingsStyles&);
     
     static ThemeApplyFn themeApplyFns[] = {
-        applyDefaultTheme
+        DefaultTheme::applyDefaultTheme
     };
-    // static function array // this array holds a list of functions. then when the "apply theme" button is pressed it accesses this array and runs the function that is at the selected theme index
 
     if (ImGui::CollapsingHeader("Themes")) {
         ImGui::Indent();
@@ -446,7 +445,7 @@ void SettingsModal::drawStylesPage() {
         }
         ImGui::Spacing();
         
-        if (ImGui::Button("Apply Theme", ImVec2(100, 30))) {
+        if (ImGui::Button("Apply Theme")) {
             if (selectedTheme >= 0 && selectedTheme < IM_ARRAYSIZE(themeApplyFns)) {
                 themeApplyFns[selectedTheme](settingsPtr->styles);
             }

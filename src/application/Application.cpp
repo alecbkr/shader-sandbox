@@ -26,6 +26,7 @@
 #include "engine/AppTimer.hpp"
 #include "engine/Errorlog.hpp"
 #include "persistence/ProjectLoader.hpp"
+#include "core/ui/themes/default.hpp"
 
 bool Application::initialized = false;
 
@@ -89,6 +90,10 @@ void Application::initializeUI(AppContext& ctx) {
 
     ctx.settingsModal.initialize(&ctx.logger, &ctx.inputs, &ctx.keybinds, &ctx.platform, &ctx.settings);
     ctx.modals.registerModal(&ctx.settingsModal);
+
+    if (!ctx.settings.settingsFound) {
+        DefaultTheme::applyDefaultTheme(ctx.settings.styles);
+    }
 }
 
 void loadPresetAssets(AppContext& ctx) {
