@@ -19,7 +19,7 @@ enum class LoggerInitialization {
 class Logger {
 public: 
     Logger();
-     bool initialize();
+    bool initialize(const std::string& appTitle, const std::string& projectTitle);
     void addLog(LogLevel level, std::string src, std::string msg, std::string additional = "", int lineNum = -1,  const std::source_location& file_location = std::source_location::current());
     void addSink(std::shared_ptr<LogSink> sink);
     void removeSink(std::shared_ptr<LogSink> sink);

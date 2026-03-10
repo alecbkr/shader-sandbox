@@ -141,7 +141,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::WARNING, "Application Initialization", "Application was already initialized.");
         return false;
     }
-    if (!ctx.logger.initialize()) {
+    if (!ctx.logger.initialize(ctx.app_title, ctx.project.projectTitle)) {
         std::cout << "Logger was not initialized successfully." << std::endl;
         return false;
     }

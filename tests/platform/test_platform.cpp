@@ -11,6 +11,13 @@
 #include "core/input/InputState.hpp"
 #include "application/AppContext.hpp"
 
+// helper to take on the project's name for the logger 
+static bool initTestLogger(Logger& logger){
+    std::string testAppName = "PrimsTSS_Test"; 
+    std::string testProjectName = "ActionRegistry_Tests"; 
+    return logger.initialize(testAppName, testProjectName); 
+}
+
 TEST_CASE("Platform: methods are safe before initialize (guards)", "[platform]") {
     Platform p;
 
@@ -44,7 +51,7 @@ TEST_CASE("Platform: getExeDir returns a valid-ish directory", "[platform]") {
 
 TEST_CASE("Platform: initialize window + callbacks (integration, may skip)", "[platform][integration]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry actions;
     REQUIRE(actions.initialize(&logger));

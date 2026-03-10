@@ -1,6 +1,7 @@
 #include "core/logging/Logger.hpp"
 #include "core/logging/FileSink.hpp"
 #include "core/logging/StdoutSink.hpp"
+#include "../../application/Project.hpp"
 
 #define DEFAULT_SINKS LoggerInitialization::CONSOLE_FILE_STDOUT
 
@@ -10,18 +11,19 @@ Logger::Logger() {
     initialized = false;
 }
 
-bool Logger::initialize(){
+bool Logger::initialize(const std::string& appName, const std::string& projectName){
     Logger::consoleSinkPtr = std::make_shared<ConsoleSink>();
     Logger::addSink(consoleSinkPtr);
+    std::filesystem::path logPath = FileSink::GetProjectLogDirectory(appName, projectName);
 
     switch (DEFAULT_SINKS) {
         case LoggerInitialization::CONSOLE_FILE_STDOUT:
-            Logger::addSink(std::make_shared<FileSink>());
+            Logger::addSink(std::make_shared<FileSink>(logPath));
             Logger::addSink(std::make_shared<StdoutSink>());
             break;
         
         case LoggerInitialization::CONSOLE_FILE:
-            Logger::addSink(std::make_shared<FileSink>());
+            Logger::addSink(std::make_shared<FileSink>(logPath));
             break;
         
         case LoggerInitialization::CONSOLE_STDOUT:

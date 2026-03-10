@@ -2,15 +2,17 @@
 #include <fstream>
 #include "LogSink.hpp"
 #include <filesystem>
+#include <string> 
 
 
 
 class FileSink : public LogSink {
     public: 
-    FileSink(const std::filesystem::path& log_dir = "../src/core/logging/logs");    // make this path more exportable on release 
+    FileSink(const std::filesystem::path& log_dir);    
     ~FileSink(); 
     void addLog(const LogEntry& entry) override; 
     const std::filesystem::path getLogDir() const; 
+    static std::filesystem::path GetProjectLogDirectory(const std::string& appName, const std::string& projectName);
 
     protected:    
     struct LogFileInfo {
