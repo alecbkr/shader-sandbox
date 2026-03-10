@@ -43,6 +43,8 @@ struct TextSelectorLayout {
 };
 
 class TextSelector {
+friend struct TextSelectorTester;      // used to test the private methods
+
 public:
     static bool Begin(const char* id, int totalRows, TextSelectionCtx& ctx, TextSelectorLayout& layout);
     static void Text(const std::string& rawText); 
@@ -67,4 +69,8 @@ private:
     static bool isWhiteSpace(char c); 
     static bool isDelimeter(char c); 
     static bool isToken(char c); 
+
+    // used for testing only 
+    static void SetTestContext(ImGuiContext* ctx);
+    static std::function<void(const std::string&)> s_testClipboardHook;
 };

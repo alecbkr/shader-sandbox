@@ -4,6 +4,9 @@
 #include <iostream>
 #include <sstream>
 
+// hook uses for testing 
+std::function<void(const std::string&)> TextSelector::s_testClipboardHook = nullptr;
+
 TextSelector::CurrentState TextSelector::state; 
 
 // setups the draw state to begin drawing the selection boxes 
@@ -267,8 +270,25 @@ void TextSelector::copyText(const TextSelectionCtx& ctx, int totalRows, std::fun
         }
     }
 
-    if (ss.rdbuf()->in_avail() > 0) {
-        ImGui::SetClipboardText(ss.str().c_str()); 
+    // std::string result = ss.str();
+    
+    // // use for debugging testing 
+    // if (!result.empty()) {
+    //     ImGuiContext* currentCtx = ImGui::GetCurrentContext();
+    // }
+    
+    // Extract the final string
+    std::string finalClipboardText = ss.str(); 
+    
+    if (finalClipboardText.length() > 0) {
+        // IF WE ARE TESTING: Use the direct C++ hook, bypass ImGui entirely
+        if (s_testClipboardHook) {
+            s_testClipboardHook(finalClipboardText);
+        } 
+        // IF IN THE REAL APP: Use ImGui's clipboard
+        else {
+            ImGui::SetClipboardText(finalClipboardText.c_str());
+        }
     }
 }
 
@@ -309,3 +329,8 @@ bool TextSelector::isDelimeter(char c) {
 bool TextSelector::isToken(char c) {
     return !isWhiteSpace(c) && !isDelimeter(c); 
 } 
+
+// used for testing only 
+void TextSelector::SetTestContext(ImGuiContext* ctx) {
+    ImGui::SetCurrentContext(ctx);
+}
