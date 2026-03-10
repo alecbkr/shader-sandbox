@@ -14,7 +14,7 @@ bool isWhiteSpace(const std::string& str) {
     return true;
 }
 
-bool ConsoleEngine::initialize(Logger* _loggerPtr) {
+bool ConsoleEngine::initialize(Logger* _loggerPtr, const ConsoleToggles& initToggles) {
     if (initialized) {
         _loggerPtr->addLog(LogLevel::WARNING, "Console UI Initialization", "Console UI was already initialized.");
         return false;
@@ -22,6 +22,7 @@ bool ConsoleEngine::initialize(Logger* _loggerPtr) {
 
     logSrc = _loggerPtr->getConsoleSinkPtr();
     loggerPtr = _loggerPtr; 
+    toggles = initToggles; 
 
     // Register Buttons
     registerButton(ConsoleActions::CLEAR, [this](){
@@ -73,9 +74,10 @@ void ConsoleEngine::executeBtnAction(std::string_view name) {
     }
 }
 
-ConsoleToggles& ConsoleEngine::getToggles() {
-    return toggles;
-}
+// ConsoleToggles& ConsoleEngine::getToggles() {
+//     return toggles;
+// }
+
 
 bool ConsoleEngine::isLogFiltered(const LogEntry& log) const{
 

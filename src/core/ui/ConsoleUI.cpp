@@ -27,14 +27,12 @@ ConsoleUI::ConsoleUI() {
     initialized = false;
 }
 
-bool ConsoleUI::initialize(Logger* _loggerPtr) {
+bool ConsoleUI::initialize(Logger* _loggerPtr, ConsoleEngine* _engine){
     if (initialized) {
         _loggerPtr->addLog(LogLevel::WARNING, "Console UI Initialization", "Console UI was already initialized.");
         return false;
     }
-    engine = std::make_shared<ConsoleEngine>();
-
-    if (!engine->initialize(_loggerPtr)) return false; 
+    engine = _engine; 
 
     // had to register it here since the ui is responsible for copying the logs 
     engine->registerButton(ConsoleActions::COPY_LOGS, [this](){
@@ -141,7 +139,8 @@ void ConsoleUI::drawLogs() {
 }
 
  void ConsoleUI::drawMenuBar() {
-    if(ImGui::BeginMenuBar()) {auto& togStates = engine->getToggles();
+    if(ImGui::BeginMenuBar()) {
+        auto& togStates = engine->getToggles();
 
         if (ImGui::BeginMenu("View")) {
             if (ImGui::MenuItem("Clear")) {
@@ -187,28 +186,28 @@ void ConsoleUI::drawLogs() {
             ImGui::EndMenu(); 
         }
 
-        if (ImGui::BeginMenu("Spawn New Log")) {
-            ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
-            if (ImGui::MenuItem("Spawn 1 Error Log")) {
-                loggerPtr->addLog(LogLevel::LOG_ERROR, "Console Menu", "This is an error test", "Additional"); 
-            }
-            if (ImGui::MenuItem("Spawn 1 Warning Log")) {
-                loggerPtr->addLog(LogLevel::WARNING, "Console Menu", "This is a test warning", "Additional"); 
-            }
-            if (ImGui::MenuItem("Spawn 1 Info Log")) {
-                loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
-            }
-            if (ImGui::MenuItem("Spawn 1 Overflow Log Test")) {
-                loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console", "Additional"); 
-            }
-            if (ImGui::MenuItem("Spawn 10 Info Logs")) {
-                for (int i = 0; i < 10; i++)
-                    loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
-            }
+        // if (ImGui::BeginMenu("Spawn New Log")) {
+        //     ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
+        //     if (ImGui::MenuItem("Spawn 1 Error Log")) {
+        //         loggerPtr->addLog(LogLevel::LOG_ERROR, "Console Menu", "This is an error test", "Additional"); 
+        //     }
+        //     if (ImGui::MenuItem("Spawn 1 Warning Log")) {
+        //         loggerPtr->addLog(LogLevel::WARNING, "Console Menu", "This is a test warning", "Additional"); 
+        //     }
+        //     if (ImGui::MenuItem("Spawn 1 Info Log")) {
+        //         loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
+        //     }
+        //     if (ImGui::MenuItem("Spawn 1 Overflow Log Test")) {
+        //         loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console", "Additional"); 
+        //     }
+        //     if (ImGui::MenuItem("Spawn 10 Info Logs")) {
+        //         for (int i = 0; i < 10; i++)
+        //             loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
+        //     }
 
-            ImGui::PopItemFlag(); 
-            ImGui::EndMenu(); 
-        }
+        //     ImGui::PopItemFlag(); 
+        //     ImGui::EndMenu(); 
+        // }
 
         if (ImGui::BeginMenu("Find")) {
             searcher.drawSearchUI();

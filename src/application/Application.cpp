@@ -189,11 +189,7 @@ bool Application::initialize(AppContext& ctx) {
         std::cout << "Texture Cache was not initialized successfully." << std::endl;
         return false;
     }
-    // if (!ConsoleEngine::initialize(Logger::getConsoleSinkPtr())) {
-    //     std::cout << "Console Engine was not initialized successfully." << std::endl;
-    //     return false;
-    // }
-    if (!ctx.console_engine.initialize(&ctx.logger)) {
+    if (!ctx.console_engine.initialize(&ctx.logger, ctx.project.consoleSettings)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Importer was not initialized successfully.");
         return false;
     }
@@ -230,7 +226,7 @@ bool Application::initialize(AppContext& ctx) {
     addSubscriptions(ctx);
     initializeUI(ctx);
     ctx.inspector_engine.refreshUniforms();
-    if (!ctx.console_ui.initialize(&ctx.logger)) {
+    if (!ctx.console_ui.initialize(&ctx.logger, &ctx.console_engine)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Console UI was not initialized successfully.");
         return false;
     }
@@ -309,7 +305,10 @@ void Application::renderUI(AppContext& ctx) {
 void Application::shutdown(AppContext& ctx) {
     ctx.settings.styles.captureFromImGui(ImGui::GetStyle());
     ctx.settings.fontIdx = ctx.fonts.getFontIndex();
+    if (initialized) ctx.project.consoleSettings = ctx.console_engine.getToggles();
+
     ctx.platform.terminate();
+
     // UI Shutdown
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

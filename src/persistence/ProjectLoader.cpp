@@ -28,6 +28,7 @@ bool ProjectLoader::load(Project& project) {
 
         ProjectLoader::version = j.value("version", 1);
         project.projectTitle = j.value("projectTitle", project.projectTitle);
+        project.consoleSettings = j.value("consoleSettings", project.consoleSettings);
     } catch (...) {
         std::cerr << "Error while loading projectJSON" << std::endl;
         return false;
@@ -43,6 +44,7 @@ void ProjectLoader::save(const Project& project) {
     json j;
     j["version"] = version;
     j["projectTitle"] = project.projectTitle;
+    j["consoleSettings"] = project.consoleSettings;
 
     std::ofstream out(project.projectJSON);
     out << j.dump(4);

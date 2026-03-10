@@ -16,7 +16,7 @@ class Logger;
 class ConsoleUI {
 public: 
     ConsoleUI();
-    bool initialize(Logger* _loggerPtr);
+    bool initialize(Logger* _loggerPtr, ConsoleEngine* _engine);
     void render();
 
     struct LogStyle {
@@ -37,7 +37,7 @@ private:
     float targetHeight = 0.0f;
     ImVec2 windowPos = ImVec2(0, 0);
     
-    std::shared_ptr<ConsoleEngine> engine = nullptr;
+    ConsoleEngine *engine = nullptr;
     std::shared_ptr<ConsoleSink> logSrc = nullptr;
     Logger* loggerPtr; 
     SearchText searcher;
