@@ -32,6 +32,12 @@ class ObjectsInspectorUI {
 public:
     void draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, TextureRegistry* textureRegPtr, ModelCache* modelCachePtr);
 
+    struct ObjectsInspectorThemeSettings {
+        ImVec4 bgColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
+        ImVec4 bgColorHovered = ImVec4(bgColor.x * 1.5, bgColor.y * 1.5, bgColor.z * 1.5, 1.0f);
+        float indentSize = 10;
+    };
+
 private:
     std::unordered_map<unsigned int, ModelShaderMenu> modelShaderMenus;
     std::unordered_map<unsigned int, ModelTextureMenu> modelTextureMenus;
@@ -45,4 +51,6 @@ private:
     bool drawModelPositionInput(Model* model);
     bool drawModelScaleInput(Model* model);
     bool drawModelOrientationInput(Model* model);
+    ObjectsInspectorThemeSettings theme;
+
 };

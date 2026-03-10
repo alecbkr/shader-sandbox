@@ -19,6 +19,11 @@ class UniformInspectorUI {
 public:
     void draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr);
 
+    struct UniformInspectorThemeSettings {
+        float kInputWidth = 72.0f;
+        float kColorPickerSize = 100.0f;
+    };
+
 private:
     Logger* loggerPtr_ = nullptr;
     UniformRegistry* uniformRegPtr_ = nullptr;
@@ -35,4 +40,6 @@ private:
     bool drawUniformInputValue(InspectorSampler2D* value, Uniform* uniform = nullptr);
     bool drawUniformInputValue(InspectorReference* value, Uniform* uniform = nullptr);
     void drawUniformInput(Uniform& uniform, unsigned int modelID, InspectorEngine* inspectorEngPtr);
+    
+    UniformInspectorThemeSettings theme;
 };

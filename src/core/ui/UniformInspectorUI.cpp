@@ -12,28 +12,41 @@
 #include <unordered_map>
 #include <vector>
 
-// ai did this, need to change this to just be a field of the class
-namespace {
-const float kInputWidth = 72.0f;
-const float kColorPickerSize = 100.0f;
-}
-
 void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr) {
     loggerPtr_ = loggerPtr;
     uniformRegPtr_ = uniformRegPtr;
     modelCachePtr_ = modelCachePtr;
     materialCachePtr_ = materialCachePtr;
 
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 6.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
-
     int imGuiID = 0;
+    int modelIndex = 0;
+    const int modelCount = static_cast<int>(modelCachePtr->getNumberOfModels());
+
     for (auto& [modelID, model] : modelCachePtr->modelIDMap) {
-        std::string modelLabel = "Model " + std::to_string(modelID) + "##uniform_model_" + std::to_string(modelID);
-        if (ImGui::TreeNodeEx(modelLabel.c_str(),  ImGuiTreeNodeFlags_Framed)) {
+        std::string modelLabel = "Model " + std::to_string(modelID);
+
+        ImGui::PushID(modelLabel.c_str());
+
+        ImVec4 bgColor(0.2f, 0.2f, 0.2f, 1.0f);
+        ImVec4 bgColorHovered(bgColor.x * 1.5f, bgColor.y * 1.5f, bgColor.z * 1.5f, 1.0f);
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, bgColor);
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f);
+        ImGui::PushStyleColor(ImGuiCol_Header, bgColor);
+        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, bgColorHovered);
+        ImGui::PushStyleColor(ImGuiCol_HeaderActive, bgColor);
+
+        ImGui::BeginChild("UniformContainer", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders);
+
+        float indentSize = 10.0f;
+        std::string headerLabel = modelLabel + "##uniform_model_" + std::to_string(modelID);
+        if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth)) {
+            ImGui::Separator();
+            ImGui::Indent(indentSize);
+
             for (unsigned int matID : model->getAllMaterialIDs()) {
-                std::string matLabel = "Material " + std::to_string(matID) + "##uniform_mat_" + std::to_string(matID);
-                if (ImGui::TreeNodeEx(matLabel.c_str(), ImGuiTreeNodeFlags_Framed)) {
+                std::string matHeader = "Material " + std::to_string(matID) + "##uniform_mat_" + std::to_string(matID);
+                if (ImGui::CollapsingHeader(matHeader.c_str(), ImGuiTreeNodeFlags_SpanAvailWidth)) {
                     const std::unordered_map<std::string, Uniform>* uniformMap = uniformRegPtr->tryReadUniforms(matID);
 
                     if (uniformMap == nullptr) {
@@ -50,14 +63,25 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                         imGuiID++;
                     }
                     ImGui::Unindent(6.0f);
-                    ImGui::TreePop();
                 }
             }
-            ImGui::TreePop();
+
+            ImGui::Unindent(indentSize);
+        }
+
+        ImGui::EndChild();
+        ImGui::PopStyleColor(3);
+        ImGui::PopStyleColor();
+        ImGui::PopStyleVar(2);
+        ImGui::PopID();
+
+        modelIndex++;
+        if (modelIndex < modelCount) {
+            ImGui::Dummy(ImVec2(0, 2));
+            ImGui::Separator();
+            ImGui::Dummy(ImVec2(0, 2));
         }
     }
-
-    ImGui::PopStyleVar(2);
 }
 
 void UniformInspectorUI::drawUniformInput(Uniform& uniform, unsigned int modelID, InspectorEngine* inspectorEngPtr) {
@@ -113,12 +137,12 @@ bool UniformInspectorUI::drawTextInput(std::string* value, const char* label) {
 }
 
 bool UniformInspectorUI::drawUniformInputValue(int* value, Uniform* uniform) {
-    ImGui::SetNextItemWidth(kInputWidth);
+    ImGui::SetNextItemWidth(theme.kInputWidth);
     return ImGui::DragInt("Value", value);
 }
 
 bool UniformInspectorUI::drawUniformInputValue(float* value, Uniform* uniform) {
-    ImGui::SetNextItemWidth(kInputWidth);
+    ImGui::SetNextItemWidth(theme.kInputWidth);
     return ImGui::DragFloat("Value", value, .1f);
 }
 
@@ -131,7 +155,7 @@ bool UniformInspectorUI::drawUniformInputValue(glm::vec3* value, Uniform* unifor
     }
 
     if (useColorPicker) {
-        ImGui::SetNextItemWidth(kColorPickerSize);
+        ImGui::SetNextItemWidth(theme.kColorPickerSize);
         changed |= ImGui::ColorPicker3("##vec3color", &value->x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
     } else {
         changed |= ImGui::DragFloat3("xyz", &value->x, .1f);
@@ -148,7 +172,7 @@ bool UniformInspectorUI::drawUniformInputValue(glm::vec4* value, Uniform* unifor
     }
 
     if (useColorPicker) {
-        ImGui::SetNextItemWidth(kColorPickerSize);
+        ImGui::SetNextItemWidth(theme.kColorPickerSize);
         changed |= ImGui::ColorPicker4("##vec4color", &value->x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_AlphaBar);
     } else {
         changed |= ImGui::DragFloat4("xyzw", &value->x, .1f);
@@ -158,7 +182,7 @@ bool UniformInspectorUI::drawUniformInputValue(glm::vec4* value, Uniform* unifor
 
 bool UniformInspectorUI::drawUniformInputValue(glm::quat* value, Uniform* uniform) {
     ImGui::TextUnformatted("Quaternion (w, x, y, z)");
-    ImGui::PushItemWidth(kInputWidth);
+    ImGui::PushItemWidth(theme.kInputWidth);
     bool changed = false;
     changed |= ImGui::InputFloat("W", &value->w, 0.0f, 0.0f, "%.3f");
     ImGui::SameLine(0.0f, 6.0f);
@@ -194,7 +218,7 @@ bool UniformInspectorUI::drawUniformInputValue(glm::mat4* value, Uniform* unifor
 }
 
 bool UniformInspectorUI::drawUniformInputValue(InspectorSampler2D* value, Uniform* uniform) {
-    ImGui::SetNextItemWidth(kInputWidth);
+    ImGui::SetNextItemWidth(theme.kInputWidth);
     return ImGui::DragInt("Texture unit", &value->textureUnit, 0, 16);
 }
 

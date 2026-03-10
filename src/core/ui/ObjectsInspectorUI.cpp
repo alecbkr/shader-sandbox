@@ -39,30 +39,26 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
 
         std::string label = "model " + std::to_string(modelID);
         ImGui::PushID(label.c_str());
-        auto bgColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
-        auto bgColorHovered = ImVec4(bgColor.x * 1.5, bgColor.y * 1.5, bgColor.z * 1.5, 1.0f);
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, bgColor); // Blue-ish background
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.bgColor); // Blue-ish background
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);   // <-- rounding radius
         ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f); // optional
-        ImGui::PushStyleColor(ImGuiCol_Header,        bgColor);
-        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, bgColorHovered);
-        ImGui::PushStyleColor(ImGuiCol_HeaderActive,  bgColor);
+        ImGui::PushStyleColor(ImGuiCol_Header,        theme.bgColor);
+        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.bgColorHovered);
+        ImGui::PushStyleColor(ImGuiCol_HeaderActive,  theme.bgColor);
         ImGui::BeginChild("Container##", ImVec2(0, 0),  ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders);
-
-        float indentSize = 10;
 
         if (ImGui::CollapsingHeader(label.c_str())) {
             ImGui::Separator();
-            ImGui::Indent(indentSize);
+            ImGui::Indent(theme.indentSize);
 
             if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth)) {
-                ImGui::Indent(indentSize);
+                ImGui::Indent(theme.indentSize);
                 drawModelPositionInput(model.get());
                 ImGui::Separator();
                 drawModelScaleInput(model.get());
                 ImGui::Separator();
                 drawModelOrientationInput(model.get());
-                ImGui::Unindent(indentSize);
+                ImGui::Unindent(theme.indentSize);
             }
             if (ImGui::CollapsingHeader("Material")) {
                 if (!textureMenu.initialized) {
@@ -71,7 +67,7 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                 // drawTextureMenu(textureMenu);
             }
             if (ImGui::CollapsingHeader("Shader Program")) {
-                ImGui::Indent(indentSize);
+                ImGui::Indent(theme.indentSize);
                 std::vector<const char*> shaderChoices;
                 shaderChoices.reserve(shaderRegPtr->getNumberOfPrograms());
                 const auto& shaders = shaderRegPtr->getPrograms();
@@ -82,10 +78,10 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                     initializeMenu(shaderMenu, shaderChoices, loggerPtr, shaderRegPtr, modelCachePtr);
                 }
                 drawShaderProgramMenu(shaderMenu, shaderChoices, shaderRegPtr, modelCachePtr, inspectorEngPtr);
-                ImGui::Unindent(indentSize);
+                ImGui::Unindent(theme.indentSize);
             }
 
-            ImGui::Unindent(indentSize);
+            ImGui::Unindent(theme.indentSize);
         }
         ImGui::EndChild();
         ImGui::PopStyleColor(3);
