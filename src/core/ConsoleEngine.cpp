@@ -1,5 +1,18 @@
 #include "ConsoleEngine.hpp"
 #include "logging/Logger.hpp"
+#include <sstream> 
+
+
+bool isWhiteSpace(const std::string& str) {
+    if (str.empty()) return false; 
+
+    for (unsigned char c: str) {
+        if (!std::isspace(c)) {
+            return false;
+        }
+    }
+    return true;
+}
 
 bool ConsoleEngine::initialize(Logger* _loggerPtr) {
     if (initialized) {
@@ -64,6 +77,26 @@ ConsoleToggles& ConsoleEngine::getToggles() {
     return toggles;
 }
 
+bool ConsoleEngine::isLogFiltered(const LogEntry& log) const{
+
+    // Message type
+    if (log.level == LogLevel::LOG_ERROR && !toggles.isShowError) return true;
+    if (log.level == LogLevel::WARNING && !toggles.isShowWarning) return true;
+    if (log.level == LogLevel::INFO && !toggles.isShowInfo) return true; 
+
+    // source types 
+    if (log.category == LogCategory::UI && !toggles.isShowUI) return true; 
+    if (log.category == LogCategory::ASSETS && !toggles.isShowAssets) return true; 
+    if (log.category == LogCategory::SHADER && !toggles.isShowShader) return true; 
+    if (log.category == LogCategory::OTHER && !toggles.isShowOther) return true;  
+    if (log.category == LogCategory::SYSTEM && !toggles.isShowSystem) return true;
+    
+    // auto filter empty messages 
+    if (isWhiteSpace(log.msg) || log.msg == "\n" || log.msg == "\t") return true; 
+
+    return false; 
+}
+
 void ConsoleEngine::openLogFile(const std::string logPath) {
     if(logPath.empty()) {
         loggerPtr->addLog(LogLevel::WARNING, "ConsoleUI", "Cannot open empty log path."); 
@@ -91,16 +124,48 @@ void ConsoleEngine::openLogFile(const std::string logPath) {
     #if defined(_WIN32) || defined(__CYGWIN__) 
         folderPath = "explorer.exe /e, \"" + finalPath +"\"";
 
-    // TODO: Test these the unix os's to see if they work 
+    // TODO: Test unix os's to see if they work 
     #elif defined(__APPLE__)
         folderPath = "open \"" + finalPath + "\""; 
 
     #elif defined(__linux__)
-        fodlerPath = "xdg-open \"" + finalPath + "\""; 
+        folderPath = "xdg-open \"" + finalPath + "\""; 
     #else 
         loggerPtr(LogLevel::Error, "Console", "Macro not defined or unsupported os"); 
         return; 
     #endif
 
     std::system(folderPath.c_str()); 
+}
+
+std::string ConsoleEngine::getFilteredLogText() const {
+    if (!logSrc) return "";
+
+    std::stringstream ss;
+    const auto& currentLogs = logSrc->getLogs();
+
+    for (const auto& log : currentLogs) {
+        if (!isLogFiltered(log)) {
+            std::string prefix;
+            switch (log.level) {
+                case LogLevel::CRITICAL: prefix = "[CRITICAL"; break;
+                case LogLevel::LOG_ERROR: prefix = "[ERROR"; break;
+                case LogLevel::WARNING: prefix = "[WARNING"; break;
+                case LogLevel::INFO: prefix = "[INFO"; break;
+            }
+
+                if(!log.src.empty()) {
+                    prefix += ": " + log.src;
+                }
+                prefix += "] ";
+
+                ss << prefix << log.msg;
+                if (!log.additional.empty()) {
+                    ss << " " << log.additional;
+                }
+                ss << "\n";
+        }
+    }
+
+    return ss.str();
 }

@@ -17,27 +17,14 @@ const ImVec4 LOG_COLORS[] = {
                                             // Anomaly (light gray)
 };
 
-bool isWhiteSpace(const std::string& str) {
-    if (str.empty()) return false; 
-
-    for (unsigned char c: str) {
-        if (!std::isspace(c)) {
-            return false;
-        }
-    }
-    return true;
-}
-
 ConsoleUI::ConsoleUI() {
     targetWidth = 0.0f;
     targetHeight = 0.0f;
     windowPos = ImVec2(0, 0);
     engine = nullptr;
     logSrc = nullptr;
-    // isAutoScroll = false;
     lastLogSize = 0;
     initialized = false;
-
 }
 
 bool ConsoleUI::initialize(Logger* _loggerPtr) {
@@ -48,6 +35,14 @@ bool ConsoleUI::initialize(Logger* _loggerPtr) {
     engine = std::make_shared<ConsoleEngine>();
 
     if (!engine->initialize(_loggerPtr)) return false; 
+
+    // had to register it here since the ui is responsible for copying the logs 
+    engine->registerButton(ConsoleActions::COPY_LOGS, [this](){
+        std::string fullLogText = engine->getFilteredLogText();
+        if (!fullLogText.empty()) {
+            ImGui::SetClipboardText(fullLogText.c_str());
+        }
+    });
 
     logSrc = _loggerPtr->getConsoleSinkPtr();
     loggerPtr = _loggerPtr;
@@ -91,11 +86,6 @@ void ConsoleUI::render() {
 void ConsoleUI::drawLogs() {
     if (!logSrc || !engine) return; 
 
-    // struct FilteredLog {
-    //     int idx; 
-    //     int collapsedCount; 
-    // }; 
-
     const auto& logs = logSrc->getLogs();
     bool isScroll = false;
 
@@ -123,10 +113,6 @@ void ConsoleUI::drawLogs() {
 
     if (TextSelector::Begin("ConsoleLogs", displayLines.size(), selectionCtx, selectionLayout)) {
         for (int row = 0; row < displayLines.size(); ++row) {
-            // const auto& lineData = displayLines[row]; 
-            // LogEntry tmpLog = logs[lineData.originalLogIdx]; 
-            // tmpLog.msg = lineData.text; 
-            // tmpLog.additional = ""; 
             drawSingleLog(row, displayLines[row], logs[displayLines[row].originalLogIdx], isScroll); 
         }
         TextSelector::End(); 
@@ -164,11 +150,11 @@ void ConsoleUI::drawLogs() {
             }
             ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
 
-            if (ImGui::MenuItem("Auto-Scroll", nullptr, &togStates.isAutoScroll)) 
-            if (ImGui::MenuItem("Collapse Logs", nullptr, &togStates.isCollapsedLogs)) 
+            if (ImGui::MenuItem("Auto-Scroll", nullptr, &togStates.isAutoScroll)) {}
+            if (ImGui::MenuItem("Collapse Logs", nullptr, &togStates.isCollapsedLogs)) {} 
             
             if (ImGui::MenuItem("Copy Logs")) {
-
+                engine->executeBtnAction(ConsoleActions::COPY_LOGS); 
             }
             if (ImGui::MenuItem("Open Log History")) {
                 // std::string p = loggerPtr->getLogPath().string();      
@@ -396,26 +382,6 @@ std::string ConsoleUI::formatLogString(const LogEntry& log) {
     return fullMsg;
 }
 
-bool ConsoleUI::isLogFiltered(const LogEntry& log) {
-    auto& togStates = engine->getToggles(); 
-    // Message type
-    if (log.level == LogLevel::LOG_ERROR && !togStates.isShowError) return true;
-    if (log.level == LogLevel::WARNING && !togStates.isShowWarning) return true;
-    if (log.level == LogLevel::INFO && !togStates.isShowInfo) return true; 
-
-    // source types 
-    if (log.category == LogCategory::UI && !togStates.isShowUI) return true; 
-    if (log.category == LogCategory::ASSETS && !togStates.isShowAssets) return true; 
-    if (log.category == LogCategory::SHADER && !togStates.isShowShader) return true; 
-    if (log.category == LogCategory::OTHER && !togStates.isShowOther) return true;  
-    if (log.category == LogCategory::SYSTEM && !togStates.isShowSystem) return true;
-    
-    // auto filter empty messages 
-    if (isWhiteSpace(log.msg) || log.msg == "\n" || log.msg == "\t") return true; 
-
-    return false; 
-}
-
 std::vector<ConsoleUI::DisplayLine> ConsoleUI::wrapLogText(const std::string& fullText, int logIndex, int collapseCount, float maxWidth) {
     std::vector<DisplayLine> result;
     if (fullText.empty()) {
@@ -444,10 +410,6 @@ std::vector<ConsoleUI::DisplayLine> ConsoleUI::wrapLogText(const std::string& fu
             lineText.pop_back(); 
         }
 
-        // if (textBegin < textEnd && *textBegin == ' ') {
-        //     textBegin++;
-        // }
-
         while (textBegin < textEnd && (*textBegin == ' ' || *textBegin == '\n')) {
             textBegin++;
         }
@@ -461,44 +423,7 @@ std::vector<ConsoleUI::DisplayLine> ConsoleUI::wrapLogText(const std::string& fu
     return result;
 }
 
-
-// void ConsoleUI::openLogFile(const std::string logPath) {
-//     if(logPath.empty()) {
-//         loggerPtr->addLog(LogLevel::WARNING, "ConsoleUI", "Cannot open empty log path."); 
-//         return; 
-//     }
-
-//     std::filesystem::path p(logPath); 
-//     std::error_code ec; 
-
-//     if (!std::filesystem::exists(p, ec)) {
-//         loggerPtr->addLog(LogLevel::LOG_ERROR, "ConsoleUI", "Log directory not found at: " + logPath);
-//         return; 
-//     }
-
-//     std::filesystem::path absPath = std::filesystem::absolute(p, ec); 
-//     if (ec) {
-//         loggerPtr->addLog(LogLevel::LOG_ERROR, "ConsoleUI", "Failed to obtain absolute path.");
-//         return;  
-//     }
-
-//     absPath.make_preferred(); 
-//     std::string finalPath = absPath.string(); 
-//     std::string folderPath; 
-
-//     #if defined(_WIN32) || defined(__CYGWIN__) 
-//         folderPath = "explorer.exe /e, \"" + finalPath +"\"";
-
-//     // TODO: Test these the unix os's to see if they work 
-//     #elif defined(__APPLE__)
-//         folderPath = "open \"" + finalPath + "\""; 
-
-//     #elif defined(__linux__)
-//         fodlerPath = "xdg-open \"" + finalPath + "\""; 
-//     #else 
-//         loggerPtr(LogLevel::Error, "Console", "Macro not defined or unsupported os"); 
-//         return; 
-//     #endif
-
-//     std::system(folderPath.c_str()); 
-// }
+bool ConsoleUI::isLogFiltered(const LogEntry& log) {
+    if (!engine) return false;
+    return engine->isLogFiltered(log);
+}
