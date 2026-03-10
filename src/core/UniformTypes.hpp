@@ -50,6 +50,8 @@ struct InspectorSampler2D {
 struct InspectorReference {
     int modelSelection = 0; 
     int uniformSelection = 0;
+    int materialSelection = 0;
+    unsigned int referencedModelID;
     unsigned int referencedMaterialID;
     std::string referencedUniformName;
     UniformType returnType;

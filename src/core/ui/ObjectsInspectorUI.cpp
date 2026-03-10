@@ -45,7 +45,7 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
         ImGui::PushStyleColor(ImGuiCol_Header,        theme.bgColor);
         ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.bgColorHovered);
         ImGui::PushStyleColor(ImGuiCol_HeaderActive,  theme.bgColor);
-        ImGui::BeginChild("Container##", ImVec2(0, 0),  ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders);
+        ImGui::BeginChild("Container##", ImVec2(0, 0),  ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar);
 
         if (ImGui::CollapsingHeader(label.c_str())) {
             ImGui::Separator();

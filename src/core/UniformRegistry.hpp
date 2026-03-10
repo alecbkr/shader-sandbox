@@ -10,15 +10,14 @@ class UniformRegistry {
     UniformRegistry();
     bool initialize(Logger* _loggerPtr);
     void shutdown();
-    const Uniform* tryReadUniform(unsigned int modelID, const std::string& uniformName) const; // return false if we didn't find it.
-    const std::unordered_map<std::string, Uniform>* tryReadUniforms(unsigned int modelID) const;
-    bool containsObject(unsigned int modelID);
-    bool containsUniform(unsigned int modelID, const std::string& uniformName);
-    void registerUniform(unsigned int modelID, Uniform uniform);
-    void insertUniformMap(unsigned int modelID, const std::unordered_map<std::string, Uniform>& map);
-    void eraseUniform(unsigned int modelID, const std::string& uniformName);
+    const Uniform* tryReadUniform(unsigned int matID, const std::string& uniformName) const; // return false if we didn't find it.
+    const std::unordered_map<std::string, Uniform>* tryReadUniforms(unsigned int matID) const;
 
-
+    bool containsMaterial(unsigned int matID);
+    bool containsUniform(unsigned int matID, const std::string& uniformName);
+    void insertUniformMap(unsigned int matID, const std::unordered_map<std::string, Uniform>& map);
+    void eraseUniform(unsigned int matID, const std::string& uniformName);
+    void registerInspectorUniform(unsigned int matID, Uniform uniform);
     void registerSceneUniform(Uniform uniform);
     void registerModelUniform(unsigned int ModelID, Uniform uniform);
     void registerMaterialUniform(unsigned int ModelID, unsigned int MaterialID, Uniform uniform);

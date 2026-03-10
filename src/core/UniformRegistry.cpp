@@ -48,8 +48,8 @@ Uniform UniformRegistry::getUniform(std::string shaderProgramName, std::string u
 */
 
 // returns nullptr if uniform doesn't exist
-const Uniform* UniformRegistry::tryReadUniform(unsigned int modelID, const std::string& uniformName) const {
-    const auto& programPair = uniforms.find(modelID);
+const Uniform* UniformRegistry::tryReadUniform(unsigned int materialID, const std::string& uniformName) const {
+    const auto& programPair = uniforms.find(materialID);
     if (programPair == uniforms.end()) {
         // this function should be documented properly so that it is known when returning nullptr it means a uniform wasnt found or doesnt exist
         // a more proper fix for this is to return an enum with the proper statuses. (ie. Uniform::NOT_FOUND) or something like this
@@ -67,12 +67,12 @@ const Uniform* UniformRegistry::tryReadUniform(unsigned int modelID, const std::
     return &uniformPair->second;
 }
 
-bool UniformRegistry::containsObject(unsigned int modelID) {
-    return uniforms.contains(modelID);
+bool UniformRegistry::containsMaterial(unsigned int matID) {
+    return uniforms.contains(matID);
 }
 
-bool UniformRegistry::containsUniform(unsigned int modelID, const std::string& uniformName) {
-    const auto& programPair = uniforms.find(modelID);
+bool UniformRegistry::containsUniform(unsigned int matID, const std::string& uniformName) {
+    const auto& programPair = uniforms.find(matID);
     if (programPair == uniforms.end()) {
         return false;
     }
@@ -88,35 +88,35 @@ bool UniformRegistry::containsUniform(unsigned int modelID, const std::string& u
 }
 
 // returns nullptr if uniform doesn't exist
-const std::unordered_map<std::string, Uniform>* UniformRegistry::tryReadUniforms(unsigned int modelID) const {
-    if (uniforms.count(modelID) <= 0) {
+const std::unordered_map<std::string, Uniform>* UniformRegistry::tryReadUniforms(unsigned int matID) const {
+    if (uniforms.count(matID) <= 0) {
         // this function should be documented properly so that it is known when returning nullptr it means uniforms werent found or dont exist
         // a more proper fix for this is to return an enum with the proper statuses. (ie. Uniform::NOT_FOUND) or something like this
         return nullptr;
     }
 
     //std::unordered_map<std::string, Uniform>* programUniforms = &uniforms[modelID];
-    const std::unordered_map<std::string, Uniform> *programUniforms = &(uniforms.at(modelID));
+    const std::unordered_map<std::string, Uniform> *programUniforms = &(uniforms.at(matID));
 
     return programUniforms;
 }
 
-void UniformRegistry::registerUniform(unsigned int modelID, Uniform uniform) {
-    uniform.materialID = modelID;
-    uniforms[modelID][uniform.name] = uniform;
+void UniformRegistry::registerInspectorUniform(unsigned int matID, Uniform uniform) {
+    uniform.materialID = matID;
+    uniforms[matID][uniform.name] = uniform;
 }
 
-void UniformRegistry::insertUniformMap(unsigned int modelID, const std::unordered_map<std::string, Uniform>& map) {
-    uniforms[modelID] = map;
-    for (auto& [name, uniform] : uniforms[modelID]) {
-        uniform.materialID = modelID;
+void UniformRegistry::insertUniformMap(unsigned int matID, const std::unordered_map<std::string, Uniform>& map) {
+    uniforms[matID] = map;
+    for (auto& [name, uniform] : uniforms[matID]) {
+        uniform.materialID = matID;
     }
 }
 
-void UniformRegistry::eraseUniform(unsigned int modelID, const std::string& uniformName) {
-    if (uniforms.count(modelID) <= 0) return;
-    if (uniforms.at(modelID).count(uniformName) <= 0) return;
-    uniforms.at(modelID).erase(uniformName);
+void UniformRegistry::eraseUniform(unsigned int matID, const std::string& uniformName) {
+    if (uniforms.count(matID) <= 0) return;
+    if (uniforms.at(matID).count(uniformName) <= 0) return;
+    uniforms.at(matID).erase(uniformName);
 }
 
 
