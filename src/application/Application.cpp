@@ -26,15 +26,17 @@
 #include "engine/AppTimer.hpp"
 #include "engine/Errorlog.hpp"
 #include "persistence/ProjectLoader.hpp"
+#include "core/ui/themes/default.hpp"
 
 bool Application::initialized = false;
-std::size_t Application::fontIdx = 2;
-std::array<ImFont*, 6> Application::fonts{};
 
-void Application::increaseFont() { if (fontIdx < 5) fontIdx++; }
-void Application::decreaseFont() { if (fontIdx > 0) fontIdx--; }
-
-void subscribeMenuButtons(AppContext& ctx) {
+void Application::addSubscriptions(AppContext& ctx) {
+    ctx.events.Subscribe(EventType::ContextSwitch, [&ctx](const EventPayload&) -> bool {
+        ctx.ctx_manager.toggleCtx();
+        if (ctx.ctx_manager.isCamera()) ctx.platform.setCursorStatus(false);
+        else ctx.platform.setCursorStatus(true);
+        return true;
+    });
     ctx.events.Subscribe(EventType::SaveProject, [&ctx](const EventPayload&) -> bool {
         ProjectLoader::save(ctx.project);
         return false;
@@ -45,7 +47,7 @@ void subscribeMenuButtons(AppContext& ctx) {
     });
 }
 
-bool Application::addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI* viewportUIPtr, ContextManager* contextManagerPtr, EventDispatcher* eventsPtr) {
+bool Application::addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI* viewportUIPtr, ContextManager* contextManagerPtr, EventDispatcher* eventsPtr, Fonts* fontsPtr) {
     if (!actionRegPtr) return false;
     if (!viewportUIPtr) return false;
     if (!contextManagerPtr) return false;
@@ -56,37 +58,26 @@ bool Application::addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI
     actionRegPtr->bind(Action::CameraRight, [viewportUIPtr]() { viewportUIPtr->getCamera()->MoveRight(); });
     actionRegPtr->bind(Action::CameraUp, [viewportUIPtr]() { viewportUIPtr->getCamera()->MoveUp(); });
     actionRegPtr->bind(Action::CameraDown, [viewportUIPtr]() { viewportUIPtr->getCamera()->MoveDown(); });
-    actionRegPtr->bind(Action::SwitchControlContext, [contextManagerPtr]() { contextManagerPtr->toggleCtx(); });
+    actionRegPtr->bind(Action::SwitchControlContext, [eventsPtr]() { eventsPtr->TriggerEvent({ EventType::ContextSwitch, false, std::monostate{} }); });
     actionRegPtr->bind(Action::SaveActiveShaderFile, [eventsPtr]() { eventsPtr->TriggerEvent({ EventType::SaveActiveShaderFile, false, std::monostate{} }); });
     actionRegPtr->bind(Action::SaveProject, [eventsPtr]() { eventsPtr->TriggerEvent({ EventType::SaveProject, false, std::monostate{} }); });
     actionRegPtr->bind(Action::QuitApplication, [eventsPtr]() { eventsPtr->TriggerEvent({ EventType::Quit, false, std::monostate{} }); });
-    actionRegPtr->bind(Action::FontSizeIncrease, []() { Application::increaseFont(); });
-    actionRegPtr->bind(Action::FontSizeDecrease, []() { Application::decreaseFont(); });
+    actionRegPtr->bind(Action::FontSizeIncrease, [fontsPtr]() { fontsPtr->increaseFont(); });
+    actionRegPtr->bind(Action::FontSizeDecrease, [fontsPtr]() { fontsPtr->decreaseFont(); });
     actionRegPtr->bind(Action::NewShaderFile, [](){});
     actionRegPtr->bind(Action::Undo, [](){});
     actionRegPtr->bind(Action::Redo, [](){});
     actionRegPtr->bind(Action::FormatActiveShader, [](){});
     actionRegPtr->bind(Action::ScreenshotViewport, [](){});
     actionRegPtr->bind(Action::FullscreenViewport, [](){});
+    actionRegPtr->bind(Action::MouseMove, [viewportUIPtr]() { viewportUIPtr->getCamera()->ProcessMouseMovement(); });
     return true;
 }
 
 void Application::initializeUI(AppContext& ctx) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-
-    ctx.platform.initializeImGui();
-
-    fonts[0] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 12.0f);
-    fonts[1] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 15.0f);
-    fonts[2] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 18.0f);
-    fonts[3] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 21.0f);
-    fonts[4] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 24.0f);
-    fonts[5] = io.Fonts->AddFontFromFileTTF("../assets/fonts/Roboto-VariableFont_wdth,wght.ttf", 27.0f);
-    fontIdx = ctx.settings.fontIdx;
-    io.FontDefault = fonts[fontIdx];
+    ctx.fonts.initialize(ctx.settings.fontIdx);
 
     if (!ctx.settings.styles.hasLoadedStyles) {
         ImGui::StyleColorsDark();
@@ -94,10 +85,15 @@ void Application::initializeUI(AppContext& ctx) {
     }
     ctx.settings.styles.applyToImGui(ImGui::GetStyle());
 
+    ImGui_ImplGlfw_InitForOpenGL(ctx.platform.getWindow().getGLFWWindow(), true);
     ImGui_ImplOpenGL3_Init();
 
     ctx.settingsModal.initialize(&ctx.logger, &ctx.inputs, &ctx.keybinds, &ctx.platform, &ctx.settings);
     ctx.modals.registerModal(&ctx.settingsModal);
+
+    if (!ctx.settings.settingsFound) {
+        DefaultTheme::applyDefaultTheme(ctx.settings.styles);
+    }
 }
 
 void loadPresetAssets(AppContext& ctx) {
@@ -109,7 +105,7 @@ void loadPresetAssets(AppContext& ctx) {
     ShaderProgram* gridplanePtr = ctx.shader_registry.getProgram("gridplane");
     ShaderProgram* skyboxPtr = ctx.shader_registry.getProgram("skybox");
     ShaderProgram* texPtr = ctx.shader_registry.getProgram("tex");
-    ShaderProgram* colorPtr = ctx.shader_registry.getProgram("color");
+    //ShaderProgram* colorPtr = ctx.shader_registry.getProgram("color");
     
 
     unsigned int skyboxID = ctx.model_cache.createSkybox("../assets/textures/skybox");
@@ -231,13 +227,14 @@ bool Application::initialize(AppContext& ctx) {
         return false;
     }
     loadPresetAssets(ctx);
-    subscribeMenuButtons(ctx);
+    addSubscriptions(ctx);
     initializeUI(ctx);
+    ctx.inspector_engine.refreshUniforms();
     if (!ctx.console_ui.initialize(&ctx.logger)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Console UI was not initialized successfully.");
         return false;
     }
-    if (!ctx.viewport_ui.initialize(&ctx.logger, &ctx.platform, &ctx.model_cache, &ctx.timer)) {
+    if (!ctx.viewport_ui.initialize(&ctx.logger, &ctx.platform, &ctx.model_cache, &ctx.timer, &ctx.inputs)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Viewport UI was not initialized successfully.");
         return false;
     }
@@ -249,12 +246,12 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Editor UI was not initialized successfully.");
         return false;
     }
-    if (!ctx.inspector_ui.initialize(&ctx.logger, &ctx.inspector_engine, &ctx.texture_registry, &ctx.shader_registry, &ctx.uniform_registry, &ctx.events, &ctx.model_cache, &ctx.file_registry, &ctx.material_cache)) {
+    if (!ctx.inspector_ui.initialize(&ctx.logger, &ctx.inspector_engine, &ctx.texture_registry, &ctx.shader_registry, &ctx.uniform_registry, &ctx.events, &ctx.model_cache, &ctx.file_registry, &ctx.material_cache, &ctx.fonts, &ctx.project, &ctx.settings.styles)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Inspector UI was not initialized successfully.");
         return false;
     }
 
-    if (!Application::addDefaultActionBinds(&ctx.action_registry, &ctx.viewport_ui, &ctx.ctx_manager, &ctx.events)) {
+    if (!Application::addDefaultActionBinds(&ctx.action_registry, &ctx.viewport_ui, &ctx.ctx_manager, &ctx.events, &ctx.fonts)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Default actions were not bound correctly.");
         return false;
     }
@@ -292,7 +289,7 @@ void Application::renderUI(AppContext& ctx) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-    ImFont* f = Application::fonts[Application::fontIdx];
+    ImFont* f = ctx.fonts.getL1();
     if (f) ImGui::PushFont(f);
 
     // Render UI
@@ -311,7 +308,7 @@ void Application::renderUI(AppContext& ctx) {
 
 void Application::shutdown(AppContext& ctx) {
     ctx.settings.styles.captureFromImGui(ImGui::GetStyle());
-    ctx.settings.fontIdx = fontIdx;
+    ctx.settings.fontIdx = ctx.fonts.getFontIndex();
     ctx.platform.terminate();
     // UI Shutdown
     ImGui_ImplOpenGL3_Shutdown();

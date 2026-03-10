@@ -256,7 +256,7 @@ int ConsoleUI::getCollapseCount(const std::deque<LogEntry> &logs, int currIdx) {
     int count = 0;
     int nextIdx = currIdx + 1;
 
-    while (nextIdx < logs.size()) {
+    while (nextIdx < (int)logs.size()) {
         const auto& current = logs[currIdx];
         const auto& next = logs[nextIdx];
 

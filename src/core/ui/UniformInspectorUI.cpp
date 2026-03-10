@@ -29,32 +29,31 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
 
     int imGuiID = 0;
     for (auto& [modelID, model] : modelCachePtr->modelIDMap) {
-        ShaderProgram* modelProgram = shaderRegPtr->getProgram(model->getProgramID());
-        if (modelProgram == nullptr) {
-            continue;
-        }
-        std::string label = "Model " + std::to_string(modelID) + "##uniform_model_" + std::to_string(modelID);
-        if (ImGui::TreeNodeEx(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed)) {
+        std::string modelLabel = "Model " + std::to_string(modelID) + "##uniform_model_" + std::to_string(modelID);
+        if (ImGui::TreeNodeEx(modelLabel.c_str(),  ImGuiTreeNodeFlags_Framed)) {
             for (unsigned int matID : model->getAllMaterialIDs()) {
-                const std::unordered_map<std::string, Uniform>* uniformMap = uniformRegPtr->tryReadUniforms(matID);
+                std::string matLabel = "Material " + std::to_string(matID) + "##uniform_mat_" + std::to_string(matID);
+                if (ImGui::TreeNodeEx(matLabel.c_str(), ImGuiTreeNodeFlags_Framed)) {
+                    const std::unordered_map<std::string, Uniform>* uniformMap = uniformRegPtr->tryReadUniforms(matID);
 
-                if (uniformMap == nullptr) {
-                    loggerPtr_->addLog(LogLevel::WARNING, "drawUniformInspector", "Model not found in registry: ", std::to_string(modelID));
+                    if (uniformMap == nullptr) {
+                        loggerPtr_->addLog(LogLevel::WARNING, "drawUniformInspector", "Model not found in registry: ", std::to_string(modelID));
+                        continue;
+                    }
+
+                    ImGui::Indent(6.0f);
+                    for (auto& [uniformName, uniformRef] : *uniformMap) {
+                        ImGui::PushID(imGuiID);
+                        Uniform uniformCopy = uniformRef;
+                        drawUniformInput(uniformCopy, matID, inspectorEngPtr);
+                        ImGui::PopID();
+                        imGuiID++;
+                    }
+                    ImGui::Unindent(6.0f);
                     ImGui::TreePop();
-                    continue;
                 }
-
-                ImGui::Indent(6.0f);
-                for (auto& [uniformName, uniformRef] : *uniformMap) {
-                    ImGui::PushID(imGuiID);
-                    Uniform uniformCopy = uniformRef;
-                    drawUniformInput(uniformCopy, modelID, inspectorEngPtr);
-                    ImGui::PopID();
-                    imGuiID++;
-                }
-                ImGui::Unindent(6.0f);
-                ImGui::TreePop();
             }
+            ImGui::TreePop();
         }
     }
 

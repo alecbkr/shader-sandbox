@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 
 class AppTimer;
+class InputState;
 
 enum Camera_Movement {
     CAM_FORWARD,
@@ -27,10 +28,10 @@ class Camera {
         float CameraSensitivity;
         float Zoom;
 
-        Camera(AppTimer* _timerPtr);
+        Camera(AppTimer* _timerPtr, InputState* _inputPtr);
         glm::mat4 GetViewMatrix();
         void ProcessKeyboard(Camera_Movement dir, float deltaTime);
-        void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch);
+        void ProcessMouseMovement();
         void ProcessMouseScroll(float yoffset);
         void MoveForward();
         void MoveBack();
@@ -41,6 +42,7 @@ class Camera {
     
     private:
         AppTimer* timerPtr = nullptr;
+        InputState* inputPtr = nullptr;
         void updateCameraVectors();
 };
 

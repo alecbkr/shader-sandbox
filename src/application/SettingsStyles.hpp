@@ -113,6 +113,24 @@ struct SettingsStyles {
     // UI helper for the settings page
     int selectedEditorPaletteColor = 0;
 
+    // Inspector Specific Styles
+
+    // Assets tab specific styles
+    // Assest tab colors
+    ImVec4 assetsDirectoryTextColor;
+    ImVec4 assetsFileBackgroundColor;
+    ImVec4 assetsBorderColor;
+    ImVec4 assetsTabBackgroundColor;
+    ImVec4 assetsTitleBackgroundColor;
+    ImVec4 assetsTreeBodyColor;
+
+    // Assets tab styles
+    float assetsBorderThickness = 1.0f;
+    float assetsBodyPadding = 12.0f;
+    float assetsTitleInnerPadding = 1.0f;
+    float assetsBodyRounding = 6.0f;
+    float assetsTitleOffset = 6.0f;
+
     // ---- Apply / Capture ----
     void applyToImGui(ImGuiStyle& s) const {
         s.Alpha = alpha;
@@ -378,6 +396,56 @@ struct SettingsStyles {
         }
         s["editorPalette"] = editorPaletteArray;
 
+        // Inspector Specific Styles
+        json inspectorStylesObject = json::object();
+        // Assets tab styles
+        json assetsTabObject = json::object();
+        assetsTabObject["assetsDirectoryTextColor"] = {
+            assetsDirectoryTextColor.x,
+            assetsDirectoryTextColor.y,
+            assetsDirectoryTextColor.z,
+            assetsDirectoryTextColor.w
+        };
+        assetsTabObject["assetsFileBackgroundColor"] = {
+            assetsFileBackgroundColor.x,
+            assetsFileBackgroundColor.y,
+            assetsFileBackgroundColor.z,
+            assetsFileBackgroundColor.w
+        };
+        assetsTabObject["assetsBorderColor"] = {
+            assetsBorderColor.x,
+            assetsBorderColor.y,
+            assetsBorderColor.z,
+            assetsBorderColor.w
+        };
+        assetsTabObject["assetsTabBackgroundColor"] = {
+            assetsTabBackgroundColor.x,
+            assetsTabBackgroundColor.y,
+            assetsTabBackgroundColor.z,
+            assetsTabBackgroundColor.w
+        };
+        assetsTabObject["assetsTitleBackgroundColor"] = {
+            assetsTitleBackgroundColor.x,
+            assetsTitleBackgroundColor.y,
+            assetsTitleBackgroundColor.z,
+            assetsTitleBackgroundColor.w
+        };
+        assetsTabObject["assetsTreeBodyColor"] = {
+            assetsTreeBodyColor.x,
+            assetsTreeBodyColor.y,
+            assetsTreeBodyColor.z,
+            assetsTreeBodyColor.w
+        };
+
+        assetsTabObject["assetsBorderThickness"] = assetsBorderThickness;
+        assetsTabObject["assetsBodyPadding"] = assetsBodyPadding;
+        assetsTabObject["assetsTitleInnerPadding"] = assetsTitleInnerPadding;
+        assetsTabObject["assetsBodyRounding"] = assetsBodyRounding;
+        assetsTabObject["assetsTitleOffset"] = assetsTitleOffset;
+
+        inspectorStylesObject["assets"] = assetsTabObject;
+        s["inspector"] = inspectorStylesObject;
+
         j["styles"] = s;
     }
 
@@ -433,6 +501,61 @@ struct SettingsStyles {
                 const auto& c = s["editorPalette"][i];
                 editorPalette[i] = ImVec4(c[0], c[1], c[2], c[3]);
             }
+        }
+
+        if (s.contains("inspector") && s["inspector"].is_object()) {
+            const json& ins = s["inspector"];
+            if (ins.contains("assets") && ins["assets"].is_object()) {
+                const json& assets = ins["assets"];
+                assetsDirectoryTextColor = ImVec4(
+                    assets["assetsDirectoryTextColor"][0],
+                    assets["assetsDirectoryTextColor"][1],
+                    assets["assetsDirectoryTextColor"][2],
+                    assets["assetsDirectoryTextColor"][3]
+                );
+                assetsFileBackgroundColor = ImVec4(
+                    assets["assetsFileBackgroundColor"][0],
+                    assets["assetsFileBackgroundColor"][1],
+                    assets["assetsFileBackgroundColor"][2],
+                    assets["assetsFileBackgroundColor"][3]
+                );
+                assetsBorderColor = ImVec4(
+                    assets["assetsBorderColor"][0],
+                    assets["assetsBorderColor"][1],
+                    assets["assetsBorderColor"][2],
+                    assets["assetsBorderColor"][3]
+                );
+                assetsTabBackgroundColor = ImVec4(
+                    assets["assetsTabBackgroundColor"][0],
+                    assets["assetsTabBackgroundColor"][1],
+                    assets["assetsTabBackgroundColor"][2],
+                    assets["assetsTabBackgroundColor"][3]
+                );
+                assetsTitleBackgroundColor = ImVec4(
+                    assets["assetsTitleBackgroundColor"][0],
+                    assets["assetsTitleBackgroundColor"][1],
+                    assets["assetsTitleBackgroundColor"][2],
+                    assets["assetsTitleBackgroundColor"][3]
+                );
+                assetsTreeBodyColor = ImVec4(
+                    assets["assetsTreeBodyColor"][0],
+                    assets["assetsTreeBodyColor"][1],
+                    assets["assetsTreeBodyColor"][2],
+                    assets["assetsTreeBodyColor"][3]
+                );
+                assetsBorderThickness = assets.value("assetsBorderThickness", assetsBorderThickness);
+                assetsBodyPadding = assets.value("assetsBodyPadding", assetsBodyPadding);
+                assetsTitleInnerPadding = assets.value("assetsTitleInnerPadding", assetsTitleInnerPadding);
+                assetsBodyRounding = assets.value("assetsBodyRounding", assetsBodyRounding);
+                assetsTitleOffset = assets.value("assetsTitleOffset", assetsTitleOffset);
+            } 
+        } else {
+            assetsDirectoryTextColor = ImVec4(180, 185, 175, 255);
+            assetsFileBackgroundColor = ImVec4(40, 42, 54, 255);
+            assetsBorderColor = ImVec4(45, 47, 63, 255);
+            assetsTabBackgroundColor = ImVec4(26, 27, 33, 255);
+            assetsTitleBackgroundColor = ImVec4(31, 32, 42, 255);
+            assetsTreeBodyColor = ImVec4(28, 30, 38, 255);
         }
     }
 };

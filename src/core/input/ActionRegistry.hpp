@@ -15,6 +15,7 @@ enum class Action {
     CameraRight,
     CameraUp,
     CameraDown,
+    MouseMove,
     SwitchControlContext,
     SaveActiveShaderFile,
     SaveProject,
