@@ -61,32 +61,30 @@ std::filesystem::path FileSink::GetProjectLogDirectory(const std::string& appNam
     // fallback, filesink will create the directory in the current directory  
     std::filesystem::path baseDir = std::filesystem::current_path() / "Logs";           
     
+    
     #if defined(_WIN32)
         const wchar_t* localAppData = _wgetenv(L"LOCALAPPDATA"); 
         if (!localAppData) throw std::runtime_error("LOCALAPPDATA not set or invalid access");
         baseDir = std::filesystem::path(localAppData) / appName / "Logs";
 
- #elif defined(__APPLE__)
+    #elif defined(__APPLE__)
     // ~/Library/Logs/<AppName>
     const char* home = std::getenv("HOME");
     if (home) {
         baseDir = std::filesystem::path(home) / "Library" / "Logs" / appName;
-    } else {
-        baseDir = std::filesystem::current_path() / "logs"; // Safe fallback
-    }
+    } 
+
     #else 
-        //  ~/.local/state/<AppName>/log
-        const char* xdgStateHome = std::getenv("XDG_STATE_HOME");
-        if (xdgStateHome) {
-            baseDir = std::filesystem::path(xdgStateHome) / appName / "log";
-        } else {
-            const char* home = std::getenv("HOME");
-            if (home) {
-                baseDir = std::filesystem::path(home) / ".local" / "state" / appName / "log";
-            } else {
-                baseDir = std::filesystem::current_path() / "logs"; // Safe fallback
-            }
-        }
+    //  ~/.local/state/<AppName>/log
+    const char* xdgStateHome = std::getenv("XDG_STATE_HOME");
+    if (xdgStateHome) {
+        baseDir = std::filesystem::path(xdgStateHome) / appName / "log";
+    } else {
+        const char* home = std::getenv("HOME");
+        if (home) {
+            baseDir = std::filesystem::path(home) / ".local" / "state" / appName / "log";
+        } 
+    }
     #endif
     
     return baseDir / projectName;
