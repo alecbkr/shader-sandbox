@@ -92,22 +92,8 @@ void ConsoleUI::drawLogs() {
     float wrapWidth = ImGui::GetWindowSize().x - ImGui::GetStyle().ScrollbarSize - 15.0f;
     wrapWidth = std::max(wrapWidth, 50.0f); 
 
-    std::vector<DisplayLine> displayLines; 
-
-    // get the filtered logs if filters are applied
-    for (int i = 0; i < logs.size();) {
-        if (!isLogFiltered(logs[i])) {
-            int collapsedCount = getCollapseCount(logs, i);
-            
-            std::string rawStr = formatLogString(logs[i]); 
-            auto wrappedLines = wrapLogText(rawStr, i, collapsedCount, wrapWidth); 
-            displayLines.insert(displayLines.end(), wrappedLines.begin(), wrappedLines.end()); 
-
-            i += collapsedCount + 1; 
-        } else {
-            i++; 
-        }
-    }
+    std::vector<DisplayLine> displayLines = buildDisplayLines(logs, wrapWidth); 
+    
 
     if (TextSelector::Begin("ConsoleLogs", displayLines.size(), selectionCtx, selectionLayout)) {
         for (int row = 0; row < displayLines.size(); ++row) {
@@ -115,7 +101,6 @@ void ConsoleUI::drawLogs() {
         }
         TextSelector::End(); 
     }
-
     
     if (selectionCtx.isActive && ImGui::IsWindowFocused() && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_C)) {
         TextSelector::copyText(selectionCtx, displayLines.size(), [&](int row, bool& isWrap) -> std::string {
@@ -282,18 +267,32 @@ void ConsoleUI::drawSingleLog(int rowIdx, const DisplayLine& lineData, const Log
         rawText += " (" + std::to_string(lineData.collapsedCount + 1) + ")"; 
     }
 
+        float arrowSize = ImGui::GetTextLineHeight(); 
+        float arrowOffset = arrowSize + ImGui::GetStyle().ItemSpacing.x;
+        
+        bool needsIndent = false; 
+
+        // calculate the offset so that the children can match the parent 
+        if (lineData.isChildLog) needsIndent = true; 
+        else if (lineData.isGroupHeader && lineData.charOffset > 0 && lineData.totalGroupCount > 1) needsIndent = true; 
+        if (needsIndent) ImGui::Indent(arrowOffset);
+    
+
     TextSelector::Text(rawText, [&]() {
-        ImGui::PushID(rowIdx); 
+        ImGui::PushID(rowIdx);         
         ImVec2 screenPos = ImGui::GetCursorScreenPos(); 
+        float screenPosX = screenPos.x; 
+        
+        // offset for the arrow if logs are collapsed 
+        if (lineData.isGroupHeader && lineData.charOffset == 0 && lineData.totalGroupCount > 1) screenPosX += arrowOffset; 
+
 
         int logIdx = lineData.originalLogIdx; 
         int idxToCheck = logIdx;
-        if (lineData.collapsedCount > 0 && searcher.hasMatches()) {
-            const auto& activeMatch = searcher.getActiveMatch(); 
-            if(activeMatch.itemIdx > logIdx && activeMatch.itemIdx <= (logIdx + lineData.collapsedCount)) {
-                idxToCheck = activeMatch.itemIdx; 
-            }
-        } 
+        
+        //  reflect the highlight state of the parent 
+        if (lineData.isChildLog && lineData.parentLogIdx != -1) idxToCheck = lineData.parentLogIdx;
+        
 
         // Draw Search Highlight if its active
         if (searcher.isItemActiveMatch(idxToCheck)) {
@@ -328,9 +327,28 @@ void ConsoleUI::drawSingleLog(int rowIdx, const DisplayLine& lineData, const Log
                 );
             }
         }
+        
+        // dropdown arrow for the collapsed logs 
+        if (lineData.isGroupHeader && lineData.charOffset == 0 && lineData.totalGroupCount > 1) {
 
-        // ImGui::TextColored(style.color, "%s", style.prefix.c_str());
-        // ImGui::SameLine(0, 0);        
+            // styling for the arrow dropdown (transparent with a tint on hover)
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.2f, 0.5f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.3f, 0.3f, 0.5f));
+            
+            // remove padding from the button 
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+
+            ImGuiDir dir = lineData.isExpanded ? ImGuiDir_Down : ImGuiDir_Right;
+            if (ImGui::ArrowButton("##expand", dir)) {
+                if (lineData.isExpanded) expandedGroups.erase(lineData.groupHash);
+                else expandedGroups.insert(lineData.groupHash);
+            }
+            ImGui::PopStyleVar();
+            ImGui::PopStyleColor(3);
+
+            ImGui::SameLine();
+        }
 
         // only print the log info if it's the first line of the wrapped text 
         if (lineData.charOffset == 0 && lineData.text.length() >= style.prefix.length()) {
@@ -348,8 +366,12 @@ void ConsoleUI::drawSingleLog(int rowIdx, const DisplayLine& lineData, const Log
             ImGui::TextDisabled("(%d)", lineData.collapsedCount + 1);
         }
 
+
         ImGui::PopID();
     }); 
+
+    if (needsIndent) ImGui::Unindent(arrowOffset); 
+
 }
 
 ConsoleUI::LogStyle ConsoleUI::getLogStyle(const LogEntry& log) {
@@ -414,10 +436,9 @@ std::vector<ConsoleUI::DisplayLine> ConsoleUI::wrapLogText(const std::string& fu
         }
 
         bool isSoftWrap = (textBegin < textEnd);
-        
         int displayCollapse = isSoftWrap ? 0 : collapseCount;
-
-        result.push_back({logIndex, lineText, isSoftWrap, displayCollapse, currOffset});
+    
+        result.push_back({logIndex, lineText, isSoftWrap, displayCollapse, currOffset, false, 0, false, false, -1, 1});    
     }
     return result;
 }
@@ -425,4 +446,85 @@ std::vector<ConsoleUI::DisplayLine> ConsoleUI::wrapLogText(const std::string& fu
 bool ConsoleUI::isLogFiltered(const LogEntry& log) {
     if (!engine) return false;
     return engine->isLogFiltered(log);
+}
+
+
+std::vector<ConsoleUI::DisplayLine> ConsoleUI::buildDisplayLines(const std::deque<LogEntry> & logs, float wrapWidth) {
+    std::vector<DisplayLine> displayLines; 
+    auto& togStates = engine->getToggles(); 
+
+    if (togStates.isCollapsedLogs) {
+        std::vector<size_t> orderedHashes; 
+        std::unordered_map<std::size_t, std::vector<int>> groupedLogs; 
+
+        for (int i = 0; i < logs.size(); ++i) {
+            if (!isLogFiltered(logs[i])) {
+                size_t hash = getLogHash(logs[i]);
+
+                if (groupedLogs.find(hash) == groupedLogs.end()) orderedHashes.push_back(hash); 
+                groupedLogs[hash].push_back(i); 
+            }
+        }
+
+        for (size_t hash: orderedHashes) {
+            const auto& indices = groupedLogs[hash]; 
+            int firstIdx = indices[0]; 
+            int count = indices.size(); 
+            bool isExpanded = expandedGroups.find(hash) != expandedGroups.end();
+
+            std::string rawStr = formatLogString(logs[firstIdx]); 
+            auto wrappedLines = wrapLogText(rawStr, firstIdx, count - 1, wrapWidth); 
+
+            // setup the ctx for collapsing 
+            for (auto& wl : wrappedLines) {
+                wl.isGroupHeader = true; 
+                wl.groupHash = hash; 
+                wl.isExpanded = isExpanded; 
+                wl.totalGroupCount = count; 
+            }
+
+            displayLines.insert(displayLines.end(), wrappedLines.begin(), wrappedLines.end());        
+            if (isExpanded && count > 1) {
+                for (int idx : indices) {
+                    float childIndent = ImGui::GetTextLineHeight() + ImGui::GetStyle().ItemSpacing.x; 
+                    std::string childStr = formatLogString(logs[idx]); 
+                    auto childWrapped = wrapLogText(childStr, idx, 0, wrapWidth - childIndent);
+                    
+                    for (auto& cw : childWrapped) {
+                        cw.isChildLog = true; 
+                        cw.parentLogIdx = firstIdx; 
+                    }
+                    displayLines.insert(displayLines.end(), childWrapped.begin(), childWrapped.end());                }
+            }
+        }
+    } else {
+        // draw normal uncollapsed logs 
+        for (int i = 0; i < logs.size(); i++) {
+            if (!isLogFiltered(logs[i])) {
+                std::string rawStr = formatLogString(logs[i]); 
+                auto wrappedLines = wrapLogText(rawStr, i, 0, wrapWidth); 
+                displayLines.insert(displayLines.end(), wrappedLines.begin(), wrappedLines.end()); 
+            }
+        }
+    }
+
+    return displayLines;
+
+}
+
+// needed to generate a unique hash value so that logs with the same values can be collapsed together 
+size_t ConsoleUI::getLogHash(const LogEntry& log) const {
+    size_t hash = 0;
+    
+    auto combine = [&hash](size_t h) { 
+        // xor the bits together and scatter them using the golden ratio to prevent hash collisions 
+        hash ^= h + 0x9e3779b9 + (hash << 6) + (hash >> 2); 
+    };
+    
+    combine(std::hash<std::string>{}(log.msg));
+    combine(std::hash<int>{}((int)log.level));
+    combine(std::hash<std::string>{}(log.src));
+    combine(std::hash<std::string>{}(log.additional));
+    
+    return hash;
 }

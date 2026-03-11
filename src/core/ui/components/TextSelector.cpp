@@ -58,12 +58,15 @@ void TextSelector::Text(const std::string& rawText, std::function<void()> drawCa
     const TextSelectorLayout& layout = state.layout; 
     int rowIdx = state.currRow; 
 
+    // get the actual cursor position to accurately draw the selection box in case we have a button or something offseting it 
+    float rowIndent = ImGui::GetCursorPos().x - layout.origin.x; 
+
     if (ctx->isActive) {
         if (rowIdx == ctx->startRow && (ctx->mode == SelectionMode::Normal || ctx->wordRecalc)) {
-            ctx->startCol = getExactColumn(rawText, ctx->startMouseX);
+            ctx->startCol = getExactColumn(rawText, ctx->startMouseX - rowIndent);
         }
         if (rowIdx == ctx->endRow && (ctx->mode == SelectionMode::Normal || ctx->wordRecalc)) {
-            ctx->endCol = getExactColumn(rawText, ctx->endMouseX);
+            ctx->endCol = getExactColumn(rawText, ctx->endMouseX - rowIndent);
         }
     }
 
@@ -135,8 +138,8 @@ void TextSelector::Text(const std::string& rawText, std::function<void()> drawCa
                 ImVec2 cursorPos = ImGui::GetCursorScreenPos(); 
                 ImDrawList* drawList = ImGui::GetWindowDrawList(); 
                 drawList->AddRectFilled(
-                    ImVec2(layout.origin.x + hlStart, cursorPos.y), 
-                    ImVec2(layout.origin.x + hlEnd, cursorPos.y + layout.lineHeight), 
+                    ImVec2(cursorPos.x + hlStart, cursorPos.y), 
+                    ImVec2(cursorPos.x + hlEnd, cursorPos.y + layout.lineHeight), 
                     layout.highlightColor
                 ); 
             }

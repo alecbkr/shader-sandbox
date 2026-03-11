@@ -6,6 +6,8 @@
 #include <vector>
 #include <memory>
 #include <deque>
+#include <unordered_set>
+#include <unordered_map>
 #include "../logging/ConsoleSink.hpp"
 #include "../ConsoleEngine.hpp"
 #include "components/SearchText.hpp"
@@ -25,11 +27,20 @@ public:
     };
 
     struct DisplayLine {
+        // used for selection
         int originalLogIdx; 
         std::string text; 
         bool isWrap; 
         int collapsedCount; 
         int charOffset; 
+
+        // used for collapsing logs 
+        bool isGroupHeader = false; 
+        size_t groupHash = 0; 
+        bool isExpanded = false; 
+        bool isChildLog = false; 
+        int parentLogIdx = -1; 
+        int totalGroupCount = 1; 
     };
 
 private:
@@ -48,6 +59,8 @@ private:
     bool initialized = false;
     int selectionStart = -1;
 
+    std::unordered_set<size_t> expandedGroups;      // used for collapsing logic 
+
     void drawLogs();
     void drawMenuBar();
     void updateSearchAndScroll(const std::deque<LogEntry> &logs, bool& isScroll);
@@ -59,4 +72,6 @@ private:
     std::string formatLogString(const LogEntry& log); 
     bool isLogFiltered(const LogEntry& log); 
     std::vector<DisplayLine> wrapLogText(const std::string& fullText, int logIndex, int collapseCount, float maxWidth);
+    std::vector<DisplayLine> buildDisplayLines(const std::deque<LogEntry>& logs, float wrapWidth);
+    size_t getLogHash(const LogEntry& log) const;
 };
