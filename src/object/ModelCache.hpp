@@ -40,6 +40,7 @@ class ModelCache {
         void renderPrimitive(unsigned int modelID, unsigned int meshID, glm::mat4 projection, glm::mat4 view, glm::vec3 camPos);
         void deleteModel(unsigned int modelID);
         Model* getModel(unsigned int modelID);
+        std::vector<unsigned int> getModelIDs() const;
         void setModelMaterialType(unsigned int modelID, unsigned int materialID, MaterialType type);
         
         // DEBUG

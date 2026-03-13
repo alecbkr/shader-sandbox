@@ -412,3 +412,12 @@ void ModelCache::setInspectorEnginePtr(InspectorEngine* _inspectorEngPtr) {
     inspectorEngPtr = _inspectorEngPtr;
     inspectorEngPtrSet = true;
 }
+
+std::vector<unsigned int> ModelCache::getModelIDs() const {
+    std::vector<unsigned int> modelIds;
+    modelIds.reserve(modelIDMap.size());
+    for (auto& [id, model] : modelIDMap) {
+        modelIds.push_back(id);
+    }
+    return modelIds;
+}
