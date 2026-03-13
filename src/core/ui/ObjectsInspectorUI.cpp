@@ -217,7 +217,7 @@ bool ObjectsInspectorUI::drawShaderProgramMenu(ModelShaderMenu& menu, const std:
 }
 
 bool ObjectsInspectorUI::drawTextureMenu(ModelTextureMenu& menu, Logger* loggerPtr, TextureRegistry* textureRegPtr) {
-    bool changed = false;
+    // bool changed = false;
     std::vector<const char*> textureChoices;
     const std::vector<const Texture*>& registryTextures = textureRegPtr->readTextures();
     textureChoices.reserve(registryTextures.size());
@@ -226,15 +226,15 @@ bool ObjectsInspectorUI::drawTextureMenu(ModelTextureMenu& menu, Logger* loggerP
     }
 
     if (ImGui::Combo("Texture", &menu.textureSelection, textureChoices.data(), (int)textureChoices.size())) {
-        changed = true;
+        // changed = true;
         loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed texture");
     }
     if (ImGui::InputInt("Unit", &menu.unitSelection)) {
-        changed = true;
+        // changed = true;
         loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed unit");
     }
     if (drawTextInput(&menu.uniformName, "Uniform Name")) {
-        changed = true;
+        // changed = true;
         loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed uniform name");
     }
 

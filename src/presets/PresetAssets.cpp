@@ -131,6 +131,8 @@ MeshData& PresetAssets::getPresetMesh(MeshPreset preset) {
 
         case MeshPreset::PYRAMID:
             return PresetAssets::pyramidMesh;
+        
+        default: return PresetAssets::cubeMesh;
     }
 }
 

@@ -30,6 +30,7 @@
 #include "application/Project.hpp"
 #include "core/ui/modals/ModalManager.hpp"
 #include "core/ui/modals/SettingsModal.hpp"
+#include "core/ui/Fonts.hpp"
 #include "object/MaterialCache.hpp"
 
 struct AppContext {
@@ -66,6 +67,7 @@ struct AppContext {
     EditorUI editor_ui;
     InspectorUI inspector_ui;
     ModalManager modals;
+    Fonts fonts;
     SettingsModal settingsModal;
     MaterialCache material_cache;
 };

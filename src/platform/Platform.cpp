@@ -11,7 +11,7 @@
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
+//#define NOMINMAX
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <windows.h>
 #include <windowsx.h>
@@ -285,6 +285,11 @@ bool Platform::enableBorderlessSnap() {
 #else
     return false;
 #endif
+}
+
+void Platform::setCursorStatus(bool status) {
+    if (status) glfwSetInputMode(windowPtr->getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    else glfwSetInputMode(windowPtr->getGLFWWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 void Platform::terminate(){

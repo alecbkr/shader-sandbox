@@ -3,6 +3,7 @@
 #include "Camera.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include "engine/AppTimer.hpp"
+#include "core/input/InputState.hpp"
 
 // DEFAULT CAMERA VALUES
 const float YAW = -90.0f;
@@ -16,7 +17,7 @@ const float ZOOM = 45.0f;
 // Camera( float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)),
 //  MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
 
-Camera::Camera(AppTimer* _timerPtr) : timerPtr(_timerPtr) {
+Camera::Camera(AppTimer* _timerPtr, InputState* _inputPtr) : timerPtr(_timerPtr), inputPtr(_inputPtr) {
 
     Position = glm::vec3(0.0f, 2.0f, 2.0f);
     WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -74,19 +75,17 @@ void Camera::ProcessKeyboard(Camera_Movement dir, float deltaTime) {
         Position += Right * velocity;
 }
 
-void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch) {
-    xoffset *= CameraSensitivity;
-    yoffset *= CameraSensitivity;
+void Camera::ProcessMouseMovement() {
+    float xoffset = inputPtr->getMouseDeltaX() * CameraSensitivity;
+    float yoffset = inputPtr->getMouseDeltaY() * CameraSensitivity;
 
     Yaw += xoffset;
-    Pitch += yoffset;
+    Pitch -= yoffset;
 
-    if (constrainPitch) {
-        if (Pitch > 89.0f)
-            Pitch = 89.0f;
-        if (Pitch < -89.0f)
-            Pitch = -89.0f;
-    }
+    if (Pitch > 89.0f)
+        Pitch = 89.0f;
+    if (Pitch < -89.0f)
+        Pitch = -89.0f;
 
     updateCameraVectors();
 }

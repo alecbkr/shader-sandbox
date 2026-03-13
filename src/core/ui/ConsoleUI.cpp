@@ -81,7 +81,7 @@ void ConsoleUI::drawLogs() {
 
     updateSearchAndScroll(logs, isScroll);
 
-    for (int i = 0; i < logs.size(); i++) {
+    for (int i = 0; i < (int)logs.size(); i++) {
         int collapseCount = getCollapseCount(logs, i);
         drawSingleLog(logs[i], i, collapseCount, isScroll);
         i += collapseCount;
@@ -208,7 +208,7 @@ int ConsoleUI::getCollapseCount(const std::deque<LogEntry> &logs, int currIdx) {
     int count = 0;
     int nextIdx = currIdx + 1;
 
-    while (nextIdx < logs.size()) {
+    while (nextIdx < (int)logs.size()) {
         const auto& current = logs[currIdx];
         const auto& next = logs[nextIdx];
 
@@ -261,7 +261,7 @@ void ConsoleUI::drawSingleLog(const LogEntry& log, int idx, int repeatCount, boo
         const auto& match = searcher.getActiveMatch();
         std::string fullText = formatLogString(log);
 
-        if (match.charIdx + match.length <= fullText.size()) {
+        if (match.charIdx + match.length <= (int)fullText.size()) {
             std::string textBefore = fullText.substr(0, match.charIdx);
             std::string textMatch = fullText.substr(match.charIdx, match.length);
 

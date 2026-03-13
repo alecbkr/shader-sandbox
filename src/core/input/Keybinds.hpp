@@ -17,7 +17,8 @@ struct SettingsKeybind;
 enum class Trigger : uint8_t {
     Pressed,
     Released,
-    Down
+    Down,
+    MouseMove
 };
 
 struct KeyCombo {
@@ -56,6 +57,7 @@ public:
     void gatherActionsForFrame(ControlCtx context);
 
 private:
+    bool mouseMoved();
     bool initialized = false;
     std::vector<Binding> bindings_;
     Logger* loggerPtr = nullptr;

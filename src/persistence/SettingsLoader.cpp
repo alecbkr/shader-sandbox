@@ -49,6 +49,8 @@ bool SettingsLoader::load(AppSettings& settings) {
 
         // Load graphics
         settings.vsyncEnabled = j.value("vsync", settings.vsyncEnabled);
+
+        settings.settingsFound = true;
     } catch (...) {
         return false;
     }

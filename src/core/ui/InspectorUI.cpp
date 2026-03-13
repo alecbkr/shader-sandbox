@@ -18,6 +18,7 @@
 #include "texture/Texture.hpp"
 #include "core/FileRegistry.hpp"
 #include "engine/ShaderProgram.hpp"
+#include "application/Project.hpp"
 #include <string>
 
 InspectorUI::InspectorUI() {
@@ -35,11 +36,10 @@ InspectorUI::InspectorUI() {
     width = 0;
     uniformInspectorUI = std::make_unique<UniformInspectorUI>();
     objectsInspectorUI = std::make_unique<ObjectsInspectorUI>();
-    assetsInspectorUI = std::make_unique<AssetsInspectorUI>();
     fileInspectorUI = std::make_unique<FileInspectorUI>();
 }
 
-bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr) {
+bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr, Fonts* _fontsPtr, Project* _project, SettingsStyles* _styles) {
     if (intitialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Inspector UI Initialization", "Inspector UI was already initialized.");
         return false;
@@ -52,6 +52,7 @@ bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngP
     eventsPtr = _eventsPtr;
     modelCachePtr = _modelCachePtr;
     fileRegPtr = _fileRegPtr;
+    assetsInspectorUI = std::make_unique<AssetsInspectorUI>(_fontsPtr, _project, _styles);
     materialCachePtr = _materialCachePtr;
     intitialized = true;
     return true;
@@ -99,7 +100,7 @@ void InspectorUI::render() {
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Assets")) {
-                assetsInspectorUI->draw(textureRegPtr);
+                assetsInspectorUI->draw();
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Shader Files")) {

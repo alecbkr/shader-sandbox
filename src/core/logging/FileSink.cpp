@@ -21,11 +21,11 @@ FileSink::~FileSink() {
 
 void FileSink::addLog(const LogEntry& entry) {
     
-    if(activeLogFile.is_open() && activeLogFile.tellp() > MAX_LOG_FILE_SIZE) {
+    if(activeLogFile.is_open() && activeLogFile.tellp() > (long long int)MAX_LOG_FILE_SIZE) {
         rotateLogFile(); 
     }
 
-    if(activeLogFile.tellp() > MAX_LOG_FILE_SIZE) {
+    if(activeLogFile.tellp() > (long long int)MAX_LOG_FILE_SIZE) {
         activeLogFile.close(); 
     }
 

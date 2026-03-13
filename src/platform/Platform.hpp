@@ -24,6 +24,7 @@ struct AppSettings;
 
 struct WindowUserData {
     InputState* inputs;
+    ContextManager* context;
     AppSettings* settings;
 };
 
@@ -48,6 +49,7 @@ public:
     void getScreenCursorPosition(int& x, int& y) const;
     bool beginNativeWindowDrag();
     bool enableBorderlessSnap();
+    void setCursorStatus(bool status);
     void terminate();
 
 private:
