@@ -96,7 +96,7 @@ void InspectorUI::render() {
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Objects")) {
-                objectsInspectorUI->draw(loggerPtr, inspectorEngPtr, shaderRegPtr, textureRegPtr, modelCachePtr);
+                objectsInspectorUI->draw(loggerPtr, inspectorEngPtr, shaderRegPtr, textureRegPtr, modelCachePtr, materialCachePtr);
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Assets")) {
