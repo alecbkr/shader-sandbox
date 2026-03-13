@@ -28,9 +28,13 @@ class ShaderRegistry;
 class TextureRegistry;
 class ModelCache;
 class Model;
+struct SettingsStyles;
 
 class ObjectsInspectorUI {
 public:
+    ObjectsInspectorUI() = default;
+    explicit ObjectsInspectorUI(SettingsStyles* styles);
+
     void draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, TextureRegistry* textureRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr);
 
     struct ObjectsInspectorThemeSettings {
@@ -42,6 +46,7 @@ public:
 private:
     std::unordered_map<unsigned int, MaterialShaderMenu> materialShaderMenus;
     std::unordered_map<unsigned int, ModelTextureMenu> modelTextureMenus;
+    SettingsStyles* styles = nullptr;
 
     void drawAddObjectMenu(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, ModelCache* modelCachePtr);
     void initializeMenu(MaterialShaderMenu& menu, const std::vector<const char*>& shaderChoices, Logger* loggerPtr, ShaderRegistry* shaderRegPtr, MaterialCache* materialCachePtr);

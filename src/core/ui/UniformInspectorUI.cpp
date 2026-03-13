@@ -1,5 +1,6 @@
 #include "core/ui/UniformInspectorUI.hpp"
 
+#include "application/SettingsStyles.hpp"
 #include "core/InspectorEngine.hpp"
 #include "core/logging/LogSink.hpp"
 #include "core/logging/Logger.hpp"
@@ -13,6 +14,20 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+UniformInspectorUI::UniformInspectorUI(SettingsStyles* styles) : styles_(styles) {
+    if (styles_) {
+        theme.bgColor = styles_->assetsTreeBodyColor;
+        // Derive a hover color from the base color so it always differs visibly.
+        theme.bgColorHovered = ImVec4(
+            theme.bgColor.x * 1.3f,
+            theme.bgColor.y * 1.3f,
+            theme.bgColor.z * 1.3f,
+            theme.bgColor.w
+        );
+        theme.indentSize = styles_->indentSpacing * 0.5f;
+    }
+}
 
 void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr) {
     loggerPtr_ = loggerPtr;

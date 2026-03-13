@@ -114,6 +114,8 @@ struct SettingsStyles {
     int selectedEditorPaletteColor = 0;
 
     // Inspector Specific Styles
+    // General inspector tree/child hover color
+    ImVec4 inspectorTreeHoveredColor;
 
     // Assets tab specific styles
     // Assest tab colors

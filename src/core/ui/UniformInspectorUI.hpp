@@ -13,9 +13,13 @@ class UniformRegistry;
 class ModelCache;
 struct Uniform;
 class ShaderProgram;
+struct SettingsStyles;
 
 class UniformInspectorUI {
 public:
+    UniformInspectorUI() = default;
+    explicit UniformInspectorUI(SettingsStyles* styles);
+
     void draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr);
 
     struct UniformInspectorThemeSettings {
@@ -33,6 +37,7 @@ private:
     ModelCache* modelCachePtr_ = nullptr;
     MaterialCache* materialCachePtr_ = nullptr;
     InspectorEngine* inspectorEngPtr_ = nullptr;
+    SettingsStyles* styles_ = nullptr;
     
     void drawModelContainer(int& imGuiID, unsigned int modelID, const std::vector<unsigned int>& materialIDs);
     void drawMaterialContainer(unsigned int modelID, const std::vector<unsigned int>& materialIDs, int& imGuiID);
