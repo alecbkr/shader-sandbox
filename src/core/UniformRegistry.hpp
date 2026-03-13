@@ -26,9 +26,11 @@ class UniformRegistry {
     const std::unordered_map<std::string, Uniform>* tryReadMaterialUniforms(unsigned int modelID, unsigned int materialID) const;
 
     private:
+    unsigned int nextID = 0;
     bool initialized = false;
     Logger* loggerPtr = nullptr;
-    std::unordered_map<unsigned int, std::unordered_map<std::string, Uniform>> uniforms;
+    std::unordered_map<unsigned int, std::unordered_map<std::string, unsigned int>> old_version_uniforms;
+    std::unordered_map<unsigned int, Uniform> uniforms;
 
     // ALECS JUNK
     struct PairHash {
@@ -37,7 +39,7 @@ class UniformRegistry {
         }
     };
 
-    std::unordered_map<std::string, Uniform> scene_uniforms;
-    std::unordered_map<unsigned int, std::unordered_map<std::string, Uniform>> model_uniforms;
-    std::unordered_map<std::pair<unsigned int, unsigned int>, std::unordered_map<std::string, Uniform>, PairHash> material_uniforms;
+    std::unordered_map<std::string, unsigned int> scene_uniforms;
+    std::unordered_map<unsigned int, std::unordered_map<std::string, unsigned int>> model_uniforms;
+    std::unordered_map<std::pair<unsigned int, unsigned int>, std::unordered_map<std::string, unsigned int>, PairHash> material_uniforms;
 };

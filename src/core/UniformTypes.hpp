@@ -63,12 +63,13 @@ struct InspectorReference {
 using UniformValue = std::variant<int, float, glm::vec3, glm::vec4, glm::mat4, InspectorSampler2D, InspectorReference>;
 
 struct Uniform {
+    unsigned int ID; // set automatically
     std::string name;
     UniformType type;
     UniformValue value;
     unsigned int materialID; // set automatically when you register the uniform
-    bool isFunction = false;
-    bool isReadOnly = false;
+    bool isFunction = false; // right now this means reference. it won't always be this way.
+    bool isReadOnly = false; // does nothing right now. 
     bool useAlternateEditor = false; // This setting is for the color picker, etc.
 };
 

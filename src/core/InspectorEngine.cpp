@@ -67,9 +67,9 @@ void InspectorEngine::refreshUniforms() {
     
     // NOTE: this will break if we do any multithreading with the program list.
     // Please be careful.
-    std::unordered_map<std::string, std::vector<unsigned int>> programToObjectList;
+    std::unordered_map<std::string, std::vector<unsigned int>> programToMaterialList;
     for (const auto& [programName, program] : programs) {
-        programToObjectList[programName] = std::vector<unsigned int>();
+        programToMaterialList[programName] = std::vector<unsigned int>();
     }
 
     const std::vector<unsigned int> materials = materialCachePtr->getAllMaterialIDs();
@@ -81,7 +81,7 @@ void InspectorEngine::refreshUniforms() {
         }
         ShaderProgram* matProgram = shaderRegPtr->getProgram(mat->getProgramID());
         if (matProgram != nullptr) {
-            programToObjectList[mat->getProgramID()].push_back(matID);
+            programToMaterialList[mat->getProgramID()].push_back(matID);
         }
         else {
             loggerPtr->addLog(LogLevel::WARNING, "refreshUniforms", "material " + std::to_string(matID) + " does not have a shader!");
@@ -97,28 +97,28 @@ void InspectorEngine::refreshUniforms() {
             uniform.value = getDefaultValue(uniform.type);
         }
         std::cout << programName << std::endl;
-        std::cout << programToObjectList[programName].size() << std::endl;
-        for (unsigned int modelID : programToObjectList[programName]) {
-            std::cout << modelID << " " << program->name << std::endl;
-            const bool newModel = !uniformRegPtr->containsMaterial(modelID);
+        std::cout << programToMaterialList[programName].size() << std::endl;
+        for (unsigned int matID : programToMaterialList[programName]) {
+            std::cout << matID << " " << program->name << std::endl;
+            const bool newModel = !uniformRegPtr->containsMaterial(matID);
             if (newModel) {
-                uniformRegPtr->insertUniformMap(modelID, parsedUniforms);
-                applyAllUniformsForObject(modelID);
+                uniformRegPtr->insertUniformMap(matID, parsedUniforms);
+                applyAllUniformsForObject(matID);
                 continue;
             }
 
             // if not a new object
-            const auto& objectUniforms = uniformRegPtr->tryReadUniforms(modelID);
+            const auto& objectUniforms = uniformRegPtr->tryReadUniforms(matID);
             if (objectUniforms == nullptr) {
                 loggerPtr->addLog(LogLevel::WARNING, "refreshUniforms", "object does not exist in registry??? code should be unreachable");
                 continue;
             }
 
             for (const auto& [uniformName, parsedUniform] : parsedUniforms) {
-                const Uniform* existingUniform = uniformRegPtr->tryReadUniform(modelID, uniformName);
+                const Uniform* existingUniform = uniformRegPtr->tryReadUniform(matID, uniformName);
                 const bool mustRegister = existingUniform == nullptr || existingUniform->type != parsedUniform.type;
                 
-                if (mustRegister) uniformRegPtr->registerInspectorUniform(modelID, parsedUniform); 
+                if (mustRegister) uniformRegPtr->registerInspectorUniform(matID, parsedUniform); 
             }
 
             std::vector<std::string> uniformsToErase;
@@ -128,7 +128,7 @@ void InspectorEngine::refreshUniforms() {
             }
 
             for (const std::string& uniformName : uniformsToErase) {
-                uniformRegPtr->eraseUniform(modelID, uniformName);
+                uniformRegPtr->eraseUniform(matID, uniformName);
             }
         }
     }

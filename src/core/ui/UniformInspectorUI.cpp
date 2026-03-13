@@ -70,9 +70,17 @@ void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::
     ImGui::Indent(theme.indentSize);
 
     for (unsigned int matID : materialIDs) {
-        std::string matHeader = "Material " + std::to_string(matID) + "##uniform_mat_" + std::to_string(matID);
-        if (ImGui::CollapsingHeader(matHeader.c_str(), ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth)) {
-            ImGui::Separator();
+        bool useMaterialHeader = materialIDs.size() > 1;
+        bool showUniforms = true;
+        if (useMaterialHeader) {
+            std::string matHeader = "Material " + std::to_string(matID) + "##uniform_mat_" + std::to_string(matID);
+            showUniforms = ImGui::CollapsingHeader(matHeader.c_str(), ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth);
+            if (showUniforms) {
+                ImGui::Separator();
+            }
+        }
+
+        if (showUniforms) {
             const std::unordered_map<std::string, Uniform>* uniformMap = uniformRegPtr_->tryReadUniforms(matID);
 
             if (uniformMap == nullptr) {

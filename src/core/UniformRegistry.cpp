@@ -4,7 +4,7 @@
 
 UniformRegistry::UniformRegistry() {
     initialized = false;
-    uniforms.clear();
+    old_version_uniforms.clear();
 }
 
 bool UniformRegistry::initialize(Logger* _loggerPtr) {
@@ -13,14 +13,14 @@ bool UniformRegistry::initialize(Logger* _loggerPtr) {
         return false;
     }
     loggerPtr = _loggerPtr;
-    uniforms.clear();
+    old_version_uniforms.clear();
     initialized = true;
     return true;
 }
 
 void UniformRegistry::shutdown() {
     loggerPtr = nullptr;
-    uniforms.clear();
+    old_version_uniforms.clear();
     initialized = false;
 }
 
@@ -49,8 +49,8 @@ Uniform UniformRegistry::getUniform(std::string shaderProgramName, std::string u
 
 // returns nullptr if uniform doesn't exist
 const Uniform* UniformRegistry::tryReadUniform(unsigned int materialID, const std::string& uniformName) const {
-    const auto& programPair = uniforms.find(materialID);
-    if (programPair == uniforms.end()) {
+    const auto& programPair = old_version_uniforms.find(materialID);
+    if (programPair == old_version_uniforms.end()) {
         // this function should be documented properly so that it is known when returning nullptr it means a uniform wasnt found or doesnt exist
         // a more proper fix for this is to return an enum with the proper statuses. (ie. Uniform::NOT_FOUND) or something like this
         return nullptr;
@@ -58,22 +58,25 @@ const Uniform* UniformRegistry::tryReadUniform(unsigned int materialID, const st
 
     auto& programUniforms = programPair->second;
     
-    const auto uniformPair = programUniforms.find(uniformName);
-    if (uniformPair == programUniforms.end()) {
+    if (!programUniforms.contains(uniformName)) {
         // see previous comment
         return nullptr;
     }
+    auto id = programUniforms.at(uniformName);
+    if (!uniforms.contains(id)) {
+        return nullptr;
+    }
 
-    return &uniformPair->second;
+    return &uniforms.at(id);
 }
 
 bool UniformRegistry::containsMaterial(unsigned int matID) {
-    return uniforms.contains(matID);
+    return old_version_uniforms.contains(matID);
 }
 
 bool UniformRegistry::containsUniform(unsigned int matID, const std::string& uniformName) {
-    const auto& programPair = uniforms.find(matID);
-    if (programPair == uniforms.end()) {
+    const auto& programPair = old_version_uniforms.find(matID);
+    if (programPair == old_version_uniforms.end()) {
         return false;
     }
 
@@ -89,51 +92,71 @@ bool UniformRegistry::containsUniform(unsigned int matID, const std::string& uni
 
 // returns nullptr if uniform doesn't exist
 const std::unordered_map<std::string, Uniform>* UniformRegistry::tryReadUniforms(unsigned int matID) const {
-    if (uniforms.count(matID) <= 0) {
+    if (old_version_uniforms.count(matID) <= 0) {
         // this function should be documented properly so that it is known when returning nullptr it means uniforms werent found or dont exist
         // a more proper fix for this is to return an enum with the proper statuses. (ie. Uniform::NOT_FOUND) or something like this
         return nullptr;
     }
 
     //std::unordered_map<std::string, Uniform>* programUniforms = &uniforms[modelID];
-    const std::unordered_map<std::string, Uniform> *programUniforms = &(uniforms.at(matID));
+    const std::unordered_map<std::string, Uniform> *programUniforms = &(old_version_uniforms.at(matID));
 
     return programUniforms;
 }
 
 void UniformRegistry::registerInspectorUniform(unsigned int matID, Uniform uniform) {
+    uniform.ID = nextID;
+    nextID++;
     uniform.materialID = matID;
-    uniforms[matID][uniform.name] = uniform;
+    old_version_uniforms[matID][uniform.name] = uniform.ID;
+    uniforms[uniform.ID] = uniform;
 }
 
 void UniformRegistry::insertUniformMap(unsigned int matID, const std::unordered_map<std::string, Uniform>& map) {
-    uniforms[matID] = map;
-    for (auto& [name, uniform] : uniforms[matID]) {
+    old_version_uniforms[matID];
+    for (auto& [name, uniformRef] : map) {
+        uniforms[nextID] = uniformRef;
+        auto& uniform = uniforms[nextID];
+        uniform.ID = nextID;
+        nextID++;
         uniform.materialID = matID;
+        old_version_uniforms[matID][uniform.name] = uniform.ID;
     }
 }
 
 void UniformRegistry::eraseUniform(unsigned int matID, const std::string& uniformName) {
-    if (uniforms.count(matID) <= 0) return;
-    if (uniforms.at(matID).count(uniformName) <= 0) return;
-    uniforms.at(matID).erase(uniformName);
-}
+    if (!old_version_uniforms.contains(matID)) return;
+    if (!old_version_uniforms.at(matID).contains(uniformName)) return;
+    unsigned int id = old_version_uniforms.at(matID).at(uniformName);
+    if (!uniforms.contains(id)) return;
+    uniforms.erase(id);
+    old_version_uniforms.at(matID).erase(uniformName);
 
+}
 
 // ALECS TEST JUNK
 void UniformRegistry::registerSceneUniform(Uniform uniform) {
-    scene_uniforms[uniform.name] = uniform;
+    uniform.ID = nextID;
+    nextID++;
+    scene_uniforms[uniform.name] = uniform.ID;
+    uniforms[uniform.ID] = uniform;
 }
 
 
 void UniformRegistry::registerModelUniform(unsigned int modelID, Uniform uniform) {
-    model_uniforms[modelID][uniform.name] = uniform;
+    uniform.ID = nextID;
+    nextID++;
+    model_uniforms[modelID][uniform.name] = uniform.ID;
+    uniforms[uniform.ID] = uniform;
 }
 
 
 
 void UniformRegistry::registerMaterialUniform(unsigned int modelID, unsigned int materialID, Uniform uniform) {
-    material_uniforms[std::make_pair(modelID, materialID)][uniform.name] = uniform;
+    uniform.ID = nextID;
+    nextID++;
+    material_uniforms[std::make_pair(modelID, materialID)][uniform.name] = uniform.ID;
+    uniforms[uniform.ID] = uniform;
 }
 
 
