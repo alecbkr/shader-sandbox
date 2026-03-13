@@ -46,7 +46,6 @@ class MeshA {
         GLuint vao = 0, vbo = 0, ebo = 0;
         unsigned int meshInstanceCount = 1;
         GLuint instanceVBO = 0;
-        std::vector<InstanceData> instanceData;
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
         glm::vec4 baseColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
@@ -54,7 +53,7 @@ class MeshA {
         void unbind();
         void loadToGPU();
         void unloadFromGPU();
-        void setInstanceVBO(unsigned int modelInstanceCount);
+        void setInstanceVBO(unsigned int modelInstanceCount, std::vector<InstanceData> instanceData);
 
         friend class Model;
         friend class CustomModel;

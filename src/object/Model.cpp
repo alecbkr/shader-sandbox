@@ -6,10 +6,19 @@
 #include "object/Material.hpp"
 #include "texture/TextureCache.hpp"
 
+#include <iostream>
 
+int Model::getMatCount() {
+    for (int i = 0; i < all_material_ids.size(); i++) {
+        std::cout << all_material_ids[i] << std::endl;
+    }
+    return all_material_ids.size();
+}
 
 Model::Model(const unsigned int ID, TextureCache* _textureCachePtr, Logger* _loggerPtr, MaterialCache* _materialCachePtr)
-    : ID(ID), textureCachePtr(_textureCachePtr), loggerPtr(_loggerPtr), materialCachePtr(_materialCachePtr) {}
+    : ID(ID), textureCachePtr(_textureCachePtr), loggerPtr(_loggerPtr), materialCachePtr(_materialCachePtr) {
+        instanceData.emplace_back(0.0f, 0.0f, 0.0f); //instace #1 value
+    }
 
 
 // -----FUNCTIONALITY
@@ -44,14 +53,13 @@ void Model::renderPrimitive(unsigned int meshID) {
     ModelPrimitive& prim = primitives[meshID];
     MeshA* mesh = all_meshes[prim.meshID].get();
     Material* mat = materialCachePtr->getMaterial(prim.materialID);
-
+    
     if (mat == nullptr) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "Model::renderInstancedPrimitive", "Material not found!");
         return;
     }
 
-    
-    mesh->setInstanceVBO(modelInstanceCount);
+    mesh->setInstanceVBO(modelInstanceCount, instanceData);
     mesh->bind();
 
     std::vector<unsigned int> textureIDs = mat->getMaterialTextureIDs();
@@ -71,7 +79,6 @@ void Model::renderPrimitive(unsigned int meshID) {
         glDrawElements(GL_TRIANGLES, mesh->indices.size(), GL_UNSIGNED_INT, 0);
     }
     glBindTexture(GL_TEXTURE_2D, 0);
-
 }
 
 
@@ -141,7 +148,14 @@ void Model::rotate(float angle, glm::vec3 axis) {
 
 
 void Model::setInstancePosition(unsigned int instanceNum, glm::vec3 position) {
-    // if (instanceNum > )
+    if (instanceNum > modelInstanceCount || instanceNum == 0) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "setInstancePosition()", "instance number out of range");
+        return;
+    }
+
+    instanceData[instanceNum - 1].x_offset = position.x;
+    instanceData[instanceNum - 1].y_offset = position.y;
+    instanceData[instanceNum - 1].z_offset = position.z;
 }
 
 
@@ -186,6 +200,19 @@ void Model::setInstanceCount(unsigned int newInstanceCount) {
     if (newInstanceCount == 0 || 100 < newInstanceCount) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "setInstanceCount()", "invalid instance range, can be 1-100");
         return;
+    }
+
+    if (newInstanceCount == modelInstanceCount) return; 
+
+    if (newInstanceCount > modelInstanceCount) {
+        for (int i = modelInstanceCount; i < newInstanceCount; i++) {
+            instanceData.emplace_back(1.0f * (i - 1), 0.0f, 0.0f);
+        }
+    }
+    else { //new count is less than model
+        for (int i = modelInstanceCount; i > newInstanceCount; i--) {
+            instanceData.erase(instanceData.begin() + i);
+        }
     }
     modelInstanceCount = newInstanceCount;
 }

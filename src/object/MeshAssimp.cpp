@@ -22,7 +22,7 @@ MeshA::~MeshA() {
     unloadFromGPU();
 }
 
-void MeshA::setInstanceVBO(unsigned int modelInstanceCount) {
+void MeshA::setInstanceVBO(unsigned int modelInstanceCount, std::vector<InstanceData> instanceData) {
     if (meshInstanceCount == modelInstanceCount) return; 
 
     if (meshInstanceCount < modelInstanceCount) {

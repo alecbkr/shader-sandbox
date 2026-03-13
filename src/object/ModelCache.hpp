@@ -53,10 +53,13 @@ class ModelCache {
         std::vector<ModelPrimitive*> opaquePrims;
         std::vector<ModelPrimitive*> translucentPrims;
         std::vector<ModelPrimitive*> cutoutPrims;
+
         ModelPrimitive* skyboxPrim = nullptr;
+        unsigned int skyboxID;
 
         // static void reorderByProgram();
-        void placeInCache(unsigned int modelID);
+        void reorderTranslucentQueue(glm::mat4 viewMat);
+        void placeInQueue(unsigned int modelID);
 
         //SYSTEM FUNCTIONALITY
         bool initialized = false;

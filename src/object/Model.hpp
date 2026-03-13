@@ -72,6 +72,7 @@ class Model {
         //DEBUG
         static std::string getProgramID(); //DUMMY FUNCTION, ALL CALLS SHOULD BE CHANGED TO GRAB FROM MATERIAL
         static void setProgramID(std::string programID); //ALSO DUMMY
+        int getMatCount();
 
     protected:
         unsigned int nextMeshID = 0;
@@ -80,6 +81,7 @@ class Model {
         std::vector<unsigned int>           all_material_ids;
 
     private:
+        std::vector<InstanceData> instanceData;
         unsigned int modelInstanceCount = 1;
         glm::mat4 modelM      = glm::mat4(1.0f);
         glm::vec3 position    = glm::vec3(0.0f);

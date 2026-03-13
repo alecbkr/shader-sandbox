@@ -89,7 +89,7 @@ unsigned int ModelCache::createCustom(
     Model* rawPointer = customModel.get();
 
     modelIDMap.emplace(nextModelID, std::move(customModel));
-    placeInCache(nextModelID);
+    placeInQueue(nextModelID);
     
     nextModelID++;
     return rawPointer->ID;
@@ -107,7 +107,7 @@ unsigned int ModelCache::createImported(std::string model_path) {
     Model* rawPointer = importedModel.get();
     modelIDMap.emplace(nextModelID, std::move(importedModel));
     // modelCache.push_back(rawPointer);
-    placeInCache(nextModelID); //adds primitives to model cache vectors
+    placeInQueue(nextModelID); //adds primitives to model cache vectors
 
     nextModelID++;
     return rawPointer->ID;
@@ -121,7 +121,7 @@ unsigned int ModelCache::createPreset(MeshPreset preset) {
     
     presetModel->setMesh(presetData.verts, presetData.indices, true, false, true);
     modelIDMap.emplace(presetModel->ID, std::move(presetModel));
-    placeInCache(nextModelID);
+    placeInQueue(nextModelID);
     nextModelID++;
     return rawPointer->ID;
 }
@@ -136,7 +136,7 @@ unsigned int ModelCache::createSkybox(std::string cubemap_dir) {
     skyboxModel->addTexture(cubemap_dir, TEX_CUBEMAP);
     skyboxModel->setMaterialType(skyboxModel->getAllMaterialIDs()[0], MaterialType::Skybox);
     modelIDMap.emplace(nextModelID, std::move(skyboxModel));
-    placeInCache(nextModelID);
+    placeInQueue(nextModelID);
     nextModelID++;
     return rawPointer->ID;
 }
@@ -168,10 +168,17 @@ void ModelCache::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camP
         inspectorEngPtr->applyAllUniformsForPrimitive(*prim);
         // getModel(prim->ModelID)->renderPrimitive(prim->meshID);
         getModel(prim->ModelID)->renderPrimitive(prim->meshID); //modelInstanceCount[prim->ModelID]
-        
+    }
+
+    // RENDER CUTOUT PRIMITIVES
+    for (ModelPrimitive* prim : cutoutPrims) {
+        inspectorEngPtr->applyAllUniformsForPrimitive(*prim);
+        // getModel(prim->ModelID)->renderPrimitive(prim->meshID);
+        getModel(prim->ModelID)->renderPrimitive(prim->meshID); //modelInstanceCount[prim->ModelID]
     }
 
     // RENDER TRANSLUCENT PRIMITIVES
+    reorderTranslucentQueue(view);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
     for (ModelPrimitive* prim : translucentPrims) {
@@ -342,15 +349,14 @@ void ModelCache::setModelMaterialType(unsigned int modelID, unsigned int materia
 }
 
 
-void ModelCache::placeInCache(unsigned int modelID) {
+void ModelCache::placeInQueue(unsigned int modelID) {
     Model* model = getModel(modelID);
     for (ModelPrimitive& prim : model->primitives) {
         switch (model->getMaterialType(prim.materialID)) {
             case MaterialType::Opaque:      opaquePrims.push_back(&prim); break;
-            // case MaterialType::Cutout:      opaquePrims.push_back(&prim); break;
+            case MaterialType::Cutout:      opaquePrims.push_back(&prim); break;
             case MaterialType::Translucent: translucentPrims.push_back(&prim); break;
             case MaterialType::Skybox:      skyboxPrim = &prim; break;
-            case MaterialType::Cutout: break;
         }
     }
 }
@@ -360,6 +366,22 @@ int ModelCache::getNumberOfModels() {
     return modelIDMap.size();
 }
 
+
+void ModelCache::reorderTranslucentQueue(glm::mat4 viewMat) {
+    for (ModelPrimitive* prim : translucentPrims) {
+        Model* currModel = getModel(prim->ModelID);
+
+        glm::vec4 viewPos = viewMat * glm::vec4(currModel->getPosition(), 1.0f);
+        prim->depth = viewPos.z;
+    }
+
+    std::sort(translucentPrims.begin(), translucentPrims.end(),
+        [](const ModelPrimitive* a, const ModelPrimitive* b) {
+            return a->depth < b->depth;
+        });
+
+    // std::cout << 
+}
 
 
 // void ModelCache::reorderByProgram() {
