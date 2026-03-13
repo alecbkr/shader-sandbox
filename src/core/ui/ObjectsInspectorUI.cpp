@@ -3,6 +3,7 @@
 #include "core/InspectorEngine.hpp"
 #include "core/ShaderRegistry.hpp"
 #include "core/TextureRegistry.hpp"
+#include "core/logging/LogSink.hpp"
 #include "core/logging/Logger.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "imgui.h"
@@ -39,7 +40,7 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                 .initialized = false,
             };
         }
-        ModelTextureMenu& textureMenu = modelTextureMenus[modelID];
+        //ModelTextureMenu& textureMenu = modelTextureMenus[modelID];
 
         std::string label = "model " + std::to_string(modelID);
         ImGui::PushID(label.c_str());
@@ -73,11 +74,13 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                     shaderChoices.push_back(name.c_str());
                 }
                 for (auto matID : matIDs) {
-                    MaterialShaderMenu shaderMenu;
+                    MaterialShaderMenu shaderMenu{
+                        .matID = matID
+                    };
                     if (!shaderMenu.initialized) {
                         initializeMenu(shaderMenu, shaderChoices, loggerPtr, shaderRegPtr, materialCachePtr);
                     }
-                    drawShaderProgramMenu(shaderMenu, shaderChoices, shaderRegPtr, modelCachePtr, inspectorEngPtr);
+                    drawShaderProgramMenu(shaderMenu, shaderChoices, shaderRegPtr, materialCachePtr, inspectorEngPtr, loggerPtr);
                 }
             
                 ImGui::Unindent(theme.indentSize);
@@ -201,16 +204,22 @@ void ObjectsInspectorUI::initializeMenu(ModelTextureMenu& menu, Logger* loggerPt
     loggerPtr->addLog(LogLevel::CRITICAL, "intializeMenu:ModelTextureMenu", "Shouldn not be calling this function! it doesn't work right now");
 }
 
-bool ObjectsInspectorUI::drawShaderProgramMenu(MaterialShaderMenu& menu, const std::vector<const char*>& shaderChoices, ShaderRegistry* shaderRegPtr, ModelCache* modelCachePtr, InspectorEngine* inspectorEngPtr) {
+bool ObjectsInspectorUI::drawShaderProgramMenu(MaterialShaderMenu& menu, const std::vector<const char*>& shaderChoices, ShaderRegistry* shaderRegPtr, MaterialCache* materialCachePtr, InspectorEngine* inspectorEngPtr, Logger* logger) {
     bool changed = false;
-    if (ImGui::Combo("Shader", &menu.selection, shaderChoices.data(), (int)shaderChoices.size())) {
+    ImGui::Text("Material %u", menu.matID);
+    ImGui::SameLine();
+    if (ImGui::Combo(("##" + std::to_string(menu.matID)).c_str(), &menu.selection, shaderChoices.data(), (int)shaderChoices.size())) {
         changed = true;
     }
 
     if (!changed) return false;
 
     ShaderProgram& selectedShader = *shaderRegPtr->getProgram(shaderChoices[menu.selection]);
-    modelCachePtr->getModel(menu.matID)->setModelProgram(selectedShader.name);
+    Material* mat = materialCachePtr->getMaterial(menu.matID);
+    if (mat == nullptr) {
+        logger->addLog(LogLevel::LOG_ERROR, "drawShaderProgramMenu", "material not found: " + std::to_string(menu.matID));
+    }
+    mat->setProgramID(selectedShader.name);
     inspectorEngPtr->refreshUniforms();
     return true;
 }

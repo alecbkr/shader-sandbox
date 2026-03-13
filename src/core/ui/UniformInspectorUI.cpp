@@ -69,6 +69,7 @@ void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::
     ImGui::Separator();
     ImGui::Indent(theme.indentSize);
 
+    int i = 0;
     for (unsigned int matID : materialIDs) {
         bool useMaterialHeader = materialIDs.size() > 1;
         bool showUniforms = true;
@@ -81,7 +82,7 @@ void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::
         }
 
         if (showUniforms) {
-            const std::unordered_map<std::string, Uniform>* uniformMap = uniformRegPtr_->tryReadUniforms(matID);
+            const auto uniformMap = uniformRegPtr_->tryReadUniforms(matID);
 
             if (uniformMap == nullptr) {
                 loggerPtr_->addLog(LogLevel::WARNING, "drawUniformInspector", "Model not found in registry: ", std::to_string(modelID));
@@ -97,6 +98,9 @@ void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::
                 imGuiID++;
             }
             ImGui::Unindent(theme.indentSize);
+        }
+        if (i < materialIDs.size()) {
+            ImGui::Dummy(ImVec2(0, 4));
         }
     }
 

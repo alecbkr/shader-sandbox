@@ -229,7 +229,7 @@ void InspectorEngine::setUniform(unsigned int materialID, const std::string& uni
 }
 
 void InspectorEngine::applyAllUniformsForObject(unsigned int materialID) {
-    const std::unordered_map<std::string, Uniform>* objectUniforms = uniformRegPtr->tryReadUniforms(materialID);
+    const auto objectUniforms = uniformRegPtr->tryReadUniforms(materialID);
 
     if (objectUniforms == nullptr) {
         // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", modelID.c_str());
@@ -484,7 +484,7 @@ void InspectorEngine::reloadUniforms(unsigned int materialID) {
         Material* matPtr = materialCachePtr->getMaterial(matID);
         if (matPtr && matPtr->getProgramID() == matProgram->name) {
             matPtr->setProgramID(matProgram->name); 
-            const auto* existingRegistry = uniformRegPtr->tryReadUniforms(matID);
+            const auto existingRegistry = uniformRegPtr->tryReadUniforms(matID);
             if (existingRegistry) {
                 for (auto& [uName, uData] : newUniforms) {
                     if (existingRegistry->contains(uName)) {
@@ -516,7 +516,7 @@ void InspectorEngine::applyAllUniformsForPrimitive(ModelPrimitive prim) {
 
     // temp fix cause we have a meeting in 2 hours
     // I need to refactor the uniform registry cause it's current state is a mess
-    const std::unordered_map<std::string, Uniform>* uniforms = uniformRegPtr->tryReadUniforms(prim.materialID);
+    const auto uniforms = uniformRegPtr->tryReadUniforms(prim.materialID);
     if (uniforms == nullptr) {
         // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", modelID.c_str());
         // Logger::addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", std::to_string(modelID)); 
@@ -535,7 +535,7 @@ void InspectorEngine::applyAllUniformsForPrimitive(ModelPrimitive prim) {
 
 
 void InspectorEngine::applySceneUniforms(ShaderProgram& program) {
-    const std::unordered_map<std::string, Uniform>* sceneUniforms = uniformRegPtr->tryReadSceneUniforms();
+    const auto sceneUniforms = uniformRegPtr->tryReadSceneUniforms();
     if (sceneUniforms == nullptr) {
         // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", modelID.c_str());
         // Logger::addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", std::to_string(modelID)); 
@@ -549,7 +549,7 @@ void InspectorEngine::applySceneUniforms(ShaderProgram& program) {
 
 
 void InspectorEngine::applyModelUniforms(ShaderProgram& program, unsigned int modelID) {
-    const std::unordered_map<std::string, Uniform>* modelUniforms = uniformRegPtr->tryReadModelUniforms(modelID);
+    const auto modelUniforms = uniformRegPtr->tryReadModelUniforms(modelID);
     if (modelUniforms == nullptr) {
         // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", modelID.c_str());
         // Logger::addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", std::to_string(modelID)); 
@@ -563,7 +563,7 @@ void InspectorEngine::applyModelUniforms(ShaderProgram& program, unsigned int mo
 
 
 void InspectorEngine::applyMaterialUniforms(ShaderProgram& program, unsigned int modelID, unsigned int materialID) {
-    const std::unordered_map<std::string, Uniform>* materialUniforms = uniformRegPtr->tryReadMaterialUniforms(modelID, materialID);
+    const auto materialUniforms = uniformRegPtr->tryReadMaterialUniforms(modelID, materialID);
     if (materialUniforms == nullptr) {
         // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", modelID.c_str());
         // Logger::addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", std::to_string(modelID)); 

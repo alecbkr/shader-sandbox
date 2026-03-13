@@ -2,6 +2,7 @@
 #include "UniformTypes.hpp"
 #include <unordered_map>
 #include <string>
+#include <memory>
 
 class Logger;
 
@@ -11,7 +12,7 @@ class UniformRegistry {
     bool initialize(Logger* _loggerPtr);
     void shutdown();
     const Uniform* tryReadUniform(unsigned int matID, const std::string& uniformName) const; // return false if we didn't find it.
-    const std::unordered_map<std::string, Uniform>* tryReadUniforms(unsigned int matID) const;
+    const std::unique_ptr<std::unordered_map<std::string, Uniform>> tryReadUniforms(unsigned int matID) const;
 
     bool containsMaterial(unsigned int matID);
     bool containsUniform(unsigned int matID, const std::string& uniformName);
@@ -21,9 +22,9 @@ class UniformRegistry {
     void registerSceneUniform(Uniform uniform);
     void registerModelUniform(unsigned int ModelID, Uniform uniform);
     void registerMaterialUniform(unsigned int ModelID, unsigned int MaterialID, Uniform uniform);
-    const std::unordered_map<std::string, Uniform>* tryReadSceneUniforms() const;
-    const std::unordered_map<std::string, Uniform>* tryReadModelUniforms(unsigned int modelID) const;
-    const std::unordered_map<std::string, Uniform>* tryReadMaterialUniforms(unsigned int modelID, unsigned int materialID) const;
+    const std::unique_ptr<std::unordered_map<std::string, Uniform>> tryReadSceneUniforms() const;
+    const std::unique_ptr<std::unordered_map<std::string, Uniform>> tryReadModelUniforms(unsigned int modelID) const;
+    const std::unique_ptr<std::unordered_map<std::string, Uniform>> tryReadMaterialUniforms(unsigned int modelID, unsigned int materialID) const;
 
     private:
     unsigned int nextID = 0;

@@ -91,17 +91,23 @@ bool UniformRegistry::containsUniform(unsigned int matID, const std::string& uni
 }
 
 // returns nullptr if uniform doesn't exist
-const std::unordered_map<std::string, Uniform>* UniformRegistry::tryReadUniforms(unsigned int matID) const {
+const std::unique_ptr<std::unordered_map<std::string, Uniform>> UniformRegistry::tryReadUniforms(unsigned int matID) const {
     if (old_version_uniforms.count(matID) <= 0) {
         // this function should be documented properly so that it is known when returning nullptr it means uniforms werent found or dont exist
         // a more proper fix for this is to return an enum with the proper statuses. (ie. Uniform::NOT_FOUND) or something like this
         return nullptr;
     }
 
-    //std::unordered_map<std::string, Uniform>* programUniforms = &uniforms[modelID];
-    const std::unordered_map<std::string, Uniform> *programUniforms = &(old_version_uniforms.at(matID));
+    //std::unique_ptr<std::unordered_map<std::string, Uniform>> programUniforms = &uniforms[modelID];
+    std::unique_ptr<std::unordered_map<std::string, Uniform>> unis = std::make_unique<std::unordered_map<std::string, Uniform>>();
+    for (auto& [name, id] : old_version_uniforms.at(matID)) {
+        if (!uniforms.contains(id)) {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "ReadSceneUniforms", "uniform doesn't exist when it should!");
+        }
+        (*unis.get())[name] = uniforms.at(id);
+    }
 
-    return programUniforms;
+    return unis;
 }
 
 void UniformRegistry::registerInspectorUniform(unsigned int matID, Uniform uniform) {
@@ -160,40 +166,58 @@ void UniformRegistry::registerMaterialUniform(unsigned int modelID, unsigned int
 }
 
 
-const std::unordered_map<std::string, Uniform>* UniformRegistry::tryReadSceneUniforms() const {
+const std::unique_ptr<std::unordered_map<std::string, Uniform>> UniformRegistry::tryReadSceneUniforms() const {
     if (scene_uniforms.size() <= 0) {
         // Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniforms", "No object found in Uniform Registry with ID");
         return nullptr;
     }
 
-    //std::unordered_map<std::string, Uniform>* programUniforms = &uniforms[modelID];
-    const std::unordered_map<std::string, Uniform> *sceneUniforms = &(scene_uniforms);
+    //std::unique_ptr<std::unordered_map<std::string, Uniform>> programUniforms = &uniforms[modelID];
+    std::unique_ptr<std::unordered_map<std::string, Uniform>> unis = std::make_unique<std::unordered_map<std::string, Uniform>>();
+    for (auto& [name, id] : scene_uniforms) {
+        if (!uniforms.contains(id)) {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "ReadSceneUniforms", "uniform doesn't exist when it should!");
+        }
+        (*unis.get())[name] = uniforms.at(id);
+    }
 
-    return sceneUniforms;
+    return unis;
 }
 
 
-const std::unordered_map<std::string, Uniform>* UniformRegistry::tryReadModelUniforms(unsigned int modelID) const {
+const std::unique_ptr<std::unordered_map<std::string, Uniform>> UniformRegistry::tryReadModelUniforms(unsigned int modelID) const {
     if (model_uniforms.count(modelID) <= 0) {
         // Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniforms", "No object found in Uniform Registry with ID", modelID );
         return nullptr;
     }
 
-    //std::unordered_map<std::string, Uniform>* programUniforms = &uniforms[modelID];
-    const std::unordered_map<std::string, Uniform> *modelUniforms = &(model_uniforms.at(modelID));
+    //std::unique_ptr<std::unordered_map<std::string, Uniform>> programUniforms = &uniforms[modelID];
+    std::unique_ptr<std::unordered_map<std::string, Uniform>> unis = std::make_unique<std::unordered_map<std::string, Uniform>>();
+    for (auto& [name, id] : model_uniforms.at(modelID)) {
+        if (!uniforms.contains(id)) {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "ReadSceneUniforms", "uniform doesn't exist when it should!");
+        }
+        (*unis.get())[name] = uniforms.at(id);
+    }
 
-    return modelUniforms;
+    return unis;
 }
 
 
-const std::unordered_map<std::string, Uniform>* UniformRegistry::tryReadMaterialUniforms(unsigned int modelID, unsigned int materialID) const {
+const std::unique_ptr<std::unordered_map<std::string, Uniform>> UniformRegistry::tryReadMaterialUniforms(unsigned int modelID, unsigned int materialID) const {
     if (material_uniforms.count(std::make_pair(modelID, materialID)) <= 0) {
         // Errorlog::getInstance().logEntry(EL_WARNING, "tryReadUniforms", "No object found in Uniform Registry with ID", modelID );
         return nullptr;
     }
 
-    //std::unordered_map<std::string, Uniform>* programUniforms = &uniforms[modelID];
-    const std::unordered_map<std::string, Uniform> *materialUniforms = &(material_uniforms.at(std::make_pair(modelID, materialID)));
+    //std::unique_ptr<std::unordered_map<std::string, Uniform>> programUniforms = &uniforms[modelID];
+    std::unique_ptr<std::unordered_map<std::string, Uniform>> unis = std::make_unique<std::unordered_map<std::string, Uniform>>();
+    for (auto& [name, id] : (material_uniforms.at(std::make_pair(modelID, materialID)))) {
+        if (!uniforms.contains(id)) {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "ReadSceneUniforms", "uniform doesn't exist when it should!");
+        }
+        (*unis.get())[name] = uniforms.at(id);
+    }
 
-    return materialUniforms;
+    return unis;
 }
