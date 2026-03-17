@@ -5,6 +5,7 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
+#include <unordered_map>
 
 class Logger;
 class InspectorEngine;
@@ -51,6 +52,7 @@ private:
     bool drawInput(InspectorReference* value, Uniform* uniform = nullptr);
     void drawUniformRow(Uniform& uniform, unsigned int matID);
     bool isSimpleType(UniformType type);
+    void drawUniformsNested_byCursor(const std::unordered_map<std::string, Uniform>& uniforms, unsigned int matID, int& imGuiID);
     
     UniformInspectorThemeSettings theme;
 };
