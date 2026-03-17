@@ -198,11 +198,32 @@ void TextSelector::handleInput(int totalRows, TextSelectionCtx& ctx, const TextS
     } 
     // handle drag
     else if (ImGui::IsMouseDown(0) && ctx.isActive) {
-        ctx.endRow = row;
+ctx.endRow = row;
         ctx.endMouseX = relX;
 
         if (ctx.mode == SelectionMode::Normal) {
             ctx.endCol = colFallback; 
+        }
+
+        // auto-scroll logic
+        float winTop = ImGui::GetWindowPos().y;
+        float winBottom = winTop + ImGui::GetWindowSize().y;
+        
+        float scrollThreshold = std::max(layout.lineHeight * 2.0f, 30.0f);  // Define an edge zone (e.g., 2 lines tall) where scrolling starts
+
+        
+        float scrollDelta = 0.0f;
+        if (mouse.y < winTop + scrollThreshold) {
+            scrollDelta = mouse.y - (winTop + scrollThreshold);     // Mouse is near the top edge (or above it)
+        } else if (mouse.y > winBottom - scrollThreshold) {
+            
+            scrollDelta = mouse.y - (winBottom - scrollThreshold);  // Mouse is near the bottom edge (or below it)
+        }
+
+        if (scrollDelta != 0.0f) {
+            // Scales with how far outside the original position we are to scroll up/down faster 
+            float scrollSpeed = scrollDelta * 15.0f * ImGui::GetIO().DeltaTime;  // Multiply by DeltaTime so scroll speed is consistent across different monitor refresh rates
+            ImGui::SetScrollY(ImGui::GetScrollY() + scrollSpeed);
         }
     }
 }
@@ -273,22 +294,14 @@ void TextSelector::copyText(const TextSelectionCtx& ctx, int totalRows, std::fun
         }
     }
 
-    // std::string result = ss.str();
-    
-    // // use for debugging testing 
-    // if (!result.empty()) {
-    //     ImGuiContext* currentCtx = ImGui::GetCurrentContext();
-    // }
-    
+
     // Extract the final string
     std::string finalClipboardText = ss.str(); 
     
     if (finalClipboardText.length() > 0) {
-        // IF WE ARE TESTING: Use the direct C++ hook, bypass ImGui entirely
         if (s_testClipboardHook) {
             s_testClipboardHook(finalClipboardText);
         } 
-        // IF IN THE REAL APP: Use ImGui's clipboard
         else {
             ImGui::SetClipboardText(finalClipboardText.c_str());
         }
