@@ -134,12 +134,17 @@ struct SettingsStyles {
     float assetsTitleOffset = 6.0f;
 
     // Console Specific Styles 
-    ImVec4 consoleCriticalColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-    ImVec4 consoleErrorColor    = ImVec4(1.0f, 0.4f, 0.4f, 1.0f);
-    ImVec4 consoleWarningColor  = ImVec4(1.0f, 0.1f, 0.5f, 1.0f);
-    ImVec4 consoleInfoColor     = ImVec4(0.4f, 1.0f, 0.4f, 1.0f);
-    ImVec4 consoleDefaultColor  = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-    ImVec4 consoleSearchHighlightColor = ImVec4(0.78f, 0.78f, 0.78f, 0.39f);
+    // Log Category Colors
+    ImVec4 consoleCriticalColor        = ImVec4(1.00000f, 0.33333f, 0.33333f, 1.00f); // Red (#ff5555)
+    ImVec4 consoleErrorColor           = ImVec4(1.00000f, 0.47451f, 0.77647f, 1.00f); // Pink (#ff79c6)
+    ImVec4 consoleWarningColor         = ImVec4(1.00000f, 0.72157f, 0.42353f, 1.00f); // Orange (#ffb86c)
+    ImVec4 consoleInfoColor            = ImVec4(0.31373f, 0.98039f, 0.48235f, 1.00f); // Green (#50fa7b)
+    
+    // UI Element Colors
+    ImVec4 consoleWindowBgColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+    ImVec4 consoleMenuBarBgColor       = ImVec4(0.12157f, 0.12549f, 0.16471f, 1.00f); // Darker Background (#1f202a)
+    ImVec4 consoleTextSelectedBgColor  = ImVec4(0.26667f, 0.27843f, 0.35294f, 0.80f); // Selection (#44475a)
+    ImVec4 consoleSearchHighlightColor = ImVec4(0.74118f, 0.57647f, 0.97647f, 0.50f); // Purple Accent (#bd93f9)
 
     // ---- Apply / Capture ----
     void applyToImGui(ImGuiStyle& s) const {
@@ -462,8 +467,10 @@ struct SettingsStyles {
         consoleStylesObject["errorColor"]    = { consoleErrorColor.x, consoleErrorColor.y, consoleErrorColor.z, consoleErrorColor.w };
         consoleStylesObject["warningColor"]  = { consoleWarningColor.x, consoleWarningColor.y, consoleWarningColor.z, consoleWarningColor.w };
         consoleStylesObject["infoColor"]     = { consoleInfoColor.x, consoleInfoColor.y, consoleInfoColor.z, consoleInfoColor.w };
-        consoleStylesObject["defaultColor"]  = { consoleDefaultColor.x, consoleDefaultColor.y, consoleDefaultColor.z, consoleDefaultColor.w };
         consoleStylesObject["searchHighlightColor"] = { consoleSearchHighlightColor.x, consoleSearchHighlightColor.y, consoleSearchHighlightColor.z, consoleSearchHighlightColor.w };
+        consoleStylesObject["windowBgColor"]       = { consoleWindowBgColor.x, consoleWindowBgColor.y, consoleWindowBgColor.z, consoleWindowBgColor.w };
+        consoleStylesObject["menuBarBgColor"]      = { consoleMenuBarBgColor.x, consoleMenuBarBgColor.y, consoleMenuBarBgColor.z, consoleMenuBarBgColor.w };
+        consoleStylesObject["textSelectedBgColor"] = { consoleTextSelectedBgColor.x, consoleTextSelectedBgColor.y, consoleTextSelectedBgColor.z, consoleTextSelectedBgColor.w };
         
         s["console"] = consoleStylesObject;
 
@@ -578,6 +585,30 @@ struct SettingsStyles {
             assetsTabBackgroundColor = ImVec4(26, 27, 33, 255);
             assetsTitleBackgroundColor = ImVec4(31, 32, 42, 255);
             assetsTreeBodyColor = ImVec4(28, 30, 38, 255);
+        }
+
+        // Load Console Styles
+        if (s.contains("console") && s["console"].is_object()) {
+            const json& cons = s["console"];
+            if (cons.contains("criticalColor"))        consoleCriticalColor        = ImVec4(cons["criticalColor"][0], cons["criticalColor"][1], cons["criticalColor"][2], cons["criticalColor"][3]);
+            if (cons.contains("errorColor"))           consoleErrorColor           = ImVec4(cons["errorColor"][0], cons["errorColor"][1], cons["errorColor"][2], cons["errorColor"][3]);
+            if (cons.contains("warningColor"))         consoleWarningColor         = ImVec4(cons["warningColor"][0], cons["warningColor"][1], cons["warningColor"][2], cons["warningColor"][3]);
+            if (cons.contains("infoColor"))            consoleInfoColor            = ImVec4(cons["infoColor"][0], cons["infoColor"][1], cons["infoColor"][2], cons["infoColor"][3]);
+            if (cons.contains("searchHighlightColor")) consoleSearchHighlightColor = ImVec4(cons["searchHighlightColor"][0], cons["searchHighlightColor"][1], cons["searchHighlightColor"][2], cons["searchHighlightColor"][3]);
+            if (cons.contains("windowBgColor"))        consoleWindowBgColor        = ImVec4(cons["windowBgColor"][0], cons["windowBgColor"][1], cons["windowBgColor"][2], cons["windowBgColor"][3]);
+            if (cons.contains("menuBarBgColor"))       consoleMenuBarBgColor       = ImVec4(cons["menuBarBgColor"][0], cons["menuBarBgColor"][1], cons["menuBarBgColor"][2], cons["menuBarBgColor"][3]);
+            if (cons.contains("textSelectedBgColor"))  consoleTextSelectedBgColor  = ImVec4(cons["textSelectedBgColor"][0], cons["textSelectedBgColor"][1], cons["textSelectedBgColor"][2], cons["textSelectedBgColor"][3]);
+        } 
+        else {
+            // fallback to the default theme colors 
+            consoleCriticalColor        = ImVec4(1.00000f, 0.33333f, 0.33333f, 1.00f);
+            consoleErrorColor           = ImVec4(1.00000f, 0.47451f, 0.77647f, 1.00f);
+            consoleWarningColor         = ImVec4(1.00000f, 0.72157f, 0.42353f, 1.00f);
+            consoleInfoColor            = ImVec4(0.31373f, 0.98039f, 0.48235f, 1.00f);
+            consoleWindowBgColor        = ImVec4(0.15686f, 0.16471f, 0.21176f, 1.00f);
+            consoleMenuBarBgColor       = ImVec4(0.12157f, 0.12549f, 0.16471f, 1.00f);
+            consoleTextSelectedBgColor  = ImVec4(0.26667f, 0.27843f, 0.35294f, 0.80f);
+            consoleSearchHighlightColor = ImVec4(0.74118f, 0.57647f, 0.97647f, 0.50f);
         }
     }
 };

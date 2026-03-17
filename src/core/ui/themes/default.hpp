@@ -201,12 +201,17 @@ namespace DefaultTheme {
         styles.assetsTreeBodyColor = ImVec4(0.10980392247438431f, 0.11764705926179886f, 0.14901961386203766f, 1.0f);
 
         // ---------- Custom console values ----------
-        styles.consoleDefaultColor  = ImVec4(0.97254902f, 0.97254902f, 0.94901961f, 1.0f);              // Default text foreground
-        styles.consoleCriticalColor = ImVec4(1.0f, 0.33333334f, 0.33333334f, 1.0f);                     // Vibrant red
-        styles.consoleErrorColor    = ImVec4(1.0f, 0.47450980f, 0.77647060f, 1.0f);                     // Pink/Light Red
-        styles.consoleWarningColor  = ImVec4(1.0f, 0.72156864f, 0.42352941f, 1.0f);                     // Orange
-        styles.consoleInfoColor     = ImVec4(0.31372550f, 0.98039215f, 0.48235294f, 1.0f);              // Green
-        styles.consoleSearchHighlightColor = ImVec4(0.38431373f, 0.44705882f, 0.64313727f, 0.50f);      // Translucent theme accent
+        // Foreground & Log Levels
+        styles.consoleCriticalColor        = ImVec4(1.00000f, 0.33333f, 0.33333f, 1.00f); // Red (#ff5555)
+        styles.consoleErrorColor           = ImVec4(1.00000f, 0.47451f, 0.77647f, 1.00f); // Pink (#ff79c6)
+        styles.consoleWarningColor         = ImVec4(1.00000f, 0.72157f, 0.42353f, 1.00f); // Orange (#ffb86c)
+        styles.consoleInfoColor            = ImVec4(0.31373f, 0.98039f, 0.48235f, 1.00f); // Green (#50fa7b)
+        
+        // Window & UI Elements
+        styles.consoleWindowBgColor        = ImVec4(0.15686f, 0.16471f, 0.21176f, 1.00f); // Background (#282a36)
+        styles.consoleMenuBarBgColor       = ImVec4(0.12157f, 0.12549f, 0.16471f, 1.00f); // Darker Background (#1f202a)
+        styles.consoleTextSelectedBgColor  = ImVec4(0.26667f, 0.27843f, 0.35294f, 0.80f); // Selection (#44475a)
+        styles.consoleSearchHighlightColor = ImVec4(0.74118f, 0.57647f, 0.97647f, 0.50f); // Purple Accent (#bd93f9)
 
         // Push everything into ImGui
         styles.applyToImGui(ImGui::GetStyle());

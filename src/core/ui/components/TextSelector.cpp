@@ -17,8 +17,8 @@ bool TextSelector::Begin(const char* id, int totalRows, TextSelectionCtx& ctx, T
 
     layout.lineHeight = std::max(1.0f, ImGui::GetTextLineHeightWithSpacing()); 
     layout.charWidth = ImGui::CalcTextSize("A").x; 
-    layout.maxWidth = layout.maxWidth = ImGui::GetContentRegionAvail().x + ImGui::GetScrollMaxX();
-    layout.highlightColor = IM_COL32(0, 120, 215, 100); 
+    layout.maxWidth = ImGui::GetContentRegionAvail().x + ImGui::GetScrollMaxX();
+    layout.highlightColor = ImGui::GetColorU32(ImGuiCol_TextSelectedBg); 
     layout.origin = ImGui::GetCursorScreenPos(); 
 
     float totalHeight = (float)totalRows * layout.lineHeight; 

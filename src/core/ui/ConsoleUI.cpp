@@ -48,6 +48,7 @@ bool ConsoleUI::initialize(Logger* _loggerPtr, ConsoleEngine* _engine, SettingsS
 // change this to draw the entire componenet
 void ConsoleUI::render() {
     if (!initialized) return;
+
     float menuBarHeight = ImGui::GetFrameHeight();
     
     int displayWidth = ImGui::GetIO().DisplaySize.x;
@@ -65,6 +66,13 @@ void ConsoleUI::render() {
     
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
                              ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar;
+    
+    if (stylesPtr) {
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, stylesPtr->consoleWindowBgColor);
+        ImGui::PushStyleColor(ImGuiCol_MenuBarBg, stylesPtr->consoleMenuBarBgColor);
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, stylesPtr->consoleWindowBgColor); // Match inner scroll area
+    }
+
 
     if (ImGui::Begin("Console", nullptr, flags)) {
         drawMenuBar();
@@ -74,6 +82,8 @@ void ConsoleUI::render() {
         ImGui::EndChild();
     }
     ImGui::End();
+
+    if (stylesPtr) ImGui::PopStyleColor(3); 
 }
 
 void ConsoleUI::drawLogs() {
@@ -89,6 +99,8 @@ void ConsoleUI::drawLogs() {
 
     std::vector<DisplayLine> displayLines = buildDisplayLines(logs, wrapWidth); 
     
+    // Push the highlight color to set the color of the highlight box 
+    if (stylesPtr) ImGui::PushStyleColor(ImGuiCol_TextSelectedBg, stylesPtr->consoleTextSelectedBgColor);
 
     if (TextSelector::Begin("ConsoleLogs", displayLines.size(), selectionCtx, selectionLayout)) {
         for (int row = 0; row < displayLines.size(); ++row) {
@@ -96,6 +108,8 @@ void ConsoleUI::drawLogs() {
         }
         TextSelector::End(); 
     }
+
+    if (stylesPtr) ImGui::PopStyleColor(); 
     
     if (selectionCtx.isActive && ImGui::IsWindowFocused() && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_C)) {
         TextSelector::copyText(selectionCtx, displayLines.size(), [&](int row, bool& isWrap) -> std::string {
@@ -352,6 +366,7 @@ void ConsoleUI::drawSingleLog(int rowIdx, const DisplayLine& lineData, const Log
             
             std::string msgWithoutPrefix = lineData.text.substr(style.prefix.length());
             ImGui::TextUnformatted(msgWithoutPrefix.c_str());
+
         } else {
             ImGui::TextUnformatted(lineData.text.c_str());
         }
@@ -364,14 +379,14 @@ void ConsoleUI::drawSingleLog(int rowIdx, const DisplayLine& lineData, const Log
         ImGui::PopID();
     }); 
 
-    if (needsIndent) ImGui::Unindent(arrowOffset); 
+    if (needsIndent) ImGui::Unindent(arrowOffset);
 }
 
 ConsoleUI::LogStyle ConsoleUI::getLogStyle(const LogEntry& log) {
     LogStyle style;
     
     if (stylesPtr) {
-        style.color = stylesPtr->consoleDefaultColor;
+        style.color = stylesPtr->colors[ImGuiCol_Text]; 
         switch (log.level) {
             case LogLevel::CRITICAL:  style.prefix = "[CRITICAL"; style.color = stylesPtr->consoleCriticalColor; break;
             case LogLevel::LOG_ERROR: style.prefix = "[ERROR";    style.color = stylesPtr->consoleErrorColor; break;
@@ -391,9 +406,8 @@ ConsoleUI::LogStyle ConsoleUI::getLogStyle(const LogEntry& log) {
     //     }
     // }
 
-    if(!log.src.empty()) {
-        style.prefix += ": " + log.src;
-    }
+    if(!log.src.empty()) style.prefix += ": " + log.src;
+    
 
     style.prefix += "] ";
     return style;
