@@ -113,6 +113,8 @@ void ConsoleUI::drawLogs() {
     }
 
     if (stylesPtr) ImGui::PopStyleColor(); 
+
+    bool isConsoleFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
     
     if (selectionCtx.isActive && ImGui::IsWindowFocused() && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_C)) {
         TextSelector::copyText(selectionCtx, displayLines.size(), [&](int row, bool& isWrap) -> std::string {
@@ -128,6 +130,23 @@ void ConsoleUI::drawLogs() {
             isWrap = false;
             return "";
         });
+    }
+
+    // Ctrl + A (Select All)
+    if (isConsoleFocused && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_A)) {
+        if (!displayLines.empty()) {
+            selectionCtx.isActive = true;
+            selectionCtx.mode = SelectionMode::Line; // Select entire lines
+            selectionCtx.startRow = 0;
+            selectionCtx.startCol = 0;
+            selectionCtx.endRow = (int)displayLines.size() - 1;
+            selectionCtx.endCol = std::numeric_limits<int>::max(); 
+        }
+    }
+
+    // Escape (Cancel Selection)
+    if (selectionCtx.isActive && isConsoleFocused && ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+        selectionCtx.clear();
     }
 
     if (isScroll && engine->getToggles().isAutoScroll) {
