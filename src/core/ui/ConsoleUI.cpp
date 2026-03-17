@@ -67,23 +67,26 @@ void ConsoleUI::render() {
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
                              ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar;
     
+
+                             
     if (stylesPtr) {
         ImGui::PushStyleColor(ImGuiCol_WindowBg, stylesPtr->consoleWindowBgColor);
         ImGui::PushStyleColor(ImGuiCol_MenuBarBg, stylesPtr->consoleMenuBarBgColor);
         ImGui::PushStyleColor(ImGuiCol_ChildBg, stylesPtr->consoleWindowBgColor); // Match inner scroll area
     }
 
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 
     if (ImGui::Begin("Console", nullptr, flags)) {
         drawMenuBar();
         // ImGuiWindowFlags consoleFlags = ImGuiWindowFlags_AlwaysHorizontalScrollbar; 
-        ImGui::BeginChild("ShowLogs", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.95f), true);
+        ImGui::BeginChild("ShowLogs", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.95f), false);
         drawLogs();
         ImGui::EndChild();
     }
     ImGui::End();
-
-    if (stylesPtr) ImGui::PopStyleColor(3); 
+    ImGui::PopStyleVar();
+    if (stylesPtr) ImGui::PopStyleColor(3); // number of style parameters that we passed to tweak the console 
 }
 
 void ConsoleUI::drawLogs() {
