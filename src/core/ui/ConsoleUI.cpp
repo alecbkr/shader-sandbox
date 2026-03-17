@@ -147,7 +147,9 @@ void ConsoleUI::drawLogs() {
             ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
 
             if (ImGui::MenuItem("Auto-Scroll", nullptr, &togStates.isAutoScroll)) {}
-            if (ImGui::MenuItem("Collapse Logs", nullptr, &togStates.isCollapsedLogs)) {} 
+            if (ImGui::MenuItem("Collapse Logs", nullptr, &togStates.isCollapsedLogs)) {
+                searcher.setDirty(true);
+            } 
             
             if (ImGui::MenuItem("Copy Logs")) {
                 engine->executeBtnAction(ConsoleActions::COPY_LOGS); 
@@ -219,19 +221,16 @@ void ConsoleUI::updateSearchAndScroll(const std::deque<LogEntry> &logs, bool& is
     auto& togStates = engine->getToggles();
     if (searcher.GetisDirty() || (searcher.hasQuery() && logs.size() > lastLogSize)) {
         // used to avoid collapsed logs in search
-        const LogEntry* lastLog = nullptr;
+        std::unordered_set<size_t> seenHashes;
+     
         searcher.updateMatches(logs, [&](const LogEntry &log) -> std::string {
-            bool isDuplicate = false;
-            if(togStates.isCollapsedLogs && lastLog) {
-                if (log.msg == lastLog->msg && log.level == lastLog->level &&
-                    log.src == lastLog->src && log.additional == lastLog->additional) {
-                    isDuplicate = true;
-            }
-        }
-
-        lastLog = &log;
-        if(isDuplicate) return "";
-        if (isLogFiltered(log)) return ""; 
+            if (isLogFiltered(log)) return "";
+            
+            if (togStates.isCollapsedLogs) {
+                size_t hash = getLogHash(log);        
+                if (seenHashes.find(hash) != seenHashes.end()) return ""; 
+                seenHashes.insert(hash);
+            } 
         
             return ConsoleUI::formatLogString(log); 
         });
@@ -298,12 +297,11 @@ void ConsoleUI::drawSingleLog(int rowIdx, const DisplayLine& lineData, const Log
         if (lineData.isGroupHeader && lineData.charOffset == 0 && lineData.totalGroupCount > 1) screenPosX += arrowOffset; 
 
         int logIdx = lineData.originalLogIdx; 
-        int idxToCheck = logIdx;
+        int idxToCheck = lineData.originalLogIdx;
         
         // reflect the highlight state of the parent 
         if (lineData.isChildLog && lineData.parentLogIdx != -1) idxToCheck = lineData.parentLogIdx;
         
-        // Draw Search Highlight if its active
         if (searcher.isItemActiveMatch(idxToCheck)) {
             if (searcher.checkAndClearScrollRequest()) {
                 ImGui::SetScrollHereY(0.5f);
@@ -328,15 +326,10 @@ void ConsoleUI::drawSingleLog(int rowIdx, const DisplayLine& lineData, const Log
                 float offsetX = ImGui::CalcTextSize(textBefore.c_str()).x;
                 float width = ImGui::CalcTextSize(textMatch.c_str()).x;
 
-                // Pull search highlight color from settings
-                ImU32 highlightColor = stylesPtr 
-                    ? ImGui::ColorConvertFloat4ToU32(stylesPtr->consoleSearchHighlightColor) 
-                    : IM_COL32(200, 200, 200, 100);
-
                 ImGui::GetWindowDrawList()->AddRectFilled(
-                    ImVec2(screenPos.x + offsetX, screenPos.y),
-                    ImVec2(screenPos.x + offsetX + width, screenPos.y + ImGui::GetTextLineHeight()),
-                    highlightColor
+                    ImVec2(screenPosX + offsetX, screenPos.y),
+                    ImVec2(screenPosX + offsetX + width, screenPos.y + ImGui::GetTextLineHeight()),
+                    IM_COL32(200, 200, 200, 100)
                 );
             }
         }
