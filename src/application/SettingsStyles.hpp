@@ -141,7 +141,7 @@ struct SettingsStyles {
     ImVec4 consoleInfoColor            = ImVec4(0.31373f, 0.98039f, 0.48235f, 1.00f); // Green (#50fa7b)
     
     // UI Element Colors
-    ImVec4 consoleWindowBgColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+    ImVec4 consoleWindowBgColor        = ImVec4(0.15686f, 0.16471f, 0.21176f, 1.00f); // Default Background
     ImVec4 consoleMenuBarBgColor       = ImVec4(0.12157f, 0.12549f, 0.16471f, 1.00f); // Darker Background (#1f202a)
     ImVec4 consoleTextSelectedBgColor  = ImVec4(0.26667f, 0.27843f, 0.35294f, 0.80f); // Selection (#44475a)
     ImVec4 consoleSearchHighlightColor = ImVec4(0.74118f, 0.57647f, 0.97647f, 0.50f); // Purple Accent (#bd93f9)
