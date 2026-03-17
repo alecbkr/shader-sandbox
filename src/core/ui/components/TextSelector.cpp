@@ -89,18 +89,22 @@ void TextSelector::Text(const std::string& rawText, std::function<void()> drawCa
             float hlEnd = 0.0f;
             int txtLength = (int)rawText.length();
             
-            // Helper to get actual pixel bounds
+            // Helper to get actual pixel bounds, including virtual empty space
             auto getPixelWidth = [&](int charIndex) -> float {
-                int len = std::clamp(charIndex, 0, txtLength);
-                return ImGui::CalcTextSize(rawText.c_str(), rawText.c_str() + len).x;
+                if (charIndex <= 0) return 0.0f;
+                if (charIndex <= txtLength) {
+                    return ImGui::CalcTextSize(rawText.c_str(), rawText.c_str() + charIndex).x;
+                } else {
+                    float baseWidth = ImGui::CalcTextSize(rawText.c_str(), rawText.c_str() + txtLength).x;
+                    float extraWidth = (charIndex - txtLength) * layout.charWidth;
+                    return baseWidth + extraWidth;
+                }
             };
-
-            float fullTextWidth = getPixelWidth(txtLength);
             
             // Triple clicking to select the entire line 
             if (ctx->mode == SelectionMode::Line) {
                 hlStart = 0.0f; 
-                hlEnd = fullTextWidth; 
+                hlEnd = layout.maxWidth; // Extend to edge of window
             } 
             else {
                 int cStart = ctx->startCol; 
@@ -119,7 +123,7 @@ void TextSelector::Text(const std::string& rawText, std::function<void()> drawCa
                 else if (rowIdx == rMin) {
                     int col = (ctx->startRow < ctx->endRow) ? ctx->startCol : ctx->endCol; 
                     hlStart = getPixelWidth(col); 
-                    hlEnd = fullTextWidth; 
+                    hlEnd = layout.maxWidth; // Extend to edge of window
                 } 
                 // end of the multiline
                 else if (rowIdx == rMax) {
@@ -130,7 +134,7 @@ void TextSelector::Text(const std::string& rawText, std::function<void()> drawCa
                 // middle lines 
                 else {
                     hlStart = 0.0f; 
-                    hlEnd = fullTextWidth; 
+                    hlEnd = layout.maxWidth; // Extend to edge of window
                 }
             }
             // draws the actual rectangle text highlighting 
@@ -198,7 +202,7 @@ void TextSelector::handleInput(int totalRows, TextSelectionCtx& ctx, const TextS
     } 
     // handle drag
     else if (ImGui::IsMouseDown(0) && ctx.isActive) {
-ctx.endRow = row;
+        ctx.endRow = row;
         ctx.endMouseX = relX;
 
         if (ctx.mode == SelectionMode::Normal) {
@@ -242,7 +246,11 @@ int TextSelector::getExactColumn(const std::string& text, float targetX) {
         }
         lastW = w;
     }
-    return len;
+    
+    // Target is beyond the string length (empty space)
+    float excessX = targetX - lastW;
+    int virtualCols = (int)std::round(excessX / state.layout.charWidth);
+    return len + virtualCols;
 }
 
 void TextSelector::copyText(const TextSelectionCtx& ctx, int totalRows, std::function<std::string(int, bool&)> fetchLine) {
@@ -310,13 +318,14 @@ void TextSelector::copyText(const TextSelectionCtx& ctx, int totalRows, std::fun
 
 // helpers for mouse 2x clicking selection to decide how much of the substr to select 
 void TextSelector::getWordUnderCursor(const std::string& text, int col, int& outStart, int& outEnd) {
-    if (text.empty()) {
-        outStart = 0; outEnd = 0; 
+    if (text.empty() || col >= (int)text.length()) {
+        outStart = col; 
+        outEnd = col; 
         return; 
     }
 
     col = std::clamp(col, 0, (int)text.length() - 1); 
-    char clickedChar = text[col]; 
+    char clickedChar = text[col];
     
     if (isWhiteSpace(clickedChar)) {
         outStart = col; 
