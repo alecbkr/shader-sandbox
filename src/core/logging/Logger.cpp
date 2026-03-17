@@ -56,8 +56,7 @@ void Logger::addLog(LogLevel level, std::string src, std::string msg, std::strin
         return;
     };
 
-    // TODO: maybe explore using a config.hpp.in later to set compiler definitions using cmake instead of hard-coding
-    constexpr std::string_view project_path = "shader-sandbox/";
+    constexpr std::string_view project_path = "shader-sandbox";
     std::string fName(toRelativePath(file_location.file_name(), project_path));
     LogCategory category = LogClassifier::categorize(file_location);
     // std::string cat_str = LogClassifier::categoryToString(category);

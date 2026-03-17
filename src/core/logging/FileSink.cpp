@@ -40,7 +40,7 @@ void FileSink::addLog(const LogEntry& entry) {
     auto now = std::chrono::system_clock::now(); 
     std::string timestamp = std::format("{:%Y-%m-%d %H:%M:%SZ}", now); // time in utc
 
-    std::string newLog = std::format("'{}' [{}] [{}{}] {}{}\n", 
+    std::string newLog = std::format("'{}' [{}::UTC] [{}{}] {}{}\n", 
         entry.fileName, 
         timestamp, 
         alert.str(), 
@@ -61,7 +61,7 @@ std::filesystem::path FileSink::GetProjectLogDirectory(const std::string& appNam
     // fallback, filesink will create the directory in the current directory  
     std::filesystem::path baseDir = std::filesystem::current_path() / "Logs";           
     
-    
+
     #if defined(_WIN32)
         const wchar_t* localAppData = _wgetenv(L"LOCALAPPDATA"); 
         if (!localAppData) throw std::runtime_error("LOCALAPPDATA not set or invalid access");
