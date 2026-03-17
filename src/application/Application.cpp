@@ -226,7 +226,7 @@ bool Application::initialize(AppContext& ctx) {
     addSubscriptions(ctx);
     initializeUI(ctx);
     ctx.inspector_engine.refreshUniforms();
-    if (!ctx.console_ui.initialize(&ctx.logger, &ctx.console_engine)) {
+    if (!ctx.console_ui.initialize(&ctx.logger, &ctx.console_engine, &ctx.settings.styles, &ctx.fonts)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Console UI was not initialized successfully.");
         return false;
     }

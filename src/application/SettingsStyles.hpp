@@ -114,6 +114,8 @@ struct SettingsStyles {
     int selectedEditorPaletteColor = 0;
 
     // Inspector Specific Styles
+    // General inspector tree/child hover color
+    ImVec4 inspectorTreeHoveredColor;
 
     // Assets tab specific styles
     // Assest tab colors
@@ -130,6 +132,14 @@ struct SettingsStyles {
     float assetsTitleInnerPadding = 1.0f;
     float assetsBodyRounding = 6.0f;
     float assetsTitleOffset = 6.0f;
+
+    // Console Specific Styles 
+    ImVec4 consoleCriticalColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+    ImVec4 consoleErrorColor    = ImVec4(1.0f, 0.4f, 0.4f, 1.0f);
+    ImVec4 consoleWarningColor  = ImVec4(1.0f, 0.1f, 0.5f, 1.0f);
+    ImVec4 consoleInfoColor     = ImVec4(0.4f, 1.0f, 0.4f, 1.0f);
+    ImVec4 consoleDefaultColor  = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+    ImVec4 consoleSearchHighlightColor = ImVec4(0.78f, 0.78f, 0.78f, 0.39f);
 
     // ---- Apply / Capture ----
     void applyToImGui(ImGuiStyle& s) const {
@@ -445,6 +455,18 @@ struct SettingsStyles {
 
         inspectorStylesObject["assets"] = assetsTabObject;
         s["inspector"] = inspectorStylesObject;
+
+        // Console specific styles 
+        json consoleStylesObject = json::object();
+        consoleStylesObject["criticalColor"] = { consoleCriticalColor.x, consoleCriticalColor.y, consoleCriticalColor.z, consoleCriticalColor.w };
+        consoleStylesObject["errorColor"]    = { consoleErrorColor.x, consoleErrorColor.y, consoleErrorColor.z, consoleErrorColor.w };
+        consoleStylesObject["warningColor"]  = { consoleWarningColor.x, consoleWarningColor.y, consoleWarningColor.z, consoleWarningColor.w };
+        consoleStylesObject["infoColor"]     = { consoleInfoColor.x, consoleInfoColor.y, consoleInfoColor.z, consoleInfoColor.w };
+        consoleStylesObject["defaultColor"]  = { consoleDefaultColor.x, consoleDefaultColor.y, consoleDefaultColor.z, consoleDefaultColor.w };
+        consoleStylesObject["searchHighlightColor"] = { consoleSearchHighlightColor.x, consoleSearchHighlightColor.y, consoleSearchHighlightColor.z, consoleSearchHighlightColor.w };
+        
+        s["console"] = consoleStylesObject;
+
 
         j["styles"] = s;
     }

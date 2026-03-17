@@ -40,7 +40,7 @@ bool ConsoleUI::initialize(Logger* _loggerPtr, ConsoleEngine* _engine, SettingsS
     logSrc = _loggerPtr->getConsoleSinkPtr();
     loggerPtr = _loggerPtr;
 
-    searcher.setSearchFlag(SearchUIFlags::ADVANCED);
+    searcher.setSearchFlag(SearchUIFlags::DEFAULT);
     initialized = true;
     return true;
 }
@@ -166,28 +166,28 @@ void ConsoleUI::drawLogs() {
             ImGui::EndMenu(); 
         }
 
-        // if (ImGui::BeginMenu("Spawn New Log")) {
-        //     ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
-        //     if (ImGui::MenuItem("Spawn 1 Error Log")) {
-        //         loggerPtr->addLog(LogLevel::LOG_ERROR, "Console Menu", "This is an error test", "Additional"); 
-        //     }
-        //     if (ImGui::MenuItem("Spawn 1 Warning Log")) {
-        //         loggerPtr->addLog(LogLevel::WARNING, "Console Menu", "This is a test warning", "Additional"); 
-        //     }
-        //     if (ImGui::MenuItem("Spawn 1 Info Log")) {
-        //         loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
-        //     }
-        //     if (ImGui::MenuItem("Spawn 1 Overflow Log Test")) {
-        //         loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console", "Additional"); 
-        //     }
-        //     if (ImGui::MenuItem("Spawn 10 Info Logs")) {
-        //         for (int i = 0; i < 10; i++)
-        //             loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
-        //     }
+        if (ImGui::BeginMenu("Spawn New Log")) {
+            ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false); 
+            if (ImGui::MenuItem("Spawn 1 Error Log")) {
+                loggerPtr->addLog(LogLevel::LOG_ERROR, "Console Menu", "This is an error test", "Additional"); 
+            }
+            if (ImGui::MenuItem("Spawn 1 Warning Log")) {
+                loggerPtr->addLog(LogLevel::WARNING, "Console Menu", "This is a test warning", "Additional"); 
+            }
+            if (ImGui::MenuItem("Spawn 1 Info Log")) {
+                loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
+            }
+            if (ImGui::MenuItem("Spawn 1 Overflow Log Test")) {
+                loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console. This is a test to test the overflow of the console", "Additional"); 
+            }
+            if (ImGui::MenuItem("Spawn 10 Info Logs")) {
+                for (int i = 0; i < 10; i++)
+                    loggerPtr->addLog(LogLevel::INFO, "Console Menu", "This is a test", "Additional"); 
+            }
 
-        //     ImGui::PopItemFlag(); 
-        //     ImGui::EndMenu(); 
-        // }
+            ImGui::PopItemFlag(); 
+            ImGui::EndMenu(); 
+        }
 
         if (ImGui::BeginMenu("Find")) {
             searcher.drawSearchUI();
@@ -381,15 +381,15 @@ ConsoleUI::LogStyle ConsoleUI::getLogStyle(const LogEntry& log) {
     } 
     
     // fallback incase we can't fetch the styles for the logs 
-    else {
-        style.color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // default white
-        switch (log.level) {
-            case LogLevel::CRITICAL:  style.prefix = "[CRITICAL"; style.color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f); break;
-            case LogLevel::LOG_ERROR: style.prefix = "[ERROR";    style.color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f); break;
-            case LogLevel::WARNING:   style.prefix = "[WARNING";  style.color = ImVec4(1.0f, 0.1f, 0.5f, 1.0f); break;
-            case LogLevel::INFO:      style.prefix = "[INFO";     style.color = ImVec4(0.4f, 1.0f, 0.4f, 1.0f); break;
-        }
-    }
+    // else {
+    //     style.color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // default white
+    //     switch (log.level) {
+    //         case LogLevel::CRITICAL:  style.prefix = "[CRITICAL"; style.color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f); break;
+    //         case LogLevel::LOG_ERROR: style.prefix = "[ERROR";    style.color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f); break;
+    //         case LogLevel::WARNING:   style.prefix = "[WARNING";  style.color = ImVec4(1.0f, 0.1f, 0.5f, 1.0f); break;
+    //         case LogLevel::INFO:      style.prefix = "[INFO";     style.color = ImVec4(0.4f, 1.0f, 0.4f, 1.0f); break;
+    //     }
+    // }
 
     if(!log.src.empty()) {
         style.prefix += ": " + log.src;
@@ -398,7 +398,7 @@ ConsoleUI::LogStyle ConsoleUI::getLogStyle(const LogEntry& log) {
     style.prefix += "] ";
     return style;
 }
-}
+
 
 std::string ConsoleUI::formatLogString(const LogEntry& log) {
     LogStyle style = getLogStyle(log);

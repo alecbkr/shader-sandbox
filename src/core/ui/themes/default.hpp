@@ -200,6 +200,14 @@ namespace DefaultTheme {
         styles.assetsTitleBackgroundColor = ImVec4(0.12156862765550613f, 0.125490203499794f, 0.16470588743686676f, 1.0f);
         styles.assetsTreeBodyColor = ImVec4(0.10980392247438431f, 0.11764705926179886f, 0.14901961386203766f, 1.0f);
 
+        // ---------- Custom console values ----------
+        styles.consoleDefaultColor  = ImVec4(0.97254902f, 0.97254902f, 0.94901961f, 1.0f);              // Default text foreground
+        styles.consoleCriticalColor = ImVec4(1.0f, 0.33333334f, 0.33333334f, 1.0f);                     // Vibrant red
+        styles.consoleErrorColor    = ImVec4(1.0f, 0.47450980f, 0.77647060f, 1.0f);                     // Pink/Light Red
+        styles.consoleWarningColor  = ImVec4(1.0f, 0.72156864f, 0.42352941f, 1.0f);                     // Orange
+        styles.consoleInfoColor     = ImVec4(0.31372550f, 0.98039215f, 0.48235294f, 1.0f);              // Green
+        styles.consoleSearchHighlightColor = ImVec4(0.38431373f, 0.44705882f, 0.64313727f, 0.50f);      // Translucent theme accent
+
         // Push everything into ImGui
         styles.applyToImGui(ImGui::GetStyle());
     }
