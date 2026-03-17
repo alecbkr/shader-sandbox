@@ -199,6 +199,7 @@ namespace DefaultTheme {
         styles.assetsTabBackgroundColor = ImVec4(0.10196078568696976f, 0.10588235408067703f, 0.12941177189350128f, 1.0f);
         styles.assetsTitleBackgroundColor = ImVec4(0.12156862765550613f, 0.125490203499794f, 0.16470588743686676f, 1.0f);
         styles.assetsTreeBodyColor = ImVec4(0.10980392247438431f, 0.11764705926179886f, 0.14901961386203766f, 1.0f);
+        styles.inspectorTreeHoveredColor = ImVec4(0.16862745583057404f, 0.1764705926179886f, 0.22745098173618317f, 1.0f);
 
         // Push everything into ImGui
         styles.applyToImGui(ImGui::GetStyle());

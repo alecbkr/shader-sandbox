@@ -34,9 +34,6 @@ InspectorUI::InspectorUI() {
     materialCachePtr = nullptr;
     height = 0;
     width = 0;
-    uniformInspectorUI = std::make_unique<UniformInspectorUI>();
-    objectsInspectorUI = std::make_unique<ObjectsInspectorUI>();
-    fileInspectorUI = std::make_unique<FileInspectorUI>();
 }
 
 bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr, Fonts* _fontsPtr, Project* _project, SettingsStyles* _styles) {
@@ -53,6 +50,9 @@ bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngP
     modelCachePtr = _modelCachePtr;
     fileRegPtr = _fileRegPtr;
     assetsInspectorUI = std::make_unique<AssetsInspectorUI>(_fontsPtr, _project, _styles);
+    uniformInspectorUI = std::make_unique<UniformInspectorUI>(_styles);
+    objectsInspectorUI = std::make_unique<ObjectsInspectorUI>(_styles);
+    fileInspectorUI = std::make_unique<FileInspectorUI>();
     materialCachePtr = _materialCachePtr;
     intitialized = true;
     return true;
