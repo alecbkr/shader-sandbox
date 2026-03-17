@@ -7,15 +7,7 @@
 #include <cstdlib>
 #include "platform/Platform.hpp"
 #include "../logging/Logger.hpp"
-
-// Lookup table for text colors for each log level
-const ImVec4 LOG_COLORS[] = {
-    ImVec4(1.0f, 0.0f, 0.0f, 1.0f),         // Critical (Deep Red)
-    ImVec4(1.0f, 0.4f, 0.4f, 1.0f),         // Error (lighter red)
-    ImVec4(1.0f, 0.1f, 0.5f, 1.0f),         // Warning (Magenta)
-    ImVec4(0.4f, 1.0f, 0.4f, 1.0f)          // Info (Light Green)
-                                            // Anomaly (light gray)
-};
+#include "application/SettingsStyles.hpp"
 
 ConsoleUI::ConsoleUI() {
     targetWidth = 0.0f;
@@ -27,12 +19,15 @@ ConsoleUI::ConsoleUI() {
     initialized = false;
 }
 
-bool ConsoleUI::initialize(Logger* _loggerPtr, ConsoleEngine* _engine){
+bool ConsoleUI::initialize(Logger* _loggerPtr, ConsoleEngine* _engine, SettingsStyles* _styles, Fonts* _fontsPtr){
     if (initialized) {
         _loggerPtr->addLog(LogLevel::WARNING, "Console UI Initialization", "Console UI was already initialized.");
         return false;
     }
+    
     engine = _engine; 
+    stylesPtr = _styles; 
+    fontsPtr = _fontsPtr; 
 
     // had to register it here since the ui is responsible for copying the logs 
     engine->registerButton(ConsoleActions::COPY_LOGS, [this](){
@@ -267,16 +262,15 @@ void ConsoleUI::drawSingleLog(int rowIdx, const DisplayLine& lineData, const Log
         rawText += " (" + std::to_string(lineData.collapsedCount + 1) + ")"; 
     }
 
-        float arrowSize = ImGui::GetTextLineHeight(); 
-        float arrowOffset = arrowSize + ImGui::GetStyle().ItemSpacing.x;
-        
-        bool needsIndent = false; 
-
-        // calculate the offset so that the children can match the parent 
-        if (lineData.isChildLog) needsIndent = true; 
-        else if (lineData.isGroupHeader && lineData.charOffset > 0 && lineData.totalGroupCount > 1) needsIndent = true; 
-        if (needsIndent) ImGui::Indent(arrowOffset);
+    float arrowSize = ImGui::GetTextLineHeight(); 
+    float arrowOffset = arrowSize + ImGui::GetStyle().ItemSpacing.x;
     
+    bool needsIndent = false; 
+
+    // calculate the offset so that the children can match the parent 
+    if (lineData.isChildLog) needsIndent = true; 
+    else if (lineData.isGroupHeader && lineData.charOffset > 0 && lineData.totalGroupCount > 1) needsIndent = true; 
+    if (needsIndent) ImGui::Indent(arrowOffset);
 
     TextSelector::Text(rawText, [&]() {
         ImGui::PushID(rowIdx);         
@@ -286,21 +280,18 @@ void ConsoleUI::drawSingleLog(int rowIdx, const DisplayLine& lineData, const Log
         // offset for the arrow if logs are collapsed 
         if (lineData.isGroupHeader && lineData.charOffset == 0 && lineData.totalGroupCount > 1) screenPosX += arrowOffset; 
 
-
         int logIdx = lineData.originalLogIdx; 
         int idxToCheck = logIdx;
         
-        //  reflect the highlight state of the parent 
+        // reflect the highlight state of the parent 
         if (lineData.isChildLog && lineData.parentLogIdx != -1) idxToCheck = lineData.parentLogIdx;
         
-
         // Draw Search Highlight if its active
         if (searcher.isItemActiveMatch(idxToCheck)) {
             if (searcher.checkAndClearScrollRequest()) {
                 ImGui::SetScrollHereY(0.5f);
                 isScroll = false; 
             }
-
 
             // only highlight the portion of the matched string that falls on the curr wrapped line 
             const auto& match = searcher.getActiveMatch();
@@ -320,17 +311,21 @@ void ConsoleUI::drawSingleLog(int rowIdx, const DisplayLine& lineData, const Log
                 float offsetX = ImGui::CalcTextSize(textBefore.c_str()).x;
                 float width = ImGui::CalcTextSize(textMatch.c_str()).x;
 
+                // Pull search highlight color from settings
+                ImU32 highlightColor = stylesPtr 
+                    ? ImGui::ColorConvertFloat4ToU32(stylesPtr->consoleSearchHighlightColor) 
+                    : IM_COL32(200, 200, 200, 100);
+
                 ImGui::GetWindowDrawList()->AddRectFilled(
                     ImVec2(screenPos.x + offsetX, screenPos.y),
                     ImVec2(screenPos.x + offsetX + width, screenPos.y + ImGui::GetTextLineHeight()),
-                    IM_COL32(200, 200, 200, 100)
+                    highlightColor
                 );
             }
         }
         
         // dropdown arrow for the collapsed logs 
         if (lineData.isGroupHeader && lineData.charOffset == 0 && lineData.totalGroupCount > 1) {
-
             // styling for the arrow dropdown (transparent with a tint on hover)
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.2f, 0.5f));
@@ -366,22 +361,34 @@ void ConsoleUI::drawSingleLog(int rowIdx, const DisplayLine& lineData, const Log
             ImGui::TextDisabled("(%d)", lineData.collapsedCount + 1);
         }
 
-
         ImGui::PopID();
     }); 
 
     if (needsIndent) ImGui::Unindent(arrowOffset); 
-
 }
 
 ConsoleUI::LogStyle ConsoleUI::getLogStyle(const LogEntry& log) {
     LogStyle style;
-    style.color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);       // default white for anomalies
-    switch (log.level) {
-        case LogLevel::CRITICAL: style.prefix = "[CRITICAL"; style.color = LOG_COLORS[(int)log.level]; break;
-        case LogLevel::LOG_ERROR: style.prefix = "[ERROR"; style.color = LOG_COLORS[(int)log.level]; break;
-        case LogLevel::WARNING: style.prefix = "[WARNING"; style.color = LOG_COLORS[(int)log.level]; break;
-        case LogLevel::INFO: style.prefix = "[INFO"; style.color = LOG_COLORS[(int)log.level]; break;
+    
+    if (stylesPtr) {
+        style.color = stylesPtr->consoleDefaultColor;
+        switch (log.level) {
+            case LogLevel::CRITICAL:  style.prefix = "[CRITICAL"; style.color = stylesPtr->consoleCriticalColor; break;
+            case LogLevel::LOG_ERROR: style.prefix = "[ERROR";    style.color = stylesPtr->consoleErrorColor; break;
+            case LogLevel::WARNING:   style.prefix = "[WARNING";  style.color = stylesPtr->consoleWarningColor; break;
+            case LogLevel::INFO:      style.prefix = "[INFO";     style.color = stylesPtr->consoleInfoColor; break;
+        }
+    } 
+    
+    // fallback incase we can't fetch the styles for the logs 
+    else {
+        style.color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // default white
+        switch (log.level) {
+            case LogLevel::CRITICAL:  style.prefix = "[CRITICAL"; style.color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f); break;
+            case LogLevel::LOG_ERROR: style.prefix = "[ERROR";    style.color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f); break;
+            case LogLevel::WARNING:   style.prefix = "[WARNING";  style.color = ImVec4(1.0f, 0.1f, 0.5f, 1.0f); break;
+            case LogLevel::INFO:      style.prefix = "[INFO";     style.color = ImVec4(0.4f, 1.0f, 0.4f, 1.0f); break;
+        }
     }
 
     if(!log.src.empty()) {
@@ -390,6 +397,7 @@ ConsoleUI::LogStyle ConsoleUI::getLogStyle(const LogEntry& log) {
 
     style.prefix += "] ";
     return style;
+}
 }
 
 std::string ConsoleUI::formatLogString(const LogEntry& log) {

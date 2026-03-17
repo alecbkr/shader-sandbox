@@ -14,11 +14,13 @@
 #include "components/TextSelector.hpp"
 
 class Logger;
+class Fonts;
+struct SettingsStyles;
 
 class ConsoleUI {
 public: 
     ConsoleUI();
-    bool initialize(Logger* _loggerPtr, ConsoleEngine* _engine);
+    bool initialize(Logger* _loggerPtr, ConsoleEngine* _engine, SettingsStyles* _styles, Fonts* _fontsPtr);
     void render();
 
     struct LogStyle {
@@ -49,8 +51,11 @@ private:
     ImVec2 windowPos = ImVec2(0, 0);
     
     ConsoleEngine *engine = nullptr;
-    std::shared_ptr<ConsoleSink> logSrc = nullptr;
-    Logger* loggerPtr; 
+    std::shared_ptr<ConsoleSink> logSrc = nullptr;          // used to fetch the logs from the console sink
+    Logger* loggerPtr;                                      // used to send new log msgs to the logger
+    SettingsStyles* stylesPtr = nullptr; 
+    Fonts* fontsPtr = nullptr; 
+    
     SearchText searcher;
     TextSelectionCtx selectionCtx; 
     TextSelectorLayout selectionLayout; 
