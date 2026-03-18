@@ -189,13 +189,14 @@ void MenuUI::drawMenuBar()
         {
             if (iconTex == 0) initializeIconTexture();
             DrawAppIcon(iconTex, barH);
-            ImGui::Text(appctx->project.projectTitle.c_str());
 
             // ---- Left-side menus ----
             PushMenuPopupStyle();
             auto menu = MenuEngine::getMenuStructure();
             for (const MenuItem& item : menu) MenuUI::drawMenuItem(item);
             PopMenuPopupStyle();
+
+            ImGui::Text(appctx->project.projectTitle.c_str());
             
             // ---- Right-side window buttons ----
             const ImGuiStyle& style = ImGui::GetStyle();
