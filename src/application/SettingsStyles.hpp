@@ -114,6 +114,8 @@ struct SettingsStyles {
     int selectedEditorPaletteColor = 0;
 
     // Inspector Specific Styles
+    // General inspector tree/child hover color
+    ImVec4 inspectorTreeHoveredColor;
 
     // Assets tab specific styles
     // Assest tab colors
@@ -130,6 +132,30 @@ struct SettingsStyles {
     float assetsTitleInnerPadding = 1.0f;
     float assetsBodyRounding = 6.0f;
     float assetsTitleOffset = 6.0f;
+
+    // Console Specific Styles 
+    // Log Category Colors
+    ImVec4 consoleCriticalColor        = ImVec4(1.00000f, 0.33333f, 0.33333f, 1.00f); // Red (#ff5555)
+    ImVec4 consoleErrorColor           = ImVec4(1.00000f, 0.47451f, 0.77647f, 1.00f); // Pink (#ff79c6)
+    ImVec4 consoleWarningColor         = ImVec4(1.00000f, 0.72157f, 0.42353f, 1.00f); // Orange (#ffb86c)
+    ImVec4 consoleInfoColor            = ImVec4(0.31373f, 0.98039f, 0.48235f, 1.00f); // Green (#50fa7b)
+    
+    // UI Element Colors
+    ImVec4 consoleWindowBgColor        = ImVec4(0.15686f, 0.16471f, 0.21176f, 1.00f); // Default Background
+    ImVec4 consoleMenuBarBgColor       = ImVec4(0.12157f, 0.12549f, 0.16471f, 1.00f); // Darker Background (#1f202a)
+    ImVec4 consoleTextSelectedBgColor  = ImVec4(0.26667f, 0.27843f, 0.35294f, 0.80f); // Selection (#44475a)
+    ImVec4 consoleSearchHighlightColor = ImVec4(0.74118f, 0.57647f, 0.97647f, 0.50f); // Purple Accent (#bd93f9)
+    // Shader tab colors
+    ImVec4 shaderTabBackgroundColor;
+    ImVec4 shaderTitleBackgroundColor;
+    ImVec4 shaderTreeBodyColor;
+    ImVec4 shaderBorderColor;
+
+    float shaderBorderThickness = 1.0f;
+    float shaderBodyPadding = 12.0f;
+    float shaderTitleInnerPadding = 1.0f;
+    float shaderBodyRounding = 6.0f;
+    float shaderTitleOffset = 6.0f;
 
     // ---- Apply / Capture ----
     void applyToImGui(ImGuiStyle& s) const {
@@ -444,7 +470,58 @@ struct SettingsStyles {
         assetsTabObject["assetsTitleOffset"] = assetsTitleOffset;
 
         inspectorStylesObject["assets"] = assetsTabObject;
+
+        json shaderTabObject = json::object();
+
+        // Shaders tab styles
+        shaderTabObject["shaderTabBackgroundColor"] = {
+            shaderTabBackgroundColor.x,
+            shaderTabBackgroundColor.y,
+            shaderTabBackgroundColor.z,
+            shaderTabBackgroundColor.w
+        };
+        shaderTabObject["shaderTitleBackgroundColor"] = {
+            shaderTitleBackgroundColor.x,
+            shaderTitleBackgroundColor.y,
+            shaderTitleBackgroundColor.z,
+            shaderTitleBackgroundColor.w
+        };
+        shaderTabObject["shaderTreeBodyColor"] = {
+            shaderTreeBodyColor.x,
+            shaderTreeBodyColor.y,
+            shaderTreeBodyColor.z,
+            shaderTreeBodyColor.w
+        };
+        shaderTabObject["shaderBorderColor"] = {
+            shaderBorderColor.x,
+            shaderBorderColor.y,
+            shaderBorderColor.z,
+            shaderBorderColor.w
+        };
+
+        shaderTabObject["shaderBorderThickness"] = shaderBorderThickness;
+        shaderTabObject["shaderBodyPadding"] = shaderBodyPadding;
+        shaderTabObject["shaderTitleInnerPadding"] = shaderTitleInnerPadding;
+        shaderTabObject["shaderBodyRounding"] = shaderBodyRounding;
+        shaderTabObject["shaderTitleOffset"] = shaderTitleOffset;
+
+        inspectorStylesObject["shaders"] = shaderTabObject;
+
         s["inspector"] = inspectorStylesObject;
+
+        // Console specific styles 
+        json consoleStylesObject = json::object();
+        consoleStylesObject["criticalColor"] = { consoleCriticalColor.x, consoleCriticalColor.y, consoleCriticalColor.z, consoleCriticalColor.w };
+        consoleStylesObject["errorColor"]    = { consoleErrorColor.x, consoleErrorColor.y, consoleErrorColor.z, consoleErrorColor.w };
+        consoleStylesObject["warningColor"]  = { consoleWarningColor.x, consoleWarningColor.y, consoleWarningColor.z, consoleWarningColor.w };
+        consoleStylesObject["infoColor"]     = { consoleInfoColor.x, consoleInfoColor.y, consoleInfoColor.z, consoleInfoColor.w };
+        consoleStylesObject["searchHighlightColor"] = { consoleSearchHighlightColor.x, consoleSearchHighlightColor.y, consoleSearchHighlightColor.z, consoleSearchHighlightColor.w };
+        consoleStylesObject["windowBgColor"]       = { consoleWindowBgColor.x, consoleWindowBgColor.y, consoleWindowBgColor.z, consoleWindowBgColor.w };
+        consoleStylesObject["menuBarBgColor"]      = { consoleMenuBarBgColor.x, consoleMenuBarBgColor.y, consoleMenuBarBgColor.z, consoleMenuBarBgColor.w };
+        consoleStylesObject["textSelectedBgColor"] = { consoleTextSelectedBgColor.x, consoleTextSelectedBgColor.y, consoleTextSelectedBgColor.z, consoleTextSelectedBgColor.w };
+        
+        s["console"] = consoleStylesObject;
+
 
         j["styles"] = s;
     }
@@ -548,14 +625,78 @@ struct SettingsStyles {
                 assetsTitleInnerPadding = assets.value("assetsTitleInnerPadding", assetsTitleInnerPadding);
                 assetsBodyRounding = assets.value("assetsBodyRounding", assetsBodyRounding);
                 assetsTitleOffset = assets.value("assetsTitleOffset", assetsTitleOffset);
-            } 
-        } else {
-            assetsDirectoryTextColor = ImVec4(180, 185, 175, 255);
-            assetsFileBackgroundColor = ImVec4(40, 42, 54, 255);
-            assetsBorderColor = ImVec4(45, 47, 63, 255);
-            assetsTabBackgroundColor = ImVec4(26, 27, 33, 255);
-            assetsTitleBackgroundColor = ImVec4(31, 32, 42, 255);
-            assetsTreeBodyColor = ImVec4(28, 30, 38, 255);
+            } else {
+                assetsDirectoryTextColor = ImVec4(180, 185, 175, 255);
+                assetsFileBackgroundColor = ImVec4(40, 42, 54, 255);
+                assetsBorderColor = ImVec4(45, 47, 63, 255);
+                assetsTabBackgroundColor = ImVec4(26, 27, 33, 255);
+                assetsTitleBackgroundColor = ImVec4(31, 32, 42, 255);
+                assetsTreeBodyColor = ImVec4(28, 30, 38, 255);
+            }
+    
+            if (ins.contains("shaders") && ins["shaders"].is_object()) {
+                const json& shaders = ins["shaders"];
+                
+                shaderTabBackgroundColor = ImVec4(
+                    shaders["shaderTabBackgroundColor"][0],
+                    shaders["shaderTabBackgroundColor"][1],
+                    shaders["shaderTabBackgroundColor"][2],
+                    shaders["shaderTabBackgroundColor"][3]
+                );
+                shaderTitleBackgroundColor = ImVec4(
+                    shaders["shaderTitleBackgroundColor"][0],
+                    shaders["shaderTitleBackgroundColor"][1],
+                    shaders["shaderTitleBackgroundColor"][2],
+                    shaders["shaderTitleBackgroundColor"][3]
+                );
+                shaderTreeBodyColor = ImVec4(
+                    shaders["shaderTreeBodyColor"][0],
+                    shaders["shaderTreeBodyColor"][1],
+                    shaders["shaderTreeBodyColor"][2],
+                    shaders["shaderTreeBodyColor"][3]
+                );
+                shaderBorderColor = ImVec4(
+                    shaders["shaderBorderColor"][0],
+                    shaders["shaderBorderColor"][1],
+                    shaders["shaderBorderColor"][2],
+                    shaders["shaderBorderColor"][3]
+                );
+
+                shaderBorderThickness = shaders.value("shaderBorderThickness", shaderBorderThickness);
+                shaderBodyPadding = shaders.value("shaderBodyPadding", shaderBodyPadding);
+                shaderTitleInnerPadding = shaders.value("shaderTitleInnerPadding", shaderTitleInnerPadding);
+                shaderBodyRounding = shaders.value("shaderBodyRounding", shaderBodyRounding);
+                shaderTitleOffset = shaders.value("shaderTitleOffset", shaderTitleOffset);
+            } else {
+                shaderTabBackgroundColor = assetsTabBackgroundColor;
+                shaderTitleBackgroundColor = assetsTitleBackgroundColor;
+                shaderTreeBodyColor = assetsTreeBodyColor;
+                shaderBorderColor = assetsBorderColor;
+            }
+        }
+
+        // Load Console Styles
+        if (s.contains("console") && s["console"].is_object()) {
+            const json& cons = s["console"];
+            if (cons.contains("criticalColor"))        consoleCriticalColor        = ImVec4(cons["criticalColor"][0], cons["criticalColor"][1], cons["criticalColor"][2], cons["criticalColor"][3]);
+            if (cons.contains("errorColor"))           consoleErrorColor           = ImVec4(cons["errorColor"][0], cons["errorColor"][1], cons["errorColor"][2], cons["errorColor"][3]);
+            if (cons.contains("warningColor"))         consoleWarningColor         = ImVec4(cons["warningColor"][0], cons["warningColor"][1], cons["warningColor"][2], cons["warningColor"][3]);
+            if (cons.contains("infoColor"))            consoleInfoColor            = ImVec4(cons["infoColor"][0], cons["infoColor"][1], cons["infoColor"][2], cons["infoColor"][3]);
+            if (cons.contains("searchHighlightColor")) consoleSearchHighlightColor = ImVec4(cons["searchHighlightColor"][0], cons["searchHighlightColor"][1], cons["searchHighlightColor"][2], cons["searchHighlightColor"][3]);
+            if (cons.contains("windowBgColor"))        consoleWindowBgColor        = ImVec4(cons["windowBgColor"][0], cons["windowBgColor"][1], cons["windowBgColor"][2], cons["windowBgColor"][3]);
+            if (cons.contains("menuBarBgColor"))       consoleMenuBarBgColor       = ImVec4(cons["menuBarBgColor"][0], cons["menuBarBgColor"][1], cons["menuBarBgColor"][2], cons["menuBarBgColor"][3]);
+            if (cons.contains("textSelectedBgColor"))  consoleTextSelectedBgColor  = ImVec4(cons["textSelectedBgColor"][0], cons["textSelectedBgColor"][1], cons["textSelectedBgColor"][2], cons["textSelectedBgColor"][3]);
+        } 
+        else {
+            // fallback to the default theme colors 
+            consoleCriticalColor        = ImVec4(1.00000f, 0.33333f, 0.33333f, 1.00f);
+            consoleErrorColor           = ImVec4(1.00000f, 0.47451f, 0.77647f, 1.00f);
+            consoleWarningColor         = ImVec4(1.00000f, 0.72157f, 0.42353f, 1.00f);
+            consoleInfoColor            = ImVec4(0.31373f, 0.98039f, 0.48235f, 1.00f);
+            consoleWindowBgColor        = ImVec4(0.15686f, 0.16471f, 0.21176f, 1.00f);
+            consoleMenuBarBgColor       = ImVec4(0.12157f, 0.12549f, 0.16471f, 1.00f);
+            consoleTextSelectedBgColor  = ImVec4(0.26667f, 0.27843f, 0.35294f, 0.80f);
+            consoleSearchHighlightColor = ImVec4(0.74118f, 0.57647f, 0.97647f, 0.50f);
         }
     }
 };

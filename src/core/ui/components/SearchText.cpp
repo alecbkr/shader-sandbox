@@ -26,7 +26,7 @@ bool SearchText::drawSearchUI(std::function<void(Match& match, char* replace)> o
     ImGui::SameLine();
     if (ImGui::Button(">")) {
         currentMatchIdx++;
-        if (currentMatchIdx >= matches.size()) currentMatchIdx = 0;
+        if (currentMatchIdx >= (int)matches.size()) currentMatchIdx = 0;
         requestScroll = true;
     }
     ImGui::EndDisabled();

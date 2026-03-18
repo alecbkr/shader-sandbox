@@ -10,6 +10,13 @@
 #include "core/logging/Logger.hpp"
 #include "core/logging/LogSink.hpp"
 
+// helper to take on the project's name for the logger 
+static bool initTestLogger(Logger& logger){
+    std::string testAppName = "PrimsTSS_Test"; 
+    std::string testProjectName = "ActionRegistry_Tests"; 
+    return logger.initialize(testAppName, testProjectName); 
+}
+
 // ------------------------------------------------------------
 // Test sink: captures logs from Logger
 // ------------------------------------------------------------
@@ -39,7 +46,7 @@ TEST_CASE("ContextManager: default state is None and stack is empty (behaviorall
 
 TEST_CASE("ContextManager: initialize sets current to Editor and clears stack", "[context][manager]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry actions;
     REQUIRE(actions.initialize(&logger));
@@ -58,7 +65,7 @@ TEST_CASE("ContextManager: initialize sets current to Editor and clears stack", 
 
 TEST_CASE("ContextManager: initialize twice returns false and logs warning", "[context][manager]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry actions;
     REQUIRE(actions.initialize(&logger));
@@ -79,7 +86,7 @@ TEST_CASE("ContextManager: initialize twice returns false and logs warning", "[c
 
 TEST_CASE("ContextManager: toggleCtx switches Editor <-> Camera using stack push", "[context][manager]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry actions;
     REQUIRE(actions.initialize(&logger));
@@ -98,7 +105,7 @@ TEST_CASE("ContextManager: toggleCtx switches Editor <-> Camera using stack push
 
 TEST_CASE("ContextManager: action binding SwitchControlContext triggers toggleCtx", "[context][manager][action]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry actions;
     REQUIRE(actions.initialize(&logger));

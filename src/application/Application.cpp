@@ -26,6 +26,7 @@
 #include "engine/AppTimer.hpp"
 #include "engine/Errorlog.hpp"
 #include "persistence/ProjectLoader.hpp"
+#include "core/ui/themes/default.hpp"
 
 bool Application::initialized = false;
 
@@ -106,6 +107,10 @@ void Application::initializeUI(AppContext& ctx) {
     ctx.modals.registerModal(&ctx.settingsModal);
     ctx.modals.registerModal(&ctx.saveAsModal);
     ctx.modals.registerModal(&ctx.openProjectModal);
+
+    if (!ctx.settings.settingsFound) {
+        DefaultTheme::applyDefaultTheme(ctx.settings.styles);
+    }
 }
 
 void loadPresetAssets(AppContext& ctx) {
@@ -117,7 +122,7 @@ void loadPresetAssets(AppContext& ctx) {
     ShaderProgram* gridplanePtr = ctx.shader_registry.getProgram("gridplane");
     ShaderProgram* skyboxPtr = ctx.shader_registry.getProgram("skybox");
     ShaderProgram* texPtr = ctx.shader_registry.getProgram("tex");
-    ShaderProgram* colorPtr = ctx.shader_registry.getProgram("color");
+    //ShaderProgram* colorPtr = ctx.shader_registry.getProgram("color");
     
 
     unsigned int skyboxID = ctx.model_cache.createSkybox("../assets/textures/skybox");
@@ -153,7 +158,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::WARNING, "Application Initialization", "Application was already initialized.");
         return false;
     }
-    if (!ctx.logger.initialize()) {
+    if (!ctx.logger.initialize(ctx.app_title, ctx.project.projectTitle)) {
         std::cout << "Logger was not initialized successfully." << std::endl;
         return false;
     }
@@ -201,11 +206,7 @@ bool Application::initialize(AppContext& ctx) {
         std::cout << "Texture Cache was not initialized successfully." << std::endl;
         return false;
     }
-    // if (!ConsoleEngine::initialize(Logger::getConsoleSinkPtr())) {
-    //     std::cout << "Console Engine was not initialized successfully." << std::endl;
-    //     return false;
-    // }
-    if (!ctx.console_engine.initialize(&ctx.logger)) {
+    if (!ctx.console_engine.initialize(&ctx.logger, ctx.project.consoleSettings)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Importer was not initialized successfully.");
         return false;
     }
@@ -241,7 +242,8 @@ bool Application::initialize(AppContext& ctx) {
     loadPresetAssets(ctx);
     addSubscriptions(ctx);
     initializeUI(ctx);
-    if (!ctx.console_ui.initialize(&ctx.logger)) {
+    ctx.inspector_engine.refreshUniforms();
+    if (!ctx.console_ui.initialize(&ctx.logger, &ctx.console_engine, &ctx.settings.styles, &ctx.fonts)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Console UI was not initialized successfully.");
         return false;
     }
@@ -322,7 +324,10 @@ void Application::shutdown(AppContext& ctx) {
 
     ctx.settings.styles.captureFromImGui(ImGui::GetStyle());
     ctx.settings.fontIdx = ctx.fonts.getFontIndex();
+    if (initialized) ctx.project.consoleSettings = ctx.console_engine.getToggles();
+
     ctx.platform.terminate();
+
     // UI Shutdown
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

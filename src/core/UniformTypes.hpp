@@ -50,6 +50,8 @@ struct InspectorSampler2D {
 struct InspectorReference {
     int modelSelection = 0; 
     int uniformSelection = 0;
+    int materialSelection = 0;
+    unsigned int referencedModelID;
     unsigned int referencedMaterialID;
     std::string referencedUniformName;
     UniformType returnType;
@@ -64,9 +66,10 @@ struct Uniform {
     std::string name;
     UniformType type;
     UniformValue value;
+    unsigned int ID; // set automatically
     unsigned int materialID; // set automatically when you register the uniform
-    bool isFunction = false;
-    bool isReadOnly = false;
+    bool isFunction = false; // right now this means reference. it won't always be this way.
+    bool isReadOnly = false; // does nothing right now. 
     bool useAlternateEditor = false; // This setting is for the color picker, etc.
 };
 

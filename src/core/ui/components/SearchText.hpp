@@ -74,7 +74,7 @@ class SearchText {
 
                 std::regex regexPattern(finalQuery, regexFlags); 
 
-                for(int i = 0; i < data.size(); ++i) {
+                for(int i = 0; i < (int)data.size(); ++i) {
                     std::string line = textExtractor(data[i]); 
                     auto words_begin = std::sregex_iterator(line.begin(), line.end(), regexPattern); 
                     auto words_end = std::sregex_iterator(); 
@@ -92,7 +92,7 @@ class SearchText {
                     std::transform(searchQuery.begin(), searchQuery.end(), searchQuery.begin(), ::tolower); 
                 }
 
-                for (int i = 0; i < data.size(); ++i) {
+                for (int i = 0; i < (int)data.size(); ++i) {
                     std::string line = textExtractor(data[i]); 
                     std::string searchLine = line; 
 

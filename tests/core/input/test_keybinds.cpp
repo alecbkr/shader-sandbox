@@ -12,6 +12,13 @@
 #include "platform/components/Keys.hpp"
 #include "application/AppContext.hpp"
 
+// helper to take on the project's name for the logger 
+static bool initTestLogger(Logger& logger){
+    std::string testAppName = "PrimsTSS_Test"; 
+    std::string testProjectName = "ActionRegistry_Tests"; 
+    return logger.initialize(testAppName, testProjectName); 
+}
+
 // Helper: find an int GLFW key code that maps to your Key enum
 static int glfwKeyFor(Key target) {
     for (int k = 0; k <= 512; ++k) {
@@ -46,7 +53,7 @@ TEST_CASE("Keybinds initialize creates expected default bindings", "[keybinds]")
     AppSettings settings;
     
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry actions;
     REQUIRE(actions.initialize(&logger));
@@ -96,7 +103,7 @@ TEST_CASE("Keybinds comboDown returns true only when all keys in combo are down"
     AppSettings settings;
     
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry actions;
     REQUIRE(actions.initialize(&logger));
@@ -127,7 +134,7 @@ TEST_CASE("Keybinds comboPressedThisFrame is true if combo is down AND at least 
     AppSettings settings;
         
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry actions;
     REQUIRE(actions.initialize(&logger));
@@ -159,7 +166,7 @@ TEST_CASE("Keybinds gatherActionsForFrame queues Pressed bindings in the correct
     AppSettings settings;    
     
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry actions;
     REQUIRE(actions.initialize(&logger));
@@ -198,7 +205,7 @@ TEST_CASE("Keybinds gatherActionsForFrame queues Down bindings every frame when 
     AppSettings settings;
         
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry actions;
     REQUIRE(actions.initialize(&logger));
@@ -233,7 +240,7 @@ TEST_CASE("Keybinds EditorCamera bindings work regardless of context (F2)", "[ke
     AppSettings settings;
         
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry actions;
     REQUIRE(actions.initialize(&logger));
@@ -274,7 +281,7 @@ TEST_CASE("Keybinds disabled binding does not queue action", "[keybinds]") {
     AppSettings settings;
         
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry actions;
     REQUIRE(actions.initialize(&logger));

@@ -18,12 +18,14 @@ struct AppSettings {
     std::filesystem::path settingsPath;
     std::string projectToOpen;
 
+    bool settingsFound = false;
+
     u32 width = 960;
     u32 height = 540;
     u32 posX = 100;
     u32 posY = 100;
 
-    u8 fontIdx = 2;
+    u8 fontIdx = 3;
 
     // Keybinds
     std::unordered_map<std::string, SettingsKeybind> keybindsMap = {
