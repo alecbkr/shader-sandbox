@@ -7,12 +7,13 @@
 #include "engine/ShaderProgram.hpp"
 
 class Logger;
+struct Project;
 using ShaderFactoryFn = std::function<ShaderProgram*(const char* vert, const char* frag, const char* name, Logger* logger)>;
 
 class ShaderRegistry {
 public:
     ShaderRegistry();
-    bool initialize(Logger* _loggerPtr, bool registerDefaults = true);
+    bool initialize(Logger* _loggerPtr, Project* project, bool registerDefaults = true);
     void shutdown();
     bool registerProgram(const std::string& vertex_file, const std::string& fragment_file, const std::string& programName);
     ShaderProgram* getProgram(const std::string& programName) const;
@@ -24,6 +25,6 @@ public:
 private:
     bool initialized = false;
     Logger* loggerPtr = nullptr;
-    std::unordered_map<std::string, std::unique_ptr<ShaderProgram>> programs;
+    Project* project = nullptr;
     ShaderFactoryFn factory_;
 };

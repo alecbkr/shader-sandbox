@@ -3,11 +3,80 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <filesystem>
-#include "application/AppContext.hpp"
+#include <application/Project.hpp>
+#include <core/ShaderRegistry.hpp>
 
 using json = nlohmann::json;
 
 int ProjectLoader::version = 1;
+
+namespace {
+    struct {
+        const char* listLabel = "programs";
+        const char* name      = "name";
+        const char* vertPath  = "vert_path";
+        const char* fragPath  = "frag_path";
+        const char* compiled  = "isCompiled";
+    } shaderLabels;
+}
+
+// returns success
+bool loadShaders(Project& project, json& j) {
+    if (project.shaderRegistry == nullptr) {
+        std::cerr << "ShaderRegistry is null; cannot load shaders." << std::endl;
+        return false;
+    }
+    try {
+        json shaderList = j.value(shaderLabels.listLabel, json::array());
+        if (shaderList.empty()) {
+            std::cerr << "shaderList was empty!" << std::endl;
+            return false;
+        }
+
+        for (const json& d : shaderList) {
+            ShaderData shaderData;
+
+            // Check that all required fields exist
+            if (!d.contains(shaderLabels.name) ||
+                !d.contains(shaderLabels.vertPath) ||
+                !d.contains(shaderLabels.fragPath) ||
+                !d.contains(shaderLabels.compiled))
+            {
+                std::cerr << "Shader entry missing required field(s)!" << std::endl;
+                return false;
+            }
+
+            // Load fields into shaderData
+            shaderData.name       = d.at(shaderLabels.name).get<std::string>();
+            shaderData.vert_path  = d.at(shaderLabels.vertPath).get<std::string>();
+            shaderData.frag_path  = d.at(shaderLabels.fragPath).get<std::string>();
+            shaderData.isCompiled = d.at(shaderLabels.compiled).get<bool>();
+
+            project.shaderRegistry->registerProgram(shaderData.vert_path, shaderData.frag_path, shaderData.name);
+        }    
+    }
+    catch (...) {
+        std::cerr << "Error while loading projectJSON (Shaders)" << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+// returns success
+bool saveShaders(const Project& project, json& j) {
+    j[shaderLabels.listLabel] = json::array();
+
+    for (const auto& [name, prog] : project.programs) {
+        j[shaderLabels.listLabel].push_back({
+            {shaderLabels.name,     prog->name},
+            {shaderLabels.vertPath, prog->vertPath},
+            {shaderLabels.fragPath, prog->fragPath},
+            {shaderLabels.compiled, prog->isCompiled()}
+        });
+    }
+    return true;
+}
 
 bool ProjectLoader::load(Project& project) {
     if (!std::filesystem::exists(project.projectJSON)) 
@@ -28,10 +97,15 @@ bool ProjectLoader::load(Project& project) {
 
         ProjectLoader::version = j.value("version", 1);
         project.projectTitle = j.value("projectTitle", project.projectTitle);
+
+        if (!loadShaders(project, j)) {
+            return false;
+        }
     } catch (...) {
         std::cerr << "Error while loading projectJSON" << std::endl;
         return false;
     }
+
 
     return true;
 }
@@ -44,6 +118,12 @@ void ProjectLoader::save(const Project& project) {
     j["version"] = version;
     j["projectTitle"] = project.projectTitle;
 
+    if (!saveShaders(project, j)) {
+        std::cerr << "Error while saving projectJSON (Shaders)" << std::endl;
+        return;
+    }
+
     std::ofstream out(project.projectJSON);
     out << j.dump(4);
+    
 }

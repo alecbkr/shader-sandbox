@@ -1,23 +1,24 @@
 #include "core/ShaderRegistry.hpp"
 #include "core/logging/Logger.hpp"
+#include "application/Project.hpp"
 
 ShaderRegistry::ShaderRegistry() {
     initialized = false;
     loggerPtr = nullptr;
-    programs.clear();
     factory_ = [](const char* v, const char* f, const char* n, Logger* l) {
         return new ShaderProgram(v, f, n, l);
     };
 }
 
-bool ShaderRegistry::initialize(Logger* _loggerPtr, bool registerDefaults) {
+bool ShaderRegistry::initialize(Logger* _loggerPtr, Project* _project, bool registerDefaults) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Shader Registry", "Shader Registry was already initialized.");
         return false;
     }
 
     loggerPtr = _loggerPtr;
-    programs.clear();
+    project = _project;
+    project->programs.clear();
 
     if (registerDefaults) {
         if (!registerProgram("../shaders/tex.vert", "../shaders/tex.frag", "tex")) return false;
@@ -33,7 +34,7 @@ bool ShaderRegistry::initialize(Logger* _loggerPtr, bool registerDefaults) {
 
 void ShaderRegistry::shutdown() {
     if (!initialized) return;
-    programs.clear();
+    project->programs.clear();
     loggerPtr = nullptr;
     initialized = false;
 }
@@ -45,12 +46,12 @@ bool ShaderRegistry::registerProgram(const std::string& vertex_file, const std::
         return false;
     }
 
-    if(programs.contains(programName)) {
+    if(project->programs.contains(programName)) {
         if (loggerPtr) loggerPtr->addLog(LogLevel::WARNING, "Shader Registry registerProgram", "Program '" + programName + "' already exists.");
         return false;
     }
 
-    programs.emplace(
+    project->programs.emplace(
         programName,
         std::unique_ptr<ShaderProgram>(
             factory_(vertex_file.c_str(), fragment_file.c_str(), programName.c_str(), loggerPtr)
@@ -63,8 +64,8 @@ bool ShaderRegistry::registerProgram(const std::string& vertex_file, const std::
 ShaderProgram* ShaderRegistry::getProgram(const std::string& programName) const {
     if (!initialized) return nullptr;
     
-    auto it = programs.find(programName);
-    if (it == programs.end()) return nullptr;
+    auto it = project->programs.find(programName);
+    if (it == project->programs.end()) return nullptr;
 
     return it->second.get();
 }
@@ -72,15 +73,15 @@ ShaderProgram* ShaderRegistry::getProgram(const std::string& programName) const 
 void ShaderRegistry::replaceProgram(const std::string &programName, std::unique_ptr<ShaderProgram> newProgram) {
     if (!newProgram) return;
 
-    programs[programName] = std::move(newProgram);
+    project->programs[programName] = std::move(newProgram);
 }
 
 const std::unordered_map<std::string, std::unique_ptr<ShaderProgram>>& ShaderRegistry::getPrograms() const {
-    return programs;
+    return project->programs;
 }
 
 size_t ShaderRegistry::getNumberOfPrograms() const {
-    return programs.size();
+    return project->programs.size();
 }
 
 void ShaderRegistry::setFactory(ShaderFactoryFn fn) {
