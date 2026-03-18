@@ -556,6 +556,51 @@ void SettingsModal::drawStylesPage() {
         ImGui::Unindent();
     }
 
+    // ===== Console Colors =====
+    static const char* kConsoleColorNames[] = {
+        "Critical Color", 
+        "Error Color", 
+        "Warning Color", 
+        "Info Color",
+        "Window Background", 
+        "Menu Bar Background", 
+        "Text Selected Background", 
+        "Search Highlight"
+    };
+
+    static ImVec4* consoleColorPtrs[] = {
+        &settingsPtr->styles.consoleCriticalColor,
+        &settingsPtr->styles.consoleErrorColor,
+        &settingsPtr->styles.consoleWarningColor,
+        &settingsPtr->styles.consoleInfoColor,
+        &settingsPtr->styles.consoleWindowBgColor,
+        &settingsPtr->styles.consoleMenuBarBgColor,
+        &settingsPtr->styles.consoleTextSelectedBgColor,
+        &settingsPtr->styles.consoleSearchHighlightColor
+    };
+
+    if (ImGui::CollapsingHeader("Console Colors")) {
+        ImGui::Indent();
+        if (beginSectionTable("##style_consolecolors")) {
+            row("Style Color", [&] { ImGui::Combo("##StyleColorConsole", &selectedConsoleStyleColor, kConsoleColorNames, 8); });
+            endSectionTable();
+        }
+        ImGui::Spacing();
+
+        const float pickerWidth = 240.0f;
+        float avail = ImGui::GetContentRegionAvail().x;
+        float x = ImGui::GetCursorPosX() + (avail - pickerWidth) * 0.5f;
+        if (x > ImGui::GetCursorPosX()) ImGui::SetCursorPosX(x);
+
+        ImGui::PushItemWidth(pickerWidth);
+        ImGui::ColorPicker4("##ConsolePicker", &(consoleColorPtrs[selectedConsoleStyleColor]->x),
+            ImGuiColorEditFlags_NoSmallPreview |
+            ImGuiColorEditFlags_PickerHueBar
+        );
+        ImGui::PopItemWidth();
+        ImGui::Unindent();
+    }
+
     ImGui::EndChild();
 }
 
