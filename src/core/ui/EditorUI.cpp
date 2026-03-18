@@ -45,7 +45,10 @@ void EditorUI::render() {
 
         ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyScroll;
         if (ImGui::BeginTabBar("EditorTabs", tabBarFlags)) {
+            projectPtr->openShaderFiles.clear();
             for (int i = 0; i < static_cast<int>(editorEngPtr->editors.size()); i++) {
+                if (!editorEngPtr->editors[i]->readOnly) projectPtr->openShaderFiles.emplace_back(editorEngPtr->editors[i]->fileName);
+
                 std::string tabTitle = editorEngPtr->editors[i]->fileName + "##" + std::to_string(i + 1);
                 bool openTab = true;
 
@@ -92,7 +95,7 @@ EditorUI::EditorUI() {
 #define START_X 0;
 #define START_Y 0;
 
-bool EditorUI::initialize(Logger* _loggerPtr, EditorEngine* _editorEngPtr, ContextManager* _contextManagerPtr, EventDispatcher* _eventDispatcherPtr) {
+bool EditorUI::initialize(Logger* _loggerPtr, EditorEngine* _editorEngPtr, ContextManager* _contextManagerPtr, EventDispatcher* _eventDispatcherPtr, Project* _projectPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Editor UI Initialization", "Editor UI was already initialized.");
         return false;
@@ -101,6 +104,7 @@ bool EditorUI::initialize(Logger* _loggerPtr, EditorEngine* _editorEngPtr, Conte
     editorEngPtr = _editorEngPtr;
     contextManagerPtr = _contextManagerPtr;
     eventDispatcherPtr = _eventDispatcherPtr;
+    projectPtr = _projectPtr;
 
     targetWidth = TARGET_WIDTH;
     targetHeight = TARGET_HEIGHT;

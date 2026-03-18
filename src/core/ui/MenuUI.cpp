@@ -189,6 +189,7 @@ void MenuUI::drawMenuBar()
         {
             if (iconTex == 0) initializeIconTexture();
             DrawAppIcon(iconTex, barH);
+            ImGui::Text(appctx->project.projectTitle.c_str());
 
             // ---- Left-side menus ----
             PushMenuPopupStyle();

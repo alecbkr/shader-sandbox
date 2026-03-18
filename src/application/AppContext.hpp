@@ -28,6 +28,8 @@
 #include "core/ui/modals/ModalManager.hpp"
 #include "core/ui/modals/SettingsModal.hpp"
 #include "core/ui/Fonts.hpp"
+#include "core/ui/modals/OpenProjectModal.hpp"
+#include "core/ui/modals/SaveAsModal.hpp"
 #include "object/MaterialCache.hpp"
 
 struct AppContext {
@@ -35,6 +37,7 @@ struct AppContext {
 
     const char* app_title;
     bool shouldClose = false;
+    bool projectSwitch = false;
 
     AppSettings settings;
     Project project;
@@ -66,5 +69,7 @@ struct AppContext {
     ModalManager modals;
     Fonts fonts;
     SettingsModal settingsModal;
+    SaveAsModal saveAsModal;
+    OpenProjectModal openProjectModal;
     MaterialCache material_cache;
 };

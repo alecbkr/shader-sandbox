@@ -16,6 +16,7 @@ struct SettingsKeybind {
 struct AppSettings {
     std::filesystem::path userConfigDir;
     std::filesystem::path settingsPath;
+    std::string projectToOpen;
 
     u32 width = 960;
     u32 height = 540;

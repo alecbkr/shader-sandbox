@@ -28,6 +28,7 @@ bool ProjectLoader::load(Project& project) {
 
         ProjectLoader::version = j.value("version", 1);
         project.projectTitle = j.value("projectTitle", project.projectTitle);
+        project.previouslySaved = j.value("previouslySaved", false);
 
         if (j.contains("openShaderFiles") && j["openShaderFiles"].is_array()) {
             const auto& saved = j["openShaderFiles"];
@@ -53,6 +54,7 @@ void ProjectLoader::save(const Project& project) {
     json j;
     j["version"] = version;
     j["projectTitle"] = project.projectTitle;
+    j["previouslySaved"] = project.previouslySaved;
 
     json openShaderFiles = json::array();
     for (const auto& filePath : project.openShaderFiles) {

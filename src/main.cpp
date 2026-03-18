@@ -10,14 +10,14 @@
 int main(int argc, char** argv) {
     AppContext ctx = AppContext(APPLICATION_TITLE);
 
-    ctx.project.projectRoot = Paths::getProjectRootDir(argc, argv, ctx.project.projectTitle);
-    ctx.project.projectShadersDir = ctx.project.projectRoot / "shaders";
-    ctx.project.projectJSON = ctx.project.projectRoot / "project.json";
-    ProjectLoader::load(ctx.project);
-
     ctx.settings.userConfigDir = Paths::getUserConfigDir(APPLICATION_TITLE);
     ctx.settings.settingsPath = ctx.settings.userConfigDir / "settings.json";
     SettingsLoader::load(ctx.settings);
+
+    ctx.project.projectRoot = Paths::getProjectRootDir(ctx.settings.projectToOpen, ctx.project.projectTitle);
+    ctx.project.projectShadersDir = ctx.project.projectRoot / "shaders";
+    ctx.project.projectJSON = ctx.project.projectRoot / "project.json";
+    ProjectLoader::load(ctx.project);
 
     if (!Application::initialize(ctx)) 
     {
@@ -27,7 +27,11 @@ int main(int argc, char** argv) {
     Application::runLoop(ctx);
     Application::shutdown(ctx);
 
+    if (!ctx.projectSwitch) ctx.settings.projectToOpen = ctx.project.projectTitle;
     ProjectLoader::save(ctx.project);
     SettingsLoader::save(ctx.settings);
+
+    if (ctx.projectSwitch) main(argc, argv);
+
     return 0;
 }

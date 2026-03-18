@@ -134,11 +134,6 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
 void EditorEngine::shutdown() {
     if (!initialized) return;
 
-    projectPtr->openShaderFiles.clear();
-    for (const auto& editor : editors) {
-        if (!editor->readOnly) projectPtr->openShaderFiles.push_back(editor->fileName);
-    }
-
     loggerPtr = nullptr;
     eventsPtr = nullptr;
     modelCachePtr = nullptr;
@@ -259,6 +254,6 @@ std::string EditorEngine::findNextFileNumber(const std::string& startingName) {
         newName = startingName + "(" + std::to_string(i) + ")";
         i++;
     }
-    
+
     return newName;
 }

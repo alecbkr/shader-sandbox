@@ -36,8 +36,21 @@ void Application::addSubscriptions(AppContext& ctx) {
         else ctx.platform.setCursorStatus(true);
         return true;
     });
-    ctx.events.Subscribe(EventType::SaveProject, [&ctx](const EventPayload&) -> bool {
+    ctx.events.Subscribe(EventType::NewProject, [&ctx](const EventPayload&) -> bool {
         ProjectLoader::save(ctx.project);
+        ctx.settings.projectToOpen = "";
+        ctx.projectSwitch = true;
+        return false;
+    });
+    ctx.events.Subscribe(EventType::SaveProject, [&ctx](const EventPayload&) -> bool {
+        if (ctx.project.previouslySaved) ProjectLoader::save(ctx.project);
+        else ctx.modals.open(SaveAsModal::ID);
+        ctx.logger.addLog(LogLevel::INFO, "ProjectLoader", "Project Saved");
+        return false;
+    });
+    ctx.events.Subscribe(EventType::RenameProject, [&ctx](const EventPayload&) -> bool {
+        ctx.project.previouslySaved = false;
+        ctx.modals.open(SaveAsModal::ID);
         return false;
     });
     ctx.events.Subscribe(EventType::Quit, [&ctx](const EventPayload&) -> bool {
@@ -88,7 +101,11 @@ void Application::initializeUI(AppContext& ctx) {
     ImGui_ImplOpenGL3_Init();
 
     ctx.settingsModal.initialize(&ctx.logger, &ctx.inputs, &ctx.keybinds, &ctx.platform, &ctx.settings);
+    ctx.saveAsModal.initialize(&ctx.logger, &ctx.project, &ctx.events, &ctx.settings, &ctx.projectSwitch);
+    ctx.openProjectModal.initialize(&ctx.project, &ctx.settings, &ctx.projectSwitch);
     ctx.modals.registerModal(&ctx.settingsModal);
+    ctx.modals.registerModal(&ctx.saveAsModal);
+    ctx.modals.registerModal(&ctx.openProjectModal);
 }
 
 void loadPresetAssets(AppContext& ctx) {
@@ -236,7 +253,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Menu UI was not initialized successfully.");
         return false;
     }
-    if (!ctx.editor_ui.initialize(&ctx.logger, &ctx.editor_engine, &ctx.ctx_manager, &ctx.events)) {
+    if (!ctx.editor_ui.initialize(&ctx.logger, &ctx.editor_engine, &ctx.ctx_manager, &ctx.events, &ctx.project)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Editor UI was not initialized successfully.");
         return false;
     }
@@ -312,11 +329,13 @@ void Application::shutdown(AppContext& ctx) {
     ImGui::DestroyContext();
 
     for (Editor* editor: ctx.editor_engine.editors) editor->destroy();
+
+    initialized = false;
 }
 
 bool Application::shouldClose(AppContext& ctx) {
     if (!initialized) return false;
-    return (ctx.platform.shouldClose() || ctx.shouldClose);
+    return (ctx.platform.shouldClose() || ctx.shouldClose || ctx.projectSwitch);
 }
 
 void Application::windowResize(AppContext& ctx, u32 _width, u32 _height) {
