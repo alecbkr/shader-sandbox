@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
     ctx.project.projectRoot = Paths::getProjectRootDir(argc, argv, ctx.project.projectTitle);
     ctx.project.projectShadersDir = ctx.project.projectRoot / "shaders";
     ctx.project.projectJSON = ctx.project.projectRoot / "project.json";
-    ProjectLoader::load(ctx.project);
+    ctx.project.shaderRegistry = &ctx.shader_registry;
 
     ctx.settings.userConfigDir = Paths::getUserConfigDir(APPLICATION_TITLE);
     ctx.settings.settingsPath = ctx.settings.userConfigDir / "settings.json";
@@ -24,6 +24,7 @@ int main(int argc, char** argv) {
         std::cerr << "Application failed to initialize" << std::endl;
         return 1;
     }
+    ProjectLoader::load(ctx.project);
     Application::runLoop(ctx);
     Application::shutdown(ctx);
 
