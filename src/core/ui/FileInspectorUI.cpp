@@ -1,7 +1,8 @@
 #include "core/ui/FileInspectorUI.hpp"
 
 #include <filesystem>
-
+#include "application/SettingsStyles.hpp"
+#include "core/ui/Fonts.hpp"
 #include "core/EventDispatcher.hpp"
 #include "core/EventTypes.hpp"
 #include "core/FileRegistry.hpp"
@@ -11,45 +12,113 @@
 #include <string>
 #include <vector>
 
-void FileInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, EventDispatcher* eventsPtr) {
-    ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0f, 0.5f));
+void FileInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, EventDispatcher* eventsPtr, Fonts* fonts, SettingsStyles* styles) {
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, styles->shaderTabBackgroundColor);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.0f);
+    float window_padding = styles->shaderBodyPadding;
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(window_padding, window_padding));
+    if (ImGui::BeginChild("ShadersContent", ImVec2(0, 0), ImGuiChildFlags_AlwaysUseWindowPadding)) {
+        float inner_padding = styles->shaderTitleInnerPadding;
+        ImGui::PushFont(fonts->getL4());
+        float text_height = ImGui::CalcTextSize("Shaders").y;
+        float directory_height = window_padding * 2 + inner_padding * 2 + ImGui::CalcTextSize("Shaders").y;
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(0,0,0,0));
+        if (ImGui::BeginChild("ShadersTitle", ImVec2(0, directory_height), ImGuiChildFlags_AlwaysUseWindowPadding)) {
+            ImVec2 p = ImGui::GetWindowPos();
+            ImVec2 s = ImGui::GetWindowSize();
 
-    ImGui::Text("--------------");
-    ImGui::Text("Shader Files");
-    ImGui::Text("--------------");
-    fileRegPtr->reloadMap();
+            ImGui::GetWindowDrawList()->AddRectFilled(
+                p,
+                ImVec2(p.x + s.x, p.y + s.y),
+                ImGui::ColorConvertFloat4ToU32(styles->shaderTitleBackgroundColor),
+                styles->shaderBodyRounding,
+                ImDrawFlags_RoundCornersTop
+            );
 
-    for (const auto& [fileName, fileData] : fileRegPtr->getFiles()) {
-        switch (fileData->state) {
-            case RENAME:
-                drawRenameFileEntry(fileData, eventsPtr);
-                break;
-            case FS_DELETE:
-                drawDeleteFileEntity(fileData, eventsPtr);
-                break;
-            case NEW:
-                break;
-            case NONE:
-            default:
-                drawStandardFileEntry(fileData, eventsPtr);
-                break;
+            ImGui::GetWindowDrawList()->AddRect(
+                p,
+                ImVec2(p.x + s.x, p.y + s.y),
+                ImGui::ColorConvertFloat4ToU32(styles->shaderBorderColor),
+                styles->shaderBodyRounding,
+                ImDrawFlags_RoundCornersTop,
+                styles->shaderBorderThickness
+            );
+
+            float centerY = directory_height * 0.5f;
+            float button_side = text_height - 2.0f;
+
+            ImGui::SetCursorPosY(inner_padding + window_padding);
+            ImGui::Dummy(ImVec2(styles->shaderTitleOffset, 0.0f));
+            ImGui::SameLine();
+            ImGui::TextUnformatted("Shaders");
+            
+            ImGui::SetCursorPos(ImVec2(s.x - button_side- window_padding, centerY - (button_side * 0.5f)));
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0,0));
+            if (ImGui::Button("+##global_add", ImVec2(button_side, button_side))) {
+                ImGui::OpenPopup("GlobalAddPopup");
+            }
+            ImGui::PopStyleVar();
+            
+            if (ImGui::BeginPopup("GlobalAddPopup")) {
+                ImGui::PushFont(fonts->getL2());
+                if (ImGui::MenuItem("Import Shader File")) {
+                    eventsPtr->TriggerEvent(Event{EventType::NewFile, false,{}});
+                }
+                if (ImGui::MenuItem("Create Shader Program")) { 
+                    static int newShaders = 0;
+                    std::string newName = "myShader_" + std::to_string(newShaders);
+                    
+                    shaderLinkMenus.emplace(std::make_pair(newName, ShaderLinkMenu{
+                        .shaderName = newName,
+                        .initialized = false
+                    }));
+        
+                    newShaders++;
+                }
+                ImGui::PopFont();
+                ImGui::EndPopup();
+            }
+            ImGui::Unindent(styles->shaderTitleOffset);
         }
-    }
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+        ImGui::PopFont();
 
-    ImGui::Text("--------------");
-    ImGui::Text("Shader Programs");
-    ImGui::Text("--------------");
-    static int newShaders = 0;
-    if (ImGui::Button("+")) {
-        shaderLinkMenus.emplace(std::make_pair("myShader_" + std::to_string(newShaders), ShaderLinkMenu{
-            .shaderName = "myShader_" + std::to_string(newShaders),
-            .initialized = false
-        }));
-        newShaders++;
-    }
-    drawShaderLinkMenus(shaderLinkMenus, shaderRegPtr, fileRegPtr, inspectorEngPtr);
+        if (ImGui::BeginChild("ShadersBody", ImVec2(0, 0), ImGuiChildFlags_AlwaysUseWindowPadding)) {
+            ImVec2 p = ImGui::GetWindowPos();
+            ImVec2 s = ImGui::GetWindowSize();
+            auto drawList = ImGui::GetWindowDrawList();
 
+            drawList->AddRectFilled(p, ImVec2(p.x + s.x, p.y + s.y), 
+                ImGui::ColorConvertFloat4ToU32(styles->shaderTreeBodyColor), styles->shaderBodyRounding, ImDrawFlags_RoundCornersBottom);
+            
+            drawList->AddRect(p, ImVec2(p.x + s.x, p.y + s.y), 
+                ImGui::ColorConvertFloat4ToU32(styles->shaderBorderColor), styles->shaderBodyRounding, ImDrawFlags_RoundCornersBottom, styles->shaderBorderThickness);
+
+            ImGui::Spacing();
+            
+            ImGui::Indent(window_padding);
+            ImGui::TextDisabled("SHADER FILES");
+            fileRegPtr->reloadMap();
+            for (const auto& [fileName, fileData] : fileRegPtr->getFiles()) {
+                drawStandardFileEntry(fileData, eventsPtr);
+            }
+
+            ImGui::Dummy(ImVec2(0, 20.0f));
+            ImGui::Separator();
+
+            ImGui::TextDisabled("SHADER PROGRAMS");
+            drawShaderLinkMenus(shaderLinkMenus, shaderRegPtr, fileRegPtr, inspectorEngPtr);
+            ImGui::Unindent(window_padding);
+        }
+        ImGui::EndChild();
+        ImGui::PopStyleVar();
+    }
+    ImGui::EndChild();
     ImGui::PopStyleVar();
+    ImGui::PopStyleVar();
+    ImGui::PopStyleColor();
 }
 
 void FileInspectorUI::drawRenameFileEntry(ShaderFile* fileData, EventDispatcher* eventsPtr) {

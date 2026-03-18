@@ -420,7 +420,11 @@ void SettingsModal::drawStylesPage() {
             row("Assets Title Inner Padding", [&] { ImGui::SliderFloat("##AssetsTitleInnerPadding", &settingsPtr->styles.assetsTitleInnerPadding, 0.0f, 4.0f, "%0.1f"); });
             row("Assets Body Rounding", [&] { ImGui::SliderFloat("##AssetsBodyRounding", &settingsPtr->styles.assetsBodyRounding, 0.0f, 12.0f, "%0.5f"); });
             row("Assets Title Offset", [&] { ImGui::SliderFloat("##AssetsTitleOffset", &settingsPtr->styles.assetsTitleOffset, 0.0f, 12.0f, "%0.5f"); });
-
+            row("Shader Border Thickness", [&] { ImGui::SliderFloat("##ShaderBorderThickness", &settingsPtr->styles.shaderBorderThickness, 0.0f, 4.0f, "%0.1f"); });
+            row("Shader Body Padding", [&] { ImGui::SliderFloat("##ShaderBodyPadding", &settingsPtr->styles.shaderBodyPadding, 0.0f, 24.0f, "%0.5f"); });
+            row("Shader Title Inner Padding", [&] { ImGui::SliderFloat("##ShaderTitleInnerPadding", &settingsPtr->styles.shaderTitleInnerPadding, 0.0f, 4.0f, "%0.1f"); });
+            row("Shader Body Rounding", [&] { ImGui::SliderFloat("##ShaderBodyRounding", &settingsPtr->styles.shaderBodyRounding, 0.0f, 12.0f, "%0.5f"); });
+            row("Shader Title Offset", [&] { ImGui::SliderFloat("##ShaderTitleOffset", &settingsPtr->styles.shaderTitleOffset, 0.0f, 12.0f, "%0.5f"); });
             endSectionTable();
         }
         ImGui::Unindent();
@@ -522,7 +526,8 @@ void SettingsModal::drawStylesPage() {
     // ===== Inspector Colors =====
     static const char* kInspectorColorNames[] = {
         "assetsDirectoryTextColor", "assetsFileBackgroundColor", "assetsBorderColor", "assetsTabBackgroundColor",
-        "assetsTitleBackgroundColor", "assetsTreeBodyColor"
+        "assetsTitleBackgroundColor", "assetsTreeBodyColor", "shaderTabBackgroundColor", "shaderTitleBackgroundColor", 
+        "shaderTreeBodyColor", "shaderBorderColor"
     };
 
     static ImVec4* inspectorColorPtrs[] = {
@@ -531,13 +536,17 @@ void SettingsModal::drawStylesPage() {
         &settingsPtr->styles.assetsBorderColor,
         &settingsPtr->styles.assetsTabBackgroundColor,
         &settingsPtr->styles.assetsTitleBackgroundColor,
-        &settingsPtr->styles.assetsTreeBodyColor
+        &settingsPtr->styles.assetsTreeBodyColor,
+        &settingsPtr->styles.shaderTabBackgroundColor,
+        &settingsPtr->styles.shaderTitleBackgroundColor,
+        &settingsPtr->styles.shaderTreeBodyColor,
+        &settingsPtr->styles.shaderBorderColor
     };
 
     if (ImGui::CollapsingHeader("Inspector Colors")) {
         ImGui::Indent();
         if (beginSectionTable("##style_inspectorcolors")) {
-            row("Style Color", [&] { ImGui::Combo("##StyleColorInspector", &selectedInspectorStyleColor, kInspectorColorNames, 6); });
+            row("Style Color", [&] { ImGui::Combo("##StyleColorInspector", &selectedInspectorStyleColor, kInspectorColorNames, 10); });
             endSectionTable();
         }
         ImGui::Spacing();

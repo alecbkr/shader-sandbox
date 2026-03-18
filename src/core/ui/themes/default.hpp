@@ -214,6 +214,17 @@ namespace DefaultTheme {
         styles.consoleTextSelectedBgColor  = ImVec4(0.26667f, 0.27843f, 0.35294f, 0.80f); // Selection (#44475a)
         styles.consoleSearchHighlightColor = ImVec4(0.74118f, 0.57647f, 0.97647f, 0.50f); // Purple Accent (#bd93f9)
 
+
+        styles.shaderBodyPadding = 12.0f;
+        styles.shaderBodyRounding = 6.0f;
+        styles.shaderBorderThickness = 1.0f;
+        styles.shaderTitleInnerPadding = 1.0f;
+        styles.shaderTitleOffset = 6.0f;
+
+        styles.shaderBorderColor = styles.assetsBorderColor;
+        styles.shaderTabBackgroundColor = styles.assetsTabBackgroundColor;
+        styles.shaderTitleBackgroundColor = styles.assetsTitleBackgroundColor;
+        styles.shaderTreeBodyColor = styles.assetsTreeBodyColor;
         // Push everything into ImGui
         styles.applyToImGui(ImGui::GetStyle());
     }

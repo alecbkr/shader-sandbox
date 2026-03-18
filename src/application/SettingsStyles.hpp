@@ -145,6 +145,17 @@ struct SettingsStyles {
     ImVec4 consoleMenuBarBgColor       = ImVec4(0.12157f, 0.12549f, 0.16471f, 1.00f); // Darker Background (#1f202a)
     ImVec4 consoleTextSelectedBgColor  = ImVec4(0.26667f, 0.27843f, 0.35294f, 0.80f); // Selection (#44475a)
     ImVec4 consoleSearchHighlightColor = ImVec4(0.74118f, 0.57647f, 0.97647f, 0.50f); // Purple Accent (#bd93f9)
+    // Shader tab colors
+    ImVec4 shaderTabBackgroundColor;
+    ImVec4 shaderTitleBackgroundColor;
+    ImVec4 shaderTreeBodyColor;
+    ImVec4 shaderBorderColor;
+
+    float shaderBorderThickness = 1.0f;
+    float shaderBodyPadding = 12.0f;
+    float shaderTitleInnerPadding = 1.0f;
+    float shaderBodyRounding = 6.0f;
+    float shaderTitleOffset = 6.0f;
 
     // ---- Apply / Capture ----
     void applyToImGui(ImGuiStyle& s) const {
@@ -459,6 +470,43 @@ struct SettingsStyles {
         assetsTabObject["assetsTitleOffset"] = assetsTitleOffset;
 
         inspectorStylesObject["assets"] = assetsTabObject;
+
+        json shaderTabObject = json::object();
+
+        // Shaders tab styles
+        shaderTabObject["shaderTabBackgroundColor"] = {
+            shaderTabBackgroundColor.x,
+            shaderTabBackgroundColor.y,
+            shaderTabBackgroundColor.z,
+            shaderTabBackgroundColor.w
+        };
+        shaderTabObject["shaderTitleBackgroundColor"] = {
+            shaderTitleBackgroundColor.x,
+            shaderTitleBackgroundColor.y,
+            shaderTitleBackgroundColor.z,
+            shaderTitleBackgroundColor.w
+        };
+        shaderTabObject["shaderTreeBodyColor"] = {
+            shaderTreeBodyColor.x,
+            shaderTreeBodyColor.y,
+            shaderTreeBodyColor.z,
+            shaderTreeBodyColor.w
+        };
+        shaderTabObject["shaderBorderColor"] = {
+            shaderBorderColor.x,
+            shaderBorderColor.y,
+            shaderBorderColor.z,
+            shaderBorderColor.w
+        };
+
+        shaderTabObject["shaderBorderThickness"] = shaderBorderThickness;
+        shaderTabObject["shaderBodyPadding"] = shaderBodyPadding;
+        shaderTabObject["shaderTitleInnerPadding"] = shaderTitleInnerPadding;
+        shaderTabObject["shaderBodyRounding"] = shaderBodyRounding;
+        shaderTabObject["shaderTitleOffset"] = shaderTitleOffset;
+
+        inspectorStylesObject["shaders"] = shaderTabObject;
+
         s["inspector"] = inspectorStylesObject;
 
         // Console specific styles 
@@ -577,14 +625,54 @@ struct SettingsStyles {
                 assetsTitleInnerPadding = assets.value("assetsTitleInnerPadding", assetsTitleInnerPadding);
                 assetsBodyRounding = assets.value("assetsBodyRounding", assetsBodyRounding);
                 assetsTitleOffset = assets.value("assetsTitleOffset", assetsTitleOffset);
-            } 
-        } else {
-            assetsDirectoryTextColor = ImVec4(180, 185, 175, 255);
-            assetsFileBackgroundColor = ImVec4(40, 42, 54, 255);
-            assetsBorderColor = ImVec4(45, 47, 63, 255);
-            assetsTabBackgroundColor = ImVec4(26, 27, 33, 255);
-            assetsTitleBackgroundColor = ImVec4(31, 32, 42, 255);
-            assetsTreeBodyColor = ImVec4(28, 30, 38, 255);
+            } else {
+                assetsDirectoryTextColor = ImVec4(180, 185, 175, 255);
+                assetsFileBackgroundColor = ImVec4(40, 42, 54, 255);
+                assetsBorderColor = ImVec4(45, 47, 63, 255);
+                assetsTabBackgroundColor = ImVec4(26, 27, 33, 255);
+                assetsTitleBackgroundColor = ImVec4(31, 32, 42, 255);
+                assetsTreeBodyColor = ImVec4(28, 30, 38, 255);
+            }
+    
+            if (ins.contains("shaders") && ins["shaders"].is_object()) {
+                const json& shaders = ins["shaders"];
+                
+                shaderTabBackgroundColor = ImVec4(
+                    shaders["shaderTabBackgroundColor"][0],
+                    shaders["shaderTabBackgroundColor"][1],
+                    shaders["shaderTabBackgroundColor"][2],
+                    shaders["shaderTabBackgroundColor"][3]
+                );
+                shaderTitleBackgroundColor = ImVec4(
+                    shaders["shaderTitleBackgroundColor"][0],
+                    shaders["shaderTitleBackgroundColor"][1],
+                    shaders["shaderTitleBackgroundColor"][2],
+                    shaders["shaderTitleBackgroundColor"][3]
+                );
+                shaderTreeBodyColor = ImVec4(
+                    shaders["shaderTreeBodyColor"][0],
+                    shaders["shaderTreeBodyColor"][1],
+                    shaders["shaderTreeBodyColor"][2],
+                    shaders["shaderTreeBodyColor"][3]
+                );
+                shaderBorderColor = ImVec4(
+                    shaders["shaderBorderColor"][0],
+                    shaders["shaderBorderColor"][1],
+                    shaders["shaderBorderColor"][2],
+                    shaders["shaderBorderColor"][3]
+                );
+
+                shaderBorderThickness = shaders.value("shaderBorderThickness", shaderBorderThickness);
+                shaderBodyPadding = shaders.value("shaderBodyPadding", shaderBodyPadding);
+                shaderTitleInnerPadding = shaders.value("shaderTitleInnerPadding", shaderTitleInnerPadding);
+                shaderBodyRounding = shaders.value("shaderBodyRounding", shaderBodyRounding);
+                shaderTitleOffset = shaders.value("shaderTitleOffset", shaderTitleOffset);
+            } else {
+                shaderTabBackgroundColor = assetsTabBackgroundColor;
+                shaderTitleBackgroundColor = assetsTitleBackgroundColor;
+                shaderTreeBodyColor = assetsTreeBodyColor;
+                shaderBorderColor = assetsBorderColor;
+            }
         }
 
         // Load Console Styles

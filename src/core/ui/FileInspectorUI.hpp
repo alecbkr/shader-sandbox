@@ -23,10 +23,12 @@ class ShaderRegistry;
 class FileRegistry;
 class EventDispatcher;
 class ShaderProgram;
+class Fonts;
+struct SettingsStyles;
 
 class FileInspectorUI {
 public:
-    void draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, EventDispatcher* eventsPtr);
+    void draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, EventDispatcher* eventsPtr, Fonts* fonts, SettingsStyles* styles);
 
 private:
     std::unordered_map<std::string, ShaderLinkMenu> shaderLinkMenus;
