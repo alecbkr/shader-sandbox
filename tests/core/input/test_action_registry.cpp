@@ -20,9 +20,16 @@ static std::shared_ptr<TestSink> attachTestSink(Logger& logger) {
     return sink;
 }
 
+// helper to take on the project's name for the logger 
+static bool initTestLogger(Logger& logger){
+    std::string testAppName = "PrimsTSS_Test"; 
+    std::string testProjectName = "ActionRegistry_Tests"; 
+    return logger.initialize(testAppName, testProjectName); 
+}
+
 TEST_CASE("ActionRegistry: initialize succeeds once", "[action][registry]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry reg;
     REQUIRE(reg.initialize(&logger) == true);
@@ -30,7 +37,7 @@ TEST_CASE("ActionRegistry: initialize succeeds once", "[action][registry]") {
 
 TEST_CASE("ActionRegistry: initialize twice returns false and logs warning", "[action][registry]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry reg;
     REQUIRE(reg.initialize(&logger) == true);
@@ -47,7 +54,7 @@ TEST_CASE("ActionRegistry: initialize twice returns false and logs warning", "[a
 
 TEST_CASE("ActionRegistry: Action::None logs warning when triggered", "[action][registry]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry reg;
     REQUIRE(reg.initialize(&logger) == true);
@@ -64,7 +71,7 @@ TEST_CASE("ActionRegistry: Action::None logs warning when triggered", "[action][
 
 TEST_CASE("ActionRegistry: bind + trigger executes callback", "[action][registry]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry reg;
     REQUIRE(reg.initialize(&logger) == true);
@@ -80,7 +87,7 @@ TEST_CASE("ActionRegistry: bind + trigger executes callback", "[action][registry
 
 TEST_CASE("ActionRegistry: trigger on unbound action is a safe no-op", "[action][registry]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry reg;
     REQUIRE(reg.initialize(&logger) == true);
@@ -91,7 +98,7 @@ TEST_CASE("ActionRegistry: trigger on unbound action is a safe no-op", "[action]
 
 TEST_CASE("ActionRegistry: processActionsForFrame triggers queued actions in order then clears queue", "[action][registry]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry reg;
     REQUIRE(reg.initialize(&logger) == true);
@@ -121,7 +128,7 @@ TEST_CASE("ActionRegistry: processActionsForFrame triggers queued actions in ord
 
 TEST_CASE("ActionRegistry: queued unbound actions are ignored during processing", "[action][registry]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ActionRegistry reg;
     REQUIRE(reg.initialize(&logger) == true);

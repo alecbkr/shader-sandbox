@@ -8,6 +8,13 @@
 #include "core/logging/Logger.hpp"
 #include "core/logging/LogSink.hpp"
 
+// helper to take on the project's name for the logger 
+static bool initTestLogger(Logger& logger){
+    std::string testAppName = "PrimsTSS_Test"; 
+    std::string testProjectName = "ActionRegistry_Tests"; 
+    return logger.initialize(testAppName, testProjectName); 
+}
+
 // ------------------------------------------------------------
 // Test sink: captures logs from Logger (for double-initialize warning)
 // ------------------------------------------------------------
@@ -40,7 +47,7 @@ TEST_CASE("EventDispatcher: does nothing when not initialized", "[event][dispatc
 
 TEST_CASE("EventDispatcher: initialize succeeds once; initialize twice returns false and logs warning", "[event][dispatcher]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     EventDispatcher d;
     REQUIRE(d.initialize(&logger) == true);
@@ -57,7 +64,7 @@ TEST_CASE("EventDispatcher: initialize succeeds once; initialize twice returns f
 
 TEST_CASE("EventDispatcher: subscribed listener is called for matching event type", "[event][dispatcher]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     EventDispatcher d;
     REQUIRE(d.initialize(&logger));
@@ -77,7 +84,7 @@ TEST_CASE("EventDispatcher: subscribed listener is called for matching event typ
 
 TEST_CASE("EventDispatcher: listener is NOT called for different event type", "[event][dispatcher]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     EventDispatcher d;
     REQUIRE(d.initialize(&logger));
@@ -97,7 +104,7 @@ TEST_CASE("EventDispatcher: listener is NOT called for different event type", "[
 
 TEST_CASE("EventDispatcher: events are processed FIFO across types", "[event][dispatcher]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     EventDispatcher d;
     REQUIRE(d.initialize(&logger));
@@ -127,7 +134,7 @@ TEST_CASE("EventDispatcher: events are processed FIFO across types", "[event][di
 
 TEST_CASE("EventDispatcher: handled stops later listeners for same event", "[event][dispatcher]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     EventDispatcher d;
     REQUIRE(d.initialize(&logger));
@@ -155,7 +162,7 @@ TEST_CASE("EventDispatcher: handled stops later listeners for same event", "[eve
 
 TEST_CASE("EventDispatcher: if not handled, all listeners run", "[event][dispatcher]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     EventDispatcher d;
     REQUIRE(d.initialize(&logger));
@@ -176,7 +183,7 @@ TEST_CASE("EventDispatcher: if not handled, all listeners run", "[event][dispatc
 
 TEST_CASE("EventDispatcher: payload arrives intact (SaveActiveShaderFile)", "[event][dispatcher][payload]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     EventDispatcher d;
     REQUIRE(d.initialize(&logger));
@@ -204,7 +211,7 @@ TEST_CASE("EventDispatcher: payload arrives intact (SaveActiveShaderFile)", "[ev
 
 TEST_CASE("EventDispatcher: payload arrives intact (OpenFile)", "[event][dispatcher][payload]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     EventDispatcher d;
     REQUIRE(d.initialize(&logger));
@@ -230,7 +237,7 @@ TEST_CASE("EventDispatcher: payload arrives intact (OpenFile)", "[event][dispatc
 
 TEST_CASE("EventDispatcher: payload arrives intact (WindowResize)", "[event][dispatcher][payload]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     EventDispatcher d;
     REQUIRE(d.initialize(&logger));
@@ -257,7 +264,7 @@ TEST_CASE("EventDispatcher: payload arrives intact (WindowResize)", "[event][dis
 
 TEST_CASE("EventDispatcher: shutdown clears listeners + queue and disables processing", "[event][dispatcher]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     EventDispatcher d;
     REQUIRE(d.initialize(&logger));

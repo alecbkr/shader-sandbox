@@ -9,6 +9,13 @@
 #include "object/ModelCache.hpp"
 #include "core/ShaderRegistry.hpp"
 
+// helper to take on the project's name for the logger 
+static bool initTestLogger(Logger& logger){
+    std::string testAppName = "PrimsTSS_Test"; 
+    std::string testProjectName = "ActionRegistry_Tests"; 
+    return logger.initialize(testAppName, testProjectName); 
+}
+
 TEST_CASE("EditorUI: Initialization", "[editor_ui]") {
     Logger logger;
     EditorEngine engine;
@@ -18,7 +25,7 @@ TEST_CASE("EditorUI: Initialization", "[editor_ui]") {
     ShaderRegistry registry;
     EventDispatcher events;
 
-    logger.initialize();
+    initTestLogger(logger);
     engine.initialize(&logger, &events, &cache, &registry, &styles);
 
     EditorUI ui;
@@ -43,7 +50,7 @@ TEST_CASE("EditorUI: Tab Management", "[editor_ui]") {
     ShaderRegistry registry;
     SettingsStyles styles;
 
-    logger.initialize();
+    initTestLogger(logger);
     events.initialize(&logger);
     engine.initialize(&logger, &events, &cache, &registry, &styles);
 

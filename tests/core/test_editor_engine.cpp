@@ -9,6 +9,13 @@
 #include "core/EditorEngine.hpp"
 #include "core/ShaderRegistry.hpp"
 
+// helper to take on the project's name for the logger 
+static bool initTestLogger(Logger& logger){
+    std::string testAppName = "PrimsTSS_Test"; 
+    std::string testProjectName = "ActionRegistry_Tests"; 
+    return logger.initialize(testAppName, testProjectName); 
+}
+
 // Helper to create a dummy shader file for testing
 void CreateDummyFile(const std::string& path, const std::string& content) {
     std::ofstream ofs(path);
@@ -23,7 +30,7 @@ TEST_CASE("EditorEngine: Lifecycle and Initialization", "[editor_engine]") {
     ShaderRegistry registry;
     SettingsStyles styles;
 
-    logger.initialize();
+    initTestLogger(logger);
     events.initialize(&logger);
 
     EditorEngine engine;
@@ -51,7 +58,7 @@ TEST_CASE("EditorEngine: Editor Management via Events", "[editor_engine][events]
     ShaderRegistry registry;
     SettingsStyles styles;
 
-    logger.initialize();
+    initTestLogger(logger);
     events.initialize(&logger);
 
     EditorEngine engine;
@@ -108,7 +115,7 @@ TEST_CASE("EditorEngine: Untitled File Generation", "[editor_engine][filesystem]
     ShaderRegistry registry;
     SettingsStyles styles;
 
-    logger.initialize();
+    initTestLogger(logger);
     events.initialize(&logger);
 
     EditorEngine engine;
@@ -143,7 +150,7 @@ TEST_CASE("EditorEngine: Model ID Linking", "[editor_engine]") {
     ShaderRegistry registry;
     SettingsStyles styles;
 
-    logger.initialize();
+    initTestLogger(logger);
     events.initialize(&logger);
 
     EditorEngine engine;

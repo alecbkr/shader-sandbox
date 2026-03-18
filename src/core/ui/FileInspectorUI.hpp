@@ -1,12 +1,13 @@
 #pragma once
 
-#include "core/FileRegistry.hpp"
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+class ShaderFile;
 
 struct ShaderLinkMenu {
     std::string shaderName;
@@ -16,6 +17,15 @@ struct ShaderLinkMenu {
     bool initialized;
 };
 
+struct ShaderLinkMenuChoices {
+    const std::vector<const char*>& vertChars;
+    const std::vector<const char*>& geoChars;
+    const std::vector<const char*>& fragChars;
+    const std::vector<const ShaderFile*>& vertFiles;
+    const std::vector<const ShaderFile*>& geoFiles;
+    const std::vector<const ShaderFile*>& fragFiles;
+};
+
 
 class Logger;
 class InspectorEngine;
@@ -23,10 +33,12 @@ class ShaderRegistry;
 class FileRegistry;
 class EventDispatcher;
 class ShaderProgram;
+class Fonts;
+struct SettingsStyles;
 
 class FileInspectorUI {
 public:
-    void draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, EventDispatcher* eventsPtr);
+    void draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, EventDispatcher* eventsPtr, Fonts* fonts, SettingsStyles* styles);
 
 private:
     std::unordered_map<std::string, ShaderLinkMenu> shaderLinkMenus;
@@ -36,6 +48,8 @@ private:
     void drawContextMenu(ShaderFile* fileData);
     void drawStandardFileEntry(ShaderFile* fileData, EventDispatcher* eventsPtr);
     void drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, InspectorEngine* inspectorEngPtr);
-    void drawShaderLinkMenu(ShaderLinkMenu& menu, const std::vector<const char*>& vertChoices, const std::vector<const char*>& geoChoices, const std::vector<const char*>& fragChoices, InspectorEngine* inspectorEngPtr);
-    void initializeMenu(ShaderLinkMenu& menu, const std::vector<const char*>& vertChoices, const std::vector<const char*>& geoChoices, const std::vector<const char*>& fragChoices, ShaderRegistry* shaderRegPtr);
+    void drawShaderLinkMenu(ShaderLinkMenu& menu,ShaderLinkMenuChoices& choices, InspectorEngine* inspectorEngPtr);
+    void initializeMenu(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, ShaderRegistry* shaderRegPtr);
+
+    Logger* loggerPtr = nullptr;
 };

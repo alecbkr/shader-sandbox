@@ -1,6 +1,8 @@
 #include "core/ShaderRegistry.hpp"
 #include "core/logging/Logger.hpp"
 #include "application/Project.hpp"
+#include "engine/ShaderProgram.hpp"
+#include <memory>
 
 ShaderRegistry::ShaderRegistry() {
     initialized = false;
@@ -75,6 +77,14 @@ void ShaderRegistry::replaceProgram(const std::string &programName, std::unique_
 
     project->programs[programName] = std::move(newProgram);
 }
+void ShaderRegistry::replaceProgram(const std::string& vertex_file, const std::string& fragment_file, const std::string& programName) {
+    auto s = std::unique_ptr<ShaderProgram>(
+            factory_(vertex_file.c_str(), fragment_file.c_str(), programName.c_str(), loggerPtr)
+        );
+
+    replaceProgram(programName, std::move(s));
+}
+
 
 const std::unordered_map<std::string, std::unique_ptr<ShaderProgram>>& ShaderRegistry::getPrograms() const {
     return project->programs;

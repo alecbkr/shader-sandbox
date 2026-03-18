@@ -7,10 +7,17 @@
 #include "core/logging/Logger.hpp"
 #include "application/Project.hpp"
 
+// helper to take on the project's name for the logger 
+static bool initTestLogger(Logger& logger){
+    std::string testAppName = "PrimsTSS_Test"; 
+    std::string testProjectName = "ActionRegistry_Tests"; 
+    return logger.initialize(testAppName, testProjectName); 
+}
+
 TEST_CASE("ShaderRegistry: initialize(false) produces empty registry", "[shader][registry]") {
     Logger logger;
     Project project;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ShaderRegistry reg;
 
@@ -27,7 +34,7 @@ TEST_CASE("ShaderRegistry: initialize(false) produces empty registry", "[shader]
 TEST_CASE("ShaderRegistry: registerProgram rejects empty name", "[shader][registry]") {
     Logger logger;
     Project project;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     ShaderRegistry reg;
 
@@ -42,7 +49,7 @@ TEST_CASE("ShaderRegistry: registerProgram rejects empty name", "[shader][regist
 
 // TEST_CASE("ShaderRegistry: duplicate program name is rejected", "[shader][registry]") {
 //     Logger logger;
-//     REQUIRE(logger.initialize());
+//     REQUIRE(initTestLogger(logger));
 
 //     ShaderRegistry reg;
 

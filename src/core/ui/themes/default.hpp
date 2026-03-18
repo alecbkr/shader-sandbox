@@ -201,6 +201,30 @@ namespace DefaultTheme {
         styles.assetsTreeBodyColor = ImVec4(0.10980392247438431f, 0.11764705926179886f, 0.14901961386203766f, 1.0f);
         styles.inspectorTreeHoveredColor = ImVec4(0.16862745583057404f, 0.1764705926179886f, 0.22745098173618317f, 1.0f);
 
+        // ---------- Custom console values ----------
+        // Foreground & Log Levels
+        styles.consoleCriticalColor        = ImVec4(1.00000f, 0.33333f, 0.33333f, 1.00f); // Red (#ff5555)
+        styles.consoleErrorColor           = ImVec4(1.00000f, 0.47451f, 0.77647f, 1.00f); // Pink (#ff79c6)
+        styles.consoleWarningColor         = ImVec4(1.00000f, 0.72157f, 0.42353f, 1.00f); // Orange (#ffb86c)
+        styles.consoleInfoColor            = ImVec4(0.31373f, 0.98039f, 0.48235f, 1.00f); // Green (#50fa7b)
+        
+        // Window & UI Elements
+        styles.consoleWindowBgColor        = ImVec4(0.15686f, 0.16471f, 0.21176f, 1.00f); // Background (#282a36)
+        styles.consoleMenuBarBgColor       = ImVec4(0.12157f, 0.12549f, 0.16471f, 1.00f); // Darker Background (#1f202a)
+        styles.consoleTextSelectedBgColor  = ImVec4(0.26667f, 0.27843f, 0.35294f, 0.80f); // Selection (#44475a)
+        styles.consoleSearchHighlightColor = ImVec4(0.74118f, 0.57647f, 0.97647f, 0.50f); // Purple Accent (#bd93f9)
+
+
+        styles.shaderBodyPadding = 12.0f;
+        styles.shaderBodyRounding = 6.0f;
+        styles.shaderBorderThickness = 1.0f;
+        styles.shaderTitleInnerPadding = 1.0f;
+        styles.shaderTitleOffset = 6.0f;
+
+        styles.shaderBorderColor = styles.assetsBorderColor;
+        styles.shaderTabBackgroundColor = styles.assetsTabBackgroundColor;
+        styles.shaderTitleBackgroundColor = styles.assetsTitleBackgroundColor;
+        styles.shaderTreeBodyColor = styles.assetsTreeBodyColor;
         // Push everything into ImGui
         styles.applyToImGui(ImGui::GetStyle());
     }

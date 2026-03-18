@@ -40,6 +40,8 @@ private:
     ModelCache* modelCachePtr = nullptr;
     FileRegistry* fileRegPtr = nullptr;
     MaterialCache* materialCachePtr = nullptr;
+    Fonts* fontsPtr = nullptr;
+    SettingsStyles* stylesPtr = nullptr;
     std::unique_ptr<UniformInspectorUI> uniformInspectorUI;
     std::unique_ptr<ObjectsInspectorUI> objectsInspectorUI;
     std::unique_ptr<AssetsInspectorUI> assetsInspectorUI;

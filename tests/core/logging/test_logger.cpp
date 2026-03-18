@@ -13,6 +13,13 @@
 #include "core/logging/LogSink.hpp"   // adjust if LogSink is included via Logger.hpp
 // (LogEntry + LogLevel must be visible from these includes)
 
+// helper to take on the project's name for the logger 
+static bool initTestLogger(Logger& logger){
+    std::string testAppName = "PrimsTSS_Test"; 
+    std::string testProjectName = "ActionRegistry_Tests"; 
+    return logger.initialize(testAppName, testProjectName); 
+}
+
 // ------------------------------------------------------------
 // Test sink: captures all logs sent to it
 // ------------------------------------------------------------
@@ -58,13 +65,13 @@ TEST_CASE("Logger: addLog before initialize prints warning and does not dispatch
 TEST_CASE("Logger: initialize returns true and console sink becomes available", "[logger]") {
     Logger logger;
 
-    REQUIRE(logger.initialize() == true);
+    REQUIRE(initTestLogger(logger) == true);
     REQUIRE(logger.getConsoleSinkPtr() != nullptr);
 }
 
 TEST_CASE("Logger: dispatches logs to sinks added after initialize", "[logger]") {
     Logger logger;
-    REQUIRE(logger.initialize() == true);
+    REQUIRE(initTestLogger(logger) == true);
 
     auto sink = std::make_shared<TestSink>();
     logger.addSink(sink);
@@ -83,7 +90,7 @@ TEST_CASE("Logger: dispatches logs to sinks added after initialize", "[logger]")
 
 TEST_CASE("Logger: removeSink stops dispatching to that sink", "[logger]") {
     Logger logger;
-    REQUIRE(logger.initialize() == true);
+    REQUIRE(initTestLogger(logger) == true);
 
     auto sink = std::make_shared<TestSink>();
     logger.addSink(sink);
@@ -99,7 +106,7 @@ TEST_CASE("Logger: removeSink stops dispatching to that sink", "[logger]") {
 
 TEST_CASE("Logger: CRITICAL does not exit; still dispatches like any other log", "[logger]") {
     Logger logger;
-    REQUIRE(logger.initialize() == true);
+    REQUIRE(initTestLogger(logger) == true);
 
     auto sink = std::make_shared<TestSink>();
     logger.addSink(sink);

@@ -8,6 +8,13 @@
 #include "core/logging/Logger.hpp"
 #include "core/logging/LogSink.hpp"
 
+// helper to take on the project's name for the logger 
+static bool initTestLogger(Logger& logger){
+    std::string testAppName = "PrimsTSS_Test"; 
+    std::string testProjectName = "ActionRegistry_Tests"; 
+    return logger.initialize(testAppName, testProjectName); 
+}
+
 // --- capture logs for double-initialize test ---
 struct TestSink final : public LogSink {
     std::vector<LogEntry> entries;
@@ -32,7 +39,7 @@ TEST_CASE("AppTimer: update before initialize is a no-op (dt stays 0)", "[apptim
 
 TEST_CASE("AppTimer: initialize twice returns false and logs warning", "[apptimer]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     double fakeNow = 0.0;
     AppTimer t;
@@ -51,7 +58,7 @@ TEST_CASE("AppTimer: initialize twice returns false and logs warning", "[apptime
 
 TEST_CASE("AppTimer: update computes dt from successive time reads", "[apptimer]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     double fakeNow = 0.0;
     AppTimer t;
@@ -73,7 +80,7 @@ TEST_CASE("AppTimer: update computes dt from successive time reads", "[apptimer]
 
 TEST_CASE("AppTimer: FPS updates when accumulated elapsed time >= 1 second", "[apptimer]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     // Simulate fixed timestep ~60 FPS
     double fakeNow = 0.0;
@@ -106,7 +113,7 @@ TEST_CASE("AppTimer: FPS updates when accumulated elapsed time >= 1 second", "[a
 
 TEST_CASE("AppTimer: FPS stays the same between updates if < 1 second elapsed", "[apptimer]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     double fakeNow = 0.0;
     AppTimer t;

@@ -1,5 +1,7 @@
 #include "ProjectLoader.hpp"
+#include "engine/ShaderProgram.hpp"
 
+#include <memory>
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <filesystem>
@@ -52,7 +54,14 @@ bool loadShaders(Project& project, json& j) {
             shaderData.frag_path  = d.at(shaderLabels.fragPath).get<std::string>();
             shaderData.isCompiled = d.at(shaderLabels.compiled).get<bool>();
 
-            project.shaderRegistry->registerProgram(shaderData.vert_path, shaderData.frag_path, shaderData.name);
+            bool shaderExists = project.shaderRegistry->getProgram(shaderData.name) != nullptr;
+            if (!shaderExists) {
+                project.shaderRegistry->registerProgram(shaderData.vert_path, shaderData.frag_path, shaderData.name);
+            }
+            else {
+                project.shaderRegistry->replaceProgram(shaderData.vert_path, shaderData.frag_path, shaderData.name);
+                std::cerr << "Shader \"" << shaderData.name << "\" already exists, replacing!" << std::endl;
+            }
         }    
     }
     catch (...) {
@@ -97,10 +106,10 @@ bool ProjectLoader::load(Project& project) {
 
         ProjectLoader::version = j.value("version", 1);
         project.projectTitle = j.value("projectTitle", project.projectTitle);
-
         if (!loadShaders(project, j)) {
             return false;
         }
+        project.consoleSettings = j.value("consoleSettings", project.consoleSettings);
     } catch (...) {
         std::cerr << "Error while loading projectJSON" << std::endl;
         return false;
@@ -117,6 +126,7 @@ void ProjectLoader::save(const Project& project) {
     json j;
     j["version"] = version;
     j["projectTitle"] = project.projectTitle;
+    j["consoleSettings"] = project.consoleSettings;
 
     if (!saveShaders(project, j)) {
         std::cerr << "Error while saving projectJSON (Shaders)" << std::endl;

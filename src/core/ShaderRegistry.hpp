@@ -19,6 +19,7 @@ public:
     ShaderProgram* getProgram(const std::string& programName) const;
     //std::unordered_map<std::string, ShaderProgram>& getPrograms();
     void replaceProgram(const std::string &programName, std::unique_ptr<ShaderProgram> newProgram);
+    void replaceProgram(const std::string& vertex_file, const std::string& fragment_file, const std::string& programName);
     const std::unordered_map<std::string, std::unique_ptr<ShaderProgram>>& getPrograms() const;
     size_t getNumberOfPrograms() const;
     void setFactory(ShaderFactoryFn fn);
