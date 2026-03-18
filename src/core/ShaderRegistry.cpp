@@ -23,10 +23,10 @@ bool ShaderRegistry::initialize(Logger* _loggerPtr, Project* _project, bool regi
     project->programs.clear();
 
     if (registerDefaults) {
-        if (!registerProgram(project->projectShadersDir / "tex.vert", projectPtr->projectShadersDir / "tex.frag", "tex")) return false;
-        if (!registerProgram(project->projectShadersDir / "color.vert", projectPtr->projectShadersDir / "color.frag", "color")) return false;
-        if (!registerProgram(project->projectShadersDir / "gridplane.vert", projectPtr->projectShadersDir / "gridplane.frag", "gridplane")) return false;
-        if (!registerProgram(project->projectShadersDir / "skybox.vert", projectPtr->projectShadersDir / "skybox.frag", "skybox")) return false;
+        if (!registerProgram(project->projectShadersDir / "tex.vert", project->projectShadersDir / "tex.frag", "tex")) return false;
+        if (!registerProgram(project->projectShadersDir / "color.vert", project->projectShadersDir / "color.frag", "color")) return false;
+        if (!registerProgram(project->projectShadersDir / "gridplane.vert", project->projectShadersDir / "gridplane.frag", "gridplane")) return false;
+        if (!registerProgram(project->projectShadersDir / "skybox.vert", project->projectShadersDir / "skybox.frag", "skybox")) return false;
     }
 
     initialized = true;

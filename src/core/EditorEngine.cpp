@@ -105,17 +105,6 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
     eventsPtr->Subscribe(EventType::ET_DeleteFile, std::bind(&EditorEngine::deleteEditor, this, std::placeholders::_1));
     eventsPtr->Subscribe(EventType::CloneFile, std::bind(&EditorEngine::cloneFile, this, std::placeholders::_1));
 
-    for (const auto& filePath : projectPtr->openShaderFiles) {
-        eventsPtr->TriggerEvent(
-            Event{
-                EventType::OpenFile,
-                false,
-                OpenFilePayload{ filePath.string(), filePath.filename().string(), 0, false }
-            }
-        );
-    }
-    projectPtr->openShaderFiles.clear();
-
     // syncing styles with settings if no loaded settings
     if (!stylesPtr->hasLoadedPalette) {
         const auto& dark = TextEditor::GetDarkPalette();

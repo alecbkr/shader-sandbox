@@ -68,7 +68,7 @@ std::string SaveAsModal::findNextFileNumber(const std::string& startingName) {
     int i = 1;
     std::string newName = startingName + "(" + std::to_string(i) + ")";
 
-    if (!std::filesystem::exists(projectPtr->projectRoot.parent_path() / startingName)) {
+    if (!std::filesystem::exists(projectPtr->projectRoot.parent_path() / startingName) || projectPtr->projectTitle == startingName) {
         return startingName;
     }
 

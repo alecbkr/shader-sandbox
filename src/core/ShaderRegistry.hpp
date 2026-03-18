@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <memory>
+#include <filesystem>
 
 #include "application/Project.hpp"
 #include "engine/ShaderProgram.hpp"

@@ -226,7 +226,7 @@ TEST_CASE("EventDispatcher: payload arrives intact (OpenFile)", "[event][dispatc
         return true;
     });
 
-    d.TriggerEvent(OpenFileEvent("C:/x/y", "file.glsl", 9));
+    d.TriggerEvent(OpenFileEvent("C:/x/y", "file.glsl", 9, false));
     d.ProcessQueue();
 
     REQUIRE(calls == 1);

@@ -18,13 +18,15 @@ int main(int argc, char** argv) {
     ctx.project.projectShadersDir = ctx.project.projectRoot / "shaders";
     ctx.project.projectJSON = ctx.project.projectRoot / "project.json";
     ctx.project.shaderRegistry = &ctx.shader_registry;
-    ProjectLoader::load(ctx.project);
+    ctx.project.events = &ctx.events;
 
     if (!Application::initialize(ctx))
     {
         std::cerr << "Application failed to initialize" << std::endl;
         return 1;
     }
+    ProjectLoader::load(ctx.project);
+
     Application::runLoop(ctx);
     Application::shutdown(ctx);
 

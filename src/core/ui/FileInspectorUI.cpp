@@ -1,6 +1,5 @@
 #include "core/ui/FileInspectorUI.hpp"
 
-#include <filesystem>
 #include "application/SettingsStyles.hpp"
 #include "core/logging/LogSink.hpp"
 #include "core/ui/Fonts.hpp"
@@ -119,6 +118,14 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
                         drawStandardFileEntry(fileData, eventsPtr);
                         break;
                 }
+            }
+
+            ImGui::Dummy(ImVec2(0, 20.0f));
+            ImGui::Separator();
+
+            ImGui::TextDisabled("PRESET SHADER");
+            for (const auto& filePath : fileRegPtr->getPresetShaders()) {
+                drawPresetShaderEntry(filePath, eventsPtr);
             }
 
             ImGui::Dummy(ImVec2(0, 20.0f));

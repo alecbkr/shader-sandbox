@@ -6,6 +6,8 @@
 #include "../core/ConsoleTypes.hpp"
 #include <vector>
 
+#include "core/EventDispatcher.hpp"
+
 class ShaderRegistry;
 class ShaderProgram;
 
@@ -17,6 +19,7 @@ struct Project {
     std::filesystem::path projectJSON;
     std::unordered_map<std::string, std::unique_ptr<ShaderProgram>> programs;
     ShaderRegistry* shaderRegistry = nullptr;
+    EventDispatcher* events = nullptr;
     ConsoleToggles consoleSettings;
     std::vector<std::filesystem::path> openShaderFiles;
 };

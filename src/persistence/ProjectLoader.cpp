@@ -8,6 +8,8 @@
 #include <application/Project.hpp>
 #include <core/ShaderRegistry.hpp>
 
+#include "core/EventTypes.hpp"
+
 using json = nlohmann::json;
 
 int ProjectLoader::version = 1;
@@ -112,12 +114,22 @@ bool ProjectLoader::load(Project& project) {
         project.consoleSettings = j.value("consoleSettings", project.consoleSettings);
         project.previouslySaved = j.value("previouslySaved", false);
 
-        if (j.contains("openShaderFiles") && j["openShaderFiles"].is_array()) {
-            const auto& saved = j["openShaderFiles"];
+        if (project.events != nullptr) {
+            if (j.contains("openShaderFiles") && j["openShaderFiles"].is_array()) {
+                const auto& saved = j["openShaderFiles"];
 
-            for (auto& fileName : saved) {
-                if (fileName.is_string()) {
-                    project.openShaderFiles.push_back(project.projectShadersDir / fileName);
+                for (auto& fileName : saved) {
+                    if (fileName.is_string()) {
+                        std::filesystem::path filePath = project.projectShadersDir / fileName;
+                        project.openShaderFiles.push_back(filePath);
+                        project.events->TriggerEvent(
+                            Event{
+                                EventType::OpenFile,
+                                false,
+                                OpenFilePayload{ filePath.string(), fileName, 0, false }
+                            }
+                        );
+                    }
                 }
             }
         }
