@@ -63,6 +63,9 @@ namespace {
     }
 
     json uniformValueToJson(const UniformValue& v) {
+        // kind just refers to the type. that said...
+        // kind can include functions, which is not in types since technically type refers to return type
+        // Cursor decided that name. it's not great but it's fine for now I suppose
         return std::visit(
             overloaded{
                 [](int x) {
