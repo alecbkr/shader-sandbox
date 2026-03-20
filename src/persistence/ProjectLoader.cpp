@@ -1,12 +1,12 @@
 #include "ProjectLoader.hpp"
 #include "engine/ShaderProgram.hpp"
 
-#include <memory>
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <filesystem>
 #include <application/Project.hpp>
 #include <core/ShaderRegistry.hpp>
+#include <persistence/UniformPersistence.hpp>
 
 #include "core/EventTypes.hpp"
 
@@ -14,6 +14,7 @@ using json = nlohmann::json;
 
 int ProjectLoader::version = 1;
 
+// use this in the cpp file only, importers of the header file don't need to have this info.
 namespace {
     struct {
         const char* listLabel = "programs";
@@ -22,7 +23,15 @@ namespace {
         const char* fragPath  = "frag_path";
         const char* compiled  = "isCompiled";
     } shaderLabels;
+
+    struct ShaderData {
+        bool isCompiled;
+        std::string name;
+        std::string vert_path;
+        std::string frag_path;
+    };
 }
+
 
 // returns success
 bool loadShaders(Project& project, json& j) {
@@ -111,6 +120,11 @@ bool ProjectLoader::load(Project& project) {
         if (!loadShaders(project, j)) {
             return false;
         }
+        UniformPersistence uniformLoader;
+        if (!uniformLoader.load(project, j)) {
+            std::cerr << "Error while saving projectJSON (Uniforms)" << std::endl;
+            return false;
+        }
         project.consoleSettings = j.value("consoleSettings", project.consoleSettings);
         project.previouslySaved = j.value("previouslySaved", false);
 
@@ -153,6 +167,11 @@ void ProjectLoader::save(const Project& project) {
 
     if (!saveShaders(project, j)) {
         std::cerr << "Error while saving projectJSON (Shaders)" << std::endl;
+        return;
+    }
+    UniformPersistence uniformSaver;
+    if (!uniformSaver.save(project, j)) {
+        std::cerr << "Error while saving projectJSON (Uniforms)" << std::endl;
         return;
     }
     j["previouslySaved"] = project.previouslySaved;
