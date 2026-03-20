@@ -194,7 +194,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Shader Registry was not initialized successfully.");
         return false;
     }
-    if (!ctx.uniform_registry.initialize(&ctx.logger)) {
+    if (!ctx.uniform_registry.initialize(&ctx.logger, &ctx.project)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Uniform Registry was not initialized successfully.");
         return false;
     }

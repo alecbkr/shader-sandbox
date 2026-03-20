@@ -563,7 +563,7 @@ void InspectorEngine::applyModelUniforms(ShaderProgram& program, unsigned int mo
 
 
 void InspectorEngine::applyMaterialUniforms(ShaderProgram& program, unsigned int modelID, unsigned int materialID) {
-    const auto materialUniforms = uniformRegPtr->tryReadMaterialUniforms(modelID, materialID);
+    const auto materialUniforms = uniformRegPtr->tryReadMaterialUniforms(materialID);
     if (materialUniforms == nullptr) {
         // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", modelID.c_str());
         // Logger::addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", std::to_string(modelID)); 

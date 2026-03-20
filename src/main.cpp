@@ -18,6 +18,7 @@ int main(int argc, char** argv) {
     ctx.project.projectShadersDir = ctx.project.projectRoot / "shaders";
     ctx.project.projectJSON = ctx.project.projectRoot / "project.json";
     ctx.project.shaderRegistry = &ctx.shader_registry;
+    ctx.project.uniformRegistry = &ctx.uniform_registry;
     ctx.project.events = &ctx.events;
 
     if (!Application::initialize(ctx))

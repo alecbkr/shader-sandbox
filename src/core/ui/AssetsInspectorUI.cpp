@@ -158,7 +158,7 @@ void AssetsInspectorUI::drawAsset(std::filesystem::directory_entry entry, float 
         );
 
         if (renamingID == entry.path().string()) drawRenameField(entry);
-        else ImGui::Text(entry.path().filename().string().c_str());
+        else ImGui::Text("%s", entry.path().filename().string().c_str());
 
         if (renamingID == "") {
             if (ImGui::BeginPopupContextWindow("##asset_ctx", ImGuiPopupFlags_MouseButtonRight)) {
