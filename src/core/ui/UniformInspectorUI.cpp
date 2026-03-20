@@ -418,56 +418,55 @@ bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) 
         }
     }
 
-
-    Model* chosenModel = modelCachePtr_->getModel(modelIDs[value->modelSelection]);
-    if (!chosenModel) {
-        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model not found!");
-        value->modelSelection = 0;
-        return false;
-    }
-
-    auto& chosenModelMatIDs = chosenModel->getAllMaterialIDs();
-    std::vector<unsigned int> matIDs{0};
-
-    if (chosenModelMatIDs.size() < 1) {
-        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model has no materials!");
-        value->modelSelection = 0;
-        return false;
-    }
-    // If model only has one material, we can just show them the uniforms on the only material since there's only one material.
-    else if (chosenModelMatIDs.size() < 2) {
-        changed = value->materialSelection != 1;
-        matIDs.push_back(chosenModelMatIDs.front());
-        value->materialSelection = 1;
-    }
-    else {
-        std::vector<std::string> matNames{""};
-        std::vector<const char*> matChoices{""};
-        matNames.reserve(chosenModelMatIDs.size() + 1);
-        matIDs.reserve(chosenModelMatIDs.size() + 1);
-        matChoices.reserve(chosenModelMatIDs.size() + 1);
-        i = 0;
-        for (unsigned int matID : chosenModelMatIDs) {
-            matNames.push_back("Material " + std::to_string(matID));
-            matChoices.push_back(matNames[i].c_str());
-            matIDs.push_back(matID);
-            i++;
-        }
-        ImGui::Text("Source Material");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(-1);
-        changed |= ImGui::Combo("##Source_material", &value->materialSelection, matChoices.data(), static_cast<int>(matChoices.size()));
-    }
-
-    if (changed) {
-        value->referencedMaterialID = matIDs[value->materialSelection];
-        value->uniformSelection = 0;
-    }
-    if (value->materialSelection == 0) {
-        return changed;
-    }
-
     if (!value->useWorldData) {
+        Model* chosenModel = modelCachePtr_->getModel(modelIDs[value->modelSelection]);
+        if (!chosenModel) {
+            loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model not found!");
+            value->modelSelection = 0;
+            return false;
+        }
+
+        auto& chosenModelMatIDs = chosenModel->getAllMaterialIDs();
+        std::vector<unsigned int> matIDs{0};
+
+        if (chosenModelMatIDs.size() < 1) {
+            loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model has no materials!");
+            value->modelSelection = 0;
+            return false;
+        }
+        // If model only has one material, we can just show them the uniforms on the only material since there's only one material.
+        else if (chosenModelMatIDs.size() < 2) {
+            changed = value->materialSelection != 1;
+            matIDs.push_back(chosenModelMatIDs.front());
+            value->materialSelection = 1;
+        }
+        else {
+            std::vector<std::string> matNames{""};
+            std::vector<const char*> matChoices{""};
+            matNames.reserve(chosenModelMatIDs.size() + 1);
+            matIDs.reserve(chosenModelMatIDs.size() + 1);
+            matChoices.reserve(chosenModelMatIDs.size() + 1);
+            i = 0;
+            for (unsigned int matID : chosenModelMatIDs) {
+                matNames.push_back("Material " + std::to_string(matID));
+                matChoices.push_back(matNames[i].c_str());
+                matIDs.push_back(matID);
+                i++;
+            }
+            ImGui::Text("Source Material");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(-1);
+            changed |= ImGui::Combo("##Source_material", &value->materialSelection, matChoices.data(), static_cast<int>(matChoices.size()));
+        }
+
+        if (changed) {
+            value->referencedMaterialID = matIDs[value->materialSelection];
+            value->uniformSelection = 0;
+        }
+        if (value->materialSelection == 0) {
+            return changed;
+        }
+
         const auto uniforms = uniformRegPtr_->tryReadUniforms(matIDs[value->materialSelection]);
         if (uniforms == nullptr) {
             loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput (function)", "uniform list not found");
