@@ -62,11 +62,6 @@ bool Renderer::initialize(
                     case MaterialType::Translucent: queueType = Translucent; break;
                 }   
 
-                std::cout << "preEmp" << std::endl;
-                std::cout << "modelID: " << data->modelID << std::endl; //TEMPPRINT
-                std::cout << "meshIdx: " << meshInstance.meshIdx << std::endl;
-                std::cout << "materialID: " << meshInstance.materialID << std::endl << std::endl;
-
                 primitiveIDMap.emplace(
                     nextPrimitiveID, 
                     Primitive{
@@ -76,14 +71,8 @@ bool Renderer::initialize(
                         .depth = 0,
                         .queuetype = queueType
                     });
-
                 
                 placeInQueue(nextPrimitiveID, queueType);
-                std::cout << "postEmp" << std::endl;
-                Primitive *prim = &primitiveIDMap[opaquePrimIDs.back()]; //TEMPPRINT
-                std::cout << "modelID: " << prim->modelID << std::endl; //TEMPPRINT
-                std::cout << "meshIdx: " << prim->meshIdx << std::endl;
-                std::cout << "materialID: " << prim->materialID << std::endl << std::endl;
 
                 nextPrimitiveID++;
             }

@@ -20,6 +20,7 @@ int main(int argc, char** argv) {
     ctx.project.shaderRegistry = &ctx.shader_registry;
     ctx.project.uniformRegistry = &ctx.uniform_registry;
     ctx.project.events = &ctx.events;
+    ProjectLoader::loadAssets(ctx.project);
 
     if (!Application::initialize(ctx))
     {

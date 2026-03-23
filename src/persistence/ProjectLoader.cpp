@@ -196,6 +196,39 @@ bool saveShaders(const Project& project, json& j) {
     return true;
 }
 
+bool ProjectLoader::loadAssets(Project& project) {
+    if (!std::filesystem::exists(project.projectJSON)) 
+    {
+        std::cerr << "projectJSON does not exist" << std::endl;
+        return false;
+    }
+
+    std::ifstream in(project.projectJSON);
+    if (!in.is_open()) {
+        std::cerr << "Could not open projectJSON" << std::endl;
+        return false;
+    }
+
+    try {
+        json j;
+        in >> j;
+
+        project.modelData = j.value("modelData", std::vector<ModelEntry>{});
+        project.materialData = j.value("materialData", std::vector<MaterialEntry>{});
+
+    } catch (const nlohmann::json::exception& e) {
+        std::cerr << "JSON error: " << e.what() << std::endl;
+        return false;
+    } catch (const std::exception& e) {
+        std::cerr << "Standard exception: " << e.what() << std::endl;
+        return false;
+    } catch (...) {
+        std::cerr << "Unknown exception while loading projectJSON" << std::endl;
+        return false;
+    }
+    return true;
+}
+
 bool ProjectLoader::load(Project& project) {
     if (!std::filesystem::exists(project.projectJSON)) 
     {
@@ -215,8 +248,6 @@ bool ProjectLoader::load(Project& project) {
 
         ProjectLoader::version = j.value("version", 1);
         project.projectTitle = j.value("projectTitle", project.projectTitle);
-        project.modelData = j.value("modelData", std::vector<ModelEntry>{});
-        project.materialData = j.value("materialData", std::vector<MaterialEntry>{});
 
         if (!loadShaders(project, j)) {
             return false;
@@ -266,6 +297,8 @@ bool ProjectLoader::load(Project& project) {
 void ProjectLoader::save(Project& project, ModelCache* modelCachePtr, MaterialCache* materialCachePtr) {
     std::filesystem::create_directories(project.projectRoot);
     std::filesystem::create_directories(project.projectShadersDir);
+
+    std::cout << "model count " << modelCachePtr->getAllModels().size() << std::endl;
 
     project.modelData.clear();
     for (auto& model : modelCachePtr->getAllModels()) {

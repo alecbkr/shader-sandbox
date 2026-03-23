@@ -236,10 +236,6 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Texture Registry was not initialized successfully.");
         return false;
     }
-    if (!ctx.assimp_importer.initialize(&ctx.logger, &ctx.model_cache, &ctx.material_cache, &ctx.inspector_engine, &ctx.project)) {
-        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
-        return false;
-    }
     
     loadPresetAssets(ctx);
     addSubscriptions(ctx);
@@ -272,6 +268,10 @@ bool Application::initialize(AppContext& ctx) {
     }
     if (!Application::addDefaultActionBinds(&ctx.action_registry, &ctx.viewport_ui, &ctx.ctx_manager, &ctx.events, &ctx.fonts)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Default actions were not bound correctly.");
+        return false;
+    }
+    if (!ctx.assimp_importer.initialize(&ctx.logger, &ctx.model_cache, &ctx.material_cache, &ctx.inspector_engine, &ctx.project)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
         return false;
     }
     ctx.logger.addLog(LogLevel::INFO, "Application Initialization", "Application Layer Initialized.");

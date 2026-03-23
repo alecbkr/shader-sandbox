@@ -11,6 +11,7 @@ struct ProjectLoader {
     static int version;
 
     static bool load(Project& project);
+    static bool loadAssets(Project& project);
     static void save(Project& project, ModelCache* modelCachePtr, MaterialCache* materialCachePtr);
 };
 
