@@ -5,10 +5,14 @@
 
 #include <iostream>
 
-MeshA::MeshA(std::vector<Vertex> vertices, std::vector<unsigned int> indices, MeshFlags meshflags, unsigned int id) : ID(id) {
+MeshA::MeshA( unsigned int meshIdx, std::vector<Vertex> vertices, std::vector<unsigned int> indices, 
+    bool hasPos, bool hasNorms, bool hasUVs) : ID(meshIdx) {
+
     this->vertices = vertices;
     this->indices = indices;
-    this->meshflags = meshflags;
+    this->meshflags.hasPositions = hasPos;
+    this->meshflags.hasNormals = hasNorms;
+    this->meshflags.hasUVs = hasUVs;
 }
 
 

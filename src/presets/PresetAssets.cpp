@@ -41,6 +41,7 @@ bool PresetAssets::initialize(Logger* _loggerPtr, Platform* _platformPtr) {
         0, 1, 2, 
         0, 2, 3
     };
+    PresetAssets::planeMesh.pseudoPath = "PRESET_PLANE";
 
     PresetAssets::pyramidMesh.verts = {
         -0.5f, 0.0f, -0.5f,  0.0f, 0.0f, // bottom-left
@@ -57,6 +58,7 @@ bool PresetAssets::initialize(Logger* _loggerPtr, Platform* _platformPtr) {
         2, 3, 4, // side 3
         3, 0, 4  // side 4
     };
+    PresetAssets::pyramidMesh.pseudoPath = "PRESET_PYRAMID";
 
     PresetAssets::cubeMesh.verts = {
         // positions       // UVs
@@ -104,6 +106,7 @@ bool PresetAssets::initialize(Logger* _loggerPtr, Platform* _platformPtr) {
         16,17,18, 18,19,16, // top
         20,21,22, 22,23,20  // bottom
     };
+    PresetAssets::cubeMesh.pseudoPath = "PRESET_CUBE";
 
     initialized = true;
     return true;
@@ -135,6 +138,7 @@ MeshData& PresetAssets::getPresetMesh(MeshPreset preset) {
         default: return PresetAssets::cubeMesh;
     }
 }
+
 
 // Texture& PresetAssets::getPresetTexture(TexturePreset preset) {
 //     switch (preset) {

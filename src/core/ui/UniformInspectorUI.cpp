@@ -26,9 +26,9 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
     const int modelCount = static_cast<int>(modelCachePtr->getNumberOfModels());
 
     ImGui::Dummy(ImVec2(0, 3)); // some padding
-    for (auto& [modelID, model] : modelCachePtr->modelIDMap) {
-        const std::vector<unsigned int>& materialIDs = model->getAllMaterialIDs();
-        drawModelContainer(imGuiID, modelID, materialIDs);
+    for (auto& model : modelCachePtr->getAllModels()) {
+        const std::unordered_map<unsigned int, unsigned int>& materialReferences = model->getAllMaterialReferences();
+        drawModelContainer(imGuiID, model->ID, materialReferences);
 
         modelIndex++;
         if (modelIndex < modelCount) {
@@ -39,7 +39,7 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
     }
 }
 
-void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, const std::vector<unsigned int>& materialIDs) {
+void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences) {
     std::string modelLabel = "Model " + std::to_string(modelID);
 
     ImGui::PushID(modelLabel.c_str());
@@ -55,7 +55,7 @@ void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, 
 
     std::string headerLabel = modelLabel + "##uniform_model_" + std::to_string(modelID);
     if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth)) {
-        drawMaterialContainer(modelID, materialIDs, imGuiID);
+        drawMaterialContainer(modelID, materialReferences, imGuiID);
     }
 
     ImGui::EndChild();
@@ -65,13 +65,13 @@ void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, 
     ImGui::PopID();
 }
 
-void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::vector<unsigned int>& materialIDs, int& imGuiID) {
+void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences, int& imGuiID) {
     ImGui::Separator();
     ImGui::Indent(theme.indentSize);
 
     int i = 0;
-    for (unsigned int matID : materialIDs) {
-        bool useMaterialHeader = materialIDs.size() > 1;
+    for (auto& [matID, matRefCount] : materialReferences) {
+        bool useMaterialHeader = materialReferences.size() > 1;
         bool showUniforms = true;
         if (useMaterialHeader) {
             std::string matHeader = "Material " + std::to_string(matID) + "##uniform_mat_" + std::to_string(matID);
@@ -99,7 +99,7 @@ void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::
             }
             ImGui::Unindent(theme.indentSize);
         }
-        if (i < materialIDs.size()) {
+        if (i < materialReferences.size()) {
             ImGui::Dummy(ImVec2(0, 4));
         }
     }
@@ -245,9 +245,9 @@ bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) 
     std::vector<std::string> modelNames;
     std::vector<const char*> modelChoices{""};
     std::vector<unsigned int> modelIDs{0};
-    modelNames.reserve(modelCachePtr_->modelIDMap.size());
-    modelChoices.reserve(modelCachePtr_->modelIDMap.size() + 1);
-    modelIDs.reserve(modelCachePtr_->modelIDMap.size() + 1);
+    modelNames.reserve(modelCachePtr_->getNumberOfModels());
+    modelChoices.reserve(modelCachePtr_->getNumberOfModels() + 1);
+    modelIDs.reserve(modelCachePtr_->getNumberOfModels() + 1);
 
     std::optional<std::vector<std::string>> worldData = getWorldData(uniform->type);
 
@@ -258,10 +258,10 @@ bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) 
     }
 
     int i = 0;
-    for (unsigned int modelID : modelCachePtr_->getModelIDs()) {
-        modelNames.push_back("Model " + std::to_string(modelID));
+    for (auto& model : modelCachePtr_->getAllModels()) {
+        modelNames.push_back("Model " + std::to_string(model->ID));
         modelChoices.push_back(modelNames[i].c_str());
-        modelIDs.push_back(modelID);
+        modelIDs.push_back(model->ID);
         i++;
     }
 
@@ -308,28 +308,29 @@ bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) 
         return false;
     }
 
-    auto& chosenModelMatIDs = chosenModel->getAllMaterialIDs();
+    auto& chosenModelMatIDReferences = chosenModel->getAllMaterialReferences();
     std::vector<unsigned int> matIDs{0};
 
-    if (chosenModelMatIDs.size() < 1) {
+    if (chosenModelMatIDReferences.size() < 1) {
         loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model has no materials!");
         value->modelSelection = 0;
         return false;
     }
     // If model only has one material, we can just show them the uniforms on the only material since there's only one material.
-    else if (chosenModelMatIDs.size() < 2) {
+    else if (chosenModelMatIDReferences.size() < 2) {
         changed = value->materialSelection != 1;
-        matIDs.push_back(chosenModelMatIDs.front());
+        auto& [matID, matRefCount] = *chosenModelMatIDReferences.begin(); //gets the only entry
+        matIDs.push_back(matID);
         value->materialSelection = 1;
     }
     else {
         std::vector<std::string> matNames{""};
         std::vector<const char*> matChoices{""};
-        matNames.reserve(chosenModelMatIDs.size() + 1);
-        matIDs.reserve(chosenModelMatIDs.size() + 1);
-        matChoices.reserve(chosenModelMatIDs.size() + 1);
+        matNames.reserve(chosenModelMatIDReferences.size() + 1);
+        matIDs.reserve(chosenModelMatIDReferences.size() + 1);
+        matChoices.reserve(chosenModelMatIDReferences.size() + 1);
         i = 0;
-        for (unsigned int matID : chosenModelMatIDs) {
+        for (auto& [matID, matRefCount] : chosenModelMatIDReferences) {
             matNames.push_back("Material " + std::to_string(matID));
             matChoices.push_back(matNames[i].c_str());
             matIDs.push_back(matID);

@@ -1,19 +1,16 @@
 #include "Material.hpp"
-#include "MaterialCache.hpp"
-#include "texture/TextureCache.hpp"
-#include "../core/logging/Logger.hpp"
 
 
-Material::Material(MaterialType type, MaterialCache* materialCachePtr, unsigned int _modelID) : ID(materialCachePtr->getNextMaterialID()), modelID(_modelID) {
-    this->type = type;
+Material::Material(unsigned int ID, MaterialType type) 
+    : ID(ID)
+{
+    
 }
 
 
-Material::Material(MaterialProperties props, 
-    std::vector<unsigned int> textureIDs, 
-    MaterialType type, MaterialCache* materialCachePtr, unsigned int _modelID
-) : ID(materialCachePtr->getNextMaterialID()), modelID(_modelID)
-{
+Material::Material(unsigned int ID, MaterialType type, MaterialProperties props, 
+    std::vector<unsigned int> textureIDs) : ID(ID)
+{   
     this->properties = props;
     this->textureIDs = textureIDs;
     this->type = type;
@@ -21,23 +18,8 @@ Material::Material(MaterialProperties props,
 }
 
 
-std::vector<unsigned int> Material::getMaterialTextureIDs() {
-    // if (textureIDs.empty()) {
-    //     TextureCache::bindDefault();
-    // }
-    // else {
-    //     unsigned int texUnit = 0;
-    //     for (unsigned int texID : textureIDs) {
-    //         TextureCache::bindTexture(texID, texUnit++);
-    //     }
-    // }
-
-    return textureIDs;
-}
-
-
-void Material::assignTexture(unsigned int textureID) {
-    textureIDs.push_back(textureID);
+void Material::setProperties(MaterialProperties properties) {
+    this->properties = properties;
 }
 
 
@@ -46,6 +28,17 @@ void Material::setProgramID(std::string programID) {
 }
 
 
-std::string Material::getProgramID() {
-    return programID;
+void Material::setMaterialType(MaterialType type) {
+    this->type = type;
 }
+
+
+void Material::addTexture(unsigned int textureID) {
+    textureIDs.push_back(textureID);
+}
+
+
+std::string Material::getProgramID() { return programID; }
+MaterialType Material::getMaterialType() { return type; }
+std::vector<unsigned int>& Material::getMaterialTextureIDs() { return textureIDs; }
+

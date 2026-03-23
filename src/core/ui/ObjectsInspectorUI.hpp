@@ -49,9 +49,9 @@ private:
     bool drawShaderProgramMenu(MaterialShaderMenu& menu, const std::vector<const char*>& shaderChoices, ShaderRegistry* shaderRegPtr, MaterialCache* materialCachePtr, InspectorEngine* inspectorEngPtr, Logger* logger);
     bool drawTextureMenu(ModelTextureMenu& menu, Logger* loggerPtr, TextureRegistry* textureRegPtr);
     bool drawTextInput(std::string* value, const char* label);
-    bool drawModelPositionInput(Model* model);
-    bool drawModelScaleInput(Model* model);
-    bool drawModelOrientationInput(Model* model);
+    bool drawModelPositionInput(Model& model);
+    bool drawModelScaleInput(Model& model);
+    bool drawModelOrientationInput(Model& model);
     ObjectsInspectorThemeSettings theme;
 
 };

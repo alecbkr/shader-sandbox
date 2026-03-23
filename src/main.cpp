@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     Application::runLoop(ctx);
     Application::shutdown(ctx);
 
-    ProjectLoader::save(ctx.project);
+    ProjectLoader::save(ctx.project, &ctx.model_cache, &ctx.material_cache);
     SettingsLoader::save(ctx.settings);
     return 0;
 }

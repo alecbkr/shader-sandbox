@@ -2,6 +2,7 @@
 
 #include <variant>
 #include <string>
+#include "object/MaterialType.hpp"
 
 enum class EventType {
     // Fill out event types here
@@ -16,7 +17,11 @@ enum class EventType {
     NewFile,
     RenameFile,
     ET_DeleteFile,
-    ContextSwitch
+    ContextSwitch,
+    CreateModel,
+    DeleteModel,
+    ModelMaterialChange,
+    MaterialTypeChange
 };
 
 struct SaveActiveShaderFilePayload { std::string filePath; unsigned int modelID; };
@@ -26,6 +31,10 @@ struct KeyPressedPayload { int key; };
 struct OpenFilePayload { std::string filePath; std::string fileName; unsigned int modelID; };
 struct RenameFilePayload { std::string oldName, newName; };
 struct DeleteFilePayload { std::string fileName; };
+struct ModelCreationPayload { unsigned int modelID; };
+struct ModelDeletionPayload { unsigned int modelID; };
+struct ModelMaterialChangePayload { unsigned int modelID; unsigned int meshIdx; unsigned int materialID; };
+struct MaterialTypeChangePayload { unsigned int materialID; MaterialType newType; };
 
 using EventPayload = std::variant<
     std::monostate,
@@ -35,7 +44,11 @@ using EventPayload = std::variant<
     KeyPressedPayload,
     OpenFilePayload,
     RenameFilePayload,
-    DeleteFilePayload
+    DeleteFilePayload,
+    ModelCreationPayload,
+    ModelDeletionPayload,
+    ModelMaterialChangePayload,
+    MaterialTypeChangePayload
 >;
 
 struct Event {

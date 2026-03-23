@@ -4,7 +4,7 @@
 #include "engine/InputHandler.hpp"
 #include "engine/Errorlog.hpp"
 #include "engine/AppTimer.hpp"
-#include "object/ModelCache.hpp"
+#include "object/Renderer.hpp"
 #include <string>
 #include <glm/gtc/matrix_transform.hpp>
 #include "platform/Platform.hpp"
@@ -27,18 +27,18 @@ ViewportUI::ViewportUI() {
     camPtr = nullptr;
     loggerPtr = nullptr;
     platformPtr = nullptr;
-    modelCachePtr = nullptr;
+    rendererPtr = nullptr;
     timerPtr = nullptr;
 }
 
-bool ViewportUI::initialize(Logger* _loggerPtr, Platform* _platformPtr, ModelCache* _modelCachePtr, AppTimer* _timerPtr, InputState* _inputPtr) {
+bool ViewportUI::initialize(Logger* _loggerPtr, Platform* _platformPtr, Renderer* _rendererPtr, AppTimer* _timerPtr, InputState* _inputPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Viewport UI Initialization", "Viewport UI was already initialized.");
         return false;
     }
     loggerPtr = _loggerPtr;
     platformPtr = _platformPtr;
-    modelCachePtr = _modelCachePtr;
+    rendererPtr = _rendererPtr;
     timerPtr = _timerPtr;
 
     u32 width_ = platformPtr->getWindow().width;
@@ -118,7 +118,9 @@ void ViewportUI::render() {
 
     glm::mat4 perspective = glm::perspective(glm::radians(45.0f), ViewportUI::getAspect(), 0.1f, 100.0f);
     glm::mat4 view = camPtr->GetViewMatrix();
-    modelCachePtr->renderAll(perspective, view, camPtr->Position);
+    // modelCachePtr->renderAll(perspective, view, camPtr->Position);
+    rendererPtr->renderAll(perspective, view, camPtr->Position);
+
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     ViewportUI::draw();

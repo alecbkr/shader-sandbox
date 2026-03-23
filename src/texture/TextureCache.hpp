@@ -13,22 +13,36 @@
 class Logger;
 
 class TextureCache {
-    public:
-        bool initialize(Logger *_loggerPtr);
-        TextureCache();
-        ~TextureCache() = default;
+private:
+    struct TextureInstance {
+        std::unique_ptr<Texture> texture;
+        unsigned int refCount;
+        unsigned int ID;
+    };
 
-        unsigned int addTexture(std::string texture_path, TextureType type);
-        bool deleteTexture(unsigned int ID);
-        bool bindTexture(unsigned int ID, unsigned int texUnit);
-        void bindDefault();
+public:
+    bool initialize(Logger *_loggerPtr);
+    TextureCache();
+    ~TextureCache() = default;
 
-    private:
-        std::unique_ptr<Texture> defaultTexture;
-        unsigned int nextID = 0;
-        std::unordered_map<std::string, unsigned int> texturePathMap;
-        std::vector<std::shared_ptr<Texture>> textureCache;
+    unsigned int createTexture2D(std::string texture2D_path);
+    unsigned int createCubeMap(std::string cubemap_dir_path);
+    void deleteTexture(unsigned int ID);
+    void bindTexture(unsigned int ID, unsigned int texUnit);
+    void bindDefault(unsigned int texUnit);
 
-        // component pointers
-        Logger* loggerPtr = nullptr;
+    std::string getTexturePath(unsigned int textureID);
+
+private:
+    unsigned int nextTextureID = 0;
+    std::unique_ptr<Texture> defaultTexture;
+    std::unordered_map<std::string, std::shared_ptr<TextureInstance>> texturePathMap;
+    std::unordered_map<unsigned int, std::shared_ptr<TextureInstance>> textureIDMap;
+    // std::unordered_map<unsigned int, std::unique_ptr<TextureInstance>> textureInstanceIDMap;
+
+    TextureInstance* getTextureInstance(unsigned int TextureInstanceID);
+    bool validateNextID();
+
+    // component pointers
+    Logger* loggerPtr = nullptr;
 };

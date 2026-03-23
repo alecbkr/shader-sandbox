@@ -4,7 +4,7 @@
 #include "core/logging/LogSink.hpp"
 #include <stb_image.h>
 
-CubeMap::CubeMap(std::string cubemap_dir, Logger* _loggerPtr) : Texture(cubemap_dir, TEX_CUBEMAP, _loggerPtr) {
+CubeMap::CubeMap(std::string cubemap_dir) : Texture(cubemap_dir) {
     cubemap_paths = {
         cubemap_dir + "/right.jpg",
         cubemap_dir + "/left.jpg",
@@ -14,39 +14,35 @@ CubeMap::CubeMap(std::string cubemap_dir, Logger* _loggerPtr) : Texture(cubemap_
         cubemap_dir + "/back.jpg"
     };
 
-    isInitialized = true;
+    status = TextureStatus::Ready;
 }
 
 
-void CubeMap::bind(unsigned int texNum) {
+bool CubeMap::bind(unsigned int texUnit) {
     loadToGPU();
-    glActiveTexture(GL_TEXTURE0 + texNum);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, ID);
-    this->texNum = texNum;
+    if (status != TextureStatus::Loaded) return false;
+    glActiveTexture(GL_TEXTURE0 + texUnit);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, gl_ID);
+    this->texUnit = texUnit;
+    return true;
 }
 
 
 void CubeMap::loadToGPU() {
-    if (isInitialized == false) {
-        loggerPtr->addLog(LogLevel::WARNING, "CUBEMAP", "Can't send uninitialized texture to GPU");
-        return;
-    } 
-    if (isLoadedInGPU) return;
+    if (status == TextureStatus::Loaded) return;
 
-    loggerPtr->addLog(LogLevel::INFO, "CUBEMAP", "Loading texture...");
     unsigned char* data;
     GLenum format;
     int width, height, channelCnt;
 
-    glGenTextures(1, &ID);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, ID);
+    glGenTextures(1, &gl_ID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, gl_ID);
     stbi_set_flip_vertically_on_load(false);
     
     for (unsigned int i = 0; i < cubemap_paths.size(); i++) {
         data = stbi_load(cubemap_paths[i].c_str(), &width, &height, &channelCnt, 0);
         if (data == nullptr) {
-            loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURE", "Could not find texture from path:",  path);
-            valid = false;
+            status = TextureStatus::FileNotFound;
             return;
         }
 
@@ -55,8 +51,7 @@ void CubeMap::loadToGPU() {
             case 3: format = GL_RGB;  break;
             case 4: format = GL_RGBA; break;
             default: 
-                loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURE", "Format could not be determined");
-                valid = false;
+                status = TextureStatus::InvalidFormat;
                 return;
         }
 
@@ -73,5 +68,5 @@ void CubeMap::loadToGPU() {
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-    isLoadedInGPU = true;
+    status = TextureStatus::Loaded;
 }

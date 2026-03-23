@@ -6,10 +6,10 @@
 
 class Texture2D : public Texture{
     public:
-        Texture2D(std::string texture_path, TextureType type, Logger* _loggerPtr);
+        Texture2D(std::string texture_path);
         ~Texture2D() = default;
-        void bind(unsigned int texNum);
+        bool bind(unsigned int texUnit) override;
 
     private:
-        void loadToGPU();
+        void loadToGPU() override;
 };

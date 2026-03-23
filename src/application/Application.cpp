@@ -27,6 +27,7 @@
 #include "engine/Errorlog.hpp"
 #include "persistence/ProjectLoader.hpp"
 #include "core/ui/themes/default.hpp"
+#include "object/AssimpImporter.hpp"
 
 bool Application::initialized = false;
 
@@ -38,7 +39,7 @@ void Application::addSubscriptions(AppContext& ctx) {
         return true;
     });
     ctx.events.Subscribe(EventType::SaveProject, [&ctx](const EventPayload&) -> bool {
-        ProjectLoader::save(ctx.project);
+        ProjectLoader::save(ctx.project, &ctx.model_cache, &ctx.material_cache);
         return false;
     });
     ctx.events.Subscribe(EventType::Quit, [&ctx](const EventPayload&) -> bool {
@@ -109,38 +110,25 @@ void loadPresetAssets(AppContext& ctx) {
     ShaderProgram* instancePtr = ctx.shader_registry.getProgram("instance");
     
 
-    unsigned int skyboxID = ctx.model_cache.createSkybox("../assets/textures/skybox");
-    ctx.model_cache.getModel(skyboxID)->setModelProgram(skyboxPtr->name);
+    // set default material with a default program
+    ctx.material_cache.getMaterial(0)->setProgramID(texPtr->name);
+
+
+
+    // unsigned int windowMatID = ctx.material_cache.createBlankMaterial();
+    // ctx.material_cache.addTextureToMaterial(windowMatID, "../assets/textures/window.png");
+    // ctx.material_cache.getMaterial(windowMatID)->setProgramID(texPtr->name);
+    // // ctx.material_cache.changeMaterialType(windowMatID, MaterialType::Translucent);
+
+    // unsigned int window1_ID = ctx.model_cache.createPreset(ModelType::PlanePreset);
+    // ctx.model_cache.changeModelMaterial(window1_ID, windowMatID);
     
-    unsigned int gridID = ctx.model_cache.createPreset(MeshPreset::PLANE);
-    Model* gridModel = ctx.model_cache.getModel(gridID);
-    ctx.model_cache.getModel(gridID)->setModelProgram(gridplanePtr->name);
-    ctx.model_cache.getModel(gridID)->setScale(glm::vec3(50.0f));
-    ctx.model_cache.getModel(gridID)->setMaterialType(gridModel->getAllMaterialIDs()[0], MaterialType::Cutout);
 
-    unsigned int backpackID = ctx.model_cache.createImported("../assets/models/backpack/backpack.obj");
-    ctx.model_cache.getModel(backpackID)->setModelProgram(instancePtr->name);
-    ctx.model_cache.getModel(backpackID)->setInstanceCount(5);
-    ctx.model_cache.getModel(backpackID)->setInstancePosition(2, glm::vec3(2.0f, 0.5f, 1.0f));
-    // ctx.model_cache.printPrimRelations(backpackID);
-    std::cout << ctx.model_cache.getModel(backpackID)->getMatCount() << std::endl;
+    // ctx.model_cache.changeModelMaterial(window2_ID, windowMatID);
+    // unsigned int window2_ID = ctx.model_cache.createPreset(ModelType::PlanePreset);
 
-    unsigned int testPlane = ctx.model_cache.createPreset(MeshPreset::PLANE);
-    Model* testPlaneModel = ctx.model_cache.getModel(testPlane);
-    testPlaneModel->addTexture("../assets/textures/grass.png", TextureType::TEX_DIFFUSE);
-    ctx.model_cache.setModelMaterialType(testPlane, testPlaneModel->getAllMaterialIDs()[0], MaterialType::Translucent);
-    testPlaneModel->setModelProgram(texPtr->name);
-    testPlaneModel->rotate(90.0, glm::vec3(1.0f, 0.0f, 0.0f));
-    testPlaneModel->translate(glm::vec3(0.0f, 1.0f, 0.0f));
+    // ctx.model_cache.getModel(window1_ID)->setInstanceCount(5);
 
-    unsigned int testPlane2 = ctx.model_cache.createPreset(MeshPreset::PLANE);
-    Model* testPlane2Model = ctx.model_cache.getModel(testPlane2);
-    testPlane2Model->addTexture("../assets/textures/window.png", TextureType::TEX_DIFFUSE);
-    ctx.model_cache.setModelMaterialType(testPlane2, testPlane2Model->getAllMaterialIDs()[0], MaterialType::Translucent);
-    testPlane2Model->setModelProgram(texPtr->name);
-    testPlane2Model->rotate(90.0, glm::vec3(1.0f, 0.0f, 0.0f));
-    testPlane2Model->translate(glm::vec3(-3.0f, 0.0f, 0.0f));
-    
 }
 
 bool Application::initialize(AppContext& ctx) {
@@ -188,12 +176,25 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Uniform Registry was not initialized successfully.");
         return false;
     }
-    if (!ctx.material_cache.initialize(&ctx.logger)) {
+    if (!ctx.material_cache.initialize(&ctx.logger, &ctx.events, &ctx.texture_cache)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Material Cache was not initialized successfully.");
         return false;
     }
     if (!ctx.texture_cache.initialize(&ctx.logger)) {
         std::cout << "Texture Cache was not initialized successfully." << std::endl;
+        return false;
+    }
+    if (!ctx.model_cache.initialize(&ctx.logger, &ctx.events, &ctx.preset_assets)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
+        return false;
+    }
+    
+    // if (!ctx.assimp_importer.initialize(&ctx.logger, &ctx.model_cache, &ctx.material_cache, &ctx.inspector_engine, &ctx.project)) {
+    //     ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
+    //     return false;
+    // }
+    if (!ctx.inspector_engine.initialize(&ctx.logger, &ctx.shader_registry, &ctx.uniform_registry, &ctx.model_cache, &ctx.viewport_ui, &ctx.material_cache)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Inspector Engine was not initialized successfully.");
         return false;
     }
     // if (!ConsoleEngine::initialize(Logger::getConsoleSinkPtr())) {
@@ -204,15 +205,9 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Importer was not initialized successfully.");
         return false;
     }
-    if (!ctx.model_cache.initialize(&ctx.logger, &ctx.events, &ctx.shader_registry, &ctx.texture_cache, &ctx.uniform_registry, &ctx.inspector_engine, &ctx.preset_assets, &ctx.material_cache)) {
-        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
-        return false;
-    }
-    if (!ctx.inspector_engine.initialize(&ctx.logger, &ctx.shader_registry, &ctx.uniform_registry, &ctx.model_cache, &ctx.viewport_ui, &ctx.material_cache)) {
-        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Inspector Engine was not initialized successfully.");
-        return false;
-    }
-    ctx.model_cache.setInspectorEnginePtr(&ctx.inspector_engine);
+    
+    
+    // ctx.model_cache.setInspectorEnginePtr(&ctx.inspector_engine);
     if (!ctx.hot_reloader.initialize(&ctx.logger, &ctx.events, &ctx.shader_registry, &ctx.model_cache, &ctx.editor_engine, &ctx.inspector_engine, &ctx.ctx_manager)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Hot Reloader was not initialized successfully.");
         return false;
@@ -233,18 +228,20 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Texture Registry was not initialized successfully.");
         return false;
     }
+    if (!ctx.assimp_importer.initialize(&ctx.logger, &ctx.model_cache, &ctx.material_cache, &ctx.inspector_engine, &ctx.project)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
+        return false;
+    }
+    
     loadPresetAssets(ctx);
     addSubscriptions(ctx);
     initializeUI(ctx);
-    ctx.inspector_engine.refreshUniforms();
+    ctx.inspector_engine.refreshUniforms(); //causing all the cout before initialization
     if (!ctx.console_ui.initialize(&ctx.logger)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Console UI was not initialized successfully.");
         return false;
     }
-    if (!ctx.viewport_ui.initialize(&ctx.logger, &ctx.platform, &ctx.model_cache, &ctx.timer, &ctx.inputs)) {
-        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Viewport UI was not initialized successfully.");
-        return false;
-    }
+    
     if (!ctx.menu_ui.initialize(&ctx.logger, &ctx.platform, &ctx.events, &ctx.modals, &ctx.keybinds, &ctx)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Menu UI was not initialized successfully.");
         return false;
@@ -257,12 +254,18 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Inspector UI was not initialized successfully.");
         return false;
     }
-
+    if (!ctx.renderer.initialize(&ctx.logger, &ctx.events, &ctx.model_cache, &ctx.material_cache, &ctx.texture_cache, &ctx.shader_registry, &ctx.uniform_registry, &ctx.inspector_engine)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Renderer was not initialized successfully.");
+        return false;
+    }
+    if (!ctx.viewport_ui.initialize(&ctx.logger, &ctx.platform, &ctx.renderer, &ctx.timer, &ctx.inputs)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Viewport UI was not initialized successfully.");
+        return false;
+    }
     if (!Application::addDefaultActionBinds(&ctx.action_registry, &ctx.viewport_ui, &ctx.ctx_manager, &ctx.events, &ctx.fonts)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Default actions were not bound correctly.");
         return false;
     }
-
     ctx.logger.addLog(LogLevel::INFO, "Application Initialization", "Application Layer Initialized.");
     Application::initialized = true;
     return true;

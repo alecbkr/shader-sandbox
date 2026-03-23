@@ -20,9 +20,10 @@
 void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, TextureRegistry* textureRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr) {
     drawAddObjectMenu(loggerPtr, inspectorEngPtr, shaderRegPtr, modelCachePtr);
     int i = 0;
-    for (auto& [modelID, model] : modelCachePtr->modelIDMap) {
-        auto& matIDs = model->getAllMaterialIDs();
-        for (unsigned int matID : matIDs) {
+    for (auto& model : modelCachePtr->getAllModels()) {
+        auto& matIDReferences = model->getAllMaterialReferences();
+        unsigned int modelID = model->ID;
+        for (auto& [matID, matRefCount] : matIDReferences) {
             if (!materialShaderMenus.contains(matID)) {
                 materialShaderMenus[matID] = MaterialShaderMenu{
                     .matID = matID,
@@ -31,6 +32,7 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                 };
             }
         }
+
         if (!modelTextureMenus.contains(modelID)) {
             modelTextureMenus[modelID] = ModelTextureMenu{
                 .modelID = modelID,
@@ -58,11 +60,11 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
 
             if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth)) {
                 ImGui::Indent(theme.indentSize);
-                drawModelPositionInput(model.get());
+                drawModelPositionInput(*model);
                 ImGui::Separator();
-                drawModelScaleInput(model.get());
+                drawModelScaleInput(*model);
                 ImGui::Separator();
-                drawModelOrientationInput(model.get());
+                drawModelOrientationInput(*model);
                 ImGui::Unindent(theme.indentSize);
             }
             if (ImGui::CollapsingHeader("Material")) {
@@ -73,7 +75,7 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                 for (auto& [name, shader] : shaders) {
                     shaderChoices.push_back(name.c_str());
                 }
-                for (auto matID : matIDs) {
+                for (auto [matID, matRefCount] : matIDReferences) {
                     MaterialShaderMenu shaderMenu{
                         .matID = matID
                     };
@@ -154,18 +156,18 @@ void ObjectsInspectorUI::drawAddObjectMenu(Logger* loggerPtr, InspectorEngine* i
     ShaderProgram& defaultProgram = *programs.begin()->second;
 
     if (ImGui::Button("Add Plane")) {
-        unsigned int id = modelCachePtr->createPreset(MeshPreset::PLANE);
-        modelCachePtr->getModel(id)->setModelProgram(defaultProgram.name);
+        unsigned int id = modelCachePtr->createPreset(ModelType::PlanePreset);
+        // modelCachePtr->getModel(id)->setModelProgram(defaultProgram.name);
         inspectorEngPtr->refreshUniforms();
     }
     if (ImGui::Button("Add Pyramid")) {
-        unsigned int id = modelCachePtr->createPreset(MeshPreset::PYRAMID);
-        modelCachePtr->getModel(id)->setModelProgram(defaultProgram.name);
+        unsigned int id = modelCachePtr->createPreset(ModelType::PyramidPreset);
+        // modelCachePtr->getModel(id)->setModelProgram(defaultProgram.name);
         inspectorEngPtr->refreshUniforms();
     }
     if (ImGui::Button("Add Cube")) {
-        unsigned int id = modelCachePtr->createPreset(MeshPreset::CUBE);
-        modelCachePtr->getModel(id)->setModelProgram(defaultProgram.name);
+        unsigned int id = modelCachePtr->createPreset(ModelType::CubePreset);
+        // modelCachePtr->getModel(id)->setModelProgram(defaultProgram.name);
         inspectorEngPtr->refreshUniforms();
     }
 }
@@ -230,7 +232,7 @@ bool ObjectsInspectorUI::drawTextureMenu(ModelTextureMenu& menu, Logger* loggerP
     const std::vector<const Texture*>& registryTextures = textureRegPtr->readTextures();
     textureChoices.reserve(registryTextures.size());
     for (const Texture* tex : registryTextures) {
-        textureChoices.push_back(tex->path.c_str());
+        textureChoices.push_back(tex->getPath().c_str());
     }
 
     if (ImGui::Combo("Texture", &menu.textureSelection, textureChoices.data(), (int)textureChoices.size())) {
@@ -260,44 +262,44 @@ bool ObjectsInspectorUI::drawTextInput(std::string* value, const char* label) {
     return changed;
 }
 
-bool ObjectsInspectorUI::drawModelPositionInput(Model* model) {
+bool ObjectsInspectorUI::drawModelPositionInput(Model& model) {
     bool changed = false;
-    ImGui::PushID(model);
+    ImGui::PushID(&model);
 
-    glm::vec3 position = model->getPosition();
+    glm::vec3 position = model.getPosition();
     ImGui::Text("Position");
     ImGui::SameLine();
     changed |= ImGui::DragFloat3("##Position##xx", &position.x, .05f);
 
     ImGui::PopID();
-    if (changed) model->setPosition(position);
+    if (changed) model.setPosition(position);
     return changed;
 }
 
-bool ObjectsInspectorUI::drawModelScaleInput(Model* model) {
+bool ObjectsInspectorUI::drawModelScaleInput(Model& model) {
     bool changed = false;
-    ImGui::PushID(model);
+    ImGui::PushID(&model);
 
-    glm::vec3 scale = model->getScale();
+    glm::vec3 scale = model.getScale();
     ImGui::Text("Scale");
     ImGui::SameLine();
     changed |= ImGui::DragFloat3("##Scale##xx", &scale.x,  .05f);
 
     ImGui::PopID();
-    if (changed) model->setScale(scale);
+    if (changed) model.setScale(scale);
     return changed;
 }
 
-bool ObjectsInspectorUI::drawModelOrientationInput(Model* model) {
+bool ObjectsInspectorUI::drawModelOrientationInput(Model& model) {
     bool changed = false;
-    ImGui::PushID(model);
+    ImGui::PushID(&model);
 
-    glm::vec4 rotation = model->getRotation();
+    glm::vec4 rotation = model.getRotation();
     ImGui::Text("Orientation");
     ImGui::SameLine();
     changed |= ImGui::DragFloat4("##Orientation##xx", &rotation.x,  .05f);
 
     ImGui::PopID();
-    if (changed) model->setRotation(rotation.x, glm::vec3(rotation.y, rotation.z, rotation.w));
+    if (changed) model.setRotation(rotation.x, glm::vec3(rotation.y, rotation.z, rotation.w));
     return changed;
 }
