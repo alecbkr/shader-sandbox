@@ -1,5 +1,6 @@
 #include "core/ui/UniformInspectorUI.hpp"
 
+#include "application/SettingsStyles.hpp"
 #include "core/InspectorEngine.hpp"
 #include "core/logging/LogSink.hpp"
 #include "core/logging/Logger.hpp"
@@ -13,6 +14,20 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+UniformInspectorUI::UniformInspectorUI(SettingsStyles* styles) : styles_(styles) {
+    if (styles_) {
+        theme.bgColor = styles_->assetsTreeBodyColor;
+        // Derive a hover color from the base color so it always differs visibly.
+        theme.bgColorHovered = ImVec4(
+            theme.bgColor.x * 1.3f,
+            theme.bgColor.y * 1.3f,
+            theme.bgColor.z * 1.3f,
+            theme.bgColor.w
+        );
+        theme.indentSize = styles_->indentSpacing * 0.5f;
+    }
+}
 
 void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr) {
     loggerPtr_ = loggerPtr;
@@ -90,13 +105,7 @@ void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::
             }
 
             ImGui::Indent(theme.indentSize);
-            for (auto& [uniformName, uniformRef] : *uniformMap) {
-                ImGui::PushID(imGuiID);
-                Uniform uniformCopy = uniformRef;
-                drawUniformRow(uniformCopy, matID);
-                ImGui::PopID();
-                imGuiID++;
-            }
+            drawUniformsNested_byCursor(*uniformMap, matID, imGuiID);
             ImGui::Unindent(theme.indentSize);
         }
         if (i < materialReferences.size()) {
@@ -105,6 +114,115 @@ void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::
     }
 
     ImGui::Unindent(theme.indentSize);
+}
+
+void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<std::string, Uniform>& uniforms, unsigned int matID, int& imGuiID) {
+    struct UniformTreeNode_byCursor {
+        const Uniform* uniform = nullptr;
+        std::unordered_map<std::string, UniformTreeNode_byCursor> children;
+    };
+
+    auto parseSegments_byCursor = [](const std::string& name) -> std::vector<std::string> {
+        std::vector<std::string> segments;
+        std::string current;
+        const std::size_t len = name.size();
+
+        for (std::size_t i = 0; i < len; ++i) {
+            char c = name[i];
+            if (c == '.') {
+                if (!current.empty()) {
+                    segments.push_back(current);
+                    current.clear();
+                }
+            } else if (c == '[') {
+                if (!current.empty()) {
+                    segments.push_back(current);
+                    current.clear();
+                }
+                std::size_t j = i;
+                while (j < len && name[j] != ']') {
+                    ++j;
+                }
+                if (j < len && name[j] == ']') {
+                    ++j;
+                }
+                segments.push_back(name.substr(i, j - i));
+                i = j - 1;
+            } else {
+                current.push_back(c);
+            }
+        }
+        if (!current.empty()) {
+            segments.push_back(current);
+        }
+        return segments;
+    };
+
+    UniformTreeNode_byCursor root;
+
+    for (const auto& [uniformName, uniformRef] : uniforms) {
+        std::vector<std::string> segments = parseSegments_byCursor(uniformName);
+        if (segments.empty()) {
+            continue;
+        }
+        UniformTreeNode_byCursor* node = &root;
+        for (const std::string& seg : segments) {
+            node = &node->children[seg];
+        }
+        node->uniform = &uniformRef;
+    }
+
+    auto renderNode_byCursor = [&](auto&& self, const std::string& segment, const UniformTreeNode_byCursor& node, const std::string& path) -> void {
+        const bool hasChildren = !node.children.empty();
+        const bool hasUniform = node.uniform != nullptr;
+
+        if (segment.empty()) {
+            for (const auto& [childSeg, childNode] : node.children) {
+                const std::string childPath = childSeg;
+                self(self, childSeg, childNode, childPath);
+            }
+            return;
+        }
+
+        if (!hasChildren) {
+            if (hasUniform) {
+                ImGui::PushID(imGuiID);
+                Uniform uniformCopy = *node.uniform;
+                drawUniformRow(uniformCopy, matID);
+                ImGui::PopID();
+                ++imGuiID;
+            }
+            return;
+        }
+
+        std::string headerLabel = segment + "##group_" + std::to_string(matID) + "_" + path;
+        bool open = ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth);
+        if (!open) {
+            return;
+        }
+
+        ImGui::Separator();
+        ImGui::Indent(theme.indentSize);
+
+        if (hasUniform) {
+            ImGui::PushID(imGuiID);
+            Uniform uniformCopy = *node.uniform;
+            drawUniformRow(uniformCopy, matID);
+            ImGui::PopID();
+            ++imGuiID;
+        }
+
+        for (const auto& [childSeg, childNode] : node.children) {
+            const std::string childPath = path.empty() ? childSeg : (path + "." + childSeg);
+            self(self, childSeg, childNode, childPath);
+        }
+
+        ImGui::Unindent(theme.indentSize);
+    };
+
+    for (const auto& [seg, childNode] : root.children) {
+        renderNode_byCursor(renderNode_byCursor, seg, childNode, seg);
+    }
 }
 
 void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
@@ -300,57 +418,109 @@ bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) 
         }
     }
 
+    //++++++++++++++++START
 
-    Model* chosenModel = modelCachePtr_->getModel(modelIDs[value->modelSelection]);
-    if (!chosenModel) {
-        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model not found!");
-        value->modelSelection = 0;
-        return false;
-    }
+    // Model* chosenModel = modelCachePtr_->getModel(modelIDs[value->modelSelection]);
+    // if (!chosenModel) {
+    //     loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model not found!");
+    //     value->modelSelection = 0;
+    //     return false;
+    // }
 
-    auto& chosenModelMatIDReferences = chosenModel->getAllMaterialReferences();
-    std::vector<unsigned int> matIDs{0};
+    // auto& chosenModelMatIDReferences = chosenModel->getAllMaterialReferences();
+    // std::vector<unsigned int> matIDs{0};
 
-    if (chosenModelMatIDReferences.size() < 1) {
-        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model has no materials!");
-        value->modelSelection = 0;
-        return false;
-    }
-    // If model only has one material, we can just show them the uniforms on the only material since there's only one material.
-    else if (chosenModelMatIDReferences.size() < 2) {
-        changed = value->materialSelection != 1;
-        auto& [matID, matRefCount] = *chosenModelMatIDReferences.begin(); //gets the only entry
-        matIDs.push_back(matID);
-        value->materialSelection = 1;
-    }
-    else {
-        std::vector<std::string> matNames{""};
-        std::vector<const char*> matChoices{""};
-        matNames.reserve(chosenModelMatIDReferences.size() + 1);
-        matIDs.reserve(chosenModelMatIDReferences.size() + 1);
-        matChoices.reserve(chosenModelMatIDReferences.size() + 1);
-        i = 0;
-        for (auto& [matID, matRefCount] : chosenModelMatIDReferences) {
-            matNames.push_back("Material " + std::to_string(matID));
-            matChoices.push_back(matNames[i].c_str());
-            matIDs.push_back(matID);
-            i++;
-        }
-        ImGui::Text("Source Material");
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(-1);
-        changed |= ImGui::Combo("##Source_material", &value->materialSelection, matChoices.data(), static_cast<int>(matChoices.size()));
-    }
+    // if (chosenModelMatIDReferences.size() < 1) {
+    //     loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model has no materials!");
+    //     value->modelSelection = 0;
+    //     return false;
+    // }
+    // // If model only has one material, we can just show them the uniforms on the only material since there's only one material.
+    // else if (chosenModelMatIDReferences.size() < 2) {
+    //     changed = value->materialSelection != 1;
+    //     auto& [matID, matRefCount] = *chosenModelMatIDReferences.begin(); //gets the only entry
+    //     matIDs.push_back(matID);
+    //     value->materialSelection = 1;
+    // }
+    // else {
+    //     std::vector<std::string> matNames{""};
+    //     std::vector<const char*> matChoices{""};
+    //     matNames.reserve(chosenModelMatIDReferences.size() + 1);
+    //     matIDs.reserve(chosenModelMatIDReferences.size() + 1);
+    //     matChoices.reserve(chosenModelMatIDReferences.size() + 1);
+    //     i = 0;
+    //     for (auto& [matID, matRefCount] : chosenModelMatIDReferences) {
+    //         matNames.push_back("Material " + std::to_string(matID));
+    //         matChoices.push_back(matNames[i].c_str());
+    //         matIDs.push_back(matID);
+    //         i++;
+    //     }
+    //     ImGui::Text("Source Material");
+    //     ImGui::SameLine();
+    //     ImGui::SetNextItemWidth(-1);
+    //     changed |= ImGui::Combo("##Source_material", &value->materialSelection, matChoices.data(), static_cast<int>(matChoices.size()));
+    // }
 
-    if (changed) {
-        value->referencedMaterialID = matIDs[value->materialSelection];
-        value->uniformSelection = 0;
-    }
-    if (value->materialSelection == 0) {
-        return changed;
-    }
+    // if (changed) {
+    //     value->referencedMaterialID = matIDs[value->materialSelection];
+    //     value->uniformSelection = 0;
+    // }
+    // if (value->materialSelection == 0) {
+    //     return changed;
+    // }
+
+    //+++++++++++++++++++++END
 
     if (!value->useWorldData) {
+        Model* chosenModel = modelCachePtr_->getModel(modelIDs[value->modelSelection]);
+        if (!chosenModel) {
+            loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model not found!");
+            value->modelSelection = 0;
+            return false;
+        }
+
+        auto& chosenModelMatReferences = chosenModel->getAllMaterialReferences();
+        std::vector<unsigned int> matIDs{0};
+
+        if (chosenModelMatReferences.size() < 1) {
+            loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model has no materials!");
+            value->modelSelection = 0;
+            return false;
+        }
+        // If model only has one material, we can just show them the uniforms on the only material since there's only one material.
+        else if (chosenModelMatReferences.size() < 2) {
+            changed = value->materialSelection != 1;
+            auto& [matID, matRefCount] = *chosenModelMatReferences.begin(); //same as getting front, retrieves only entry
+            matIDs.push_back(matID);
+            value->materialSelection = 1;
+        }
+        else {
+            std::vector<std::string> matNames{""};
+            std::vector<const char*> matChoices{""};
+            matNames.reserve(chosenModelMatReferences.size() + 1);
+            matIDs.reserve(chosenModelMatReferences.size() + 1);
+            matChoices.reserve(chosenModelMatReferences.size() + 1);
+            i = 0;
+            for (auto& [matID, matRefCount] : chosenModelMatReferences) {
+                matNames.push_back("Material " + std::to_string(matID));
+                matChoices.push_back(matNames[i].c_str());
+                matIDs.push_back(matID);
+                i++;
+            }
+            ImGui::Text("Source Material");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(-1);
+            changed |= ImGui::Combo("##Source_material", &value->materialSelection, matChoices.data(), static_cast<int>(matChoices.size()));
+        }
+
+        if (changed) {
+            value->referencedMaterialID = matIDs[value->materialSelection];
+            value->uniformSelection = 0;
+        }
+        if (value->materialSelection == 0) {
+            return changed;
+        }
+
         const auto uniforms = uniformRegPtr_->tryReadUniforms(matIDs[value->materialSelection]);
         if (uniforms == nullptr) {
             loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput (function)", "uniform list not found");

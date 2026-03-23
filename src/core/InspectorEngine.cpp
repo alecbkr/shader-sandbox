@@ -134,19 +134,19 @@ void InspectorEngine::refreshUniforms() {
     }
 }
 
-bool InspectorEngine::handleEditShaderProgram(const std::string& vertexFile, const std::string& fragmentFile, const std::string& programName) {
+bool InspectorEngine::handleEditShaderProgram(const std::string& vertexPath, const std::string& fragmentPath, const std::string& programName) {
     // Code mostly taken from hotreloader
     ShaderProgram *oldProgram = shaderRegPtr->getProgram(programName);
     
     // Simple path, just register the new program
     if (oldProgram == nullptr) {
-        if (!shaderRegPtr->registerProgram(vertexFile, fragmentFile , programName)) return false;
+        if (!shaderRegPtr->registerProgram(vertexPath, fragmentPath , programName)) return false;
         InspectorEngine::refreshUniforms();
         return true;
     }
 
     // Otherwise, we need to go through this mess.
-    auto newProgram = std::make_unique<ShaderProgram>(vertexFile.c_str(), fragmentFile.c_str(), programName.c_str(), loggerPtr);
+    auto newProgram = std::make_unique<ShaderProgram>(vertexPath.c_str(), fragmentPath.c_str(), programName.c_str(), loggerPtr);
     if (!newProgram->isCompiled()) return false;
 
     shaderRegPtr->replaceProgram(programName, std::move(newProgram));
@@ -563,7 +563,7 @@ void InspectorEngine::applyModelUniforms(ShaderProgram& program, unsigned int mo
 
 
 void InspectorEngine::applyMaterialUniforms(ShaderProgram& program, unsigned int modelID, unsigned int materialID) {
-    const auto materialUniforms = uniformRegPtr->tryReadMaterialUniforms(modelID, materialID);
+    const auto materialUniforms = uniformRegPtr->tryReadMaterialUniforms(materialID);
     if (materialUniforms == nullptr) {
         // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", modelID.c_str());
         // Logger::addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", std::to_string(modelID)); 

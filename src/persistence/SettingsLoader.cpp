@@ -27,6 +27,7 @@ bool SettingsLoader::load(AppSettings& settings) {
         settings.posX = j.value("windowPositionX", settings.posX);
         settings.posY = j.value("windowPositionY", settings.posY);
         settings.fontIdx = j.value("fontIdx", settings.fontIdx);
+        settings.projectToOpen = j.value("projectToOpen", "");
 
         // Load keybinds
         if (j.contains("keybinds") && j["keybinds"].is_object()) {
@@ -68,6 +69,7 @@ void SettingsLoader::save(const AppSettings& settings) {
     j["windowPositionX"] = settings.posX;
     j["windowPositionY"] = settings.posY;
     j["fontIdx"] = settings.fontIdx;
+    j["projectToOpen"] = settings.projectToOpen;
 
     json keybinds = json::object();
     for (const auto& [name, bind] : settings.keybindsMap) {

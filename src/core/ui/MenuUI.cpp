@@ -195,6 +195,8 @@ void MenuUI::drawMenuBar()
             auto menu = MenuEngine::getMenuStructure();
             for (const MenuItem& item : menu) MenuUI::drawMenuItem(item);
             PopMenuPopupStyle();
+
+            ImGui::Text(appctx->project.projectTitle.c_str());
             
             // ---- Right-side window buttons ----
             const ImGuiStyle& style = ImGui::GetStyle();

@@ -6,16 +6,21 @@
 #include <vector>
 #include <memory>
 #include <deque>
+#include <unordered_set>
+#include <unordered_map>
 #include "../logging/ConsoleSink.hpp"
 #include "../ConsoleEngine.hpp"
 #include "components/SearchText.hpp"
+#include "components/TextSelector.hpp"
 
 class Logger;
+class Fonts;
+struct SettingsStyles;
 
 class ConsoleUI {
 public: 
     ConsoleUI();
-    bool initialize(Logger* _loggerPtr);
+    bool initialize(Logger* _loggerPtr, ConsoleEngine* _engine, SettingsStyles* _styles, Fonts* _fontsPtr);
     void render();
 
     struct LogStyle {
@@ -23,29 +28,55 @@ public:
         ImVec4 color;
     };
 
-private:
-    SearchText searcher;
+    struct DisplayLine {
+        // used for selection
+        int originalLogIdx; 
+        std::string text; 
+        bool isWrap; 
+        int collapsedCount; 
+        int charOffset; 
 
+        // used for collapsing logs 
+        bool isGroupHeader = false; 
+        size_t groupHash = 0; 
+        bool isExpanded = false; 
+        bool isChildLog = false; 
+        int parentLogIdx = -1; 
+        int totalGroupCount = 1; 
+    };
+
+private:
     float targetWidth = 0.0f;
     float targetHeight = 0.0f;
     ImVec2 windowPos = ImVec2(0, 0);
     
-    std::shared_ptr<ConsoleEngine> engine = nullptr;
-    std::shared_ptr<ConsoleSink> logSrc = nullptr;
-    Logger* loggerPtr;
+    ConsoleEngine *engine = nullptr;
+    std::shared_ptr<ConsoleSink> logSrc = nullptr;          // used to fetch the logs from the console sink
+    Logger* loggerPtr;                                      // used to send new log msgs to the logger
+    SettingsStyles* stylesPtr = nullptr; 
+    Fonts* fontsPtr = nullptr; 
+    
+    SearchText searcher;
+    TextSelectionCtx selectionCtx; 
+    TextSelectorLayout selectionLayout; 
 
     size_t lastLogSize = 0;
     bool initialized = false;
     int selectionStart = -1;
 
+    std::unordered_set<size_t> expandedGroups;      // used for collapsing logic 
+
     void drawLogs();
     void drawMenuBar();
     void updateSearchAndScroll(const std::deque<LogEntry> &logs, bool& isScroll);
     int getCollapseCount(const std::deque<LogEntry> &logs, int currIdx);
-    void drawSingleLog(const LogEntry& log, int index, int repeatCount, bool& isScroll);
+    void drawSingleLog(int rowIdx, const DisplayLine& lineData, const LogEntry& originalLog, bool& isScroll);
 
-    // Allows for users to copy their logs from the console(because of the way ImGui renders text I had to do this)
-    void copyLogsToClipboard();
-    LogStyle getLogStyle(const LogEntry& log);
-    std::string formatLogString(const LogEntry& log);
-}; 
+    // helpers 
+    LogStyle getLogStyle(const LogEntry& log); 
+    std::string formatLogString(const LogEntry& log); 
+    bool isLogFiltered(const LogEntry& log); 
+    std::vector<DisplayLine> wrapLogText(const std::string& fullText, int logIndex, int collapseCount, float maxWidth);
+    std::vector<DisplayLine> buildDisplayLines(const std::deque<LogEntry>& logs, float wrapWidth);
+    size_t getLogHash(const LogEntry& log) const;
+};

@@ -1,5 +1,6 @@
 #include "core/ui/ObjectsInspectorUI.hpp"
 
+#include "application/SettingsStyles.hpp"
 #include "core/InspectorEngine.hpp"
 #include "core/ShaderRegistry.hpp"
 #include "core/TextureRegistry.hpp"
@@ -16,6 +17,20 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>
+
+ObjectsInspectorUI::ObjectsInspectorUI(SettingsStyles* styles) : styles(styles) {
+    if (styles) {
+        theme.bgColor = styles->assetsTreeBodyColor;
+        // Derive a hover color from the base color so it always differs visibly.
+        theme.bgColorHovered = ImVec4(
+            theme.bgColor.x * 1.3f,
+            theme.bgColor.y * 1.3f,
+            theme.bgColor.z * 1.3f,
+            theme.bgColor.w
+        );
+        theme.indentSize = styles->indentSpacing * 0.5f;
+    }
+}
 
 void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, TextureRegistry* textureRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr) {
     drawAddObjectMenu(loggerPtr, inspectorEngPtr, shaderRegPtr, modelCachePtr);

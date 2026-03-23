@@ -5,10 +5,19 @@
 
 #include "core/ShaderRegistry.hpp"
 #include "core/logging/Logger.hpp"
+#include "application/Project.hpp"
+
+// helper to take on the project's name for the logger 
+static bool initTestLogger(Logger& logger){
+    std::string testAppName = "PrimsTSS_Test"; 
+    std::string testProjectName = "ActionRegistry_Tests"; 
+    return logger.initialize(testAppName, testProjectName); 
+}
 
 TEST_CASE("ShaderRegistry: initialize(false) produces empty registry", "[shader][registry]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    Project project;
+    REQUIRE(initTestLogger(logger));
 
     ShaderRegistry reg;
 
@@ -17,14 +26,15 @@ TEST_CASE("ShaderRegistry: initialize(false) produces empty registry", "[shader]
         return nullptr;
     });
 
-    REQUIRE(reg.initialize(&logger, false) == true);
+    REQUIRE(reg.initialize(&logger, &project, false) == true);
     REQUIRE(reg.getNumberOfPrograms() == 0);
     REQUIRE(reg.getProgram("anything") == nullptr);
 }
 
 TEST_CASE("ShaderRegistry: registerProgram rejects empty name", "[shader][registry]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    Project project;
+    REQUIRE(initTestLogger(logger));
 
     ShaderRegistry reg;
 
@@ -33,13 +43,13 @@ TEST_CASE("ShaderRegistry: registerProgram rejects empty name", "[shader][regist
         return nullptr;
     });
 
-    REQUIRE(reg.initialize(&logger, false) == true);
+    REQUIRE(reg.initialize(&logger, &project, false) == true);
     REQUIRE_FALSE(reg.registerProgram("v.vert", "f.frag", ""));
 }
 
 // TEST_CASE("ShaderRegistry: duplicate program name is rejected", "[shader][registry]") {
 //     Logger logger;
-//     REQUIRE(logger.initialize());
+//     REQUIRE(initTestLogger(logger));
 
 //     ShaderRegistry reg;
 

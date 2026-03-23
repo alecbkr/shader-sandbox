@@ -1,6 +1,7 @@
 #include "core/logging/Logger.hpp"
 #include "core/logging/FileSink.hpp"
 #include "core/logging/StdoutSink.hpp"
+#include "../../application/Project.hpp"
 
 #define DEFAULT_SINKS LoggerInitialization::CONSOLE_FILE_STDOUT
 
@@ -10,18 +11,19 @@ Logger::Logger() {
     initialized = false;
 }
 
-bool Logger::initialize(){
+bool Logger::initialize(const std::string& appName, const std::string& projectName){
     Logger::consoleSinkPtr = std::make_shared<ConsoleSink>();
     Logger::addSink(consoleSinkPtr);
+    std::filesystem::path logPath = FileSink::GetProjectLogDirectory(appName, projectName);
 
     switch (DEFAULT_SINKS) {
         case LoggerInitialization::CONSOLE_FILE_STDOUT:
-            Logger::addSink(std::make_shared<FileSink>());
+            Logger::addSink(std::make_shared<FileSink>(logPath));
             Logger::addSink(std::make_shared<StdoutSink>());
             break;
         
         case LoggerInitialization::CONSOLE_FILE:
-            Logger::addSink(std::make_shared<FileSink>());
+            Logger::addSink(std::make_shared<FileSink>(logPath));
             break;
         
         case LoggerInitialization::CONSOLE_STDOUT:
@@ -54,8 +56,7 @@ void Logger::addLog(LogLevel level, std::string src, std::string msg, std::strin
         return;
     };
 
-    // TODO: maybe explore using a config.hpp.in later to set compiler definitions using cmake instead of hard-coding
-    constexpr std::string_view project_path = "shader-sandbox/";
+    constexpr std::string_view project_path = "shader-sandbox";
     std::string fName(toRelativePath(file_location.file_name(), project_path));
     LogCategory category = LogClassifier::categorize(file_location);
     // std::string cat_str = LogClassifier::categoryToString(category);
@@ -84,6 +85,16 @@ void Logger::addLog(LogLevel level, std::string src, std::string msg, std::strin
 std::shared_ptr<ConsoleSink> Logger::getConsoleSinkPtr() {
     if (!initialized) return nullptr;
     return Logger::consoleSinkPtr;
+}
+
+const std::filesystem::path Logger::getLogPath() const {
+    for (const auto& sink: sinks) {
+        if (auto fileSink = dynamic_cast<FileSink*>(sink.get())) {
+            return fileSink->getLogDir();
+        }
+    }
+
+    return {};
 }
 
 // helper that strips the root path to get the relative path of the file

@@ -1,6 +1,8 @@
 #include "core/MenuEngine.hpp"
 #include <array>
 #include "core/ui/modals/SettingsModal.hpp"
+#include "ui/modals/OpenProjectModal.hpp"
+#include "ui/modals/SaveAsModal.hpp"
 
 MenuItem::MenuItem(std::string_view _name, EventType _eventType) : name(_name), eventType(_eventType) { noAction = true; };
 MenuItem::MenuItem(std::string_view _name, Action _action, EventType _eventType) : name(_name), action(_action), eventType(_eventType) {};
@@ -8,11 +10,15 @@ MenuItem::MenuItem(bool _isSeparator) : isSeparator(_isSeparator) {};
 MenuItem::MenuItem(std::string_view _name, std::string_view _modalName, bool _opensModal) : name(_name), modalName(_modalName), opensModal(_opensModal) {};
 MenuItem::MenuItem(std::string_view _name, std::span<const MenuItem> _children) : name(_name), children(_children) {};
 
-static const std::array<MenuItem, 8> fileMenu = {{
+static const std::array<MenuItem, 12> fileMenu = {{
     {"New Shader File", Action::NewShaderFile, EventType::NewFile},
     {true},
     {"Save Active Shader File", Action::SaveActiveShaderFile, EventType::SaveActiveShaderFile},
+    {"New Project", Action::NewProject, EventType::NewProject},
+    {"Open Project", OpenProjectModal::ID, true},
+    {"Save Project As", SaveAsModal::ID, true},
     {"Save Project", Action::SaveProject, EventType::SaveProject},
+    {"Rename Project", Action::RenameProject, EventType::RenameProject},
     {true},
     {"Settings", SettingsModal::ID, true},
     {true},

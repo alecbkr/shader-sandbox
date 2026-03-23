@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 class ModelCache;
 class MaterialCache;
@@ -12,3 +13,4 @@ struct ProjectLoader {
     static bool load(Project& project);
     static void save(Project& project, ModelCache* modelCachePtr, MaterialCache* materialCachePtr);
 };
+

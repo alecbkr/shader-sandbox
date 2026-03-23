@@ -1,7 +1,5 @@
 #pragma once
 
-#include <filesystem>
-#include <types.hpp>
 #include "core/logging/Logger.hpp"
 #include "core/input/ActionRegistry.hpp"
 #include "core/input/ContextManager.hpp"
@@ -18,7 +16,6 @@
 #include "core/InspectorEngine.hpp"
 #include "core/HotReloader.hpp"
 #include "core/FileRegistry.hpp"
-#include "core/EditorEngine.hpp"
 #include "presets/PresetAssets.hpp"
 #include "core/TextureRegistry.hpp"
 #include "core/ui/ConsoleUI.hpp"
@@ -31,6 +28,8 @@
 #include "core/ui/modals/ModalManager.hpp"
 #include "core/ui/modals/SettingsModal.hpp"
 #include "core/ui/Fonts.hpp"
+#include "core/ui/modals/OpenProjectModal.hpp"
+#include "core/ui/modals/SaveAsModal.hpp"
 #include "object/MaterialCache.hpp"
 #include "object/Renderer.hpp"
 #include "object/AssimpImporter.hpp"
@@ -40,6 +39,7 @@ struct AppContext {
 
     const char* app_title;
     bool shouldClose = false;
+    bool projectSwitch = false;
 
     AppSettings settings;
     Project project;
@@ -71,6 +71,8 @@ struct AppContext {
     ModalManager modals;
     Fonts fonts;
     SettingsModal settingsModal;
+    SaveAsModal saveAsModal;
+    OpenProjectModal openProjectModal;
     MaterialCache material_cache;
     Renderer renderer;
     AssimpImporter assimp_importer;

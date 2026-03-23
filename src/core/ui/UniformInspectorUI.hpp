@@ -5,6 +5,7 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
+#include <unordered_map>
 
 class Logger;
 class InspectorEngine;
@@ -13,9 +14,13 @@ class UniformRegistry;
 class ModelCache;
 struct Uniform;
 class ShaderProgram;
+struct SettingsStyles;
 
 class UniformInspectorUI {
 public:
+    UniformInspectorUI() = default;
+    explicit UniformInspectorUI(SettingsStyles* styles);
+
     void draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr);
 
     struct UniformInspectorThemeSettings {
@@ -33,6 +38,7 @@ private:
     ModelCache* modelCachePtr_ = nullptr;
     MaterialCache* materialCachePtr_ = nullptr;
     InspectorEngine* inspectorEngPtr_ = nullptr;
+    SettingsStyles* styles_ = nullptr;
     
     void drawModelContainer(int& imGuiID, unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialRefernces);
     void drawMaterialContainer(unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences, int& imGuiID);
@@ -46,6 +52,7 @@ private:
     bool drawInput(InspectorReference* value, Uniform* uniform = nullptr);
     void drawUniformRow(Uniform& uniform, unsigned int matID);
     bool isSimpleType(UniformType type);
+    void drawUniformsNested_byCursor(const std::unordered_map<std::string, Uniform>& uniforms, unsigned int matID, int& imGuiID);
     
     UniformInspectorThemeSettings theme;
 };

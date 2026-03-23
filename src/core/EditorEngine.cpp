@@ -2,6 +2,8 @@
 #include <fstream>
 #include <filesystem>
 #include <limits>
+
+#include "application/Project.hpp"
 #include "core/logging/Logger.hpp"
 #include "core/EventDispatcher.hpp"
 #include "object/ModelCache.hpp"
@@ -22,18 +24,20 @@ std::string getFileContents(std::string filename) {
     return "";
 }
 
-Editor::Editor(std::string filePath, std::string fileName, unsigned int modelID, SettingsStyles* styles) {
+Editor::Editor(std::string filePath, std::string fileName, unsigned int modelID, SettingsStyles* styles, bool readOnly) {
     searcher.setSearchFlag(SearchUIFlags::ADVANCED | SearchUIFlags::REPLACE);
 
     this->filePath = std::move(filePath);
     this->fileName = std::move(fileName);
     this->modelID = modelID;
     this->stylesPtr = styles;
+    this->readOnly = readOnly;
     seenPaletteVersion = std::numeric_limits<u32>::max();
 
     TextEditor::LanguageDefinition lang = TextEditor::LanguageDefinition::GLSL();
     this->textEditor.SetLanguageDefinition(lang);
     this->textEditor.SetShowWhitespaces(false);
+    this->textEditor.SetReadOnly(readOnly);
     applyPaletteIfOutdated();
 
     this->textEditor.SetText(getFileContents(this->filePath));
@@ -80,7 +84,7 @@ EditorEngine::EditorEngine() {
     activeEditor = 0;
 }
 
-bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, ShaderRegistry* _shaderRegPtr, SettingsStyles* styles) {
+bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, ShaderRegistry* _shaderRegPtr, SettingsStyles* styles, Project* _projectPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Editor Engine Initialization", "Editor Engine was already initialized.");
         return false;
@@ -90,6 +94,7 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
     eventsPtr = _eventsPtr;
     modelCachePtr = _modelCachePtr;
     shaderRegPtr = _shaderRegPtr;
+    projectPtr = _projectPtr;
     stylesPtr = styles;
     editors.clear();
     activeEditor = 0;
@@ -98,6 +103,7 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
     eventsPtr->Subscribe(EventType::NewFile, std::bind(&EditorEngine::spawnEditor, this, std::placeholders::_1));
     eventsPtr->Subscribe(EventType::RenameFile, std::bind(&EditorEngine::renameEditor, this, std::placeholders::_1));
     eventsPtr->Subscribe(EventType::ET_DeleteFile, std::bind(&EditorEngine::deleteEditor, this, std::placeholders::_1));
+    eventsPtr->Subscribe(EventType::CloneFile, std::bind(&EditorEngine::cloneFile, this, std::placeholders::_1));
 
     // syncing styles with settings if no loaded settings
     if (!stylesPtr->hasLoadedPalette) {
@@ -116,6 +122,7 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
 
 void EditorEngine::shutdown() {
     if (!initialized) return;
+
     loggerPtr = nullptr;
     eventsPtr = nullptr;
     modelCachePtr = nullptr;
@@ -141,18 +148,17 @@ bool EditorEngine::spawnEditor(const EventPayload& payload) {
                 }
             }
         }
-        if (!data->filePath.empty()) {
-            editors.push_back(new Editor(data->filePath, data->fileName, linkedID, stylesPtr));
-        } else {
-            editors.push_back(new Editor("../shaders/tex.frag", "tex.frag", linkedID, stylesPtr));
+        if (!data->filePath.empty() && std::filesystem::exists(data->filePath)) {
+            editors.push_back(new Editor(data->filePath, data->fileName, linkedID, stylesPtr, data->readOnly));
         }
+
         return true;
     } else if (std::get_if<std::monostate>(&payload)) {
         try {
-            const std::string fileName = "Untitled " + findNextUntitledNumber();
-            const std::string filePath = "../shaders/" + fileName;
+            const std::string fileName = findNextFileNumber("Untitled");
+            const std::string filePath = (projectPtr->projectShadersDir /  fileName).string();
             createFile(filePath);
-            editors.push_back(new Editor(filePath, fileName, 0, stylesPtr));
+            editors.push_back(new Editor(filePath, fileName, 0, stylesPtr, false));
             return true;
         } catch (const std::filesystem::filesystem_error& e) {
             loggerPtr->addLog(LogLevel::LOG_ERROR, "EditorEngine::createFile", std::string("Filesystem error: ") + e.what());
@@ -171,6 +177,11 @@ bool EditorEngine::renameEditor(const EventPayload& payload) {
                 editor->fileName = data->newName;
 
                 std::filesystem::path newPath = editor->filePath;
+                if (std::filesystem::exists(editor->filePath)) {
+                    loggerPtr->addLog(LogLevel::LOG_ERROR, "renameEditor", "File Name Already Exists");
+                    return false;
+                }
+
                 newPath.replace_filename(data->newName);
                 editor->filePath = newPath.string();
             }
@@ -198,6 +209,21 @@ bool EditorEngine::deleteEditor(const EventPayload& payload) {
     return false;
 }
 
+bool EditorEngine::cloneFile(const EventPayload& payload) {
+    if (std::get_if<std::monostate>(&payload) && !editors.empty()) {
+        const std::string fileName = findNextFileNumber(editors[activeEditor]->fileName);
+        const std::string filePath = (projectPtr->projectShadersDir  / fileName).string();
+
+        std::ofstream outfile(filePath);
+        outfile << editors[activeEditor]->textEditor.GetText();
+        outfile.close();
+
+        editors.push_back(new Editor(filePath, fileName, 0, stylesPtr, false));
+    }
+
+    return false;
+}
+
 void EditorEngine::createFile(const std::string& filePath) {
     std::ofstream outfile(filePath);
     outfile << "#version 330 core\n\n";
@@ -205,8 +231,18 @@ void EditorEngine::createFile(const std::string& filePath) {
     outfile.close();
 }
 
-std::string EditorEngine::findNextUntitledNumber() {
-    int i = 0;
-    while (std::filesystem::exists("../shaders/Untitled " + std::to_string(i))) i++;
-    return std::to_string(i);
+std::string EditorEngine::findNextFileNumber(const std::string& startingName) {
+    int i = 1;
+    std::string newName = startingName + "(" + std::to_string(i) + ")";
+
+    if (!std::filesystem::exists(projectPtr->projectShadersDir / startingName)) {
+        return startingName;
+    }
+
+    while (std::filesystem::exists(projectPtr->projectShadersDir / newName)) {
+        newName = startingName + "(" + std::to_string(i) + ")";
+        i++;
+    }
+
+    return newName;
 }

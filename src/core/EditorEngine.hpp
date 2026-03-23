@@ -4,8 +4,8 @@
 #include <types.hpp>
 
 #include "EventTypes.hpp"
-#include "imgui.h"
-//#include "ui/EditorUI.hpp"
+#include "application/Project.hpp"
+#include "application/Project.hpp"
 #include "ui/TextEditor.h"
 
 class Logger;
@@ -17,9 +17,10 @@ struct SettingsStyles;
 struct Editor {
     TextEditor textEditor;
     SearchText searcher;
-    Editor(std::string filePath, std::string fileName, unsigned int modelID, SettingsStyles* styles);
+    Editor(std::string filePath, std::string fileName, unsigned int modelID, SettingsStyles* styles, bool readOnly);
     std::string filePath;
     std::string fileName;
+    bool readOnly;
     unsigned int modelID;
 
     SettingsStyles* stylesPtr = nullptr;
@@ -34,10 +35,10 @@ public:
     EditorEngine();
     std::vector<Editor*> editors;
     int activeEditor;
-    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, ShaderRegistry* _shaderRegPtr, SettingsStyles* styles);
+    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, ShaderRegistry* _shaderRegPtr, SettingsStyles* styles, Project* project);
     void shutdown();
     void createFile(const std::string& filePath);
-    std::string findNextUntitledNumber();
+    std::string findNextFileNumber(const std::string& startingName);
 private:
     bool initialized = false;
     Logger* loggerPtr = nullptr;
@@ -45,7 +46,9 @@ private:
     ModelCache* modelCachePtr = nullptr;
     ShaderRegistry* shaderRegPtr = nullptr;
     SettingsStyles* stylesPtr = nullptr;
+    Project* projectPtr = nullptr;
     bool spawnEditor(const EventPayload& payload);
     bool renameEditor(const EventPayload& payload);
-    bool deleteEditor(const EventPayload& payload); 
+    bool deleteEditor(const EventPayload& payload);
+    bool cloneFile(const EventPayload& payload);
 };

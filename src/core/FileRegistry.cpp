@@ -22,7 +22,7 @@ ShaderFile::ShaderFile(std::string filePath, std::string fileName, std::string e
     this->extension = extension;
 }
 
-bool FileRegistry::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, Platform* _platformPtr) {
+bool FileRegistry::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, Platform* _platformPtr, Project* _projectPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "File Registry Initialization", "File Registry was already initialized.");
         return true;
@@ -30,10 +30,15 @@ bool FileRegistry::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, P
     loggerPtr = _loggerPtr;
     eventsPtr = _eventsPtr;
     platformPtr = _platformPtr;
+    projectPtr = _projectPtr;
     
     eventsPtr->Subscribe(EventType::RenameFile, [this](const EventPayload& payload) -> bool { return renameFile(payload); });
     eventsPtr->Subscribe(EventType::ET_DeleteFile, [this](const EventPayload& payload) -> bool { return deleteFile(payload); });
     reloadMap();
+
+    for (const auto& dirEntry : std::filesystem::directory_iterator(platformPtr->getExeDir() / ".." / "shaders")) {
+        presetShaders.push_back(dirEntry.path());
+    }
 
     initialized = true;
     return true;
@@ -41,7 +46,7 @@ bool FileRegistry::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, P
 
 void FileRegistry::reloadMap() {
     std::unordered_map<std::string, ShaderFile*> tempMap;
-    for (const auto & dirEntry : std::filesystem::directory_iterator(platformPtr->getExeDir() / ".." / "shaders")) {
+    for (const auto & dirEntry : std::filesystem::directory_iterator(projectPtr->projectShadersDir)) {
         std::string filePath = dirEntry.path().string();
         std::string fileName = dirEntry.path().filename().string();
         std::string fileExtension = dirEntry.path().extension().string();
@@ -115,4 +120,8 @@ bool FileRegistry::deleteFile(const EventPayload& payload) {
 
 std::unordered_map<std::string, ShaderFile *> FileRegistry::getFiles() {
     return files;
+}
+
+std::vector<std::filesystem::path> FileRegistry::getPresetShaders() {
+    return presetShaders;
 }

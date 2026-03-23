@@ -9,6 +9,13 @@
 #include "core/EditorEngine.hpp"
 #include "core/ShaderRegistry.hpp"
 
+// helper to take on the project's name for the logger 
+static bool initTestLogger(Logger& logger){
+    std::string testAppName = "PrimsTSS_Test"; 
+    std::string testProjectName = "ActionRegistry_Tests"; 
+    return logger.initialize(testAppName, testProjectName); 
+}
+
 // Helper to create a dummy shader file for testing
 void CreateDummyFile(const std::string& path, const std::string& content) {
     std::ofstream ofs(path);
@@ -22,25 +29,26 @@ TEST_CASE("EditorEngine: Lifecycle and Initialization", "[editor_engine]") {
     ModelCache cache;
     ShaderRegistry registry;
     SettingsStyles styles;
+    Project project;
 
-    logger.initialize();
+    initTestLogger(logger);
     events.initialize(&logger);
 
     EditorEngine engine;
 
     SECTION("Initialization attaches event listeners") {
-        REQUIRE(engine.initialize(&logger, &events, &cache, &registry, &styles) == true);
+        REQUIRE(engine.initialize(&logger, &events, &cache, &registry, &styles, &project) == true);
 
         // Verify double initialization fails
-        REQUIRE(engine.initialize(&logger, &events, &cache, &registry, &styles) == false);
+        REQUIRE(engine.initialize(&logger, &events, &cache, &registry, &styles, &project) == false);
     }
 
     SECTION("Shutdown resets state") {
-        engine.initialize(&logger, &events, &cache, &registry, &styles);
+        engine.initialize(&logger, &events, &cache, &registry, &styles, &project);
         engine.shutdown();
 
         // After shutdown, engine should be ready for a fresh init
-        REQUIRE(engine.initialize(&logger, &events, &cache, &registry, &styles) == true);
+        REQUIRE(engine.initialize(&logger, &events, &cache, &registry, &styles, &project) == true);
     }
 }
 
@@ -50,12 +58,13 @@ TEST_CASE("EditorEngine: Editor Management via Events", "[editor_engine][events]
     ModelCache cache;
     ShaderRegistry registry;
     SettingsStyles styles;
+    Project project;
 
-    logger.initialize();
+    initTestLogger(logger);
     events.initialize(&logger);
 
     EditorEngine engine;
-    engine.initialize(&logger, &events, &cache, &registry, &styles);
+    engine.initialize(&logger, &events, &cache, &registry, &styles, &project);
 
     // Setup a temp file
     std::string testPath = "test_shader.frag";
@@ -63,7 +72,7 @@ TEST_CASE("EditorEngine: Editor Management via Events", "[editor_engine][events]
     CreateDummyFile(testPath, testContent);
 
     SECTION("Spawning an editor via OpenFile event") {
-        events.TriggerEvent(OpenFileEvent(testPath, "test_shader.frag", 0));
+        events.TriggerEvent(OpenFileEvent(testPath, "test_shader.frag", 0, false));
         events.ProcessQueue();
 
         REQUIRE(engine.editors.size() == 1);
@@ -73,12 +82,8 @@ TEST_CASE("EditorEngine: Editor Management via Events", "[editor_engine][events]
     }
 
     SECTION("Renaming an editor") {
-        // First spawn one
-        events.TriggerEvent(OpenFileEvent(testPath, "old_name.frag", 0));
-        events.ProcessQueue();
-
         // Trigger Rename
-        events.TriggerEvent(RenameFileEvent("old_name.frag", "new_name.frag"));
+        events.TriggerEvent(RenameFileEvent("test_shader.frag", "new_name.frag"));
         events.ProcessQueue();
 
         REQUIRE(engine.editors[0]->fileName == "new_name.frag");
@@ -87,7 +92,7 @@ TEST_CASE("EditorEngine: Editor Management via Events", "[editor_engine][events]
     }
 
     SECTION("Deleting an editor") {
-        events.TriggerEvent(OpenFileEvent(testPath, "to_delete.frag", 0));
+        events.TriggerEvent(OpenFileEvent(testPath, "to_delete.frag", 0, false));
         events.ProcessQueue();
         REQUIRE(engine.editors.size() == 1);
 
@@ -107,12 +112,13 @@ TEST_CASE("EditorEngine: Untitled File Generation", "[editor_engine][filesystem]
     ModelCache cache;
     ShaderRegistry registry;
     SettingsStyles styles;
+    Project project;
 
-    logger.initialize();
+    initTestLogger(logger);
     events.initialize(&logger);
 
     EditorEngine engine;
-    engine.initialize(&logger, &events, &cache, &registry, &styles);
+    engine.initialize(&logger, &events, &cache, &registry, &styles, &project);
 
     // Ensure directory exists for the test
     std::filesystem::create_directories("../shaders");
@@ -142,15 +148,16 @@ TEST_CASE("EditorEngine: Model ID Linking", "[editor_engine]") {
     ModelCache cache;
     ShaderRegistry registry;
     SettingsStyles styles;
+    Project project;
 
-    logger.initialize();
+    initTestLogger(logger);
     events.initialize(&logger);
 
     EditorEngine engine;
-    engine.initialize(&logger, &events, &cache, &registry, &styles);
+    engine.initialize(&logger, &events, &cache, &registry, &styles, &project);
 
     SECTION("Editor inherits ModelID from payload") {
-        events.TriggerEvent(OpenFileEvent("path.glsl", "name.glsl", 1234u));
+        events.TriggerEvent(OpenFileEvent("path.glsl", "name.glsl", 1234u, false));
         events.ProcessQueue();
 
         REQUIRE(engine.editors.back()->modelID == 1234u);

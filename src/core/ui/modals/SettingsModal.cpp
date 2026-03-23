@@ -420,7 +420,11 @@ void SettingsModal::drawStylesPage() {
             row("Assets Title Inner Padding", [&] { ImGui::SliderFloat("##AssetsTitleInnerPadding", &settingsPtr->styles.assetsTitleInnerPadding, 0.0f, 4.0f, "%0.1f"); });
             row("Assets Body Rounding", [&] { ImGui::SliderFloat("##AssetsBodyRounding", &settingsPtr->styles.assetsBodyRounding, 0.0f, 12.0f, "%0.5f"); });
             row("Assets Title Offset", [&] { ImGui::SliderFloat("##AssetsTitleOffset", &settingsPtr->styles.assetsTitleOffset, 0.0f, 12.0f, "%0.5f"); });
-
+            row("Shader Border Thickness", [&] { ImGui::SliderFloat("##ShaderBorderThickness", &settingsPtr->styles.shaderBorderThickness, 0.0f, 4.0f, "%0.1f"); });
+            row("Shader Body Padding", [&] { ImGui::SliderFloat("##ShaderBodyPadding", &settingsPtr->styles.shaderBodyPadding, 0.0f, 24.0f, "%0.5f"); });
+            row("Shader Title Inner Padding", [&] { ImGui::SliderFloat("##ShaderTitleInnerPadding", &settingsPtr->styles.shaderTitleInnerPadding, 0.0f, 4.0f, "%0.1f"); });
+            row("Shader Body Rounding", [&] { ImGui::SliderFloat("##ShaderBodyRounding", &settingsPtr->styles.shaderBodyRounding, 0.0f, 12.0f, "%0.5f"); });
+            row("Shader Title Offset", [&] { ImGui::SliderFloat("##ShaderTitleOffset", &settingsPtr->styles.shaderTitleOffset, 0.0f, 12.0f, "%0.5f"); });
             endSectionTable();
         }
         ImGui::Unindent();
@@ -522,7 +526,8 @@ void SettingsModal::drawStylesPage() {
     // ===== Inspector Colors =====
     static const char* kInspectorColorNames[] = {
         "assetsDirectoryTextColor", "assetsFileBackgroundColor", "assetsBorderColor", "assetsTabBackgroundColor",
-        "assetsTitleBackgroundColor", "assetsTreeBodyColor"
+        "assetsTitleBackgroundColor", "assetsTreeBodyColor", "shaderTabBackgroundColor", "shaderTitleBackgroundColor", 
+        "shaderTreeBodyColor", "shaderBorderColor"
     };
 
     static ImVec4* inspectorColorPtrs[] = {
@@ -531,13 +536,17 @@ void SettingsModal::drawStylesPage() {
         &settingsPtr->styles.assetsBorderColor,
         &settingsPtr->styles.assetsTabBackgroundColor,
         &settingsPtr->styles.assetsTitleBackgroundColor,
-        &settingsPtr->styles.assetsTreeBodyColor
+        &settingsPtr->styles.assetsTreeBodyColor,
+        &settingsPtr->styles.shaderTabBackgroundColor,
+        &settingsPtr->styles.shaderTitleBackgroundColor,
+        &settingsPtr->styles.shaderTreeBodyColor,
+        &settingsPtr->styles.shaderBorderColor
     };
 
     if (ImGui::CollapsingHeader("Inspector Colors")) {
         ImGui::Indent();
         if (beginSectionTable("##style_inspectorcolors")) {
-            row("Style Color", [&] { ImGui::Combo("##StyleColorInspector", &selectedInspectorStyleColor, kInspectorColorNames, 6); });
+            row("Style Color", [&] { ImGui::Combo("##StyleColorInspector", &selectedInspectorStyleColor, kInspectorColorNames, 10); });
             endSectionTable();
         }
         ImGui::Spacing();
@@ -549,6 +558,51 @@ void SettingsModal::drawStylesPage() {
 
         ImGui::PushItemWidth(pickerWidth);
         ImGui::ColorPicker4("##Picker", &(inspectorColorPtrs[selectedInspectorStyleColor]->x),
+            ImGuiColorEditFlags_NoSmallPreview |
+            ImGuiColorEditFlags_PickerHueBar
+        );
+        ImGui::PopItemWidth();
+        ImGui::Unindent();
+    }
+
+    // ===== Console Colors =====
+    static const char* kConsoleColorNames[] = {
+        "Critical Color", 
+        "Error Color", 
+        "Warning Color", 
+        "Info Color",
+        "Window Background", 
+        "Menu Bar Background", 
+        "Text Selected Background", 
+        "Search Highlight"
+    };
+
+    static ImVec4* consoleColorPtrs[] = {
+        &settingsPtr->styles.consoleCriticalColor,
+        &settingsPtr->styles.consoleErrorColor,
+        &settingsPtr->styles.consoleWarningColor,
+        &settingsPtr->styles.consoleInfoColor,
+        &settingsPtr->styles.consoleWindowBgColor,
+        &settingsPtr->styles.consoleMenuBarBgColor,
+        &settingsPtr->styles.consoleTextSelectedBgColor,
+        &settingsPtr->styles.consoleSearchHighlightColor
+    };
+
+    if (ImGui::CollapsingHeader("Console Colors")) {
+        ImGui::Indent();
+        if (beginSectionTable("##style_consolecolors")) {
+            row("Style Color", [&] { ImGui::Combo("##StyleColorConsole", &selectedConsoleStyleColor, kConsoleColorNames, 8); });
+            endSectionTable();
+        }
+        ImGui::Spacing();
+
+        const float pickerWidth = 240.0f;
+        float avail = ImGui::GetContentRegionAvail().x;
+        float x = ImGui::GetCursorPosX() + (avail - pickerWidth) * 0.5f;
+        if (x > ImGui::GetCursorPosX()) ImGui::SetCursorPosX(x);
+
+        ImGui::PushItemWidth(pickerWidth);
+        ImGui::ColorPicker4("##ConsolePicker", &(consoleColorPtrs[selectedConsoleStyleColor]->x),
             ImGuiColorEditFlags_NoSmallPreview |
             ImGuiColorEditFlags_PickerHueBar
         );

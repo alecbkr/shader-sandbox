@@ -19,6 +19,8 @@
 #include "core/FileRegistry.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "application/Project.hpp"
+#include "application/SettingsStyles.hpp"
+#include "core/ui/Fonts.hpp"
 #include <string>
 
 InspectorUI::InspectorUI() {
@@ -34,9 +36,6 @@ InspectorUI::InspectorUI() {
     materialCachePtr = nullptr;
     height = 0;
     width = 0;
-    uniformInspectorUI = std::make_unique<UniformInspectorUI>();
-    objectsInspectorUI = std::make_unique<ObjectsInspectorUI>();
-    fileInspectorUI = std::make_unique<FileInspectorUI>();
 }
 
 bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr, Fonts* _fontsPtr, Project* _project, SettingsStyles* _styles) {
@@ -53,7 +52,12 @@ bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngP
     modelCachePtr = _modelCachePtr;
     fileRegPtr = _fileRegPtr;
     assetsInspectorUI = std::make_unique<AssetsInspectorUI>(_fontsPtr, _project, _styles);
+    uniformInspectorUI = std::make_unique<UniformInspectorUI>(_styles);
+    objectsInspectorUI = std::make_unique<ObjectsInspectorUI>(_styles);
+    fileInspectorUI = std::make_unique<FileInspectorUI>();
     materialCachePtr = _materialCachePtr;
+    fontsPtr = _fontsPtr;
+    stylesPtr = _styles;
     intitialized = true;
     return true;
 }
@@ -70,7 +74,10 @@ void InspectorUI::shutdown() {
     eventsPtr = nullptr;
     modelCachePtr = nullptr;
     materialCachePtr = nullptr;
+    fontsPtr = nullptr;
+    stylesPtr = nullptr;
     intitialized = false;
+    
 }
 
 void InspectorUI::render() {
@@ -104,7 +111,7 @@ void InspectorUI::render() {
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Shader Files")) {
-                fileInspectorUI->draw(loggerPtr, inspectorEngPtr, shaderRegPtr, fileRegPtr, eventsPtr);
+                fileInspectorUI->draw(loggerPtr, inspectorEngPtr, shaderRegPtr, fileRegPtr, eventsPtr, fontsPtr, stylesPtr);
                 ImGui::EndTabItem();
             }
             ImGui::EndTabBar();

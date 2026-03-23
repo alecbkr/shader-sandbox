@@ -11,7 +11,9 @@ enum class EventType {
     KeyPressed,
     SaveActiveShaderFile,
     ReloadShader,
+    NewProject,
     SaveProject,
+    RenameProject,
     Quit,
     OpenFile,
     NewFile,
@@ -21,14 +23,15 @@ enum class EventType {
     CreateModel,
     DeleteModel,
     ModelMaterialChange,
-    MaterialTypeChange
+    MaterialTypeChange,
+    CloneFile
 };
 
 struct SaveActiveShaderFilePayload { std::string filePath; unsigned int modelID; };
 struct ReloadShaderPayload { std::string programName; };
 struct WindowResizePayload { int w, h; };
 struct KeyPressedPayload { int key; };
-struct OpenFilePayload { std::string filePath; std::string fileName; unsigned int modelID; };
+struct OpenFilePayload { std::string filePath; std::string fileName; unsigned int modelID; bool readOnly; };
 struct RenameFilePayload { std::string oldName, newName; };
 struct DeleteFilePayload { std::string fileName; };
 struct ModelCreationPayload { unsigned int modelID; };
@@ -77,8 +80,8 @@ inline Event MakeQuitAppEvent() {
     return { EventType::Quit, false, std::monostate{} };
 };
 
-inline Event OpenFileEvent(std::string filePath, std::string fileName, unsigned int modelID) {
-    return { EventType::OpenFile, false, OpenFilePayload{filePath, fileName, modelID} };
+inline Event OpenFileEvent(std::string filePath, std::string fileName, unsigned int modelID, bool readOnly) {
+    return { EventType::OpenFile, false, OpenFilePayload{filePath, fileName, modelID, readOnly} };
 }
 
 inline Event NewFileEvent() {
@@ -92,3 +95,7 @@ inline Event RenameFileEvent(std::string oldName, std::string newName) {
 inline Event DeleteFileEvent(std::string fileName) {
     return { EventType::ET_DeleteFile, false, DeleteFilePayload{fileName} };
 }
+
+inline Event CloneFileEvent() {
+    return { EventType::CloneFile, false, std::monostate{} };
+};

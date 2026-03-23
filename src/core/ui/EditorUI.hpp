@@ -12,12 +12,14 @@ class EditorUI {
 public:
     EditorUI();
     void render();
-    bool initialize(Logger* _loggerPtr, EditorEngine* _editorEngPtr, ContextManager* _contextManagerPtr);
+    bool initialize(Logger* _loggerPtr, EditorEngine* _editorEngPtr, ContextManager* _contextManagerPtr, EventDispatcher* _eventDispatcherPtr, Project* _projectPtr);
 private:
     bool initialized = false;
     Logger* loggerPtr = nullptr;
     EditorEngine* editorEngPtr = nullptr;
     ContextManager* contextManagerPtr = nullptr;
+    EventDispatcher* eventDispatcherPtr = nullptr;
+    Project* projectPtr = nullptr;
     float targetWidth = 0.0f;
     float targetHeight = 0.0f;
     ImVec2 windowPos = ImVec2(0, 0);

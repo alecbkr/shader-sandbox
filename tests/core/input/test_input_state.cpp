@@ -10,6 +10,13 @@
 #include "core/logging/LogSink.hpp"
 #include "platform/components/Keys.hpp"
 
+// helper to take on the project's name for the logger 
+static bool initTestLogger(Logger& logger){
+    std::string testAppName = "PrimsTSS_Test"; 
+    std::string testProjectName = "ActionRegistry_Tests"; 
+    return logger.initialize(testAppName, testProjectName); 
+}
+
 // ------------------------------------------------------------
 // Test sink: captures logs from Logger (for double-initialize warning)
 // ------------------------------------------------------------
@@ -52,7 +59,7 @@ TEST_CASE("InputState: getters are safe before initialize (return 0)", "[input][
 
 TEST_CASE("InputState: initialize succeeds once; initialize twice returns false and logs warning", "[input][state]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     InputState in;
     REQUIRE(in.initialize(&logger) == true);
@@ -69,7 +76,7 @@ TEST_CASE("InputState: initialize succeeds once; initialize twice returns false 
 
 TEST_CASE("InputState: beginFrame clears pressed/released/pressedKeys and resets deltas + scroll; down persists", "[input][state]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     InputState in;
     REQUIRE(in.initialize(&logger));
@@ -123,7 +130,7 @@ TEST_CASE("InputState: beginFrame clears pressed/released/pressedKeys and resets
 
 TEST_CASE("InputState: pressing an already-down key does not re-add to pressedKeys", "[input][state]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     InputState in;
     REQUIRE(in.initialize(&logger));
@@ -151,7 +158,7 @@ TEST_CASE("InputState: pressing an already-down key does not re-add to pressedKe
 
 TEST_CASE("InputState: release sets released flag only if key was down", "[input][state]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     InputState in;
     REQUIRE(in.initialize(&logger));
@@ -172,7 +179,7 @@ TEST_CASE("InputState: release sets released flag only if key was down", "[input
 
 TEST_CASE("InputState: mouse button press/release sets down/pressed/released correctly", "[input][state][mouse]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     InputState in;
     REQUIRE(in.initialize(&logger));
@@ -199,7 +206,7 @@ TEST_CASE("InputState: mouse button press/release sets down/pressed/released cor
 
 TEST_CASE("InputState: onCursorPos accumulates deltas within a frame", "[input][state][mouse]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     InputState in;
     REQUIRE(in.initialize(&logger));
@@ -220,7 +227,7 @@ TEST_CASE("InputState: onCursorPos accumulates deltas within a frame", "[input][
 
 TEST_CASE("InputState: onScroll accumulates and beginFrame clears scroll", "[input][state][scroll]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     InputState in;
     REQUIRE(in.initialize(&logger));
@@ -240,7 +247,7 @@ TEST_CASE("InputState: onScroll accumulates and beginFrame clears scroll", "[inp
 
 TEST_CASE("InputState: unknown key/button queries always return false", "[input][state]") {
     Logger logger;
-    REQUIRE(logger.initialize());
+    REQUIRE(initTestLogger(logger));
 
     InputState in;
     REQUIRE(in.initialize(&logger));

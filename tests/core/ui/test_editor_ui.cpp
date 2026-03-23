@@ -9,6 +9,13 @@
 #include "object/ModelCache.hpp"
 #include "core/ShaderRegistry.hpp"
 
+// helper to take on the project's name for the logger 
+static bool initTestLogger(Logger& logger){
+    std::string testAppName = "PrimsTSS_Test"; 
+    std::string testProjectName = "ActionRegistry_Tests"; 
+    return logger.initialize(testAppName, testProjectName); 
+}
+
 TEST_CASE("EditorUI: Initialization", "[editor_ui]") {
     Logger logger;
     EditorEngine engine;
@@ -17,20 +24,21 @@ TEST_CASE("EditorUI: Initialization", "[editor_ui]") {
     ModelCache cache;
     ShaderRegistry registry;
     EventDispatcher events;
+    Project project;
 
-    logger.initialize();
-    engine.initialize(&logger, &events, &cache, &registry, &styles);
+    initTestLogger(logger);
+    engine.initialize(&logger, &events, &cache, &registry, &styles, &project);
 
     EditorUI ui;
 
     SECTION("Successful initialization") {
-        REQUIRE(ui.initialize(&logger, &engine, &context) == true);
+        REQUIRE(ui.initialize(&logger, &engine, &context, &events, &project) == true);
     }
 
     SECTION("Prevent double initialization") {
-        ui.initialize(&logger, &engine, &context);
+        ui.initialize(&logger, &engine, &context, &events, &project);
         // Second call should return false
-        REQUIRE(ui.initialize(&logger, &engine, &context) == false);
+        REQUIRE(ui.initialize(&logger, &engine, &context, &events, &project) == false);
     }
 }
 
@@ -42,17 +50,18 @@ TEST_CASE("EditorUI: Tab Management", "[editor_ui]") {
     ModelCache cache;
     ShaderRegistry registry;
     SettingsStyles styles;
+    Project project;
 
-    logger.initialize();
+    initTestLogger(logger);
     events.initialize(&logger);
-    engine.initialize(&logger, &events, &cache, &registry, &styles);
+    engine.initialize(&logger, &events, &cache, &registry, &styles, &project);
 
     EditorUI ui;
-    ui.initialize(&logger, &engine, &context);
+    ui.initialize(&logger, &engine, &context, &events, &project);
 
     SECTION("Closing a tab removes it from engine") {
-        events.TriggerEvent(OpenFileEvent("file1.frag", "file1.frag", 0));
-        events.TriggerEvent(OpenFileEvent("file2.frag", "file2.frag", 0));
+        events.TriggerEvent(OpenFileEvent("file1.frag", "file1.frag", 0, false));
+        events.TriggerEvent(OpenFileEvent("file2.frag", "file2.frag", 0, false));
         events.ProcessQueue();
 
         REQUIRE(engine.editors.size() == 2);

@@ -38,8 +38,21 @@ void Application::addSubscriptions(AppContext& ctx) {
         else ctx.platform.setCursorStatus(true);
         return true;
     });
-    ctx.events.Subscribe(EventType::SaveProject, [&ctx](const EventPayload&) -> bool {
+    ctx.events.Subscribe(EventType::NewProject, [&ctx](const EventPayload&) -> bool {
         ProjectLoader::save(ctx.project, &ctx.model_cache, &ctx.material_cache);
+        ctx.settings.projectToOpen = "";
+        ctx.projectSwitch = true;
+        return false;
+    });
+    ctx.events.Subscribe(EventType::SaveProject, [&ctx](const EventPayload&) -> bool {
+        if (ctx.project.previouslySaved) ProjectLoader::save(ctx.project, &ctx.model_cache, &ctx.material_cache);
+        else ctx.modals.open(SaveAsModal::ID);
+        ctx.logger.addLog(LogLevel::INFO, "ProjectLoader", "Project Saved");
+        return false;
+    });
+    ctx.events.Subscribe(EventType::RenameProject, [&ctx](const EventPayload&) -> bool {
+        ctx.project.previouslySaved = false;
+        ctx.modals.open(SaveAsModal::ID);
         return false;
     });
     ctx.events.Subscribe(EventType::Quit, [&ctx](const EventPayload&) -> bool {
@@ -90,7 +103,11 @@ void Application::initializeUI(AppContext& ctx) {
     ImGui_ImplOpenGL3_Init();
 
     ctx.settingsModal.initialize(&ctx.logger, &ctx.inputs, &ctx.keybinds, &ctx.platform, &ctx.settings);
+    ctx.saveAsModal.initialize(&ctx.logger, &ctx.project, &ctx.events, &ctx.settings, &ctx.projectSwitch);
+    ctx.openProjectModal.initialize(&ctx.project, &ctx.settings, &ctx.model_cache, &ctx.material_cache, &ctx.projectSwitch);
     ctx.modals.registerModal(&ctx.settingsModal);
+    ctx.modals.registerModal(&ctx.saveAsModal);
+    ctx.modals.registerModal(&ctx.openProjectModal);
 
     if (!ctx.settings.settingsFound) {
         DefaultTheme::applyDefaultTheme(ctx.settings.styles);
@@ -136,7 +153,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::WARNING, "Application Initialization", "Application was already initialized.");
         return false;
     }
-    if (!ctx.logger.initialize()) {
+    if (!ctx.logger.initialize(ctx.app_title, ctx.project.projectTitle)) {
         std::cout << "Logger was not initialized successfully." << std::endl;
         return false;
     }
@@ -168,11 +185,11 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Event Dispatcher was not initialized successfully.");
         return false;
     }
-    if (!ctx.shader_registry.initialize(&ctx.logger)) {
+    if (!ctx.shader_registry.initialize(&ctx.logger, &ctx.project)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Shader Registry was not initialized successfully.");
         return false;
     }
-    if (!ctx.uniform_registry.initialize(&ctx.logger)) {
+    if (!ctx.uniform_registry.initialize(&ctx.logger, &ctx.project)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Uniform Registry was not initialized successfully.");
         return false;
     }
@@ -188,20 +205,11 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
         return false;
     }
-    
-    // if (!ctx.assimp_importer.initialize(&ctx.logger, &ctx.model_cache, &ctx.material_cache, &ctx.inspector_engine, &ctx.project)) {
-    //     ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
-    //     return false;
-    // }
     if (!ctx.inspector_engine.initialize(&ctx.logger, &ctx.shader_registry, &ctx.uniform_registry, &ctx.model_cache, &ctx.viewport_ui, &ctx.material_cache)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Inspector Engine was not initialized successfully.");
         return false;
     }
-    // if (!ConsoleEngine::initialize(Logger::getConsoleSinkPtr())) {
-    //     std::cout << "Console Engine was not initialized successfully." << std::endl;
-    //     return false;
-    // }
-    if (!ctx.console_engine.initialize(&ctx.logger)) {
+    if (!ctx.console_engine.initialize(&ctx.logger, ctx.project.consoleSettings)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Importer was not initialized successfully.");
         return false;
     }
@@ -212,11 +220,11 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Hot Reloader was not initialized successfully.");
         return false;
     }
-    if (!ctx.file_registry.initialize(&ctx.logger, &ctx.events, &ctx.platform)) {
+    if (!ctx.file_registry.initialize(&ctx.logger, &ctx.events, &ctx.platform, &ctx.project)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "File Registry was not initialized successfully.");
         return false;
     }
-    if (!ctx.editor_engine.initialize(&ctx.logger, &ctx.events, &ctx.model_cache, &ctx.shader_registry, &ctx.settings.styles)) {
+    if (!ctx.editor_engine.initialize(&ctx.logger, &ctx.events, &ctx.model_cache, &ctx.shader_registry, &ctx.settings.styles, &ctx.project)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Editor Engine was not initialized successfully.");
         return false;
     }
@@ -236,8 +244,8 @@ bool Application::initialize(AppContext& ctx) {
     loadPresetAssets(ctx);
     addSubscriptions(ctx);
     initializeUI(ctx);
-    ctx.inspector_engine.refreshUniforms(); //causing all the cout before initialization
-    if (!ctx.console_ui.initialize(&ctx.logger)) {
+    ctx.inspector_engine.refreshUniforms();
+    if (!ctx.console_ui.initialize(&ctx.logger, &ctx.console_engine, &ctx.settings.styles, &ctx.fonts)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Console UI was not initialized successfully.");
         return false;
     }
@@ -246,7 +254,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Menu UI was not initialized successfully.");
         return false;
     }
-    if (!ctx.editor_ui.initialize(&ctx.logger, &ctx.editor_engine, &ctx.ctx_manager)) {
+    if (!ctx.editor_ui.initialize(&ctx.logger, &ctx.editor_engine, &ctx.ctx_manager, &ctx.events, &ctx.project)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Editor UI was not initialized successfully.");
         return false;
     }
@@ -317,20 +325,27 @@ void Application::renderUI(AppContext& ctx) {
 }
 
 void Application::shutdown(AppContext& ctx) {
+    ctx.editor_engine.shutdown();
+
     ctx.settings.styles.captureFromImGui(ImGui::GetStyle());
     ctx.settings.fontIdx = ctx.fonts.getFontIndex();
+    if (initialized) ctx.project.consoleSettings = ctx.console_engine.getToggles();
+
     ctx.platform.terminate();
+
     // UI Shutdown
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
     for (Editor* editor: ctx.editor_engine.editors) editor->destroy();
+
+    initialized = false;
 }
 
 bool Application::shouldClose(AppContext& ctx) {
     if (!initialized) return false;
-    return (ctx.platform.shouldClose() || ctx.shouldClose);
+    return (ctx.platform.shouldClose() || ctx.shouldClose || ctx.projectSwitch);
 }
 
 void Application::windowResize(AppContext& ctx, u32 _width, u32 _height) {

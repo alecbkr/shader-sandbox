@@ -16,6 +16,7 @@ struct SettingsKeybind {
 struct AppSettings {
     std::filesystem::path userConfigDir;
     std::filesystem::path settingsPath;
+    std::string projectToOpen;
 
     bool settingsFound = false;
 

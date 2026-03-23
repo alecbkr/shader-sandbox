@@ -31,7 +31,7 @@ std::filesystem::path getUserConfigDir(const std::string& appName) {
     return dir;
 }
 
-std::filesystem::path getProjectRootDir(int argc, char** argv, std::string& projectTitle) {
+std::filesystem::path getProjectRootDir(std::string projectToOpen, std::string& projectTitle) {
     namespace fs = std::filesystem;
 
 #ifdef _WIN32
@@ -48,10 +48,22 @@ std::filesystem::path getProjectRootDir(int argc, char** argv, std::string& proj
 
     // Determine project name
     std::string projectName;
-    if (argc > 1 && argv[1] && std::strlen(argv[1]) > 0) {
-        projectName = argv[1];
+    if (!projectToOpen.empty() && std::filesystem::exists(prismRoot / projectToOpen)) {
+        projectName = projectToOpen;
     } else {
-        projectName = "PrismTSS_New_Project";
+        int i = 1;
+        std::string newName = "Untitled(" + std::to_string(i) + ")";
+
+        if (!std::filesystem::exists(prismRoot / "Untitled")) {
+            projectName = "Untitled";
+        } else {
+            while (std::filesystem::exists(prismRoot/ newName)) {
+                newName = "Untitled(" + std::to_string(i) + ")";
+                i++;
+            }
+
+            projectName = newName;
+        }
     }
 
     projectTitle = projectName;
