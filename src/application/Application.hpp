@@ -20,4 +20,5 @@ private:
     static void initializeUI(AppContext& ctx);
     static bool addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI* viewportUIPtr, ContextManager* contextManagerPtr, EventDispatcher* eventsPtr, Fonts* fontsPtr);
     static void addSubscriptions(AppContext& ctx);
+    static std::string findNextFileNumber(const std::filesystem::path& baseFolder, const std::string& startingName);
 };

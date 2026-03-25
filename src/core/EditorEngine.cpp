@@ -103,7 +103,6 @@ bool EditorEngine::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, M
     eventsPtr->Subscribe(EventType::NewFile, std::bind(&EditorEngine::spawnEditor, this, std::placeholders::_1));
     eventsPtr->Subscribe(EventType::RenameFile, std::bind(&EditorEngine::renameEditor, this, std::placeholders::_1));
     eventsPtr->Subscribe(EventType::ET_DeleteFile, std::bind(&EditorEngine::deleteEditor, this, std::placeholders::_1));
-    eventsPtr->Subscribe(EventType::CloneFile, std::bind(&EditorEngine::cloneFile, this, std::placeholders::_1));
 
     // syncing styles with settings if no loaded settings
     if (!stylesPtr->hasLoadedPalette) {
@@ -206,21 +205,6 @@ bool EditorEngine::deleteEditor(const EventPayload& payload) {
     } else {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "renameEditor", "Invalid Payload Type");
     }
-    return false;
-}
-
-bool EditorEngine::cloneFile(const EventPayload& payload) {
-    if (std::get_if<std::monostate>(&payload) && !editors.empty()) {
-        const std::string fileName = findNextFileNumber(editors[activeEditor]->fileName);
-        const std::string filePath = (projectPtr->projectShadersDir  / fileName).string();
-
-        std::ofstream outfile(filePath);
-        outfile << editors[activeEditor]->textEditor.GetText();
-        outfile.close();
-
-        editors.push_back(new Editor(filePath, fileName, 0, stylesPtr, false));
-    }
-
     return false;
 }
 

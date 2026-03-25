@@ -30,7 +30,7 @@ void EditorUI::render() {
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("File##editor")) {
                 if (ImGui::MenuItem("Clone Shader File")) {
-                    eventDispatcherPtr->TriggerEvent(CloneFileEvent());
+                    //eventDispatcherPtr->TriggerEvent(CloneFileEvent());
                 }
                 ImGui::EndMenu();
             }

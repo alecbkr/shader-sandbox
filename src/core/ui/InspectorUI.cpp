@@ -110,7 +110,7 @@ void InspectorUI::render() {
                 assetsInspectorUI->draw();
                 ImGui::EndTabItem();
             }
-            if (ImGui::BeginTabItem("Shader Files")) {
+            if (ImGui::BeginTabItem("Shaders")) {
                 fileInspectorUI->draw(loggerPtr, inspectorEngPtr, shaderRegPtr, fileRegPtr, eventsPtr, fontsPtr, stylesPtr);
                 ImGui::EndTabItem();
             }

@@ -50,5 +50,4 @@ private:
     bool spawnEditor(const EventPayload& payload);
     bool renameEditor(const EventPayload& payload);
     bool deleteEditor(const EventPayload& payload);
-    bool cloneFile(const EventPayload& payload);
 };

@@ -46,12 +46,12 @@ private:
 
     void drawRenameFileEntry(ShaderFile* fileData, EventDispatcher* eventsPtr);
     void drawDeleteFileEntity(ShaderFile* fileData, EventDispatcher* eventsPtr);
-    void drawContextMenu(ShaderFile* fileData);
+    void drawContextMenu(ShaderFile* fileData, EventDispatcher* evnetsPtr);
     void drawStandardFileEntry(ShaderFile* fileData, EventDispatcher* eventsPtr);
     void drawPresetShaderEntry(std::filesystem::path filePath, EventDispatcher* eventsPtr);
     void drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, InspectorEngine* inspectorEngPtr);
     void drawShaderLinkMenu(ShaderLinkMenu& menu,ShaderLinkMenuChoices& choices, InspectorEngine* inspectorEngPtr);
     void initializeMenu(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, ShaderRegistry* shaderRegPtr);
-
+    bool showPresets = true;
     Logger* loggerPtr = nullptr;
 };

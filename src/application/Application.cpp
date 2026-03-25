@@ -54,6 +54,19 @@ void Application::addSubscriptions(AppContext& ctx) {
         ctx.modals.open(SaveAsModal::ID);
         return false;
     });
+    ctx.events.Subscribe(EventType::CloneFile, [&ctx](const EventPayload& payload) -> bool {
+        if (const auto* data = std::get_if<CloneFilePayload>(&payload)) {
+            std::filesystem::path sourcePath(data->fileName);
+            if (!std::filesystem::exists(sourcePath)) return false;
+            std::string originalName = sourcePath.filename().string();
+            std::string newFileName = findNextFileNumber(ctx.project.projectShadersDir, originalName);
+            std::filesystem::path destPath = ctx.project.projectShadersDir / newFileName;
+            std::filesystem::copy(sourcePath, destPath);
+            ctx.file_registry.reloadMap(); 
+            return true;
+        }
+        return false;
+    });
     ctx.events.Subscribe(EventType::Quit, [&ctx](const EventPayload&) -> bool {
         ctx.shouldClose = true;
         return true;
@@ -111,46 +124,6 @@ void Application::initializeUI(AppContext& ctx) {
     if (!ctx.settings.settingsFound) {
         DefaultTheme::applyDefaultTheme(ctx.settings.styles);
     }
-}
-
-void loadPresetAssets(AppContext& ctx) {
-    // ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::WATER));
-    // ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::FACE));
-    // ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::METAL));
-    // ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::GRID));
-
-    ShaderProgram* gridplanePtr = ctx.shader_registry.getProgram("gridplane");
-    ShaderProgram* skyboxPtr = ctx.shader_registry.getProgram("skybox");
-    ShaderProgram* texPtr = ctx.shader_registry.getProgram("tex");
-    //ShaderProgram* colorPtr = ctx.shader_registry.getProgram("color");
-    
-
-    unsigned int skyboxID = ctx.model_cache.createSkybox("../assets/textures/skybox");
-    ctx.model_cache.getModel(skyboxID)->setModelProgram(skyboxPtr->name);
-    
-    unsigned int gridID = ctx.model_cache.createPreset(MeshPreset::PLANE);
-    ctx.model_cache.getModel(gridID)->setModelProgram(gridplanePtr->name);
-    ctx.model_cache.getModel(gridID)->setScale(glm::vec3(50.0f));
-
-    unsigned int backpackID = ctx.model_cache.createImported("../assets/models/backpack/backpack.obj");
-    ctx.model_cache.getModel(backpackID)->setModelProgram(texPtr->name);
-
-    unsigned int testPlane = ctx.model_cache.createPreset(MeshPreset::PLANE);
-    Model* testPlaneModel = ctx.model_cache.getModel(testPlane);
-    testPlaneModel->addTexture("../assets/textures/grass.png", TextureType::TEX_DIFFUSE);
-    ctx.model_cache.setModelMaterialType(testPlane, testPlaneModel->getAllMaterialIDs()[0], MaterialType::Translucent);
-    testPlaneModel->setModelProgram(texPtr->name);
-    testPlaneModel->rotate(90.0, glm::vec3(1.0f, 0.0f, 0.0f));
-    testPlaneModel->translate(glm::vec3(0.0f, 1.0f, 0.0f));
-
-    unsigned int testPlane2 = ctx.model_cache.createPreset(MeshPreset::PLANE);
-    Model* testPlane2Model = ctx.model_cache.getModel(testPlane2);
-    testPlane2Model->addTexture("../assets/textures/window.png", TextureType::TEX_DIFFUSE);
-    ctx.model_cache.setModelMaterialType(testPlane2, testPlane2Model->getAllMaterialIDs()[0], MaterialType::Translucent);
-    testPlane2Model->setModelProgram(texPtr->name);
-    testPlane2Model->rotate(90.0, glm::vec3(1.0f, 0.0f, 0.0f));
-    testPlane2Model->translate(glm::vec3(-3.0f, 0.0f, 0.0f));
-    
 }
 
 bool Application::initialize(AppContext& ctx) {
@@ -239,7 +212,6 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Texture Registry was not initialized successfully.");
         return false;
     }
-    loadPresetAssets(ctx);
     addSubscriptions(ctx);
     initializeUI(ctx);
     ctx.inspector_engine.refreshUniforms();
@@ -346,4 +318,24 @@ bool Application::shouldClose(AppContext& ctx) {
 void Application::windowResize(AppContext& ctx, u32 _width, u32 _height) {
     ctx.settings.width = _width;
     ctx.settings.height = _height;
+}
+
+std::string Application::findNextFileNumber(const std::filesystem::path& baseFolder, const std::string& startingName) {
+    int i = 1;
+    std::filesystem::path p(startingName);
+    std::string name = p.stem().string();
+    std::string extension = p.extension().string();
+
+    if (!std::filesystem::exists(baseFolder / startingName)) {
+        return startingName;
+    }
+
+    while (true) {
+        std::string newName = name + "(" + std::to_string(i) + ")" + extension;
+        
+        if (!std::filesystem::exists(baseFolder / newName)) {
+            return newName;
+        }
+        i++;
+    }
 }

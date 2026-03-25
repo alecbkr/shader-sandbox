@@ -29,6 +29,7 @@ struct KeyPressedPayload { int key; };
 struct OpenFilePayload { std::string filePath; std::string fileName; unsigned int modelID; bool readOnly; };
 struct RenameFilePayload { std::string oldName, newName; };
 struct DeleteFilePayload { std::string fileName; };
+struct CloneFilePayload {std::string fileName; };
 
 using EventPayload = std::variant<
     std::monostate,
@@ -38,7 +39,8 @@ using EventPayload = std::variant<
     KeyPressedPayload,
     OpenFilePayload,
     RenameFilePayload,
-    DeleteFilePayload
+    DeleteFilePayload,
+    CloneFilePayload
 >;
 
 struct Event {
@@ -83,6 +85,6 @@ inline Event DeleteFileEvent(std::string fileName) {
     return { EventType::ET_DeleteFile, false, DeleteFilePayload{fileName} };
 }
 
-inline Event CloneFileEvent() {
-    return { EventType::CloneFile, false, std::monostate{} };
+inline Event CloneFileEvent(std::string fileName) {
+    return { EventType::CloneFile, false, CloneFilePayload{fileName} };
 };

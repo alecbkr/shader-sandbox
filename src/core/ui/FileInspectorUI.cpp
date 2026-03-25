@@ -64,10 +64,10 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
 
             if (ImGui::BeginPopup("GlobalAddPopup")) {
                 ImGui::PushFont(fonts->getL2());
-                if (ImGui::MenuItem("Import Shader File")) {
+                if (ImGui::MenuItem("New shader file")) {
                     eventsPtr->TriggerEvent(Event{EventType::NewFile, false,{}});
                 }
-                if (ImGui::MenuItem("Create Shader Program")) {
+                if (ImGui::MenuItem("New shader program")) {
                     static int newShaders = 0;
                     std::string newName = "myShader_" + std::to_string(newShaders);
 
@@ -101,39 +101,58 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
             ImGui::Spacing();
 
             ImGui::Indent(window_padding);
-            ImGui::TextDisabled("SHADER FILES");
             fileRegPtr->reloadMap();
-            for (const auto& [fileName, fileData] : fileRegPtr->getFiles()) {
-                switch (fileData->state) {
-                    case RENAME:
-                        drawRenameFileEntry(fileData, eventsPtr);
-                        break;
-                    case FS_DELETE:
-                        drawDeleteFileEntity(fileData, eventsPtr);
-                        break;
-                    case NEW:
-                        break;
-                    case NONE:
-                    default:
-                        drawStandardFileEntry(fileData, eventsPtr);
-                        break;
+            const auto& files = fileRegPtr->getFiles();
+            if (!files.empty()) {
+                ImGui::TextDisabled("Files");
+                for (const auto& [fileName, fileData] : files) {
+                    switch (fileData->state) {
+                        case RENAME:
+                            drawRenameFileEntry(fileData, eventsPtr);
+                            break;
+                        case FS_DELETE:
+                            drawDeleteFileEntity(fileData, eventsPtr);
+                            break;
+                        case NEW:
+                            break;
+                        case NONE:
+                        default:
+                            drawStandardFileEntry(fileData, eventsPtr);
+                            break;
+                    }
                 }
             }
-
             ImGui::Dummy(ImVec2(0, 20.0f));
-            ImGui::Separator();
 
-            ImGui::TextDisabled("PRESET SHADER");
-            for (const auto& filePath : fileRegPtr->getPresetShaders()) {
-                drawPresetShaderEntry(filePath, eventsPtr);
+            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+            if (ImGui::Selectable("Presets##Header", false, ImGuiSelectableFlags_AllowOverlap)) {
+                showPresets = !showPresets;
             }
 
+            ImGui::SameLine();
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0,0,0,0));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0,0,0,0));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0,0,0,0));
+            if (ImGui::ArrowButton("##ToggleArrow", showPresets ? ImGuiDir_Down : ImGuiDir_Right)) {
+                showPresets = !showPresets;
+            }
+            ImGui::PopStyleColor(3);
+            ImGui::PopStyleColor();
+            ImGui::PopStyleVar();
+            if (showPresets) {
+                for (const auto& filePath : fileRegPtr->getPresetShaders()) {
+                    drawPresetShaderEntry(filePath, eventsPtr);
+                }
+            }
             ImGui::Dummy(ImVec2(0, 20.0f));
-            ImGui::Separator();
-
-            ImGui::TextDisabled("SHADER PROGRAMS");
-            drawShaderLinkMenus(shaderLinkMenus, shaderRegPtr, fileRegPtr, inspectorEngPtr);
-            ImGui::Unindent(window_padding);
+            const auto& programs = shaderRegPtr->getPrograms();
+            if (!programs.empty() || !shaderLinkMenus.empty()){
+                ImGui::TextDisabled("Programs");
+                drawShaderLinkMenus(shaderLinkMenus, shaderRegPtr, fileRegPtr, inspectorEngPtr);
+                ImGui::Unindent(window_padding);
+            }
+            
         }
         ImGui::EndChild();
         ImGui::PopStyleVar();
@@ -184,7 +203,7 @@ void FileInspectorUI::drawDeleteFileEntity(ShaderFile* fileData, EventDispatcher
     }
 }
 
-void FileInspectorUI::drawContextMenu(ShaderFile* fileData) {
+void FileInspectorUI::drawContextMenu(ShaderFile* fileData, EventDispatcher* eventsPtr) {
     if (ImGui::BeginPopupContextItem()) {
         if (ImGui::Selectable("Rename")) {
             fileData->state = RENAME;
@@ -192,37 +211,46 @@ void FileInspectorUI::drawContextMenu(ShaderFile* fileData) {
         if (ImGui::Selectable("Delete")) {
             fileData->state = FS_DELETE;
         }
+        if (ImGui::Selectable("Clone")) {
+            eventsPtr->TriggerEvent(CloneFileEvent(fileData->filePath)); 
+        }
 
         ImGui::EndPopup();
     }
 }
 
 void FileInspectorUI::drawStandardFileEntry(ShaderFile* fileData, EventDispatcher* eventsPtr) {
-    if (ImGui::Selectable(fileData->fileName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
-        if (ImGui::IsMouseDoubleClicked(0)) {
-            eventsPtr->TriggerEvent(
-                Event{
-                    EventType::OpenFile,
-                    false,
-                    OpenFilePayload{ fileData->filePath, fileData->fileName, 0, false }
-                }
-            );
-        }
+    std::string uniqueID = fileData->fileName + "##" + fileData->filePath;
+    bool isSelected = ImGui::Selectable(uniqueID.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick);
+    if (isSelected && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+        eventsPtr->TriggerEvent(
+            Event{
+                EventType::OpenFile,
+                false,
+                OpenFilePayload{ fileData->filePath, fileData->fileName, 0, false }
+            }
+        );
     }
-    drawContextMenu(fileData);
+    drawContextMenu(fileData, eventsPtr);
 }
 
 void FileInspectorUI::drawPresetShaderEntry(std::filesystem::path filePath, EventDispatcher* eventsPtr) {
-    if (ImGui::Selectable((filePath.filename().string() + "##1").c_str(), false, ImGuiSelectableFlags_AllowDoubleClick)) {
-        if (ImGui::IsMouseDoubleClicked(0)) {
-            eventsPtr->TriggerEvent(
-                Event{
-                    EventType::OpenFile,
-                    false,
-                    OpenFilePayload{ filePath.string(), filePath.filename().string(), 0, true }
-                }
-            );
+    std::string uniqueID = filePath.filename().string() + "##preset" + filePath.string();
+    bool isSelected = ImGui::Selectable(uniqueID.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick);
+    if (isSelected && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+        eventsPtr->TriggerEvent(
+            Event{
+                EventType::OpenFile,
+                false,
+                OpenFilePayload{ filePath.string(), filePath.filename().string(), 0, true }
+            }
+        );
+    }
+    if (ImGui::BeginPopupContextItem()) {
+        if (ImGui::Selectable("Clone Shader File")) {
+            eventsPtr->TriggerEvent(CloneFileEvent(filePath.string()));
         }
+        ImGui::EndPopup();
     }
 }
 
