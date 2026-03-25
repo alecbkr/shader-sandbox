@@ -18,12 +18,12 @@ bool MaterialCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, 
         return false;
     }
 
-    loggerPtr->addLog(LogLevel::INFO, "TEST", "here: " + std::to_string(previouslySaved)); //TEMPPRINT
+    // loggerPtr->addLog(LogLevel::INFO, "TEST", "here: " + std::to_string(previouslySaved)); //TEMPPRINT
     //DEFAULT MATERIAL TO BE USED BY ALL NEWLY CREATED PRESET MODELS | ID = 0
-    if (previouslySaved == false) {
-        materialIDMap.emplace(0, std::make_unique<Material>(0, MaterialType::Opaque));
-        nextMaterialID = 1;
-    }
+    // if (previouslySaved == false) {
+    //     materialIDMap.emplace(0, std::make_unique<Material>(0, MaterialType::Opaque));
+        // nextMaterialID = 1;
+    // }
     
 
     initialized = true;
