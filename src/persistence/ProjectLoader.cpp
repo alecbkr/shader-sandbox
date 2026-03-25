@@ -258,7 +258,7 @@ bool ProjectLoader::load(Project& project) {
             return false;
         }
         project.consoleSettings = j.value("consoleSettings", project.consoleSettings);
-        project.previouslySaved = j.value("previouslySaved", false);
+        // project.previouslySaved = j.value("previouslySaved", false);
 
         if (project.events != nullptr) {
             if (j.contains("openShaderFiles") && j["openShaderFiles"].is_array()) {
@@ -278,6 +278,7 @@ bool ProjectLoader::load(Project& project) {
                     }
                 }
             }
+            project.previouslySaved = j.value("previouslySaved", true);
         }
     } catch (const nlohmann::json::exception& e) {
         std::cerr << "JSON error: " << e.what() << std::endl;
@@ -297,8 +298,6 @@ bool ProjectLoader::load(Project& project) {
 void ProjectLoader::save(Project& project, ModelCache* modelCachePtr, MaterialCache* materialCachePtr) {
     std::filesystem::create_directories(project.projectRoot);
     std::filesystem::create_directories(project.projectShadersDir);
-
-    std::cout << "model count " << modelCachePtr->getAllModels().size() << std::endl;
 
     project.modelData.clear();
     for (auto& model : modelCachePtr->getAllModels()) {
@@ -350,7 +349,8 @@ void ProjectLoader::save(Project& project, ModelCache* modelCachePtr, MaterialCa
         std::cerr << "Error while saving projectJSON (Uniforms)" << std::endl;
         return;
     }
-    j["previouslySaved"] = project.previouslySaved;
+    // j["previouslySaved"] = project.previouslySaved;
+    j["previouslySaved"] = true;
 
     json openShaderFiles = json::array();
     for (const auto& filePath : project.openShaderFiles) {
@@ -360,5 +360,4 @@ void ProjectLoader::save(Project& project, ModelCache* modelCachePtr, MaterialCa
 
     std::ofstream out(project.projectJSON);
     out << j.dump(4);
-
 }

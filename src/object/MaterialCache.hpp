@@ -14,7 +14,7 @@ class TextureCache;
 class MaterialCache {
 public:
     MaterialCache();
-    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, TextureCache* _textureCachePtr);
+    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, TextureCache* _textureCachePtr, bool previouslySaved);
     void shutdown();
     
     unsigned int createBlankMaterial();

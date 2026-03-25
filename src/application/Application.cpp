@@ -129,6 +129,7 @@ void loadPresetAssets(AppContext& ctx) {
 
     // set default material with a default program
     ctx.material_cache.getMaterial(0)->setProgramID(texPtr->name);
+    
 
 
 
@@ -193,7 +194,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Uniform Registry was not initialized successfully.");
         return false;
     }
-    if (!ctx.material_cache.initialize(&ctx.logger, &ctx.events, &ctx.texture_cache)) {
+    if (!ctx.material_cache.initialize(&ctx.logger, &ctx.events, &ctx.texture_cache, ctx.project.previouslySaved)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Material Cache was not initialized successfully.");
         return false;
     }
@@ -237,9 +238,9 @@ bool Application::initialize(AppContext& ctx) {
         return false;
     }
     
-    loadPresetAssets(ctx);
-    addSubscriptions(ctx);
-    initializeUI(ctx);
+    // loadPresetAssets(ctx);
+    // addSubscriptions(ctx);
+    // initializeUI(ctx);
     ctx.inspector_engine.refreshUniforms();
     if (!ctx.console_ui.initialize(&ctx.logger, &ctx.console_engine, &ctx.settings.styles, &ctx.fonts)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Console UI was not initialized successfully.");
@@ -274,6 +275,10 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
         return false;
     }
+    loadPresetAssets(ctx);
+    addSubscriptions(ctx);
+    initializeUI(ctx);
+
     ctx.logger.addLog(LogLevel::INFO, "Application Initialization", "Application Layer Initialized.");
     Application::initialized = true;
     return true;

@@ -8,7 +8,7 @@
 
 MaterialCache::MaterialCache() = default;
 
-bool MaterialCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, TextureCache* _textureCachePtr) {
+bool MaterialCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, TextureCache* _textureCachePtr, bool previouslySaved) {
     loggerPtr = _loggerPtr;
     eventsPtr = _eventsPtr;
     textureCachePtr = _textureCachePtr;
@@ -18,9 +18,13 @@ bool MaterialCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, 
         return false;
     }
 
+    loggerPtr->addLog(LogLevel::INFO, "TEST", "here: " + std::to_string(previouslySaved)); //TEMPPRINT
     //DEFAULT MATERIAL TO BE USED BY ALL NEWLY CREATED PRESET MODELS | ID = 0
-    materialIDMap.emplace(0, std::make_unique<Material>(0, MaterialType::Opaque));
-    nextMaterialID = 1;
+    if (previouslySaved == false) {
+        materialIDMap.emplace(0, std::make_unique<Material>(0, MaterialType::Opaque));
+        nextMaterialID = 1;
+    }
+    
 
     initialized = true;
     return true;
@@ -141,7 +145,6 @@ std::vector<Material*> MaterialCache::getAllMaterials() {
     for (auto& [id, material] : materialIDMap) {
         materials.push_back(material.get());
     }
-
     return materials;
 }
 

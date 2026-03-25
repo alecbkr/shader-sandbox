@@ -162,9 +162,9 @@ void Renderer::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camPos
     }
     
     renderOpaquePrimitives();
-    // renderCutoutPrimitives();
-    // reorderTranslucentPrimitives(view);
-    // renderTranslucentPrimitives();
+    renderCutoutPrimitives();
+    reorderTranslucentPrimitives(view);
+    renderTranslucentPrimitives();
 }
 
 
@@ -260,10 +260,7 @@ void Renderer::bindTextures(unsigned int materialID) {
 
 
 void Renderer::bindProgram(unsigned int materialID) {
-    Material* foundMaterial = materialCachePtr->getMaterial(materialID);
-    
-    //  std::cout << "matID " << materialID << std::endl; //TEMPPRINT
-    //   std::cout << "progname " << foundMaterial->getProgramID() << std::endl;   
+    Material* foundMaterial = materialCachePtr->getMaterial(materialID);  
 
     if (foundMaterial == nullptr) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER | bindProgram()", "materialID out of bounds: ", std::to_string(materialID));
