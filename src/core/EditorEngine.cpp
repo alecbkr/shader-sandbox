@@ -135,13 +135,13 @@ bool EditorEngine::spawnEditor(const EventPayload& payload) {
         unsigned int linkedID = data->modelID;
 
         if (linkedID == 0) {
-            for (auto const& [id, model] : modelCachePtr->modelIDMap) {
+            for (auto const& model : modelCachePtr->getAllModels()) {
 
-                ShaderProgram* modelProgram = shaderRegPtr->getProgram(model->getProgramID());
+                ShaderProgram* modelProgram = shaderRegPtr->getProgram(model->getProgramID()); //SHOULD NOT BE HERE getProgramID call from model is dummy
                 if (modelProgram != nullptr) {
                     if (modelProgram->fragPath == data->filePath || 
                         modelProgram->vertPath == data->filePath) {
-                        linkedID = id;
+                        linkedID = model->ID;
                         break;
                     }
                 }

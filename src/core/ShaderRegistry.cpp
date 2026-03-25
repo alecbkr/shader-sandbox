@@ -22,6 +22,14 @@ bool ShaderRegistry::initialize(Logger* _loggerPtr, Project* _project, bool regi
     project = _project;
     project->programs.clear();
 
+    // if (registerDefaults) { //TEMPADD
+    //     if (!registerProgram(project->projectShadersDir / "tex.vert", project->projectShadersDir / "tex.frag", "tex")) return false;
+    //     if (!registerProgram(project->projectShadersDir / "color.vert", project->projectShadersDir / "color.frag", "color")) return false;
+    //     if (!registerProgram(project->projectShadersDir / "gridplane.vert", project->projectShadersDir / "gridplane.frag", "gridplane")) return false;
+    //     if (!registerProgram(project->projectShadersDir / "skybox.vert", project->projectShadersDir / "skybox.frag", "skybox")) return false;
+    //     if (!registerProgram(project->projectShadersDir / "instance.vert", project->projectShadersDir / "instance.frag", "instance")) return false;
+    // } //had to bring this back for current functionality, sorry fellas
+
     initialized = true;
     return true;
 }

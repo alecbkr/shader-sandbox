@@ -23,6 +23,7 @@ enum class TexturePreset {
 struct MeshData {
     std::vector<float> verts;
     std::vector<unsigned int> indices;
+    std::string pseudoPath;
 };
 
 class PresetAssets {

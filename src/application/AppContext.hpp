@@ -31,6 +31,8 @@
 #include "core/ui/modals/OpenProjectModal.hpp"
 #include "core/ui/modals/SaveAsModal.hpp"
 #include "object/MaterialCache.hpp"
+#include "object/Renderer.hpp"
+#include "object/AssimpImporter.hpp"
 
 struct AppContext {
     AppContext(const char* _app_title) : app_title(_app_title) {};
@@ -72,4 +74,6 @@ struct AppContext {
     SaveAsModal saveAsModal;
     OpenProjectModal openProjectModal;
     MaterialCache material_cache;
+    Renderer renderer;
+    AssimpImporter assimp_importer;
 };

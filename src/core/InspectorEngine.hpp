@@ -12,7 +12,6 @@ class UniformRegistry;
 class ModelCache;
 class MaterialCache;
 class ViewportUI;
-struct ModelPrimitive;
 
 class InspectorEngine {
 public:
@@ -29,7 +28,7 @@ public:
     UniformValue getDefaultValue(UniformType type);
 
     // ALECS TEST JUNK
-    void applyAllUniformsForPrimitive(ModelPrimitive prim);
+    void applyAllUniformsForPrimitive(unsigned int modelID, unsigned int meshID, unsigned int materialID);
     void applySceneUniforms(ShaderProgram& program);
     void applyModelUniforms(ShaderProgram& program, unsigned int modelID);
     void applyMaterialUniforms(ShaderProgram& program, unsigned int modelID, unsigned int materialID);

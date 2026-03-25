@@ -40,8 +40,8 @@ private:
     InspectorEngine* inspectorEngPtr_ = nullptr;
     SettingsStyles* styles_ = nullptr;
     
-    void drawModelContainer(int& imGuiID, unsigned int modelID, const std::vector<unsigned int>& materialIDs);
-    void drawMaterialContainer(unsigned int modelID, const std::vector<unsigned int>& materialIDs, int& imGuiID);
+    void drawModelContainer(int& imGuiID, unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialRefernces);
+    void drawMaterialContainer(unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences, int& imGuiID);
     bool drawInput(int* value, Uniform* uniform = nullptr);
     bool drawInput(float* value, Uniform* uniform = nullptr);
     bool drawInput(glm::vec3* value, Uniform* uniform = nullptr);

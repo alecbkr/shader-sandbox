@@ -501,22 +501,22 @@ void InspectorEngine::reloadUniforms(unsigned int materialID) {
 }
 
 
-void InspectorEngine::applyAllUniformsForPrimitive(ModelPrimitive prim) {
-    Material* mat = materialCachePtr->getMaterial(prim.materialID);
+void InspectorEngine::applyAllUniformsForPrimitive(unsigned int modelID, unsigned int meshID, unsigned int materialID) {
+    Material* mat = materialCachePtr->getMaterial(materialID);
     if (mat == nullptr) {
-        loggerPtr->addLog(LogLevel::WARNING, "reloadUniforms", "material " + std::to_string(prim.materialID) + " does not exist!");
+        loggerPtr->addLog(LogLevel::WARNING, "reloadUniforms", "material " + std::to_string(materialID) + " does not exist!");
         return;
     }
     ShaderProgram* matProgram = shaderRegPtr->getProgram(mat->getProgramID());
     if (matProgram == nullptr || !matProgram->isCompiled()) {
-        loggerPtr->addLog(LogLevel::WARNING, "reloadUniforms", "material " + std::to_string(prim.materialID) + " has no shader! or is not compiled");
+        loggerPtr->addLog(LogLevel::WARNING, "reloadUniforms", "material " + std::to_string(materialID) + " has no shader! or is not compiled");
         return;
     }
     matProgram->use();
 
     // temp fix cause we have a meeting in 2 hours
     // I need to refactor the uniform registry cause it's current state is a mess
-    const auto uniforms = uniformRegPtr->tryReadUniforms(prim.materialID);
+    const auto uniforms = uniformRegPtr->tryReadUniforms(materialID);
     if (uniforms == nullptr) {
         // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", modelID.c_str());
         // Logger::addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", std::to_string(modelID)); 
@@ -528,8 +528,8 @@ void InspectorEngine::applyAllUniformsForPrimitive(ModelPrimitive prim) {
     }
 
     applySceneUniforms(*matProgram);
-    applyModelUniforms(*matProgram, prim.ModelID);
-    applyMaterialUniforms(*matProgram, prim.ModelID, prim.materialID);
+    applyModelUniforms(*matProgram, modelID);
+    applyMaterialUniforms(*matProgram, modelID, materialID);
 
 }
 

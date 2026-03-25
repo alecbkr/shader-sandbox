@@ -20,6 +20,7 @@ int main(int argc, char** argv) {
     ctx.project.shaderRegistry = &ctx.shader_registry;
     ctx.project.uniformRegistry = &ctx.uniform_registry;
     ctx.project.events = &ctx.events;
+    ProjectLoader::loadAssets(ctx.project);
 
     if (!Application::initialize(ctx))
     {
@@ -32,7 +33,7 @@ int main(int argc, char** argv) {
     Application::shutdown(ctx);
 
     if (!ctx.projectSwitch) ctx.settings.projectToOpen = ctx.project.projectTitle;
-    ProjectLoader::save(ctx.project);
+    ProjectLoader::save(ctx.project, &ctx.model_cache, &ctx.material_cache);
     SettingsLoader::save(ctx.settings);
 
     if (ctx.projectSwitch) main(argc, argv);

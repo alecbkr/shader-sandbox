@@ -8,13 +8,13 @@
 
 class Logger;
 class Platform;
-class ModelCache;
+class Renderer;
 class AppTimer;
 
 class ViewportUI {
 public:
     ViewportUI();
-    bool initialize(Logger* _loggerPtr, Platform* _platformPtr, ModelCache* _modelCachePtr, AppTimer* _timerPtr, InputState* _inputPtr);
+    bool initialize(Logger* _loggerPtr, Platform* _platformPtr, Renderer* _rendererPtr, AppTimer* _timerPtr, InputState* _inputPtr);
     void render();
     Camera* getCamera();
     ~ViewportUI();
@@ -34,7 +34,7 @@ private:
 
     Logger* loggerPtr = nullptr;
     Platform* platformPtr = nullptr;
-    ModelCache* modelCachePtr = nullptr;
+    Renderer* rendererPtr = nullptr;
     AppTimer* timerPtr = nullptr;
 
     void bind();

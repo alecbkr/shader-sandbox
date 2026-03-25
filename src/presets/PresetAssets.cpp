@@ -41,6 +41,7 @@ bool PresetAssets::initialize(Logger* _loggerPtr, Platform* _platformPtr) {
         0, 1, 2, 
         0, 2, 3
     };
+    PresetAssets::planeMesh.pseudoPath = "PRESET_PLANE";
 
     PresetAssets::pyramidMesh.verts = {
         -0.5f, 0.0f, -0.5f,  0.0f, 0.0f, // bottom-left
@@ -57,27 +58,55 @@ bool PresetAssets::initialize(Logger* _loggerPtr, Platform* _platformPtr) {
         2, 3, 4, // side 3
         3, 0, 4  // side 4
     };
+    PresetAssets::pyramidMesh.pseudoPath = "PRESET_PYRAMID";
 
     PresetAssets::cubeMesh.verts = {
         // positions       // UVs
+    //front:
+        -0.5f,-0.5f, 0.5f, 0.0f,0.0f, //bottom-left
+        0.5f,-0.5f, 0.5f, 1.0f,0.0f,  //bottom-right
+        0.5f, 0.5f, 0.5f, 1.0f,1.0f,  //top-right
+        -0.5f, 0.5f, 0.5f, 0.0f,1.0f, //top-left
+    
+    //back:
+        0.5f,-0.5f,-0.5f, 0.0f,0.0f,
+        -0.5f,-0.5f,-0.5f, 1.0f,0.0f,
+        -0.5f, 0.5f,-0.5f, 1.0f,1.0f,
+        0.5f, 0.5f,-0.5f, 0.0f,1.0f,
+
+    //left: 
         -0.5f,-0.5f,-0.5f, 0.0f,0.0f,
+        -0.5f,-0.5f, 0.5f, 1.0f,0.0f,
+        -0.5f, 0.5f, 0.5f, 1.0f,1.0f,
+        -0.5f, 0.5f,-0.5f, 0.0f,1.0f,
+    
+    //right:
+        0.5f,-0.5f, 0.5f, 0.0f,0.0f,
         0.5f,-0.5f,-0.5f, 1.0f,0.0f,
+        0.5f, 0.5f,-0.5f, 1.0f,1.0f,
+        0.5f, 0.5f, 0.5f, 0.0f,1.0f,
+
+    //top:
+        -0.5f, 0.5f, 0.5f, 0.0f,0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f,0.0f,
         0.5f, 0.5f,-0.5f, 1.0f,1.0f,
         -0.5f, 0.5f,-0.5f, 0.0f,1.0f,
 
-        -0.5f,-0.5f, 0.5f, 0.0f,0.0f,
-        0.5f,-0.5f, 0.5f, 1.0f,0.0f,
-        0.5f, 0.5f, 0.5f, 1.0f,1.0f,
-        -0.5f, 0.5f, 0.5f, 0.0f,1.0f
+    //bottom:
+        -0.5f,-0.5f,-0.5f, 0.0f,0.0f,
+        0.5f,-0.5f,-0.5f, 1.0f,0.0f,
+        0.5f,-0.5f, 0.5f, 1.0f,1.0f,
+        -0.5f,-0.5f, 0.5f, 0.0f,1.0f
     };
     PresetAssets::cubeMesh.indices = {
-        0,1,2, 0,2,3, // back
-        4,5,6, 4,6,7, // front
-        3,2,6, 3,6,7, // top
-        0,1,5, 0,5,4, // bottom
-        1,2,6, 1,6,5, // right
-        0,3,7, 0,7,4  // left
+        0,1,2,    2,3,0,    // front
+        4,5,6,    6,7,4,    // back
+        8,9,10,   10,11,8,  // left
+        12,13,14, 14,15,12, // right
+        16,17,18, 18,19,16, // top
+        20,21,22, 22,23,20  // bottom
     };
+    PresetAssets::cubeMesh.pseudoPath = "PRESET_CUBE";
 
     initialized = true;
     return true;
@@ -109,6 +138,7 @@ MeshData& PresetAssets::getPresetMesh(MeshPreset preset) {
         default: return PresetAssets::cubeMesh;
     }
 }
+
 
 // Texture& PresetAssets::getPresetTexture(TexturePreset preset) {
 //     switch (preset) {

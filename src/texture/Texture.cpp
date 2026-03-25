@@ -5,13 +5,9 @@
 #include "core/logging/Logger.hpp"
 
 
-Texture::Texture(std::string texture_path, TextureType type, Logger* _loggerPtr) : loggerPtr(_loggerPtr) {
-    this->path = texture_path;
-    this->type = type;
-    
-    isInitialized = true;
-}
+Texture::Texture(std::string texture_path) : path(texture_path) {
 
+}
 
 
 Texture::~Texture() {
@@ -19,28 +15,36 @@ Texture::~Texture() {
 }
 
 
-
-
 void Texture::unbind() {
-    glActiveTexture(GL_TEXTURE0 + texNum);
+    unloadFromGPU();
+    glActiveTexture(GL_TEXTURE0 + texUnit);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 
+TextureStatus Texture::getStatus() const {
+    return status;
+}
+
+
+void Texture::setPath(std::string newPath) {
+    if (path == newPath) return;
+    
+    unloadFromGPU();
+    this->path = newPath;
+    status = TextureStatus::Ready;
+}
+
+
+const std::string Texture::getPath() const {
+    return path;
+}
+
+
 void Texture::unloadFromGPU() {
-    if (isLoadedInGPU == false) return;
-    glDeleteTextures(1, &ID);
-    ID = 0;
+    if (status == TextureStatus::Ready) return;
+    glDeleteTextures(1, &gl_ID);
+    gl_ID = 0;
 
-    isLoadedInGPU = false;
-}
-
-
-bool Texture::isValid() const { 
-    return valid;
-}
-
-
-TextureType Texture::getType() {
-    return type;
+    status = TextureStatus::Ready;
 }
