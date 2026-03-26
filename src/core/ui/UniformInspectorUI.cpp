@@ -39,8 +39,34 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
     int imGuiID = 0;
     int modelIndex = 0;
     const int modelCount = static_cast<int>(modelCachePtr->getNumberOfModels());
+    bool hasActivePrograms = false;
+
+    for (auto& model : modelCachePtr->getAllModels()) {
+        for (auto& [matID, matRefCount] : model->getAllMaterialReferences()) {
+            Material* material = materialCachePtr_->getMaterial(matID);
+            if (material == nullptr) {
+                continue;
+            }
+
+            ShaderProgram* program = shaderRegPtr->getProgram(material->getProgramID());
+            if (program != nullptr && program->isCompiled()) {
+                hasActivePrograms = true;
+                break;
+            }
+        }
+    }
 
     ImGui::Dummy(ImVec2(0, 3)); // some padding
+
+    if (modelCount == 0) {
+        ImGui::TextDisabled("No objects");
+        return;
+    } 
+    else if (!hasActivePrograms) {
+        ImGui::TextDisabled("No active programs");
+        return;
+    }
+
     for (auto& model : modelCachePtr->getAllModels()) {
         const std::unordered_map<unsigned int, unsigned int>& materialReferences = model->getAllMaterialReferences();
         drawModelContainer(imGuiID, model->ID, materialReferences);
@@ -55,7 +81,7 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
 }
 
 void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences) {
-    std::string modelLabel = "Model " + std::to_string(modelID);
+    std::string modelLabel = "Object " + std::to_string(modelID);
 
     ImGui::PushID(modelLabel.c_str());
 
@@ -380,7 +406,7 @@ bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) 
 
     int i = 0;
     for (auto& model : modelCachePtr_->getAllModels()) {
-        modelNames.push_back("Model " + std::to_string(model->ID));
+        modelNames.push_back("Object " + std::to_string(model->ID));
         modelChoices.push_back(modelNames[i].c_str());
         modelIDs.push_back(model->ID);
         i++;
@@ -390,7 +416,7 @@ bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) 
         modelChoices.push_back("Camera");
     }
 
-    ImGui::Text("Source Model");
+    ImGui::Text("Source Object");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(-1);
     changed |= ImGui::Combo("##Source_model", &value->modelSelection, modelChoices.data(), static_cast<int>(modelChoices.size()));
