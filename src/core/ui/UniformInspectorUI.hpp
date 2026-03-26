@@ -21,6 +21,7 @@ class UniformInspectorUI {
 public:
     UniformInspectorUI() = default;
     UniformInspectorUI(Fonts* fonts, SettingsStyles* styles);
+    ~UniformInspectorUI();
 
     void draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr);
 
@@ -52,9 +53,18 @@ private:
     bool drawInput(glm::quat* value, Uniform* uniform = nullptr);
     bool drawInput(InspectorSampler2D* value, Uniform* uniform = nullptr);
     bool drawInput(InspectorReference* value, Uniform* uniform = nullptr);
+    bool drawReferenceEditor(InspectorReference* value, Uniform* uniform);
     void drawUniformRow(Uniform& uniform, unsigned int matID);
+    void drawUniformRowInline(Uniform& uniform, unsigned int matID);
+    bool drawModePicker(const char* id, int& mode, const char* const* labels, int labelCount);
+    void setReferenceMode(Uniform& uniform, bool useReference);
+    std::string makeUniformStateKey(unsigned int matID, const std::string& uniformName) const;
+    std::string getUniformSummary(const Uniform& uniform) const;
+    std::string getReferenceSummary(const Uniform& uniform) const;
+    std::string getUniformTypeSummary(const Uniform& uniform) const;
     bool isSimpleType(UniformType type);
     void drawUniformsNested_byCursor(const std::unordered_map<std::string, Uniform>& uniforms, unsigned int matID, int& imGuiID);
     
     UniformInspectorThemeSettings theme;
+    std::unordered_map<std::string, bool> advancedOpenState_;
 };
