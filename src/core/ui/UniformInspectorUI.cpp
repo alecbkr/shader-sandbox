@@ -7,6 +7,7 @@
 #include "core/UniformRegistry.hpp"
 #include "core/UniformTypes.hpp"
 #include "core/ShaderRegistry.hpp"
+#include "core/ui/Fonts.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "imgui.h"
 #include "object/MaterialCache.hpp"
@@ -15,9 +16,9 @@
 #include <unordered_map>
 #include <vector>
 
-UniformInspectorUI::UniformInspectorUI(SettingsStyles* styles) : styles_(styles) {
+UniformInspectorUI::UniformInspectorUI(Fonts* fonts, SettingsStyles* styles) : fonts_(fonts), styles_(styles) {
     if (styles_) {
-        theme.bgColor = styles_->assetsTreeBodyColor;
+        theme.bgColor = styles_->assetsFileBackgroundColor;
         // Derive a hover color from the base color so it always differs visibly.
         theme.bgColorHovered = ImVec4(
             theme.bgColor.x * 1.3f,
@@ -56,28 +57,102 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
         }
     }
 
-    ImGui::Dummy(ImVec2(0, 3)); // some padding
 
-    if (modelCount == 0) {
-        ImGui::TextDisabled("No objects");
-        return;
-    } 
-    else if (!hasActivePrograms) {
-        ImGui::TextDisabled("No active programs");
-        return;
-    }
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, styles_->assetsTabBackgroundColor);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.0f);
+    const float window_padding = styles_->assetsBodyPadding;
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(window_padding, window_padding));
 
-    for (auto& model : modelCachePtr->getAllModels()) {
-        const std::unordered_map<unsigned int, unsigned int>& materialReferences = model->getAllMaterialReferences();
-        drawModelContainer(imGuiID, model->ID, materialReferences);
+    if (ImGui::BeginChild("UniformsContent", ImVec2(0, 0), 
+                          ImGuiChildFlags_AlwaysUseWindowPadding)) {
+    const float inner_padding = styles_->assetsTitleInnerPadding;
+        ImGui::PushFont(fonts_->getL4());
+        const float directory_height = window_padding * 2 + inner_padding * 2 + ImGui::CalcTextSize("Uniforms").y;
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(0,0,0,0));
 
-        modelIndex++;
-        if (modelIndex < modelCount) {
-            ImGui::Dummy(ImVec2(0, 2));
-            ImGui::Separator();
-            ImGui::Dummy(ImVec2(0, 2));
+        if (ImGui::BeginChild("UniformsTitle", ImVec2(0, directory_height), 
+                              ImGuiChildFlags_AlwaysUseWindowPadding)) {
+            ImVec2 p = ImGui::GetWindowPos();
+            ImVec2 s = ImGui::GetWindowSize();
+
+            ImGui::GetWindowDrawList()->AddRectFilled(
+                p,
+                ImVec2(p.x + s.x, p.y + s.y),
+                ImGui::ColorConvertFloat4ToU32(styles_->assetsTitleBackgroundColor),
+                styles_->assetsBodyRounding,
+                ImDrawFlags_RoundCornersTop
+            );
+
+            ImGui::GetWindowDrawList()->AddRect(
+                p,
+                ImVec2(p.x + s.x, p.y + s.y),
+                ImGui::ColorConvertFloat4ToU32(styles_->assetsBorderColor),
+                styles_->assetsBodyRounding,
+                ImDrawFlags_RoundCornersTop,
+                styles_->assetsBorderThickness
+            );
+
+            ImGui::SetCursorPosY(inner_padding + window_padding);
+            ImGui::Dummy(ImVec2(styles_->assetsTitleOffset, 0.0f));
+            ImGui::SameLine();
+            ImGui::TextUnformatted("Uniforms");
         }
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+        ImGui::PopFont();
+
+        if (ImGui::BeginChild("UniformsBody", ImVec2(0, 0), 
+                              ImGuiChildFlags_AlwaysUseWindowPadding)) {
+            ImVec2 p = ImGui::GetWindowPos();
+            ImVec2 s = ImGui::GetWindowSize();
+
+            ImGui::GetWindowDrawList()->AddRectFilled(
+                p,
+                ImVec2(p.x + s.x, p.y + s.y),
+                ImGui::ColorConvertFloat4ToU32(styles_->assetsTreeBodyColor),
+                styles_->assetsBodyRounding,
+                ImDrawFlags_RoundCornersBottom
+            );
+
+            ImGui::GetWindowDrawList()->AddRect(
+                p,
+                ImVec2(p.x + s.x, p.y + s.y),
+                ImGui::ColorConvertFloat4ToU32(styles_->assetsBorderColor),
+                styles_->assetsBodyRounding,
+                ImDrawFlags_RoundCornersBottom,
+                styles_->assetsBorderThickness
+            );
+
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 8.0f));
+            ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
+
+            if (modelCount == 0) {
+                ImGui::TextDisabled("No objects");
+            } 
+            else if (!hasActivePrograms) {
+                ImGui::TextDisabled("No active programs");
+            }
+            else {
+                for (auto& model : modelCachePtr->getAllModels()) {
+                    const std::unordered_map<unsigned int, unsigned int>& materialReferences = model->getAllMaterialReferences();
+                    drawModelContainer(imGuiID, model->ID, materialReferences);
+
+                    modelIndex++;
+                    if (modelIndex < modelCount) {
+                        ImGui::Separator();
+                    }
+                }
+            }
+            ImGui::PopStyleVar(2);
+        }
+        ImGui::EndChild();
+        ImGui::PopStyleVar();
     }
+    ImGui::EndChild();
+    ImGui::PopStyleVar();
+    ImGui::PopStyleVar();
+    ImGui::PopStyleColor();
 }
 
 void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences) {
@@ -86,8 +161,8 @@ void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, 
     ImGui::PushID(modelLabel.c_str());
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.bgColor);
-    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles_->assetsBodyRounding);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles_->assetsBorderThickness);
     ImGui::PushStyleColor(ImGuiCol_Header, theme.bgColor);
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.bgColorHovered);
     ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.bgColor);
