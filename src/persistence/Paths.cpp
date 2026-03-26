@@ -72,6 +72,7 @@ std::filesystem::path getProjectRootDir(std::string projectToOpen, std::string& 
     // Ensure directory exists
     fs::create_directories(projectRoot);
     fs::create_directories(projectRoot / "shaders");
+    fs::create_directories(projectRoot / "assets");
 
     return projectRoot;
 }
