@@ -71,6 +71,7 @@ struct Uniform {
     bool isFunction = false; // right now this means reference. it won't always be this way.
     bool isReadOnly = false; // does nothing right now. 
     bool useAlternateEditor = false; // This setting is for the color picker, etc.
+    bool invisible = false;
 };
 
 inline std::optional<std::vector<std::string>> getWorldData(UniformType type) {

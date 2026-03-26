@@ -19,7 +19,7 @@ public:
     bool initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, ModelCache* _modelCachePtr, ViewportUI* _viewportUIPtr, MaterialCache* _materialCachePtr);
     void shutdown();
     void refreshUniforms();
-    void applyAllUniformsForObject(unsigned int modelID);
+    void applyAllUniformsForMaterial(unsigned int modelID);
     void setUniform(unsigned int modelID, const std::string& uniformName, UniformValue value);
     void applyInput(unsigned int modelID, const Uniform& uniform);
     void reloadUniforms(unsigned int modelID);
@@ -27,7 +27,6 @@ public:
     void assignDefaultValue(Uniform& uniform);
     UniformValue getDefaultValue(UniformType type);
 
-    // ALECS TEST JUNK
     void applyAllUniformsForPrimitive(unsigned int modelID, unsigned int meshID, unsigned int materialID);
     void applySceneUniforms(ShaderProgram& program);
     void applyModelUniforms(ShaderProgram& program, unsigned int modelID);

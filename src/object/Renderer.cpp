@@ -154,11 +154,15 @@ bool Renderer::initialize(
 
 
 void Renderer::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camPos) {
-    uniformRegPtr->registerSceneUniform({"projection", UniformType::Mat4, perspective});
-    uniformRegPtr->registerSceneUniform({"view", UniformType::Mat4, view});
+    uniformRegPtr->registerSceneUniform(Uniform{
+        .name = "projection", .type = UniformType::Mat4, .value = perspective, .invisible = true
+    });
+    uniformRegPtr->registerSceneUniform(Uniform{
+            .name = "view", .type = UniformType::Mat4, .value = view, .invisible = true
+    });
 
     for (auto& model : modelCachePtr->getAllModels()) {
-        uniformRegPtr->registerModelUniform(model->ID, {"model", UniformType::Mat4, model->getModelMatrix()});
+        uniformRegPtr->registerModelUniform(model->ID, {"model", UniformType::Mat4, model->getModelMatrix(), 0, 0, false, false, false, true});
     }
     
     renderOpaquePrimitives();

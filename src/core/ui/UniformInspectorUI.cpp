@@ -97,7 +97,7 @@ void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::
         }
 
         if (showUniforms) {
-            const auto uniformMap = uniformRegPtr_->tryReadUniforms(matID);
+            const auto uniformMap = uniformRegPtr_->tryReadMaterialUniforms(matID);
 
             if (uniformMap == nullptr) {
                 loggerPtr_->addLog(LogLevel::WARNING, "drawUniformInspector", "Model not found in registry: ", std::to_string(modelID));
@@ -226,6 +226,9 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
 }
 
 void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
+    // I think it would be better to maybe just say it's here and have it be read only? invisible isn't a great idea imo
+    if (uniform.invisible) return;
+
     bool nodeOpen = ImGui::CollapsingHeader(uniform.name.c_str(), ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowOverlap);
 
     if (nodeOpen) {
@@ -521,7 +524,7 @@ bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) 
             return changed;
         }
 
-        const auto uniforms = uniformRegPtr_->tryReadUniforms(matIDs[value->materialSelection]);
+        const auto uniforms = uniformRegPtr_->tryReadMaterialUniforms(matIDs[value->materialSelection]);
         if (uniforms == nullptr) {
             loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput (function)", "uniform list not found");
         }
