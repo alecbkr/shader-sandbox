@@ -117,6 +117,20 @@ struct SettingsStyles {
     // General inspector tree/child hover color
     ImVec4 inspectorTreeHoveredColor;
 
+    // Materials tab specific styles
+    // Materials tab colors
+    ImVec4 materialsBorderColor;
+    ImVec4 materialsTabBackgroundColor;
+    ImVec4 materialsTitleBackgroundColor;
+    ImVec4 materialsTreeBodyColor;
+
+    // Materials tab styles
+    float materialsBorderThickness = 1.0f;
+    float materialsBodyPadding = 12.0f;
+    float materialsTitleInnerPadding = 1.0f;
+    float materialsBodyRounding = 6.0f;
+    float materialsTitleOffset = 6.0f;
+
     // Assets tab specific styles
     // Assest tab colors
     ImVec4 assetsDirectoryTextColor;
@@ -424,6 +438,42 @@ struct SettingsStyles {
 
         // Inspector Specific Styles
         json inspectorStylesObject = json::object();
+
+        // Materials tab styles
+        json materialsTabObject = json::object();
+        materialsTabObject["materialsBorderColor"] = {
+            materialsBorderColor.x,
+            materialsBorderColor.y,
+            materialsBorderColor.z,
+            materialsBorderColor.w
+        };
+        materialsTabObject["materialsTabBackgroundColor"] = {
+            materialsTabBackgroundColor.x,
+            materialsTabBackgroundColor.y,
+            materialsTabBackgroundColor.z,
+            materialsTabBackgroundColor.w
+        };
+        materialsTabObject["materialsTitleBackgroundColor"] = {
+            materialsTitleBackgroundColor.x,
+            materialsTitleBackgroundColor.y,
+            materialsTitleBackgroundColor.z,
+            materialsTitleBackgroundColor.w
+        };
+        materialsTabObject["materialsTreeBodyColor"] = {
+            materialsTreeBodyColor.x,
+            materialsTreeBodyColor.y,
+            materialsTreeBodyColor.z,
+            materialsTreeBodyColor.w
+        };
+
+        materialsTabObject["materialsBorderThickness"] = materialsBorderThickness;
+        materialsTabObject["materialsBodyPadding"] = materialsBodyPadding;
+        materialsTabObject["materialsTitleInnerPadding"] = materialsTitleInnerPadding;
+        materialsTabObject["materialsBodyRounding"] = materialsBodyRounding;
+        materialsTabObject["materialsTitleOffset"] = materialsTitleOffset;
+
+        inspectorStylesObject["materials"] = materialsTabObject;
+
         // Assets tab styles
         json assetsTabObject = json::object();
         assetsTabObject["assetsDirectoryTextColor"] = {
@@ -582,6 +632,43 @@ struct SettingsStyles {
 
         if (s.contains("inspector") && s["inspector"].is_object()) {
             const json& ins = s["inspector"];
+            if (ins.contains("materials") && ins["materials"].is_object()) {
+                const json& mats = ins["materials"];
+                materialsBorderColor = ImVec4(
+                    mats["materialsBorderColor"][0],
+                    mats["materialsBorderColor"][1],
+                    mats["materialsBorderColor"][2],
+                    mats["materialsBorderColor"][3]
+                );
+                materialsTabBackgroundColor = ImVec4(
+                    mats["materialsTabBackgroundColor"][0],
+                    mats["materialsTabBackgroundColor"][1],
+                    mats["materialsTabBackgroundColor"][2],
+                    mats["materialsTabBackgroundColor"][3]
+                );
+                materialsTitleBackgroundColor = ImVec4(
+                    mats["materialsTitleBackgroundColor"][0],
+                    mats["materialsTitleBackgroundColor"][1],
+                    mats["materialsTitleBackgroundColor"][2],
+                    mats["materialsTitleBackgroundColor"][3]
+                );
+                materialsTreeBodyColor = ImVec4(
+                    mats["materialsTreeBodyColor"][0],
+                    mats["materialsTreeBodyColor"][1],
+                    mats["materialsTreeBodyColor"][2],
+                    mats["materialsTreeBodyColor"][3]
+                );
+                materialsBorderThickness = mats.value("materialsBorderThickness", materialsBorderThickness);
+                materialsBodyPadding = mats.value("materialsBodyPadding", materialsBodyPadding);
+                materialsTitleInnerPadding = mats.value("materialsTitleInnerPadding", materialsTitleInnerPadding);
+                materialsBodyRounding = mats.value("materialsBodyRounding", materialsBodyRounding);
+                materialsTitleOffset = mats.value("materialsTitleOffset", materialsTitleOffset);
+            } else {
+                materialsBorderColor = ImVec4(45, 47, 63, 255);
+                materialsTabBackgroundColor = ImVec4(26, 27, 33, 255);
+                materialsTitleBackgroundColor = ImVec4(31, 32, 42, 255);
+                materialsTreeBodyColor = ImVec4(28, 30, 38, 255);
+            }
             if (ins.contains("assets") && ins["assets"].is_object()) {
                 const json& assets = ins["assets"];
                 assetsDirectoryTextColor = ImVec4(

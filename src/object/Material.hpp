@@ -8,7 +8,7 @@
 #include "MaterialProperties.hpp"
 
 class EventDispatcher;
-
+class TextureCache;
 
 class Material {
 public:
@@ -38,7 +38,7 @@ public:
     float getRoughness();
     float getMetalness();
     std::vector<unsigned int>& getMaterialTextureIDs();
-    std::vector<std::string> getAllTexturePaths();
+    std::vector<std::string> getAllTexturePaths(TextureCache* texCache);
     
 private:
     std::string programID;

@@ -509,7 +509,7 @@ void InspectorEngine::applyAllUniformsForPrimitive(unsigned int modelID, unsigne
     }
     ShaderProgram* matProgram = shaderRegPtr->getProgram(mat->getProgramID());
     if (matProgram == nullptr || !matProgram->isCompiled()) {
-        loggerPtr->addLog(LogLevel::WARNING, "reloadUniforms", "material " + std::to_string(materialID) + " has no shader! or is not compiled");
+        //loggerPtr->addLog(LogLevel::WARNING, "reloadUniforms", "material " + std::to_string(materialID) + " has no shader! or is not compiled");
         return;
     }
     matProgram->use();
