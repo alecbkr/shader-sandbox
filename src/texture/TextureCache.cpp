@@ -111,6 +111,7 @@ void TextureCache::bindTexture(unsigned int textureID, unsigned int texUnit) {
                 loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURECACHE | bindTexture()", " texUnit must be 0-31");
                 break;
             default:
+                break;
         }
         bindDefault(texUnit);
     }

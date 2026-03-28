@@ -18,9 +18,7 @@ enum class Action {
     MouseMove,
     SwitchControlContext,
     SaveActiveShaderFile,
-    NewProject,
     SaveProject,
-    RenameProject,
     QuitApplication,
     FontSizeIncrease,
     FontSizeDecrease,
@@ -30,7 +28,10 @@ enum class Action {
     FormatActiveShader,
     ScreenshotViewport,
     FullscreenViewport,
-    Count
+    EditorFind,
+    Count,
+    NewProject,
+    RenameProject,
 };
 
 class ActionRegistry {
