@@ -58,6 +58,7 @@ private:
     void bindProgram(unsigned int materialID);
     void drawMesh(unsigned int modelID, unsigned int meshID);
     bool validateNextID();
+    bool validatePrimitive(unsigned int primitiveID);
     void placeInQueue(unsigned int primitiveID, QueueType queueType);
     void removeFromQueue(unsigned int primitiveIDToDelete, QueueType queueType);
 

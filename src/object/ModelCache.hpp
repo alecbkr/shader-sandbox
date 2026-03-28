@@ -31,11 +31,10 @@ public:
     unsigned int createSkybox(std::string cubemap_dir);
 
     // FUNCTIONS THAT SHOULD NOT BE ACCESSED
-    void setupPreset(unsigned int ID, ModelType type);
+    void addPresetMesh(unsigned int ID, ModelType type);
     bool reserveModelID(unsigned int ID, std::string model_path, ModelType type);
     unsigned int createModelForImportSetup(std::string model_path);
-    void finalizeMesh(unsigned int modelID);
-    void sendToRenderer(unsigned int modelID);
+    void trySendingToRenderer(unsigned int modelID);
 
 private:
     unsigned int nextModelID = 0;

@@ -41,7 +41,6 @@ public:
     void setInstanceCount(unsigned int newInstanceCount);
     bool setMeshMaterial(unsigned int meshIdx, unsigned int materialID);
     void setModelMaterial(unsigned int materialID);
-    bool setModelStateReady();
 
     // GETTERS
     unsigned int getID() const;
@@ -60,6 +59,8 @@ public:
     void loadInstanceData(std::vector<InstanceData> instanceData);
     void loadMeshMaterialIDs(std::vector<unsigned int> meshMaterialIDs);
     std::vector<unsigned int> getAllMaterialIDsPerMesh();
+    bool finalizeMeshes();
+    void setMaterialStateReady();
 
     //DEBUG
     unsigned int getNumberOfMeshes();
@@ -74,7 +75,7 @@ private:
     unsigned int modelInstanceCount = 1;
     std::vector<InstanceData> instanceData;
 
-    ModelStatus status    = ModelStatus::Empty;
+    ModelStatus status;
     glm::mat4 modelM      = glm::mat4(1.0f);
     glm::vec3 position    = glm::vec3(0.0f);
     glm::vec3 scale       = glm::vec3(1.0f);

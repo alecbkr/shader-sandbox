@@ -133,20 +133,28 @@ void loadPresetAssets(AppContext& ctx) {
     // ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::METAL));
     // ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::GRID));
 
-    // ShaderProgram* gridplanePtr = ctx.shader_registry.getProgram("gridplane");
-    // ShaderProgram* skyboxPtr = ctx.shader_registry.getProgram("skybox");
-    // ShaderProgram* texPtr = ctx.shader_registry.getProgram("tex");
-    // ShaderProgram* colorPtr = ctx.shader_registry.getProgram("color");
-    // ShaderProgram* instancePtr = ctx.shader_registry.getProgram("instance");
 
     ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "color.vert", ctx.project.projectShadersDir / "color.frag", "color");
-    ShaderProgram* colorPtr = ctx.shader_registry.getProgram("color");
-    
-    unsigned int matID = ctx.material_cache.createBlankMaterial();
-    ctx.material_cache.getMaterial(matID)->setProgramID(colorPtr->name);
-    unsigned int cubeID = ctx.model_cache.createPreset(ModelType::CubePreset);
-    ctx.model_cache.changeModelMaterial(cubeID, matID);
+    ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "tex.vert", ctx.project.projectShadersDir / "tex.frag", "tex");
+    ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "gridplane.vert", ctx.project.projectShadersDir / "gridplane.frag", "gridplane");
 
+
+    unsigned int matID = ctx.material_cache.createBlankMaterial();
+    ctx.material_cache.getMaterial(matID)->setProgramID("color");
+
+    unsigned int mat2ID = ctx.material_cache.createBlankMaterial();
+    ctx.material_cache.addTextureToMaterial(mat2ID, "../assets/textures/water.png");
+    ctx.material_cache.getMaterial(mat2ID)->setProgramID("tex");
+
+
+    // unsigned int cubeID = ctx.model_cache.createPreset(ModelType::CubePreset);
+    // ctx.model_cache.changeModelMaterial(cubeID, matID);
+
+    unsigned int bpID = ctx.assimp_importer.importModel("../assets/models/backpack/backpack.obj");
+    ctx.model_cache.changeModelMaterial(bpID, mat2ID);
+
+    unsigned int presetID = ctx.model_cache.createPreset(ModelType::CubePreset);
+    // ctx.material_cache.getMaterial(3)->setProgramID(texPtr->name);
     
 
 
@@ -217,7 +225,7 @@ bool Application::initialize(AppContext& ctx) {
         return false;
     }
     if (!ctx.texture_cache.initialize(&ctx.logger)) {
-        std::cout << "Texture Cache was not initialized successfully." << std::endl;
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Texture Cache was not initialized successfully.");
         return false;
     }
     if (!ctx.model_cache.initialize(&ctx.logger, &ctx.events, &ctx.preset_assets)) {
@@ -232,9 +240,6 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Importer was not initialized successfully.");
         return false;
     }
-    
-    
-    // ctx.model_cache.setInspectorEnginePtr(&ctx.inspector_engine);
     if (!ctx.hot_reloader.initialize(&ctx.logger, &ctx.events, &ctx.shader_registry, &ctx.model_cache, &ctx.editor_engine, &ctx.inspector_engine, &ctx.ctx_manager)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Hot Reloader was not initialized successfully.");
         return false;
@@ -255,16 +260,11 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Texture Registry was not initialized successfully.");
         return false;
     }
-    
-    // loadPresetAssets(ctx);
-    // addSubscriptions(ctx);
-    // initializeUI(ctx);
     ctx.inspector_engine.refreshUniforms();
     if (!ctx.console_ui.initialize(&ctx.logger, &ctx.console_engine, &ctx.settings.styles, &ctx.fonts)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Console UI was not initialized successfully.");
         return false;
     }
-    
     if (!ctx.menu_ui.initialize(&ctx.logger, &ctx.platform, &ctx.events, &ctx.modals, &ctx.keybinds, &ctx)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Menu UI was not initialized successfully.");
         return false;
@@ -293,8 +293,8 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
         return false;
     }
-    loadPresetAssets(ctx);
     addSubscriptions(ctx);
+    loadPresetAssets(ctx);
     initializeUI(ctx);
 
     ctx.logger.addLog(LogLevel::INFO, "Application Initialization", "Application Layer Initialized.");

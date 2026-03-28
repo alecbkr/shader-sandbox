@@ -80,20 +80,20 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
         if (reservationResult == false) continue;
 
         if (type != ModelType::Imported) {
-            modelCachePtr->setupPreset(ID, type);
+            modelCachePtr->addPresetMesh(ID, type);
         }
         else {
             Assimp::Importer import;
             const aiScene *scene = import.ReadFile(path.string(), aiProcess_Triangulate | aiProcess_FlipUVs);
             if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-                loggerPtr->addLog(LogLevel::WARNING, "ASSIMP_IMPORTER | loadAssetCachesFromSave()", "Skipping. Model not found with path " + path.string());
+                loggerPtr->addLog(LogLevel::WARNING, "ASSIMP_IMPORTER::loadAssetCachesFromSave()", "Skipping. Model not found with path " + path.string());
                 continue;
             }
             processNode(ID, scene->mRootNode, scene);
         }
-        modelCachePtr->finalizeMesh(ID);
-
         Model* model = modelCachePtr->getModel(ID);
+        model->finalizeMeshes();
+
         // LOAD BOUND MATERIALS PER MESH
         model->loadMeshMaterialIDs(meshMaterialIDs);
         model->setPosition(position);
@@ -102,7 +102,7 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
         model->setInstanceCount(instanceData.size());
         model->loadInstanceData(instanceData);     
 
-        modelCachePtr->sendToRenderer(ID);
+        modelCachePtr->trySendingToRenderer(ID);
 
         // inspectorEngPtr->refreshUniforms();
     }
@@ -114,7 +114,7 @@ unsigned int AssimpImporter::importModel(std::string path) {
     Assimp::Importer import;
     const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        loggerPtr->addLog(LogLevel::WARNING, "ASSIMP_IMPORTER | importModel()", "Model not found");
+        loggerPtr->addLog(LogLevel::WARNING, "ASSIMP_IMPORTER::importModel()", "Model not found");
         return INVALID_MODEL_ID;
     }
 
@@ -128,8 +128,8 @@ unsigned int AssimpImporter::importModel(std::string path) {
 
     // PROCESS MESHES
     processNode(modelID, scene->mRootNode, scene);
-    modelCachePtr->finalizeMesh(modelID);
-    modelCachePtr->sendToRenderer(modelID);
+    modelCachePtr->getModel(modelID)->finalizeMeshes();
+    modelCachePtr->trySendingToRenderer(modelID);
     return modelID;
 }
 

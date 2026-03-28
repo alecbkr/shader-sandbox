@@ -41,7 +41,7 @@ public:
     std::vector<std::string> getAllTexturePaths(TextureCache* texCache);
     
 private:
-    std::string programID;
+    std::string programID = "";
     std::vector<unsigned int> textureIDs;
     MaterialType type = MaterialType::Opaque;
 

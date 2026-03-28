@@ -33,7 +33,7 @@ bool ModelCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr,  Pr
     MeshData cubeMesh = presetsPtr->getPresetMesh(MeshPreset::CUBE);
     skyboxModel = new Model(UINT_MAX, std::string("SKYBOX"), ModelType::CubePreset);
     skyboxModel->addMeshByData(cubeMesh.verts, cubeMesh.indices, true, false, true);
-    skyboxModel->setModelStateReady();
+    skyboxModel->finalizeMeshes();
 
     
     eventsPtr->Subscribe(EventType::ReloadShader, [this](const EventPayload& payload) -> bool {
@@ -66,21 +66,21 @@ void ModelCache::shutdown() {
 
 unsigned int ModelCache::createPreset(ModelType type) {
     if (validateNextID() == false) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE | createPreset", "failed to validate next model ID on model creation");
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::createPreset()", "failed to validate next model ID on model creation");
         return INVALID_MODEL_ID;
     }
 
     if (type == ModelType::Imported) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE | createPreset", "invalid type call, imported model types are reserved for the importer");
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::createPreset()", "invalid type call, imported model types are reserved for the importer");
         return INVALID_MODEL_ID;
     }
 
     unsigned int presetModelID = nextModelID;
     modelIDMap.emplace(presetModelID, std::make_unique<Model>(presetModelID, "preset", type));
-    setupPreset(presetModelID, type);
+    addPresetMesh(presetModelID, type);
 
-    finalizeMesh(presetModelID);
-    sendToRenderer(presetModelID);
+    getModel(presetModelID)->finalizeMeshes();
+    trySendingToRenderer(presetModelID);
     nextModelID++;
     return presetModelID;
 }
@@ -89,7 +89,7 @@ unsigned int ModelCache::createPreset(ModelType type) {
 //DO NOT CALL THIS OUTSIDE MODELIMPORTER
 unsigned int ModelCache::createModelForImportSetup(std::string model_path) {
     if (validateNextID() == false) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE | createEmptyModel()", "failed to validate next model ID on model creation");
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::createEmptyModel()", "failed to validate next model ID on model creation");
         return INVALID_MODEL_ID;
     }
     unsigned int emptyModelID = nextModelID;
@@ -102,7 +102,7 @@ unsigned int ModelCache::createModelForImportSetup(std::string model_path) {
 
 bool ModelCache::reserveModelID(unsigned int modelID, std::string model_path, ModelType type) {
     if (modelIDMap.contains(modelID)) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE | reserveModelID", "reservation failed. ModelCache already contains ID " + std::to_string(modelID));
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::reserveModelID()", "reservation failed. ModelCache already contains ID " + std::to_string(modelID));
         return false;
     }
     modelIDMap.emplace(modelID, std::make_unique<Model>(modelID, model_path, type));
@@ -130,22 +130,18 @@ unsigned int ModelCache::createSkybox(std::string cubemap_dir) {
 }
 
 
-void ModelCache::finalizeMesh(unsigned int modelID) {
-    Model* model = getModel(modelID);
-    if (model == nullptr) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE | finalizeAnEmptyModel", "model not found: " + std::to_string(modelID));
+void ModelCache::trySendingToRenderer(unsigned int modelID) {
+    ModelStatus status = getModel(modelID)->getModelStatus();
+    if (status.meshes != ModelState::Ready || status.material != ModelState::Ready)  {
+        if (status.meshes != ModelState::Ready) {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::trySendingToRenderer()", "mesh is not set or has an error");
+        }
+        if (status.material != ModelState::Ready) {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::trySendingToRenderer()", "material is not set or has an error");
+        }
         return;
     }
 
-    bool result = model->setModelStateReady();
-    if (result == false) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE | finalizeAnEmptyModel", "could not finalize model because its in error state, modelID: " + std::to_string(modelID));
-        return;
-    }
-}
-
-
-void ModelCache::sendToRenderer(unsigned int modelID) {
     eventsPtr->TriggerEvent(Event { EventType::CreateModel, false, ModelCreationPayload{modelID} });
 }
 
@@ -153,7 +149,7 @@ void ModelCache::sendToRenderer(unsigned int modelID) {
 void ModelCache::deleteModel(unsigned int modelID) {
     Model* model = getModel(modelID);
     if (model == nullptr) {
-        loggerPtr->addLog(LogLevel::WARNING, "OBJECT CACHE", "Model ID not found:", std::to_string(modelID));
+        loggerPtr->addLog(LogLevel::WARNING, "MODELCACHE::deleteModel()", "Model ID not found:", std::to_string(modelID));
         return;
     }
     modelIDMap.erase(modelID);
@@ -164,29 +160,41 @@ void ModelCache::deleteModel(unsigned int modelID) {
 void ModelCache::changeMeshMaterial(unsigned int modelID, unsigned int meshIdx, unsigned int materialID) {
     Model* foundModel = getModel(modelID);
     if (foundModel == nullptr) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "ChangeMeshMaterial()", "model not found from ID " + std::to_string(modelID));
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::changeMeshMaterial()", "model not found from ID " + std::to_string(modelID));
         return;
     }
 
     unsigned int numOfMeshes = foundModel->getNumberOfMeshes();
     if (meshIdx < 0 || numOfMeshes < meshIdx) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "ChangeMeshMaterial()", "mesh idx out of bounds " + std::to_string(meshIdx));
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::changeMeshMaterial()", "mesh idx out of bounds " + std::to_string(meshIdx));
         return;
     }
 
     foundModel->setMeshMaterial(meshIdx, materialID);
-    eventsPtr->TriggerEvent(Event { EventType::ModelMaterialChange, false, ModelMaterialChangePayload{modelID, meshIdx, materialID} });
+
+    if (foundModel->getModelStatus().wasSentToRenderer == false) {
+        trySendingToRenderer(modelID);
+    }
+    else {
+        eventsPtr->TriggerEvent(Event { EventType::ModelMaterialChange, false, ModelMaterialChangePayload{modelID, meshIdx, materialID} });
+    }
 }
 
 
 void ModelCache::changeModelMaterial(unsigned int modelID, unsigned int materialID) {
     Model* foundModel = getModel(modelID);
     if (foundModel == nullptr) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "ChangeMeshMaterial()", "model not found from ID " + std::to_string(modelID));
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::changeModelMaterial()", "model not found from ID " + std::to_string(modelID));
         return;
     }
     foundModel->setModelMaterial(materialID);
-    eventsPtr->TriggerEvent(Event { EventType::ModelMaterialChange, false, ModelMaterialChangePayload{modelID, UINT_MAX, materialID} });
+    
+    if (foundModel->getModelStatus().wasSentToRenderer == false) {
+        trySendingToRenderer(modelID);
+    } 
+    else {
+        eventsPtr->TriggerEvent(Event { EventType::ModelMaterialChange, false, ModelMaterialChangePayload{modelID, UINT_MAX, materialID} });
+    }
 }
 
 
@@ -203,7 +211,6 @@ std::vector<Model*> ModelCache::getAllModels() const {
 Model* ModelCache::getModel(unsigned int modelID) {
     auto it = modelIDMap.find(modelID);
     if (it == modelIDMap.end()) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE | getModel()", "modelID not found: ", std::to_string(modelID));
         return nullptr;
     }
     return it->second.get();
@@ -227,7 +234,7 @@ bool ModelCache::validateNextID() {
 }
 
 
-void ModelCache::setupPreset(unsigned int modelID, ModelType type) {
+void ModelCache::addPresetMesh(unsigned int modelID, ModelType type) {
     MeshPreset preset;
     switch(type) {
         case ModelType::PlanePreset: preset = MeshPreset::PLANE; break;

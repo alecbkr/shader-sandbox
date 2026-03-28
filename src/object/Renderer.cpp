@@ -50,7 +50,7 @@ bool Renderer::initialize(
             Model* newModel = modelCachePtr->getModel(data->modelID);
             for (const MeshInstance& meshInstance : newModel->getMeshInstances()) {
                 if (validateNextID() == false) {
-                    loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER", "failed to validate next primitive ID on model creation");
+                    loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER::Event", "failed to validate next primitive ID on model creation");
                     break;
                 }
 
@@ -126,7 +126,7 @@ bool Renderer::initialize(
 
     eventsPtr->Subscribe(EventType::MaterialTypeChange, [this](const EventPayload& payload) -> bool {
         if (const auto* data = std::get_if<MaterialTypeChangePayload>(&payload)) {
-            
+
             for (auto iter = primitiveIDMap.begin(); iter != primitiveIDMap.end(); ) {
                 if (iter->second.materialID == data->materialID) {
                     QueueType newHostQueueType;
@@ -181,7 +181,12 @@ void Renderer::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camPos
 
 void Renderer::renderOpaquePrimitives() {
     for (unsigned int primitiveID : opaquePrimIDs) {
-    
+        
+        if (validatePrimitive(primitiveID) == false) {
+            // removeFromQueue(primitiveID, QueueType::Opaque);
+            continue;
+        }
+
         Primitive* currPrimitive = &primitiveIDMap.at(primitiveID);
         bindProgram(currPrimitive->materialID);
         inspectorEngPtr->applyAllUniformsForPrimitive(currPrimitive->modelID, currPrimitive->meshIdx, currPrimitive->materialID);
@@ -193,6 +198,11 @@ void Renderer::renderOpaquePrimitives() {
 
 void Renderer::renderCutoutPrimitives() {
     for (unsigned int primitiveID : cutoutPrimIDs) {
+
+        if (validatePrimitive(primitiveID) == false) {
+            // removeFromQueue(primitiveID, QueueType::Cutout);
+            continue;
+        }
 
         Primitive* currPrimitive = &primitiveIDMap.at(primitiveID);
         bindProgram(currPrimitive->materialID);
@@ -207,6 +217,11 @@ void Renderer::renderTranslucentPrimitives() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
     for (unsigned int primitiveID : translucentPrimIDs) {
+
+        if (validatePrimitive(primitiveID) == false) {
+            // removeFromQueue(primitiveID, QueueType::Translucent);
+            continue;
+        }
 
         Primitive* currPrimitive = &primitiveIDMap.at(primitiveID);
         bindProgram(currPrimitive->materialID);
@@ -240,10 +255,6 @@ void Renderer::reorderTranslucentPrimitives(glm::mat4 viewMat) {
 
 void Renderer::bindTextures(unsigned int materialID) {
     Material* foundMaterial = materialCachePtr->getMaterial(materialID);
-    if (foundMaterial == nullptr) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER |bindTextures()", "materialID out of bounds: ", std::to_string(materialID));
-        return;
-    }
 
     const auto& textureIDs = foundMaterial->getMaterialTextureIDs();
     if (textureIDs.empty() == false) {
@@ -261,34 +272,13 @@ void Renderer::bindTextures(unsigned int materialID) {
 
 void Renderer::bindProgram(unsigned int materialID) {
     Material* foundMaterial = materialCachePtr->getMaterial(materialID);  
-
-    if (foundMaterial == nullptr) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER | bindProgram()", "materialID out of bounds: ", std::to_string(materialID));
-        return;
-    }
-
     ShaderProgram* program = shaderRegPtr->getProgram(foundMaterial->getProgramID());
-    if (program == nullptr) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER | bindProgram()", "shader program not found: ", foundMaterial->getProgramID());
-        return;
-    }
-
     program->use();
 }
 
 
 void Renderer::drawMesh(unsigned int modelID, unsigned int meshIdx) {
     Model* foundModel = modelCachePtr->getModel(modelID);
-    if (foundModel == nullptr) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER | drawMesh()", "model not found with ID " + std::to_string(modelID));
-        return;
-    }
-
-    if (meshIdx >= foundModel->getNumberOfMeshes()) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER | drawMesh()", "meshIdx " + std::to_string(meshIdx) + " out of bounds for model " + std::to_string(modelID));
-        return;
-    }
-
     foundModel->drawMesh(meshIdx);
 }
 
@@ -332,4 +322,37 @@ void Renderer::removeFromQueue(unsigned int primitiveIDToDelete, QueueType queue
             iter++;
         }
     }
+}
+
+
+bool Renderer::validatePrimitive(unsigned int primitiveID) {
+    Primitive& primitive = primitiveIDMap.at(primitiveID);
+    bool result = true;
+    std::string feedback = "";
+
+    Model* foundModel = modelCachePtr->getModel(primitive.modelID);
+    if (foundModel == nullptr) {
+        feedback += "\nmodel not found with ID " + std::to_string(primitive.modelID);
+        result = false;
+    }
+    else if (primitive.meshIdx >= foundModel->getNumberOfMeshes()) {
+        feedback += "\nmesh with Index " + std::to_string(primitive.meshIdx) + " out of bounds for model " + std::to_string(primitive.modelID);
+        result = false;
+    }
+
+    Material* foundMaterial = materialCachePtr->getMaterial(primitive.materialID);  
+    if (foundMaterial == nullptr) {
+        std::cout << "MATERR" << std::endl; //TEMPPRINT
+        feedback += "\nmaterial not found with ID: " + std::to_string(primitive.materialID) + ". Removing materialID from model";
+        result = false;
+    }
+    else if (shaderRegPtr->getProgram(foundMaterial->getProgramID()) == nullptr) {
+        feedback += "\nshader program not found: " + foundMaterial->getProgramID();
+        result = false;
+    }
+
+    if (result == false) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER::validatePrimitive()", feedback);
+    }
+    return result;
 }
