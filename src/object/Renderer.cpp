@@ -372,7 +372,6 @@ bool Renderer::validatePrimitive(unsigned int primitiveID) {
 
     Material* foundMaterial = materialCachePtr->getMaterial(primitive.materialID);  
     if (foundMaterial == nullptr) {
-        std::cout << "MATERR" << std::endl; //TEMPPRINT
         feedback += "\nmaterial not found with ID: " + std::to_string(primitive.materialID) + ". Removing materialID from model";
         result = false;
     }

@@ -104,13 +104,15 @@ bool ModelCache::reserveModelID(unsigned int modelID, std::string model_path, Mo
 
 void ModelCache::trySendingToRenderer(unsigned int modelID) {
     ModelStatus& status = getModel(modelID)->getModelStatus();
+    if (status.wasSentToRenderer == true) return;
+
     if (status.meshes != ModelState::Ready || status.material != ModelState::Ready)  {
-        // if (status.meshes != ModelState::Ready) {
-        //     loggerPtr->addLog(LogLevel::WARNING, "MODELCACHE::trySendingToRenderer()", "mesh is not set or has an error");
-        // }
-        // if (status.material != ModelState::Ready) {
-        //     loggerPtr->addLog(LogLevel::WARNING, "MODELCACHE::trySendingToRenderer()", "material is not set or has an error");
-        // }
+        if (status.meshes == ModelState::Error) {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::trySendingToRenderer()", "mesh is in error state for model " + std::to_string(modelID));
+        }
+        if (status.material == ModelState::Error) {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::trySendingToRenderer()", "material(s) in error state for model " + std::to_string(modelID));
+        }
         return;
     }
 
