@@ -185,7 +185,7 @@ void Renderer::renderSkybox() {
         skyboxPrimID = UINT_MAX;
         return;
     }
-
+    
     Primitive* skyboxPrimitive = &primitiveIDMap.at(skyboxPrimID);
     glDepthFunc(GL_LEQUAL);
     glDepthMask(GL_FALSE);

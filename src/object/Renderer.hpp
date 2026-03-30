@@ -48,7 +48,7 @@ private:
     std::vector<unsigned int> opaquePrimIDs;
     std::vector<unsigned int> cutoutPrimIDs;
     std::vector<unsigned int> translucentPrimIDs;
-    unsigned int skyboxPrimID;
+    unsigned int skyboxPrimID = UINT_MAX;
 
     void renderSkybox();
     void renderOpaquePrimitives();
