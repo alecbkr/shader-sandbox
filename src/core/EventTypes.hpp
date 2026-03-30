@@ -26,6 +26,7 @@ enum class EventType {
     MaterialTypeChange,
     CloneFile,
     ToggleEditorFind,
+    LoadModel,
 };
 
 struct SaveActiveShaderFilePayload { std::string filePath; unsigned int modelID; };
@@ -40,6 +41,7 @@ struct ModelCreationPayload { unsigned int modelID; };
 struct ModelDeletionPayload { unsigned int modelID; };
 struct ModelMaterialChangePayload { unsigned int modelID; unsigned int meshIdx; unsigned int materialID; };
 struct MaterialTypeChangePayload { unsigned int materialID; MaterialType newType; };
+struct LoadModelPayload { std::string filePath; }; 
 
 using EventPayload = std::variant<
     std::monostate,
@@ -54,7 +56,8 @@ using EventPayload = std::variant<
     ModelCreationPayload,
     ModelDeletionPayload,
     ModelMaterialChangePayload,
-    MaterialTypeChangePayload
+    MaterialTypeChangePayload,
+    LoadModelPayload
 >;
 
 struct Event {
@@ -102,3 +105,7 @@ inline Event DeleteFileEvent(std::string fileName) {
 inline Event CloneFileEvent(std::string fileName) {
     return { EventType::CloneFile, false, CloneFilePayload{fileName} };
 };
+
+inline Event LoadModelEvent(std::string filePath) {
+    return { EventType::LoadModel, false, LoadModelPayload{filePath} }; 
+}

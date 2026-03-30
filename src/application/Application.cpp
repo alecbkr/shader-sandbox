@@ -72,6 +72,19 @@ void Application::addSubscriptions(AppContext& ctx) {
         ctx.shouldClose = true;
         return true;
     });
+    ctx.events.Subscribe(EventType::LoadModel, [&ctx](const EventPayload& payload) -> bool {
+        if (const auto* data = std::get_if<LoadModelPayload>(&payload)) {
+            unsigned int newModelID = ctx.assimp_importer.importModel(data->filePath); 
+            if (newModelID != INVALID_MODEL_ID) {
+                ctx.logger.addLog(LogLevel::INFO, "InspectorObject", "Successfully loaded model: " + data->filePath);
+                ctx.inspector_engine.refreshUniforms();
+            } else {
+                ctx.logger.addLog(LogLevel::LOG_ERROR, "Application", "Failed to import model: " + data->filePath); 
+            }
+            return true; 
+        }
+        return false; 
+    });  
 }
 
 bool Application::addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI* viewportUIPtr, ContextManager* contextManagerPtr, EventDispatcher* eventsPtr, Fonts* fontsPtr) {
@@ -119,7 +132,7 @@ void Application::initializeUI(AppContext& ctx) {
     ctx.settingsModal.initialize(&ctx.logger, &ctx.inputs, &ctx.keybinds, &ctx.platform, &ctx.settings);
     ctx.saveAsModal.initialize(&ctx.logger, &ctx.project, &ctx.events, &ctx.settings, &ctx.projectSwitch);
     ctx.openProjectModal.initialize(&ctx.project, &ctx.settings, &ctx.model_cache, &ctx.material_cache, &ctx.projectSwitch);
-    ctx.addObjectModal.initialize(&ctx.model_cache, &ctx.inspector_engine); 
+    ctx.addObjectModal.initialize(&ctx.model_cache, &ctx.inspector_engine, &ctx.project, &ctx.events); 
     ctx.modals.registerModal(&ctx.settingsModal);
     ctx.modals.registerModal(&ctx.saveAsModal);
     ctx.modals.registerModal(&ctx.openProjectModal);
