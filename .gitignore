@@ -11,3 +11,19 @@
 
 src/core/logging/logs.txt
 src/core/logging/logs/log_*.txt
+CMakeFiles/cmake.check_cache
+CMakeFiles/CMakeConfigureLog.yaml
+CMakeFiles/InstallScripts.json
+CMakeFiles/rules.ninja
+CMakeFiles/TargetDirectories.txt
+CMakeFiles/4.2.3/CMakeCCompiler.cmake
+CMakeFiles/4.2.3/CMakeCXXCompiler.cmake
+CMakeFiles/4.2.3/CMakeDetermineCompilerABI_C.bin
+CMakeFiles/4.2.3/CMakeDetermineCompilerABI_CXX.bin
+CMakeFiles/4.2.3/CMakeRCCompiler.cmake
+CMakeFiles/4.2.3/CMakeSystem.cmake
+CMakeFiles/4.2.3/CompilerIdC/a.exe
+CMakeFiles/4.2.3/CompilerIdC/CMakeCCompilerId.c
+CMakeFiles/4.2.3/CompilerIdCXX/a.exe
+CMakeFiles/4.2.3/CompilerIdCXX/CMakeCXXCompilerId.cpp
+CMakeFiles/CheckTypeSize/OFF64_T.bin

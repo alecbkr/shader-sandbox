@@ -30,6 +30,7 @@
 #include "core/ui/Fonts.hpp"
 #include "core/ui/modals/OpenProjectModal.hpp"
 #include "core/ui/modals/SaveAsModal.hpp"
+#include "core/ui/modals/AddObjectModal.hpp"
 #include "object/MaterialCache.hpp"
 #include "object/Renderer.hpp"
 #include "object/AssimpImporter.hpp"
@@ -73,6 +74,7 @@ struct AppContext {
     SettingsModal settingsModal;
     SaveAsModal saveAsModal;
     OpenProjectModal openProjectModal;
+    AddObjectModal addObjectModal; 
     MaterialCache material_cache;
     Renderer renderer;
     AssimpImporter assimp_importer;

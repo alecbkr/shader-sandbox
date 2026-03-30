@@ -119,9 +119,11 @@ void Application::initializeUI(AppContext& ctx) {
     ctx.settingsModal.initialize(&ctx.logger, &ctx.inputs, &ctx.keybinds, &ctx.platform, &ctx.settings);
     ctx.saveAsModal.initialize(&ctx.logger, &ctx.project, &ctx.events, &ctx.settings, &ctx.projectSwitch);
     ctx.openProjectModal.initialize(&ctx.project, &ctx.settings, &ctx.model_cache, &ctx.material_cache, &ctx.projectSwitch);
+    ctx.addObjectModal.initialize(&ctx.model_cache, &ctx.inspector_engine); 
     ctx.modals.registerModal(&ctx.settingsModal);
     ctx.modals.registerModal(&ctx.saveAsModal);
     ctx.modals.registerModal(&ctx.openProjectModal);
+    ctx.modals.registerModal(&ctx.addObjectModal); 
 
     if (!ctx.settings.settingsFound) {
         DefaultTheme::applyDefaultTheme(ctx.settings.styles);
@@ -274,7 +276,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Editor UI was not initialized successfully.");
         return false;
     }
-    if (!ctx.inspector_ui.initialize(&ctx.logger, &ctx.inspector_engine, &ctx.texture_registry, &ctx.shader_registry, &ctx.uniform_registry, &ctx.events, &ctx.model_cache, &ctx.file_registry, &ctx.material_cache, &ctx.fonts, &ctx.project, &ctx.settings.styles)) {
+    if (!ctx.inspector_ui.initialize(&ctx.logger, &ctx.inspector_engine, &ctx.texture_registry, &ctx.shader_registry, &ctx.uniform_registry, &ctx.events, &ctx.model_cache, &ctx.file_registry, &ctx.material_cache, &ctx.fonts, &ctx.project, &ctx.settings.styles, &ctx.modals)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Inspector UI was not initialized successfully.");
         return false;
     }

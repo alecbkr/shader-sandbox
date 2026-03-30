@@ -3,6 +3,7 @@
 #include "core/ui/ObjectsInspectorUI.hpp"
 #include "core/ui/AssetsInspectorUI.hpp"
 #include "core/ui/FileInspectorUI.hpp"
+#include "core/ui/modals/ModalManager.hpp"
 #include "core/logging/LogSink.hpp"
 #include "core/logging/Logger.hpp"
 #include "core/InspectorEngine.hpp"
@@ -34,11 +35,12 @@ InspectorUI::InspectorUI() {
     modelCachePtr = nullptr;
     fileRegPtr = nullptr;
     materialCachePtr = nullptr;
+
     height = 0;
     width = 0;
 }
 
-bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr, Fonts* _fontsPtr, Project* _project, SettingsStyles* _styles) {
+bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr, Fonts* _fontsPtr, Project* _project, SettingsStyles* _styles, ModalManager* _modalManager) {
     if (intitialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Inspector UI Initialization", "Inspector UI was already initialized.");
         return false;
@@ -58,6 +60,7 @@ bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngP
     materialCachePtr = _materialCachePtr;
     fontsPtr = _fontsPtr;
     stylesPtr = _styles;
+    modalManager = _modalManager; 
     intitialized = true;
     return true;
 }
@@ -103,7 +106,7 @@ void InspectorUI::render() {
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Objects")) {
-                objectsInspectorUI->draw(loggerPtr, inspectorEngPtr, shaderRegPtr, textureRegPtr, modelCachePtr, materialCachePtr);
+                objectsInspectorUI->draw(loggerPtr, inspectorEngPtr, shaderRegPtr, textureRegPtr, modelCachePtr, materialCachePtr, modalManager);
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Assets")) {

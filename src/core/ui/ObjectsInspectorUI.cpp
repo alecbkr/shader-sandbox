@@ -14,6 +14,7 @@
 #include "object/ModelCache.hpp"
 #include "presets/PresetAssets.hpp"
 #include "texture/Texture.hpp"
+#include "core/ui/modals/ModalManager.hpp"
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>
@@ -32,8 +33,8 @@ ObjectsInspectorUI::ObjectsInspectorUI(SettingsStyles* styles) : styles(styles) 
     }
 }
 
-void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, TextureRegistry* textureRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr) {
-    drawAddObjectMenu(loggerPtr, inspectorEngPtr, shaderRegPtr, modelCachePtr);
+void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, TextureRegistry* textureRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr, ModalManager* modalManager) {
+    drawAddObjectMenu(loggerPtr, inspectorEngPtr, shaderRegPtr, modelCachePtr, modalManager);
     int i = 0;
     for (auto& model : modelCachePtr->getAllModels()) {
         auto& matIDReferences = model->getAllMaterialReferences();
@@ -119,7 +120,7 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
     }
 }
 
-void ObjectsInspectorUI::drawAddObjectMenu(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, ModelCache* modelCachePtr) {
+void ObjectsInspectorUI::drawAddObjectMenu(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, ModelCache* modelCachePtr, ModalManager* modalManager) {
     static const std::vector<float> gridPlane_verts{
         -1.0f, 0.0f, -1.0f,  0.0f, 0.0f,
         -1.0f, 0.0f, 1.0f,  1.0f, 0.0f,
@@ -170,20 +171,26 @@ void ObjectsInspectorUI::drawAddObjectMenu(Logger* loggerPtr, InspectorEngine* i
 
     ShaderProgram& defaultProgram = *programs.begin()->second;
 
-    if (ImGui::Button("Add Plane")) {
-        unsigned int id = modelCachePtr->createPreset(ModelType::PlanePreset);
-        // modelCachePtr->getModel(id)->setModelProgram(defaultProgram.name);
-        inspectorEngPtr->refreshUniforms();
-    }
-    if (ImGui::Button("Add Pyramid")) {
-        unsigned int id = modelCachePtr->createPreset(ModelType::PyramidPreset);
-        // modelCachePtr->getModel(id)->setModelProgram(defaultProgram.name);
-        inspectorEngPtr->refreshUniforms();
-    }
-    if (ImGui::Button("Add Cube")) {
-        unsigned int id = modelCachePtr->createPreset(ModelType::CubePreset);
-        // modelCachePtr->getModel(id)->setModelProgram(defaultProgram.name);
-        inspectorEngPtr->refreshUniforms();
+    // if (ImGui::Button("Add Plane")) {
+    //     unsigned int id = modelCachePtr->createPreset(ModelType::PlanePreset);
+    //     // modelCachePtr->getModel(id)->setModelProgram(defaultProgram.name);
+    //     inspectorEngPtr->refreshUniforms();
+    // }
+    // if (ImGui::Button("Add Pyramid")) {
+    //     unsigned int id = modelCachePtr->createPreset(ModelType::PyramidPreset);
+    //     // modelCachePtr->getModel(id)->setModelProgram(defaultProgram.name);
+    //     inspectorEngPtr->refreshUniforms();
+    // }
+    // if (ImGui::Button("Add Cube")) {
+    //     unsigned int id = modelCachePtr->createPreset(ModelType::CubePreset);
+    //     // modelCachePtr->getModel(id)->setModelProgram(defaultProgram.name);
+    //     inspectorEngPtr->refreshUniforms();
+    // }
+
+    if (ImGui::Button("Add Object")) {
+        if (modalManager) {
+            modalManager->open("Add Object Modal");
+        } 
     }
 }
 

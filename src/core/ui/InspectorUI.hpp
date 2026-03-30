@@ -5,6 +5,7 @@
 #include <imgui/imgui_impl_opengl3.h>
 #include <memory>
 #include <filesystem>
+
 class Logger;
 class InspectorEngine;
 class TextureRegistry;
@@ -18,6 +19,7 @@ class ObjectsInspectorUI;
 class AssetsInspectorUI;
 class FileInspectorUI;
 class Fonts;
+class ModalManager; 
 struct Project;
 struct SettingsStyles;
 
@@ -25,7 +27,7 @@ class InspectorUI {
 public:
     InspectorUI();
     ~InspectorUI();
-    bool initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr, Fonts* _fontsPtr, Project* _project, SettingsStyles* _styles);
+    bool initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr, Fonts* _fontsPtr, Project* _project, SettingsStyles* _styles, ModalManager* _modalManager);
     void shutdown();
     void render();
   
@@ -42,6 +44,7 @@ private:
     MaterialCache* materialCachePtr = nullptr;
     Fonts* fontsPtr = nullptr;
     SettingsStyles* stylesPtr = nullptr;
+    ModalManager* modalManager = nullptr; 
     std::unique_ptr<UniformInspectorUI> uniformInspectorUI;
     std::unique_ptr<ObjectsInspectorUI> objectsInspectorUI;
     std::unique_ptr<AssetsInspectorUI> assetsInspectorUI;
