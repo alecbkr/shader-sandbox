@@ -28,14 +28,7 @@ bool ModelCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr,  Pr
     loggerPtr       = _loggerPtr;
     eventsPtr       = _eventsPtr;
     presetsPtr      = _presetsPtr;
-    
-    // SETUP SKYBOX
-    MeshData cubeMesh = presetsPtr->getPresetMesh(MeshPreset::CUBE);
-    skyboxModel = new Model(UINT_MAX, std::string("SKYBOX"), ModelType::CubePreset);
-    skyboxModel->addMeshByData(cubeMesh.verts, cubeMesh.indices, true, false, true);
-    skyboxModel->finalizeMeshes();
 
-    
     eventsPtr->Subscribe(EventType::ReloadShader, [this](const EventPayload& payload) -> bool {
         
         if (const auto* data = std::get_if<ReloadShaderPayload>(&payload)) {
@@ -57,7 +50,6 @@ bool ModelCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr,  Pr
 }
 
 void ModelCache::shutdown() {
-    delete skyboxModel;
     loggerPtr       = nullptr;
     eventsPtr       = nullptr;
     initialized = false;
@@ -110,50 +102,61 @@ bool ModelCache::reserveModelID(unsigned int modelID, std::string model_path, Mo
 }
 
 
-unsigned int ModelCache::createSkybox(std::string cubemap_dir) {
-    // if (validateNextID() == false) {
-    //     loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE", "failed to validate next model ID on model creation");
-    //     return INVALID_MODEL_ID;
-    // }
-    // MeshData cube = presetsPtr->getPresetMesh(MeshPreset::CUBE);
-    // std::unique_ptr<CustomModel> skyboxModel = std::make_unique<CustomModel>(nextModelID, std::string("SKYBOX_PRESET"));
-    // Model* rawPointer = skyboxModel.get();
-
-    // skyboxModel->addMesh(cube.verts, cube.indices, true, false, true);
-    // // skyboxModel->addTexture(cubemap_dir, TEX_CUBEMAP);
-    // // skyboxModel->setMaterialType(skyboxModel->getAllMaterialIDs()[0], MaterialType::Skybox);
-    // modelIDMap.emplace(nextModelID, std::move(skyboxModel));
-    // eventsPtr->TriggerEvent(Event { EventType::CreateModel, false, ModelCreationPayload{nextModelID} });
-    // nextModelID++;
-    // return rawPointer->ID;
-    return 0; //dummy
-}
-
-
 void ModelCache::trySendingToRenderer(unsigned int modelID) {
-    ModelStatus status = getModel(modelID)->getModelStatus();
+    ModelStatus& status = getModel(modelID)->getModelStatus();
     if (status.meshes != ModelState::Ready || status.material != ModelState::Ready)  {
-        if (status.meshes != ModelState::Ready) {
-            loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::trySendingToRenderer()", "mesh is not set or has an error");
-        }
-        if (status.material != ModelState::Ready) {
-            loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::trySendingToRenderer()", "material is not set or has an error");
-        }
+        // if (status.meshes != ModelState::Ready) {
+        //     loggerPtr->addLog(LogLevel::WARNING, "MODELCACHE::trySendingToRenderer()", "mesh is not set or has an error");
+        // }
+        // if (status.material != ModelState::Ready) {
+        //     loggerPtr->addLog(LogLevel::WARNING, "MODELCACHE::trySendingToRenderer()", "material is not set or has an error");
+        // }
         return;
     }
 
-    eventsPtr->TriggerEvent(Event { EventType::CreateModel, false, ModelCreationPayload{modelID} });
+    bool isSkybox;
+    modelID == skyboxModelID ? isSkybox = true : isSkybox = false;
+
+    eventsPtr->TriggerEvent(Event { EventType::CreateModel, false, ModelCreationPayload{modelID, isSkybox} });
+    status.wasSentToRenderer = true;
 }
 
 
 void ModelCache::deleteModel(unsigned int modelID) {
     Model* model = getModel(modelID);
     if (model == nullptr) {
-        loggerPtr->addLog(LogLevel::WARNING, "MODELCACHE::deleteModel()", "Model ID not found:", std::to_string(modelID));
+        loggerPtr->addLog(LogLevel::WARNING, "MODELCACHE::deleteModel()", "Model not found with ID " + std::to_string(modelID));
         return;
     }
+
+    if (modelID == skyboxModelID) {
+        skyboxModelID = INVALID_MODEL_ID;
+    }
+    
     modelIDMap.erase(modelID);
     eventsPtr->TriggerEvent(Event { EventType::DeleteModel, false, ModelDeletionPayload{modelID} });
+}
+
+
+void ModelCache::setAsSkybox(unsigned int modelID) {
+    Model* model = getModel(modelID);
+    if (model == nullptr) {
+        loggerPtr->addLog(LogLevel::WARNING, "MODELCACHE::setAsSkyBox()", "Model not found with ID " + std::to_string(modelID));
+        return;
+    }
+
+    if (model->type != ModelType::CubePreset) {
+        loggerPtr->addLog(LogLevel::WARNING, "MODELCACHE::setAsSkyBox()", "Model given is not of the type CubePreset");
+        return;
+    }
+
+    if (model->getModelStatus().wasSentToRenderer == true) {
+        eventsPtr->TriggerEvent(Event { EventType::DeleteModel, false, ModelDeletionPayload{modelID} });
+        model->getModelStatus().wasSentToRenderer = false;
+    }
+
+    skyboxModelID = modelID;
+    trySendingToRenderer(modelID);
 }
 
 
@@ -171,7 +174,7 @@ void ModelCache::changeMeshMaterial(unsigned int modelID, unsigned int meshIdx, 
     }
 
     foundModel->setMeshMaterial(meshIdx, materialID);
-
+    
     if (foundModel->getModelStatus().wasSentToRenderer == false) {
         trySendingToRenderer(modelID);
     }
@@ -214,6 +217,11 @@ Model* ModelCache::getModel(unsigned int modelID) {
         return nullptr;
     }
     return it->second.get();
+}
+
+
+unsigned int ModelCache::getSkyboxModelID() const {
+    return skyboxModelID;
 }
 
 

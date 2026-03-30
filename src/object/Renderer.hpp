@@ -16,7 +16,8 @@ private:
     enum QueueType {
         Opaque,
         Cutout,
-        Translucent
+        Translucent,
+        Skybox
     };
 
     struct Primitive {
@@ -49,7 +50,7 @@ private:
     std::vector<unsigned int> translucentPrimIDs;
     unsigned int skyboxPrimID;
 
-    // void renderSkybox();
+    void renderSkybox();
     void renderOpaquePrimitives();
     void renderCutoutPrimitives();
     void renderTranslucentPrimitives();

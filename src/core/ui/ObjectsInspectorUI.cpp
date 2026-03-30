@@ -82,6 +82,13 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                 drawModelOrientationInput(*model);
                 ImGui::Unindent(theme.indentSize);
             }
+            // ALECS ATTEMPT
+            // if (ImGui::CollapsingHeader("Meshes")) {
+            //     ImGui::Indent(theme.indentSize);
+            //     drawMeshesMenu(model, materialCachePtr, loggerPtr);
+            // }
+
+
             if (ImGui::CollapsingHeader("Material")) {
                 ImGui::Indent(theme.indentSize);
                 std::vector<const char*> shaderChoices;
@@ -120,50 +127,6 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
 }
 
 void ObjectsInspectorUI::drawAddObjectMenu(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, ModelCache* modelCachePtr) {
-    static const std::vector<float> gridPlane_verts{
-        -1.0f, 0.0f, -1.0f,  0.0f, 0.0f,
-        -1.0f, 0.0f, 1.0f,  1.0f, 0.0f,
-        1.0f, 0.0f, 1.0f,  1.0f, 1.0f,
-        1.0f, 0.0f, -1.0f, 0.0f, 1.0f
-    };
-
-    static const std::vector<unsigned int> gridPlane_indices{
-        0, 1, 2,
-        0, 2, 3
-    };
-
-    static const std::vector<float> pyramidVerts = {
-        -0.5f, 0.0f, -0.5f,  0.0f, 0.0f,
-        0.5f, 0.0f, -0.5f,  1.0f, 0.0f,
-        0.5f, 0.0f,  0.5f,  1.0f, 1.0f,
-        -0.5f, 0.0f,  0.5f,  0.0f, 1.0f,
-        0.0f, 1.0f, 0.0f,   0.5f, 0.5f
-    };
-
-    static const std::vector<unsigned int> pyramidIndices = {
-        0, 1, 2,  0, 2, 3,
-        0, 1, 4, 1, 2, 4, 2, 3, 4, 3, 0, 4
-    };
-
-    static const std::vector<float> cubeVerts = {
-        -0.5f,-0.5f,-0.5f, 0.0f,0.0f,
-        0.5f,-0.5f,-0.5f, 1.0f,0.0f,
-        0.5f, 0.5f,-0.5f, 1.0f,1.0f,
-        -0.5f, 0.5f,-0.5f, 0.0f,1.0f,
-        -0.5f,-0.5f, 0.5f, 0.0f,0.0f,
-        0.5f,-0.5f, 0.5f, 1.0f,0.0f,
-        0.5f, 0.5f, 0.5f, 1.0f,1.0f,
-        -0.5f, 0.5f, 0.5f, 0.0f,1.0f
-    };
-
-    static const std::vector<unsigned int> cubeIndices = {
-        0,1,2, 0,2,3,
-        4,5,6, 4,6,7,
-        3,2,6, 3,6,7,
-        0,1,5, 0,5,4,
-        1,2,6, 1,6,5,
-        0,3,7, 0,7,4
-    };
 
     const auto& programs = shaderRegPtr->getPrograms();
     if (programs.empty()) return;
@@ -220,6 +183,14 @@ void ObjectsInspectorUI::initializeMenu(MaterialShaderMenu& menu, const std::vec
 void ObjectsInspectorUI::initializeMenu(ModelTextureMenu& menu, Logger* loggerPtr) {
     loggerPtr->addLog(LogLevel::CRITICAL, "intializeMenu:ModelTextureMenu", "Shouldn not be calling this function! it doesn't work right now");
 }
+
+// ALECS ATTEMPT
+// bool ObjectsInspectorUI::drawMeshesMenu(Logger* loggerPtr, Model* currModel, MaterialCache* materialCachePtr) {
+//     for (auto& meshInstance : currModel->getMeshInstances()) {
+//         bool changed = false;
+//         ImGui::Text("Mesh %u", )
+//     }
+// }
 
 bool ObjectsInspectorUI::drawShaderProgramMenu(MaterialShaderMenu& menu, const std::vector<const char*>& shaderChoices, ShaderRegistry* shaderRegPtr, MaterialCache* materialCachePtr, InspectorEngine* inspectorEngPtr, Logger* logger) {
     bool changed = false;

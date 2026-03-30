@@ -246,7 +246,7 @@ void AssimpImporter::getTextures(unsigned int materialID, aiMaterial *mat, std::
             }
 
             std::string filepath = directory + "/" + aiTex.C_Str();
-            materialCachePtr->addTextureToMaterial(materialID, filepath);
+            materialCachePtr->addTextureToMaterial(materialID, filepath, false);
         }
     }
 }

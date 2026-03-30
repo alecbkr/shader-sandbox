@@ -55,13 +55,18 @@ bool Renderer::initialize(
                 }
 
                 QueueType queueType;
-                MaterialType materialType = materialCachePtr->getMaterial(meshInstance.materialID)->getMaterialType();
-                switch (materialType) {
-                    case MaterialType::Opaque:      queueType = Opaque;      break;
-                    case MaterialType::Cutout:      queueType = Cutout;      break;
-                    case MaterialType::Translucent: queueType = Translucent; break;
-                }   
-
+                if (data->isSkyBox == true) {
+                    queueType = Skybox;
+                }
+                else {
+                    MaterialType materialType = materialCachePtr->getMaterial(meshInstance.materialID)->getMaterialType();
+                    switch (materialType) {
+                        case MaterialType::Opaque:      queueType = Opaque;      break;
+                        case MaterialType::Cutout:      queueType = Cutout;      break;
+                        case MaterialType::Translucent: queueType = Translucent; break;
+                    }   
+                }
+                
                 primitiveIDMap.emplace(
                     nextPrimitiveID, 
                     Primitive{
@@ -92,6 +97,7 @@ bool Renderer::initialize(
                 else {
                     iter++;
                 }
+            
             }
             return true;
         }
@@ -157,10 +163,13 @@ void Renderer::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camPos
     uniformRegPtr->registerSceneUniform({"projection", UniformType::Mat4, perspective});
     uniformRegPtr->registerSceneUniform({"view", UniformType::Mat4, view});
 
+    unsigned int skyboxModelID = modelCachePtr->getSkyboxModelID();
     for (auto& model : modelCachePtr->getAllModels()) {
+        if (model->ID == skyboxModelID) continue;
         uniformRegPtr->registerModelUniform(model->ID, {"model", UniformType::Mat4, model->getModelMatrix()});
     }
     
+    renderSkybox();
     renderOpaquePrimitives();
     renderCutoutPrimitives();
     reorderTranslucentPrimitives(view);
@@ -168,15 +177,25 @@ void Renderer::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camPos
 }
 
 
-// void Renderer::renderSkybox() {
-    
-//     glDepthFunc(GL_LEQUAL);
-//     glDepthMask(GL_FALSE);
-//     inspectorEngPtr->applyAllUniformsForPrimitive(*skyboxPrim);
-//     modelCachePtr->getSkybox()->drawMesh(0);
-//     glDepthMask(GL_TRUE);
-//     glDepthFunc(GL_LESS);
-// }
+void Renderer::renderSkybox() {
+    if (skyboxPrimID == UINT_MAX) return;
+
+    if (validatePrimitive(skyboxPrimID) == false) {
+        // primitiveIDMap.erase(skyboxPrimID);
+        skyboxPrimID = UINT_MAX;
+        return;
+    }
+
+    Primitive* skyboxPrimitive = &primitiveIDMap.at(skyboxPrimID);
+    glDepthFunc(GL_LEQUAL);
+    glDepthMask(GL_FALSE);
+    bindProgram(skyboxPrimitive->materialID);
+    inspectorEngPtr->applyAllUniformsForPrimitive(skyboxPrimitive->modelID, skyboxPrimitive->meshIdx, skyboxPrimitive->materialID);
+    bindTextures(skyboxPrimitive->materialID);
+    drawMesh(skyboxPrimitive->modelID, skyboxPrimitive->meshIdx);
+    glDepthMask(GL_TRUE);
+    glDepthFunc(GL_LESS);
+}
 
 
 void Renderer::renderOpaquePrimitives() {
@@ -301,6 +320,9 @@ void Renderer::placeInQueue(unsigned int primitiveID, QueueType queueType) {
         case Opaque:      hostQueue = &opaquePrimIDs;      break;
         case Cutout:      hostQueue = &cutoutPrimIDs;      break;
         case Translucent: hostQueue = &translucentPrimIDs; break;
+        case Skybox:
+            skyboxPrimID = primitiveID;
+            return;
     }
     hostQueue->push_back(primitiveID);
 }
@@ -312,6 +334,9 @@ void Renderer::removeFromQueue(unsigned int primitiveIDToDelete, QueueType queue
         case Opaque:      hostQueue = &opaquePrimIDs;      break;
         case Cutout:      hostQueue = &cutoutPrimIDs;      break;
         case Translucent: hostQueue = &translucentPrimIDs; break;
+        case Skybox:
+            skyboxPrimID = UINT_MAX;
+            return;
     }
     for (auto iter = hostQueue->begin(); iter != hostQueue->end(); ) {
         if (*iter == primitiveIDToDelete) {
@@ -326,6 +351,11 @@ void Renderer::removeFromQueue(unsigned int primitiveIDToDelete, QueueType queue
 
 
 bool Renderer::validatePrimitive(unsigned int primitiveID) {
+    if (primitiveIDMap.contains(primitiveID) == false) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER::validatePrimitive", "primitive not found in map with ID " + std::to_string(primitiveID));
+        return false;
+    }
+
     Primitive& primitive = primitiveIDMap.at(primitiveID);
     bool result = true;
     std::string feedback = "";

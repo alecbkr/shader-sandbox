@@ -39,13 +39,13 @@ public:
     void setRotation(float angle, glm::vec3 axis);
     void setInstancePosition(unsigned int instanceNum, glm::vec3 position);
     void setInstanceCount(unsigned int newInstanceCount);
-    bool setMeshMaterial(unsigned int meshIdx, unsigned int materialID);
+    void setMeshMaterial(unsigned int meshIdx, unsigned int materialID);
     void setModelMaterial(unsigned int materialID);
 
     // GETTERS
     unsigned int getID() const;
     std::string getPath() const;
-    ModelStatus getModelStatus() const;
+    ModelStatus& getModelStatus();
     glm::mat4 getModelMatrix() const;
     glm::vec3 getPosition() const;
     glm::vec3 getScale() const;

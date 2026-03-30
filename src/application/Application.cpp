@@ -136,24 +136,31 @@ void loadPresetAssets(AppContext& ctx) {
 
     ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "color.vert", ctx.project.projectShadersDir / "color.frag", "color");
     ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "tex.vert", ctx.project.projectShadersDir / "tex.frag", "tex");
-    ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "gridplane.vert", ctx.project.projectShadersDir / "gridplane.frag", "gridplane");
+    ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "skybox.vert", ctx.project.projectShadersDir / "skybox.frag", "skybox");
 
 
     unsigned int matID = ctx.material_cache.createBlankMaterial();
     ctx.material_cache.getMaterial(matID)->setProgramID("color");
 
     unsigned int mat2ID = ctx.material_cache.createBlankMaterial();
-    ctx.material_cache.addTextureToMaterial(mat2ID, "../assets/textures/water.png");
+    ctx.material_cache.addTextureToMaterial(mat2ID, "../assets/textures/water.png", false);
     ctx.material_cache.getMaterial(mat2ID)->setProgramID("tex");
 
+    unsigned int skyMatID = ctx.material_cache.createBlankMaterial();
+    ctx.material_cache.addTextureToMaterial(skyMatID, "../assets/textures/skybox", true);
+    ctx.material_cache.getMaterial(skyMatID)->setProgramID("skybox");
 
-    // unsigned int cubeID = ctx.model_cache.createPreset(ModelType::CubePreset);
-    // ctx.model_cache.changeModelMaterial(cubeID, matID);
 
-    unsigned int bpID = ctx.assimp_importer.importModel("../assets/models/backpack/backpack.obj");
-    ctx.model_cache.changeModelMaterial(bpID, mat2ID);
 
-    unsigned int presetID = ctx.model_cache.createPreset(ModelType::CubePreset);
+    // unsigned int bpID = ctx.assimp_importer.importModel("../assets/models/backpack/backpack.obj");
+    // ctx.model_cache.changeModelMaterial(bpID, mat2ID);
+
+    unsigned int skyboxID = ctx.model_cache.createPreset(ModelType::CubePreset);
+    ctx.model_cache.changeModelMaterial(skyboxID, skyMatID);
+    ctx.model_cache.setAsSkybox(skyboxID);
+
+    unsigned int planeID = ctx.model_cache.createPreset(ModelType::PlanePreset);
+    ctx.model_cache.changeMeshMaterial(planeID, 0, mat2ID);
     // ctx.material_cache.getMaterial(3)->setProgramID(texPtr->name);
     
 
@@ -173,6 +180,7 @@ void loadPresetAssets(AppContext& ctx) {
 
     // ctx.model_cache.getModel(window1_ID)->setInstanceCount(5);
 
+    ctx.inspector_engine.refreshUniforms();
 }
 
 bool Application::initialize(AppContext& ctx) {

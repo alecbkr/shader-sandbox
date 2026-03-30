@@ -186,16 +186,17 @@ void Model::setInstanceCount(unsigned int newInstanceCount) {
 }
 
 
-bool Model::setMeshMaterial(unsigned int meshIdx, unsigned int materialID) {
+void Model::setMeshMaterial(unsigned int meshIdx, unsigned int materialID) {
     MeshInstance* meshInstance = &meshInstances[meshIdx];
 
     if (meshInstance->materialID != UINT_MAX) {
         allMaterialReferences.at(meshInstance->materialID)--;
-    
+        std::cout << "Nuts" << std::endl;
         if (allMaterialReferences.at(meshInstance->materialID) == 0) {
             allMaterialReferences.erase(meshInstance->materialID);
         }
     }
+    
     
     meshInstance->materialID = materialID;
     if (allMaterialReferences.contains(materialID)) {
@@ -270,7 +271,7 @@ void Model::loadMeshMaterialIDs(std::vector<unsigned int> meshMaterialIDs) {
 
 unsigned int Model::getID() const { return ID; }
 std::string Model::getPath() const { return model_path; }
-ModelStatus Model::getModelStatus() const { return status; }
+ModelStatus& Model::getModelStatus() { return status; }
 glm::mat4 Model::getModelMatrix() const {return modelM;}
 glm::vec3 Model::getPosition()    const {return position;}
 glm::vec3 Model::getScale()       const {return scale;}

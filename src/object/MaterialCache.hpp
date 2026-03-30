@@ -22,7 +22,7 @@ public:
     void deleteMaterial(unsigned int materialID);
     
 
-    void addTextureToMaterial(unsigned int materialID, std::string texture_path);
+    void addTextureToMaterial(unsigned int materialID, std::string texture_path, bool isCubemap);
     void removeTextureFromMaterial(unsigned int materialID, unsigned int textureID);
     void changeMaterialType(unsigned int materialID, MaterialType type);
     bool loadMaterialFromSave(unsigned int ID, MaterialType type, MaterialProperties properties, std::vector<std::string> texture_paths);

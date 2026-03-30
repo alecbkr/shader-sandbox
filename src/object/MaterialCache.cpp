@@ -53,13 +53,19 @@ unsigned int MaterialCache::createMaterial(MaterialType type, MaterialProperties
 }
 
 
-void MaterialCache::addTextureToMaterial(unsigned int materialID, std::string texture_path) {
+void MaterialCache::addTextureToMaterial(unsigned int materialID, std::string texture_path, bool isCubemap) {
     Material* foundMaterial = getMaterial(materialID);
     if (foundMaterial == nullptr) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "addTextureToMaterial", "materialID out of bounds: ", std::to_string(materialID));
         return;
     }
-    unsigned int textureID = textureCachePtr->createTexture2D(texture_path);
+
+
+    unsigned int textureID;
+    switch (isCubemap) {
+        case true:  textureID = textureCachePtr->createCubeMap(texture_path);   break;
+        case false: textureID = textureCachePtr->createTexture2D(texture_path); break;
+    }
     foundMaterial->addTexture(textureID);
 }
 
@@ -103,7 +109,7 @@ bool MaterialCache::loadMaterialFromSave(unsigned int materialID, MaterialType t
     }
     materialIDMap.emplace(materialID, std::make_unique<Material>(materialID, type));
     for(std::string texture_path : texture_paths) {
-        addTextureToMaterial(materialID, texture_path);
+        addTextureToMaterial(materialID, texture_path, false);
     }
     getMaterial(materialID)->setProperties(properties);
     return true;
