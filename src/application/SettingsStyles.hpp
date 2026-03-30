@@ -114,6 +114,17 @@ struct SettingsStyles {
     int selectedEditorPaletteColor = 0;
 
     // Inspector Specific Styles
+    ImVec4 inspectorBorderColor;
+    ImVec4 inspectorTabBackgroundColor;
+    ImVec4 inspectorTitleBackgroundColor;
+    ImVec4 inspectorBodyColor;
+
+    float inspectorBorderThickness = 1.0f;
+    float inspectorBodyPadding = 12.0f;
+    float inspectorTitleInnerPadding = 1.0f;
+    float inspectorBodyRounding = 6.0f;
+    float inspectorTitleOffset = 6.0f;
+
     // General inspector tree/child hover color
     ImVec4 inspectorTreeHoveredColor;
 
@@ -439,6 +450,37 @@ struct SettingsStyles {
         // Inspector Specific Styles
         json inspectorStylesObject = json::object();
 
+        inspectorStylesObject["inspectorBorderColor"] = {
+            inspectorBorderColor.x,
+            inspectorBorderColor.y,
+            inspectorBorderColor.z,
+            inspectorBorderColor.w
+        };
+        inspectorStylesObject["inspectorTabBackgroundColor"] = {
+            inspectorTabBackgroundColor.x,
+            inspectorTabBackgroundColor.y,
+            inspectorTabBackgroundColor.z,
+            inspectorTabBackgroundColor.w
+        };
+        inspectorStylesObject["inspectorTitleBackgroundColor"] = {
+            inspectorTitleBackgroundColor.x,
+            inspectorTitleBackgroundColor.y,
+            inspectorTitleBackgroundColor.z,
+            inspectorTitleBackgroundColor.w
+        };
+        inspectorStylesObject["inspectorBodyColor"] = {
+            inspectorBodyColor.x,
+            inspectorBodyColor.y,
+            inspectorBodyColor.z,
+            inspectorBodyColor.w
+        };
+
+        inspectorStylesObject["inspectorBorderThickness"] = inspectorBorderThickness;
+        inspectorStylesObject["inspectorBodyPadding"] = inspectorBodyPadding;
+        inspectorStylesObject["inspectorTitleInnerPadding"] = inspectorTitleInnerPadding;
+        inspectorStylesObject["inspectorBodyRounding"] = inspectorBodyRounding;
+        inspectorStylesObject["inspectorTitleOffset"] = inspectorTitleOffset;
+
         // Materials tab styles
         json materialsTabObject = json::object();
         materialsTabObject["materialsBorderColor"] = {
@@ -632,6 +674,46 @@ struct SettingsStyles {
 
         if (s.contains("inspector") && s["inspector"].is_object()) {
             const json& ins = s["inspector"];
+
+            if (ins.contains("inspectorBoderColor")) {
+                inspectorBorderColor = ImVec4(
+                    ins["inspectorBorderColor"][0],
+                    ins["inspectorBorderColor"][1],
+                    ins["inspectorBorderColor"][2],
+                    ins["inspectorBorderColor"][3]
+                );
+            }
+            if (ins.contains("inspectorTabBackgroundColor")) {   
+                inspectorTabBackgroundColor = ImVec4(
+                    ins["inspectorTabBackgroundColor"][0],
+                    ins["inspectorTabBackgroundColor"][1],
+                    ins["inspectorTabBackgroundColor"][2],
+                    ins["inspectorTabBackgroundColor"][3]
+                );
+            }
+            if (ins.contains("inspectorTitleBackgroundColor")) {
+                inspectorTitleBackgroundColor = ImVec4(
+                    ins["inspectorTitleBackgroundColor"][0],
+                    ins["inspectorTitleBackgroundColor"][1],
+                    ins["inspectorTitleBackgroundColor"][2],
+                    ins["inspectorTitleBackgroundColor"][3]
+                );
+            }
+            if (ins.contains("inspectorBodyColor")) {
+                inspectorBodyColor = ImVec4(
+                    ins["inspectorBodyColor"][0],
+                    ins["inspectorBodyColor"][1],
+                    ins["inspectorBodyColor"][2],
+                    ins["inspectorBodyColor"][3]
+                );
+            }
+
+            inspectorBorderThickness = ins.value("inspectorBorderThickness", inspectorBorderThickness);
+            inspectorBodyPadding = ins.value("inspectorBodyPadding", inspectorBodyPadding);
+            inspectorTitleInnerPadding = ins.value("inspectorTitleInnerPadding", inspectorTitleInnerPadding);
+            inspectorBodyRounding = ins.value("inspectorBodyRounding", inspectorBodyRounding);
+            inspectorTitleOffset = ins.value("inspectorTitleOffset", inspectorTitleOffset);
+
             if (ins.contains("materials") && ins["materials"].is_object()) {
                 const json& mats = ins["materials"];
                 materialsBorderColor = ImVec4(

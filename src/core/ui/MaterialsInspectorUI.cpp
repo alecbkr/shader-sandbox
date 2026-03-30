@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-MaterialsInspectorUI::MaterialsInspectorUI(Fonts* fonts, SettingsStyles* styles, MaterialCache* matCache, TextureCache* texCache, ShaderRegistry* shaderReg) : fonts(fonts), styles(styles), matCache(matCache), texCache(texCache), shaderReg(shaderReg) {}
+MaterialsInspectorUI::MaterialsInspectorUI(Fonts* fonts, SettingsStyles* styles, MaterialCache* matCache, TextureCache* texCache, ShaderRegistry* shaderReg, std::filesystem::path assetsDirPath) : fonts(fonts), styles(styles), matCache(matCache), texCache(texCache), shaderReg(shaderReg), assetsDirPath(assetsDirPath) {}
 
 void MaterialsInspectorUI::draw() {
     ImGui::PushStyleColor(ImGuiCol_ChildBg, styles->materialsTabBackgroundColor);
@@ -115,6 +115,13 @@ void MaterialsInspectorUI::draw() {
                 if (matOpen) {
                     const auto& programs = shaderReg->getPrograms();
 
+                    static int currentType = (int)mat->getMaterialType();
+                    static const char* materialTypes[3] = {"Opaque", "Cutout", "Translucent"};
+
+                    if (ImGui::Combo("Type", &currentType, materialTypes, 3)) {
+                        mat->setMaterialType((MaterialType)currentType);
+                    }
+
                     if (ImGui::BeginCombo("Program", mat->getProgramID().c_str())) {
                         for (auto& [name, program] : programs) {
                             bool isSelected = (mat->getProgramID() == name);
@@ -131,9 +138,31 @@ void MaterialsInspectorUI::draw() {
                     }
 
                     if (ImGui::CollapsingHeader(("Textures##" + std::to_string(mat->ID)).c_str())) {
-                        ImGui::Button("+");
-                        for (auto& tex : mat->getAllTexturePaths(texCache)) {
-                            ImGui::TextUnformatted(tex.c_str());
+                        static char textureAddBuf[256] = "";
+
+                        ImGui::InputText(("##TextureInput" + std::to_string(mat->ID)).c_str(),
+                                        textureAddBuf, sizeof(textureAddBuf));
+                        ImGui::SameLine();
+
+                        if (ImGui::Button(("+##TextureInput" + std::to_string(mat->ID)).c_str())) {
+                            unsigned int id = texCache->createTexture2D((assetsDirPath / textureAddBuf).string().c_str());
+                            mat->addTexture(id);
+                        }
+
+                        auto textures = mat->getAllTexturePaths(texCache);
+
+                        for (int i = 0; i < (int)textures.size(); i++) {
+                            ImGui::PushID(i);
+
+                            ImGui::TextUnformatted(textures[i].c_str());
+
+                            if (ImGui::BeginPopupContextItem("TexturePopup")) {
+                                if (ImGui::MenuItem("Remove")) {
+                                }
+                                ImGui::EndPopup();
+                            }
+
+                            ImGui::PopID();
                         }
                     }
                 }

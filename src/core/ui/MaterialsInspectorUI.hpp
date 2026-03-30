@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <string>
+#include <filesystem>
 
 class Fonts;
 struct SettingsStyles;
@@ -14,7 +15,7 @@ class ShaderRegistry;
 class MaterialsInspectorUI {
 public:
     MaterialsInspectorUI() = delete;
-    MaterialsInspectorUI(Fonts* fonts, SettingsStyles* styles, MaterialCache* matCache, TextureCache* texCache, ShaderRegistry* shaderReg);
+    MaterialsInspectorUI(Fonts* fonts, SettingsStyles* styles, MaterialCache* matCache, TextureCache* texCache, ShaderRegistry* shaderReg, std::filesystem::path assetsDirPath);
     void draw();
 
 private:
@@ -23,6 +24,7 @@ private:
     MaterialCache* matCache;
     TextureCache* texCache;
     ShaderRegistry* shaderReg;
+    std::filesystem::path assetsDirPath;
 
     std::vector<std::string> selectedPrograms;
 };
