@@ -6,6 +6,11 @@
 class ModelCache; 
 class InspectorEngine; 
 
+enum class AddObjectPage {
+    PRESET_ASSETS, 
+    CUSTOM_ASSETS, 
+}; 
+
 class AddObjectModal final : public IModal{
     public: 
     AddObjectModal() = default; 
@@ -20,7 +25,8 @@ class AddObjectModal final : public IModal{
     char customModelPath[256] = ""; 
 
     bool initialized = false; 
+    AddObjectPage page = AddObjectPage::PRESET_ASSETS; 
 
-    void drawPresetModelTab(); 
-    void drawCustomModelTab(); 
+    void drawPresetModelPage(); 
+    void drawCustomModelPage(); 
 };
