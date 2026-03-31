@@ -17,6 +17,9 @@ bool OpenProjectModal::initialize(
 }
 
 void OpenProjectModal::draw() {
+    ImGui::SetNextItemWidth(-1);
+    ImGui::BeginChild("##open_project_root", ImVec2(500, 250), false);
+
     for (const auto& dirEntry : std::filesystem::directory_iterator(projectPtr->projectRoot / "..")) {
         ImGui::Bullet();
         std::string fileName = dirEntry.path().filename().string();
@@ -29,4 +32,10 @@ void OpenProjectModal::draw() {
             ImGui::CloseCurrentPopup();
         }
     }
+
+    if (ImGui::Button("Cancel")) {
+        ImGui::CloseCurrentPopup();
+    }
+
+    ImGui::EndChild();
 }
