@@ -8,6 +8,7 @@
 #include "imgui.h"
 #include "components/SearchText.hpp"
 #include "core/EventDispatcher.hpp"
+#include "core/input/ActionRegistry.hpp"
 #include "core/input/ContextManager.hpp"
 #include "core/logging/Logger.hpp"
 
@@ -24,25 +25,9 @@ void EditorUI::render() {
     ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_Always);
     ImGui::SetNextWindowPos(ImVec2(windowPos.x, windowPos.y + menuBarHeight), ImGuiCond_Always);
 
-    ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar;
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
     if (ImGui::Begin("Editor", nullptr, flags)) {
-        if (ImGui::BeginMenuBar()) {
-            if (ImGui::BeginMenu("File##editor")) {
-                if (ImGui::MenuItem("Clone Shader File")) {
-                    //eventDispatcherPtr->TriggerEvent(CloneFileEvent());
-                }
-                ImGui::EndMenu();
-            }
-            if (ImGui::BeginMenu("Edit##editor")) {
-                if (ImGui::MenuItem("Find")) {
-                    findBar = !findBar;
-                }
-                ImGui::EndMenu();
-            }
-            ImGui::EndMenuBar();
-        }
-
         ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyScroll;
         if (ImGui::BeginTabBar("EditorTabs", tabBarFlags)) {
             projectPtr->openShaderFiles.clear();
@@ -58,7 +43,11 @@ void EditorUI::render() {
                             editorEngPtr->editors[i]->textEditor.ReplaceMatch(match, replace);
                         });
                     }
+
+                    ImGui::PushFont(fontsPtr->getMonoFont());
                     editorEngPtr->editors[i]->render();
+                    ImGui::PopFont();
+
                     editorEngPtr->activeEditor = i;
 
                     ImGui::EndTabItem();
@@ -95,16 +84,24 @@ EditorUI::EditorUI() {
 #define START_X 0;
 #define START_Y 0;
 
-bool EditorUI::initialize(Logger* _loggerPtr, EditorEngine* _editorEngPtr, ContextManager* _contextManagerPtr, EventDispatcher* _eventDispatcherPtr, Project* _projectPtr) {
+bool EditorUI::initialize(Logger* _loggerPtr, EditorEngine* _editorEngPtr, ContextManager* _contextManagerPtr, EventDispatcher* _eventDispatcherPtr, Project* _projectPtr, Fonts* _fontsPtr) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Editor UI Initialization", "Editor UI was already initialized.");
         return false;
     }
+
+    findBar = false;
+    _eventDispatcherPtr->Subscribe(EventType::ToggleEditorFind, [&](const EventPayload& payload) {
+        findBar = !findBar;
+        return false;
+    });
+
     loggerPtr = _loggerPtr;
     editorEngPtr = _editorEngPtr;
     contextManagerPtr = _contextManagerPtr;
     eventDispatcherPtr = _eventDispatcherPtr;
     projectPtr = _projectPtr;
+    fontsPtr = _fontsPtr;
 
     targetWidth = TARGET_WIDTH;
     targetHeight = TARGET_HEIGHT;

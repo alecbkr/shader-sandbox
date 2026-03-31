@@ -1064,7 +1064,7 @@ void TextEditor::Render(SearchText* searcher)
 	// Deduce mTextStart by evaluating mLines size (global lineMax) plus two spaces as text width
 	char buf[16];
 	snprintf(buf, 16, " %d ", globalLineMax);
-	mTextStart = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x + mLeftMargin;
+	mTextStart = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, "1000", nullptr, nullptr).x + mLeftMargin;
 
 	if (!mLines.empty())
 	{
@@ -1190,8 +1190,8 @@ void TextEditor::Render(SearchText* searcher)
 			ImVec2 bufferOffset;
 
 			if (searcher->isItemActiveMatch(lineNo)) {
-				const auto& activeLine = GetTextLines()[lineNo];
-				const auto& activeMatch = searcher->getActiveMatch();
+				const auto activeLine = GetTextLines()[lineNo];
+				const auto activeMatch = searcher->getActiveMatch();
 
 				if (activeMatch.charIdx + activeMatch.length <= (int)activeLine.size()) {
 					std::string textBefore = activeLine.substr(0, activeMatch.charIdx);

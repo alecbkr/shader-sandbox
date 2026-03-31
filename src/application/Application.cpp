@@ -98,6 +98,7 @@ bool Application::addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI
     actionRegPtr->bind(Action::ScreenshotViewport, [](){});
     actionRegPtr->bind(Action::FullscreenViewport, [](){});
     actionRegPtr->bind(Action::MouseMove, [viewportUIPtr]() { viewportUIPtr->getCamera()->ProcessMouseMovement(); });
+    actionRegPtr->bind(Action::EditorFind, [eventsPtr](){ eventsPtr->TriggerEvent({ EventType::ToggleEditorFind, false, std::monostate{} }); });
     return true;
 }
 
@@ -269,7 +270,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Menu UI was not initialized successfully.");
         return false;
     }
-    if (!ctx.editor_ui.initialize(&ctx.logger, &ctx.editor_engine, &ctx.ctx_manager, &ctx.events, &ctx.project)) {
+    if (!ctx.editor_ui.initialize(&ctx.logger, &ctx.editor_engine, &ctx.ctx_manager, &ctx.events, &ctx.project, &ctx.fonts)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Editor UI was not initialized successfully.");
         return false;
     }

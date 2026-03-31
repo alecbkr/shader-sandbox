@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <iostream>
 #include <cstdlib>
+
+#include "Fonts.hpp"
 #include "platform/Platform.hpp"
 #include "../logging/Logger.hpp"
 #include "application/SettingsStyles.hpp"
@@ -81,7 +83,11 @@ void ConsoleUI::render() {
         drawMenuBar();
         // ImGuiWindowFlags consoleFlags = ImGuiWindowFlags_AlwaysHorizontalScrollbar; 
         ImGui::BeginChild("ShowLogs", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.95f), false);
+
+        ImGui::PushFont(fontsPtr->getMonoFont());
         drawLogs();
+        ImGui::PopFont();
+
         ImGui::EndChild();
     }
     ImGui::End();

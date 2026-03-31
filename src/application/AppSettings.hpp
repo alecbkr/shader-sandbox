@@ -45,9 +45,10 @@ struct AppSettings {
         {"newShaderFile", {14, {45, 14}, 1, 0}},
         {"undo", {15, {45, 26}, 1, 0}},
         {"redo", {16, {45, 25}, 1, 0}},
-        {"formatActiveShader", {17, {45, 6}, 1, 0}},
+        {"formatActiveShader", {17, {45, 7}, 1, 0}},
         {"screenshotViewport", {18, {82}, 3, 0}},
         {"fullscreenViewport", {19, {75}, 2, 0}},
+        {"editorFind", {20, {45, 6}, 1, 0}},
     };
 
     // Styles

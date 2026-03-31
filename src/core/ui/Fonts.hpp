@@ -40,6 +40,9 @@ public:
     ImFont* getL8();
     ImFont* getL9();
     ImFont* getL10();
+
+    std::array<ImFont*, NUMBER_OF_FONT_SIZES + NUMBER_OF_FONT_LEVELS - 1> monoFonts;
+    ImFont* getMonoFont();
 private:
     std::size_t fontIdx = STARTING_FONT_INDEX;
 };
