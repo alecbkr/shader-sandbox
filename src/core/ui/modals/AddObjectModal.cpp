@@ -79,9 +79,13 @@ void AddObjectModal::drawPresetModelPage() {
     ImGuiTableFlags flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingStretchProp; 
 
     if (ImGui::BeginTable("##PresetAssetsTable", 2, flags)) {
-        ImGui::TableSetupColumn("Asset Name"); 
-        ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, 60.0f); 
-        ImGui::TableHeadersRow(); 
+        
+        // table headers
+        ImGui::TableNextRow(ImGuiTableRowFlags_Headers); 
+        ImGui::TableNextColumn();
+        ImGui::TextDisabled("Asset Name");        
+        ImGui::TableNextColumn();
+        ImGui::TextDisabled("Type");
 
         for (const auto&preset : presets) {
             std::string label = std::string("Add ") + preset.name; 
@@ -132,9 +136,13 @@ void AddObjectModal::drawImportedModelPage() {
         } else {
             ImGuiTableFlags flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_ScrollY;
             if (ImGui::BeginTable("##ImportedAssetsTable", 2, flags)) {
-                ImGui::TableSetupColumn("Asset Name"); 
-                ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, 50.0f); 
-                ImGui::TableHeadersRow(); 
+                
+                // table headers
+                ImGui::TableNextRow(ImGuiTableRowFlags_Headers); 
+                ImGui::TableNextColumn();
+                ImGui::TextDisabled("Asset Name");        
+                ImGui::TableNextColumn();
+                ImGui::TextDisabled("Type");
 
                 drawDirectoryNode(assetsPath); 
                 ImGui::EndTable(); 
