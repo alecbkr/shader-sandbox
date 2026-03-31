@@ -189,7 +189,7 @@ void ObjectsInspectorUI::drawAddObjectMenu(Logger* loggerPtr, InspectorEngine* i
 
     if (ImGui::Button("Add Object")) {
         if (modalManager) {
-            modalManager->open("Add Object Modal");
+            modalManager->open("Add Object");
         } 
     }
 }

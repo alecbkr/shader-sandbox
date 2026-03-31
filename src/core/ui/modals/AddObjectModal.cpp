@@ -30,7 +30,7 @@ void AddObjectModal::draw() {
         if (page == AddObjectPage::PRESET_ASSETS) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
         else ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_Button]);
         
-        if (ImGui::Button("Preset Assets", toggleSize)) page = AddObjectPage::PRESET_ASSETS;
+        if (ImGui::Button("Preset Objects", toggleSize)) page = AddObjectPage::PRESET_ASSETS;
         ImGui::PopStyleColor();
         
         ImGui::SameLine(0, 0); // remove spacing in-between the buttons 
@@ -39,8 +39,9 @@ void AddObjectModal::draw() {
         if (page == AddObjectPage::IMPORTED_ASSETS) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
         else ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_Button]);
         
-        if (ImGui::Button("Imported Assets", toggleSize)) page = AddObjectPage::IMPORTED_ASSETS;
+        if (ImGui::Button("Imported Objects", toggleSize)) page = AddObjectPage::IMPORTED_ASSETS;
         ImGui::PopStyleColor(); 
+
         ImGui::PopStyleVar(2);
         
         ImGui::Spacing();
@@ -54,9 +55,8 @@ void AddObjectModal::draw() {
             } else {
                 drawImportedModelPage();
             }
-            ImGui::EndChild();
         }
-
+        ImGui::EndChild();
         ImGui::EndChild(); 
     }
 
@@ -66,39 +66,38 @@ void AddObjectModal::draw() {
 }
 
 void AddObjectModal::drawPresetModelPage() {
-    ImGui::Text("Preset Models"); 
+    ImGui::Text("Preset Objects"); 
     ImGui::Separator(); 
     ImGui::Spacing(); 
 
-    ImVec2 btnSize(-1.0f, 0.0f); 
-
-    if (ImGui::Button("Add Plane", btnSize)) {
-        modelCachePtr->createPreset(ModelType::PlanePreset);
-        inspectorEngPtr->refreshUniforms();
-        ImGui::CloseCurrentPopup(); 
+    if (ImGui::BeginChild("##PresetObjectsList", ImVec2(0, 0), true)) {
+        if (ImGui::Selectable("Add Plane")) {
+            modelCachePtr->createPreset(ModelType::PlanePreset);
+            inspectorEngPtr->refreshUniforms();
+            ImGui::CloseCurrentPopup(); 
+        }
+        ImGui::Spacing();
+        if (ImGui::Selectable("Add Pyramid")) {
+            modelCachePtr->createPreset(ModelType::PyramidPreset);
+            inspectorEngPtr->refreshUniforms();
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::Spacing();
+        if (ImGui::Selectable("Add Cube")) {
+            modelCachePtr->createPreset(ModelType::CubePreset);
+            inspectorEngPtr->refreshUniforms();
+            ImGui::CloseCurrentPopup();
+        }
     }
-
-    ImGui::Spacing();
-
-    if (ImGui::Button("Add Pyramid", btnSize)) {
-        modelCachePtr->createPreset(ModelType::PyramidPreset);
-        inspectorEngPtr->refreshUniforms();
-        ImGui::CloseCurrentPopup();
-    }
-    ImGui::Spacing();
-    if (ImGui::Button("Add Cube", btnSize)) {
-        modelCachePtr->createPreset(ModelType::CubePreset);
-        inspectorEngPtr->refreshUniforms();
-        ImGui::CloseCurrentPopup();
-    }
+    ImGui::EndChild();
 }
 
 void AddObjectModal::drawImportedModelPage() {
-    ImGui::TextUnformatted("Imported Assets"); 
+    ImGui::TextUnformatted("Imported Objects"); 
     ImGui::Separator(); 
     ImGui::Spacing(); 
 
-    if (ImGui::BeginChild("##IMPORTEDAssetsList", ImVec2(0, 0), true)) { 
+    if (ImGui::BeginChild("##ImportedObjectsList", ImVec2(0, 0), true)) { 
 
         if(!projectPtr) {
             ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Project data unavailable.");
@@ -121,7 +120,7 @@ void AddObjectModal::drawImportedModelPage() {
                 std::string ext = entry.path().extension().string();
                 std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 
-                if (ext == ".obj" || ext == ".gltf" || ext == ".glb" || ext == ".fbx") {
+                if (supportedModelExtensions.contains(ext)) {
                     isFoundModels = true;
                     
                     std::string displayPath = std::filesystem::relative(entry.path(), assetsPath).string();
@@ -135,16 +134,14 @@ void AddObjectModal::drawImportedModelPage() {
                         
                         ImGui::CloseCurrentPopup();
                     }
+                
                 }
             }
         }
     
-
-    if (!isFoundModels) {
-        ImGui::TextDisabled("No 3D models (.obj, .gltf, .glb, .fbx)\nfound in the project assets folder.");
+        if (!isFoundModels) {
+            ImGui::TextDisabled("No 3D models (.obj, .gltf, .glb, .fbx)\nfound in the project assets folder.");
+        }
     }
-
     ImGui::EndChild();
-
-    }
 }
