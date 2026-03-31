@@ -35,7 +35,7 @@ namespace {
 }
 
 inline void to_json(json& j, const InstanceData& m) {
-    j = {m.x_offset, m.y_offset, m.z_offset};
+    j = {m.pos.x, m.pos.y, m.pos.z};
 }
 
 inline void to_json(json& j, const ModelEntry& modelData){
@@ -76,9 +76,9 @@ inline void to_json(json& j, const MaterialEntry& materialData) {
 
 
 inline void from_json(const json& j, InstanceData& instData) {
-    instData.x_offset = j.at(0).get<float>();
-    instData.y_offset = j.at(1).get<float>();
-    instData.z_offset = j.at(2).get<float>();
+    instData.pos.x = j.at(0).get<float>();
+    instData.pos.y = j.at(1).get<float>();
+    instData.pos.z = j.at(2).get<float>();
 }
 
 inline void from_json(const json& j, ModelEntry& modelData) {
@@ -319,7 +319,7 @@ void ProjectLoader::save(Project& project, ModelCache* modelCachePtr, MaterialCa
     project.materialData.clear();
     for (auto& material : materialCachePtr->getAllMaterials()) {
         MaterialEntry materialEntry{
-            .name = material->name,
+            .name = material->getName(),
             .ID = material->ID,
             .type = material->getMaterialType(),
             

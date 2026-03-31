@@ -97,7 +97,7 @@ void MaterialsInspectorUI::draw() {
             );
 
             for (auto& mat : matCache->getAllMaterials()) {
-                std::string label = mat->name + " (" + std::to_string(mat->ID) + ")" + "##" + std::to_string(mat->ID);
+                std::string label = mat->getName() + " (" + std::to_string(mat->ID) + ")" + "##" + std::to_string(mat->ID);
                 bool matOpen = ImGui::CollapsingHeader(label.c_str());
 
                 if (ImGui::BeginPopupContextItem()) {
@@ -119,7 +119,8 @@ void MaterialsInspectorUI::draw() {
                     static const char* materialTypes[3] = {"Opaque", "Cutout", "Translucent"};
 
                     if (ImGui::Combo("Type", &currentType, materialTypes, 3)) {
-                        mat->setMaterialType((MaterialType)currentType);
+                        matCache->changeMaterialType(mat->ID, (MaterialType)currentType);
+                        
                     }
 
                     if (ImGui::BeginCombo("Program", mat->getProgramID().c_str())) {

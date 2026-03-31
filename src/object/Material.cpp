@@ -19,6 +19,11 @@ Material::Material(unsigned int ID, MaterialType type, MaterialProperties props,
 }
 
 
+void Material::setName(std::string name) {
+    this->name = name;
+}
+
+
 void Material::setProperties(MaterialProperties properties) {
     this->properties = properties;
 }
@@ -38,7 +43,7 @@ void Material::addTexture(unsigned int textureID) {
     textureIDs.push_back(textureID);
 }
 
-
+std::string Material::getName() {return name; }
 std::string Material::getProgramID() { return programID; }
 MaterialType Material::getMaterialType() { return type; }
 std::vector<unsigned int>& Material::getMaterialTextureIDs() { return textureIDs; }

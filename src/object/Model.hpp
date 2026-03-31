@@ -51,7 +51,7 @@ public:
     glm::vec3 getScale() const;
     glm::vec4 getRotation() const;
     unsigned int getInstanceCount() const;
-    std::vector<InstanceData> getInstanceData() const;
+    std::vector<InstanceData>& getInstanceData();
     const std::vector<MeshInstance>& getMeshInstances() const;
     const std::unordered_map<unsigned int, unsigned int>& getAllMaterialReferences() const;
 

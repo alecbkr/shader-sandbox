@@ -5,14 +5,14 @@
 
 Model::Model(const unsigned int ID, std::string model_path, ModelType type)
     : ID(ID), model_path(model_path), type(type) {
-        instanceData.emplace_back(0.0f, 0.0f, 0.0f); //instace #1 value
+        instanceData.emplace_back(glm::vec3(0.0f, 0.0f, 0.0f)); //instace #1 value
     }
 
 
 void Model::drawMesh(unsigned int meshID) {
     MeshA* mesh = &meshes[meshID];
-    mesh->setInstanceVBO(modelInstanceCount, instanceData);
-    mesh->bind();
+    // mesh->setInstanceVBO(modelInstanceCount, instanceData);
+    mesh->bind(instanceData);
 
     if (modelInstanceCount > 1) {
         glDrawElementsInstanced(GL_TRIANGLES, mesh->indices.size(), GL_UNSIGNED_INT, 0, modelInstanceCount);
@@ -153,11 +153,12 @@ void Model::setRotation(float angle, glm::vec3 axis) {
 
 
 void Model::setInstancePosition(unsigned int instanceNum, glm::vec3 position) {
-    if (instanceNum > modelInstanceCount || instanceNum == 0) return;
+    if (instanceNum > modelInstanceCount) return;
     
-    instanceData[instanceNum - 1].x_offset = position.x;
-    instanceData[instanceNum - 1].y_offset = position.y;
-    instanceData[instanceNum - 1].z_offset = position.z;
+    instanceData[instanceNum].pos = position;
+    for (MeshA& mesh : meshes) {
+        mesh.updateInstanceData(instanceData);
+    }
 }
 
 
@@ -174,15 +175,18 @@ void Model::setInstanceCount(unsigned int newInstanceCount) {
 
     if (newInstanceCount > modelInstanceCount) {
         for (int i = modelInstanceCount; i < newInstanceCount; i++) {
-            instanceData.emplace_back(1.0f * (i - 1), 0.0f, 0.0f);
+            instanceData.emplace_back(glm::vec3(1.0f * i, 0.0f, 0.0f));
         }
     }
     else { //new count is less than model
-        for (int i = modelInstanceCount; i > newInstanceCount; i--) {
+        for (int i = modelInstanceCount - 1; i > newInstanceCount; i--) {
             instanceData.erase(instanceData.begin() + i);
         }
     }
     modelInstanceCount = newInstanceCount;
+    for (MeshA& mesh : meshes) {
+        mesh.resizeInstanceVBO(instanceData);
+    }
 }
 
 
@@ -191,7 +195,6 @@ void Model::setMeshMaterial(unsigned int meshIdx, unsigned int materialID) {
 
     if (meshInstance->materialID != UINT_MAX) {
         allMaterialReferences.at(meshInstance->materialID)--;
-        std::cout << "Nuts" << std::endl;
         if (allMaterialReferences.at(meshInstance->materialID) == 0) {
             allMaterialReferences.erase(meshInstance->materialID);
         }
@@ -277,7 +280,7 @@ glm::vec3 Model::getPosition()    const {return position;}
 glm::vec3 Model::getScale()       const {return scale;}
 glm::vec4 Model::getRotation()    const {return rotation;}
 unsigned int Model::getInstanceCount() const { return modelInstanceCount; }
-std::vector<InstanceData> Model::getInstanceData() const { return instanceData; }
+std::vector<InstanceData>& Model::getInstanceData() { return instanceData; }
 const std::vector<MeshInstance>& Model::getMeshInstances() const { return meshInstances; }
 const std::unordered_map<unsigned int, unsigned int>& Model::getAllMaterialReferences() const { return allMaterialReferences; }
 

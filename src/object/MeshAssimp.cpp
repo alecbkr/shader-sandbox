@@ -26,38 +26,9 @@ MeshA::~MeshA() {
     unloadFromGPU();
 }
 
-void MeshA::setInstanceVBO(unsigned int modelInstanceCount, std::vector<InstanceData> instanceData) {
-    if (meshInstanceCount == modelInstanceCount) return; 
 
-    if (meshInstanceCount < modelInstanceCount) {
-        for (int i = meshInstanceCount; i <= modelInstanceCount; i++) {
-            instanceData.emplace_back(1.0f * i, 0.0f, 0.0f);
-        }
-    }
-    else { //model count is less than mesh
-        for (int i = meshInstanceCount; i > modelInstanceCount; i--) {
-            instanceData.erase(instanceData.begin() + i);
-        }
-    }
-    meshInstanceCount = modelInstanceCount;
-
-    if (instanceVBO == 0) {
-        glGenBuffers(1, &instanceVBO);
-    }
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferData(
-        GL_ARRAY_BUFFER, 
-        instanceData.size() * sizeof(InstanceData),
-        instanceData.data(),
-        GL_STATIC_DRAW
-    );
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-
-
-void MeshA::bind() {
-    loadToGPU();
+void MeshA::bind(std::vector<InstanceData>& instanceData) {
+    loadToGPU(instanceData);
     glBindVertexArray(vao);
 }
 
@@ -67,7 +38,7 @@ void MeshA::unbind() {
 }
 
 
-void MeshA::loadToGPU() {
+void MeshA::loadToGPU(std::vector<InstanceData>& instanceData) {
     if (isLoadedInGPU) return;
     
     // Logger::addLog(LogLevel::INFO, "MESH", "Loading mesh...");
@@ -101,12 +72,11 @@ void MeshA::loadToGPU() {
     glEnableVertexAttribArray(3);
     glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
 
-    if (meshInstanceCount > 1) {
-        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)0);
-        glVertexAttribDivisor(4, 1);
-    }
+    resizeInstanceVBO(instanceData);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)0);
+    glVertexAttribDivisor(4, 1);
     
     isLoadedInGPU = true;
 }
@@ -124,4 +94,21 @@ void MeshA::unloadFromGPU() {
     ebo = 0;
     
     isLoadedInGPU = false;
+}
+
+
+void MeshA::resizeInstanceVBO(std::vector<InstanceData>& instanceData) {
+    if (instanceVBO == 0) {
+        glGenBuffers(1, &instanceVBO);
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, instanceData.size() * sizeof(InstanceData), nullptr, GL_DYNAMIC_DRAW);
+
+    glBufferSubData(GL_ARRAY_BUFFER, 0, instanceData.size() * sizeof(InstanceData), instanceData.data());
+}
+
+
+void MeshA::updateInstanceData(std::vector<InstanceData>& instanceData) {
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, instanceData.size()* sizeof(InstanceData), instanceData.data());
 }

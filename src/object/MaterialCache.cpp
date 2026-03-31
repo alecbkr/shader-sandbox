@@ -6,6 +6,8 @@
 #include "texture/TextureCache.hpp"
 #include <memory>
 
+#include <iostream> //TEMPADD
+
 MaterialCache::MaterialCache() = default;
 
 bool MaterialCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, TextureCache* _textureCachePtr, bool previouslySaved) {

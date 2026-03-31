@@ -13,7 +13,7 @@
 #include "core/InspectorEngine.hpp"
 #include "application/Project.hpp"
 
-#include <iostream>
+#include <iostream> //TEMPADD
 
 static const aiTextureType TexMap[13] {
     aiTextureType_NONE,              // TEX_UNDEFINED
@@ -121,8 +121,8 @@ unsigned int AssimpImporter::importModel(std::string path) {
     unsigned int modelID = modelCachePtr->createModelForImportSetup(path);
     std::string directory = path.substr(0, path.find_last_of('/'));
     
-    // GRAB MATERIALS
-    for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
+    // GRAB MATERIALS -- starts as 1 to avoid creating an unused default mat from assimp
+    for (unsigned int i = 1; i < scene->mNumMaterials; i++) {
         processMaterial(scene->mMaterials[i], directory);
     }
 
@@ -139,14 +139,6 @@ void AssimpImporter::processNode(unsigned int modelID, aiNode* node, const aiSce
         
         aiMesh *aimesh = scene->mMeshes[node->mMeshes[i]];
         processMesh(modelID, aimesh);
-
-        // Material *mat = materialCachePtr->getMaterial(model.getMatVec()[aimesh->mMaterialIndex]);
-
-        // model.primitives.emplace_back(
-        //     model.getID(),                       // MODEL ID
-        //     model.getMeshVec().back().get()->ID, // MESH ID
-        //     mat->ID                              // MATERIAL ID
-        // );
     }
 
     for (unsigned int i = 0; i < node->mNumChildren; i++) {
@@ -226,7 +218,9 @@ void AssimpImporter::processMaterial(aiMaterial *aimat, std::string directory) {
 
 
     unsigned int materialID = materialCachePtr->createBlankMaterial();
-    materialCachePtr->getMaterial(materialID)->setProperties(properties);
+    Material* newMaterial = materialCachePtr->getMaterial(materialID);
+    newMaterial->setName("Imported_Mat");
+    // newMaterial->setProperties(properties);
     getTextures(materialID, aimat, directory);
 }
 

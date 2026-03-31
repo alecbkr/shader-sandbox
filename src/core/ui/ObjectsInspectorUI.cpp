@@ -167,32 +167,29 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                         ImGui::Unindent(theme.indentSize);
                     }
                     // ALECS ATTEMPT
-                    // if (ImGui::CollapsingHeader("Meshes")) {
+                    drawMeshesMenu(model, materialCachePtr, modelCachePtr, loggerPtr);
+                    drawInstancesMenu(model, modelCachePtr, loggerPtr);
+                        
+                    // if (ImGui::CollapsingHeader("Material")) {
                     //     ImGui::Indent(theme.indentSize);
-                    //     drawMeshesMenu(model, materialCachePtr, loggerPtr);
-                    // }
-        
-        
-                    if (ImGui::CollapsingHeader("Material")) {
-                        ImGui::Indent(theme.indentSize);
-                        std::vector<const char*> shaderChoices;
-                        shaderChoices.reserve(shaderRegPtr->getNumberOfPrograms());
-                        const auto& shaders = shaderRegPtr->getPrograms();
-                        for (auto& [name, shader] : shaders) {
-                            shaderChoices.push_back(name.c_str());
-                        }
-                        for (auto [matID, matRefCount] : matIDReferences) {
-                            MaterialShaderMenu shaderMenu{
-                                .matID = matID
-                            };
-                            if (!shaderMenu.initialized) {
-                                initializeMenu(shaderMenu, shaderChoices, loggerPtr, shaderRegPtr, materialCachePtr);
-                            }
-                            drawShaderProgramMenu(shaderMenu, shaderChoices, shaderRegPtr, materialCachePtr, inspectorEngPtr, loggerPtr);
-                        }
+                    //     std::vector<const char*> shaderChoices;
+                    //     shaderChoices.reserve(shaderRegPtr->getNumberOfPrograms());
+                    //     const auto& shaders = shaderRegPtr->getPrograms();
+                    //     for (auto& [name, shader] : shaders) {
+                    //         shaderChoices.push_back(name.c_str());
+                    //     }
+                    //     for (auto [matID, matRefCount] : matIDReferences) {
+                    //         MaterialShaderMenu shaderMenu{
+                    //             .matID = matID
+                    //         };
+                    //         if (!shaderMenu.initialized) {
+                    //             initializeMenu(shaderMenu, shaderChoices, loggerPtr, shaderRegPtr, materialCachePtr);
+                    //         }
+                    //         drawShaderProgramMenu(shaderMenu, shaderChoices, shaderRegPtr, materialCachePtr, inspectorEngPtr, loggerPtr);
+                    //     }
                     
-                        ImGui::Unindent(theme.indentSize);
-                    }
+                    //     ImGui::Unindent(theme.indentSize);
+                    // }
         
                     ImGui::Unindent(theme.indentSize);
                 }
@@ -275,32 +272,94 @@ void ObjectsInspectorUI::initializeMenu(ModelTextureMenu& menu, Logger* loggerPt
 }
 
 // ALECS ATTEMPT
-// bool ObjectsInspectorUI::drawMeshesMenu(Logger* loggerPtr, Model* currModel, MaterialCache* materialCachePtr) {
-//     for (auto& meshInstance : currModel->getMeshInstances()) {
-//         bool changed = false;
-//         ImGui::Text("Mesh %u", )
-//     }
-// }
+bool ObjectsInspectorUI::drawMeshesMenu(Model* currModel, MaterialCache* materialCachePtr, ModelCache* modelCachePtr, Logger* loggerPtr) {
+    bool isOpen = ImGui::CollapsingHeader("Meshes");
+    if (!isOpen) return false;
 
-bool ObjectsInspectorUI::drawShaderProgramMenu(MaterialShaderMenu& menu, const std::vector<const char*>& shaderChoices, ShaderRegistry* shaderRegPtr, MaterialCache* materialCachePtr, InspectorEngine* inspectorEngPtr, Logger* logger) {
-    bool changed = false;
-    ImGui::Text("Material %u", menu.matID);
-    ImGui::SameLine();
-    if (ImGui::Combo(("##" + std::to_string(menu.matID)).c_str(), &menu.selection, shaderChoices.data(), (int)shaderChoices.size())) {
-        changed = true;
+    ImGui::Indent(theme.indentSize);
+    std::vector<unsigned int> materialIDs = materialCachePtr->getAllMaterialIDs();
+    // ugly but it keeps the names accessible since matName vec stores pointers
+    std::vector<std::string> materialStrings;
+    materialStrings.reserve(materialIDs.size());
+    std::vector<const char*> materialNames;
+    for (unsigned int materialID : materialIDs) {
+        materialStrings.push_back(materialCachePtr->getMaterial(materialID)->getName());
+        materialNames.push_back(materialStrings.back().c_str());
+    }
+    
+    for (auto& meshInstance : currModel->getMeshInstances()) {
+        int selectedItem;
+        for (unsigned int i = 0; i < materialIDs.size(); i++) {
+            if (meshInstance.materialID == materialIDs[i]) {
+                selectedItem = i;
+                break;
+            }
+        }
+        std::string label = "##" + std::to_string(meshInstance.meshIdx);
+        ImGui::Text("Mesh %u", meshInstance.meshIdx + 1);
+        ImGui::SameLine();
+        if (ImGui::Combo(label.c_str(), &selectedItem, materialNames.data(), (int)materialNames.size())) {
+            unsigned int assignedMaterialID = materialIDs[selectedItem];
+            modelCachePtr->changeMeshMaterial(currModel->ID, meshInstance.meshIdx, assignedMaterialID);
+        }
     }
 
-    if (!changed) return false;
-
-    ShaderProgram& selectedShader = *shaderRegPtr->getProgram(shaderChoices[menu.selection]);
-    Material* mat = materialCachePtr->getMaterial(menu.matID);
-    if (mat == nullptr) {
-        logger->addLog(LogLevel::LOG_ERROR, "drawShaderProgramMenu", "material not found: " + std::to_string(menu.matID));
-    }
-    mat->setProgramID(selectedShader.name);
-    inspectorEngPtr->refreshUniforms();
+    ImGui::Unindent(theme.indentSize);
     return true;
 }
+
+bool ObjectsInspectorUI::drawInstancesMenu(Model* model, ModelCache* modelCachePtr, Logger* loggerPtr) {
+    bool isOpen = ImGui::CollapsingHeader("Instances");
+    if (!isOpen) return false;
+
+    int numOfInstances = model->getInstanceCount();
+    ImGui::Text("Number of Instances:");
+    ImGui::SameLine();
+
+    ImGui::SetNextItemWidth(110.0f);
+    ImGui::InputInt("##InstanceCount", &numOfInstances);
+    if (ImGui::IsItemDeactivatedAfterEdit()) {
+        if (numOfInstances > 0) {
+            model->setInstanceCount(numOfInstances);
+        }
+    }
+
+    std::vector<InstanceData>& instanceData = model->getInstanceData();
+    for (unsigned int idx = 0; idx < model->getInstanceCount(); idx++) {
+        ImGui::PushID(idx);
+
+        InstanceData& currInstanceData = instanceData[idx];
+        ImGui::Text(("Instance " + std::to_string(idx + 1)).c_str());
+        ImGui::SameLine();
+        if (ImGui::DragFloat3("##Position##xx", &currInstanceData.pos.x, .05f)) {
+            model->setInstancePosition(idx, currInstanceData.pos);
+        }
+        
+
+        ImGui::PopID();
+    }
+    return true;
+}
+
+// bool ObjectsInspectorUI::drawShaderProgramMenu(MaterialShaderMenu& menu, const std::vector<const char*>& shaderChoices, ShaderRegistry* shaderRegPtr, MaterialCache* materialCachePtr, InspectorEngine* inspectorEngPtr, Logger* logger) {
+//     bool changed = false;
+//     ImGui::Text("Material %u", menu.matID);
+//     ImGui::SameLine();
+//     if (ImGui::Combo(("##" + std::to_string(menu.matID)).c_str(), &menu.selection, shaderChoices.data(), (int)shaderChoices.size())) {
+//         changed = true;
+//     }
+
+//     if (!changed) return false;
+
+//     ShaderProgram& selectedShader = *shaderRegPtr->getProgram(shaderChoices[menu.selection]);
+//     Material* mat = materialCachePtr->getMaterial(menu.matID);
+//     if (mat == nullptr) {
+//         logger->addLog(LogLevel::LOG_ERROR, "drawShaderProgramMenu", "material not found: " + std::to_string(menu.matID));
+//     }
+//     mat->setProgramID(selectedShader.name);
+//     inspectorEngPtr->refreshUniforms();
+//     return true;
+// }
 
 bool ObjectsInspectorUI::drawTextureMenu(ModelTextureMenu& menu, Logger* loggerPtr, TextureRegistry* textureRegPtr) {
     // bool changed = false;

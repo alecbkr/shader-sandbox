@@ -135,6 +135,7 @@ bool Renderer::initialize(
 
             for (auto iter = primitiveIDMap.begin(); iter != primitiveIDMap.end(); ) {
                 if (iter->second.materialID == data->materialID) {
+                    
                     QueueType newHostQueueType;
                     switch (data->newType) {
                         case MaterialType::Opaque:      newHostQueueType = Opaque;      break;
@@ -143,12 +144,12 @@ bool Renderer::initialize(
                     }
                     unsigned int primitiveID = iter->first;
                     QueueType oldHostQueueType = iter->second.queuetype;
+                    iter->second.queuetype = newHostQueueType;
+
                     removeFromQueue(primitiveID, oldHostQueueType);
                     placeInQueue(primitiveID, newHostQueueType);
                 }
-                else {
-                    iter++;
-                }
+                iter++;
             }
             return true;
         }
