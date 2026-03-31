@@ -43,10 +43,10 @@ class SearchText {
     bool showReplace = false; 
 
     bool drawSearchUI(std::function<void(Match& match, char* replace)> onReplaceClick = nullptr);      // UI for find
-    bool GetisDirty() const {return isDirty;}                               // On update of things we need to search through 
+    bool GetisDirty() const {return isDirty;}                                                // On update of things we need to search through 
     void setDirty(bool dirty) {isDirty = dirty;}    
-    bool hasQuery() const {return inputBuffer[0] != '\0'; }                 // user has typed in the input field
-    bool hasMatches() const { return !matches.empty(); }                    // user input has matches in whatever text they're searching through
+    bool hasQuery() const {return inputBuffer[0] != '\0'; }                                  // user has typed in the input field
+    bool hasMatches() const { return !matches.empty(); }                                     // user input has matches in whatever text they're searching through
 
     // Where the actual text filtering will take place 
     template <typename Container, typename Func> 
@@ -181,4 +181,6 @@ class SearchText {
     bool requestScroll = false; 
     bool isDirty = false; 
     std::string statusMessage = ""; 
+
+    bool drawToggleButton(const char* label, bool* state, const char* tooltip);
 };
