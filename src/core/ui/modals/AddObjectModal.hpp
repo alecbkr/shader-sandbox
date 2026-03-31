@@ -1,11 +1,11 @@
 #pragma once 
 
 #include "core/ui/modals/IModal.hpp"
+#include "object/ModelCache.hpp"
 #include <string> 
 #include <unordered_set>
 #include <filesystem>
 
-class ModelCache; 
 class InspectorEngine;
 class EventDispatcher;  
 struct Project; 
@@ -27,19 +27,27 @@ class AddObjectModal final : public IModal{
     std::string_view id() const override { return ID; }
     void draw() override; 
 
-    private: 
+    private:
+    struct PresetItem {
+        const char* name; 
+        ModelType type; 
+    }; 
+    
     ModelCache* modelCachePtr = nullptr; 
     InspectorEngine* inspectorEngPtr = nullptr; 
     Project* projectPtr = nullptr; 
     EventDispatcher* eventsPtr = nullptr; 
 
-    char customModelPath[256] = ""; 
-
     bool initialized = false; 
     AddObjectPage page = AddObjectPage::PRESET_ASSETS; 
 
+    // components
+    void drawHeader(); 
     void drawPresetModelPage(); 
     void drawImportedModelPage(); 
+
+    // helpers 
     void drawDirectoryNode(const std::filesystem::path& dirPath); 
     bool isValidFileExtension(const std::filesystem::directory_entry &entry); 
+    void drawAssetTableRow(const std::string& name, const std::string& type, std::function<void()> onClick);
 };

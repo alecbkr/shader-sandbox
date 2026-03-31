@@ -1,5 +1,4 @@
 #include "AddObjectModal.hpp"
-#include "object/ModelCache.hpp"
 #include "core/InspectorEngine.hpp"
 #include "application/Project.hpp"
 #include "core/EventDispatcher.hpp"
@@ -20,42 +19,14 @@ bool AddObjectModal::initialize(ModelCache* _modelCachePtr, InspectorEngine* _in
 void AddObjectModal::draw() {
 
     // Top Navigation Toggle
-    if (ImGui::BeginChild("ModalRootSize", ImVec2(500, 400), false)) { 
-        ImGui::SetNextItemWidth(-1); 
-
-        ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.5f, 0.5f));   
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 8.0f));
-        ImVec2 toggleSize(ImGui::GetContentRegionAvail().x * 0.5f, 40); 
+    if (ImGui::BeginChild("ModalRootSize", ImVec2(600, 400), false)) { 
         
-        // Preset Assets Button
-        if (page == AddObjectPage::PRESET_ASSETS) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
-        else ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_Button]);
-        
-        if (ImGui::Button("Preset Objects", toggleSize)) page = AddObjectPage::PRESET_ASSETS;
-        ImGui::PopStyleColor();
-        
-        ImGui::SameLine(0, 0); // remove spacing in-between the buttons 
-        
-        // IMPORTED Assets Button
-        if (page == AddObjectPage::IMPORTED_ASSETS) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
-        else ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_Button]);
-        
-        if (ImGui::Button("Imported Objects", toggleSize)) page = AddObjectPage::IMPORTED_ASSETS;
-        ImGui::PopStyleColor(); 
-
-        ImGui::PopStyleVar(2);
-        
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::Spacing();
+        drawHeader();
 
         // Content Area
         if (ImGui::BeginChild("##AddObjectContent", ImVec2(0, 0), false)) {
-            if (page == AddObjectPage::PRESET_ASSETS) {
-                drawPresetModelPage();
-            } else {
-                drawImportedModelPage();
-            }
+            if (page == AddObjectPage::PRESET_ASSETS) drawPresetModelPage();
+            else drawImportedModelPage();
         }
         ImGui::EndChild();
         ImGui::EndChild(); 
@@ -66,27 +37,61 @@ void AddObjectModal::draw() {
     if (ImGui::Button("Cancel")) ImGui::CloseCurrentPopup();
 }
 
+void AddObjectModal::drawHeader() {
+    float availWidth = ImGui::GetContentRegionAvail().x;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.5f, 0.5f));   
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 8.0f));
+    ImVec2 tabSize(availWidth * 0.5f, 0.0f); 
+    
+    // Preset Assets Tab
+    if (page == AddObjectPage::PRESET_ASSETS) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
+    else ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_Button]);
+    if (ImGui::Button("Preset Objects", tabSize)) page = AddObjectPage::PRESET_ASSETS;
+    ImGui::PopStyleColor();
+    
+    ImGui::SameLine(0, 0); 
+    
+    // Imported Assets Tab
+    if (page == AddObjectPage::IMPORTED_ASSETS) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
+    else ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_Button]);
+    if (ImGui::Button("Imported Objects", tabSize)) page = AddObjectPage::IMPORTED_ASSETS;
+    ImGui::PopStyleColor(); 
+
+    ImGui::PopStyleVar(2);
+    
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+}
+
 void AddObjectModal::drawPresetModelPage() {
     ImGui::Spacing(); 
 
-    if (ImGui::BeginChild("##PresetObjectsList", ImVec2(0, 0), true)) {
-        if (ImGui::Selectable("Add Plane")) {
-            modelCachePtr->createPreset(ModelType::PlanePreset);
-            inspectorEngPtr->refreshUniforms();
-            ImGui::CloseCurrentPopup(); 
+    ImGui::BeginChild("##PresetObjectsList", ImVec2(0, 0), true);
+    
+    PresetItem presets[] = {
+        {"Plane", ModelType::PlanePreset},
+        {"Pyramid", ModelType::PyramidPreset},
+        {"Cube", ModelType::CubePreset}
+    };
+
+    ImGuiTableFlags flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingStretchProp; 
+
+    if (ImGui::BeginTable("##PresetAssetsTable", 2, flags)) {
+        ImGui::TableSetupColumn("Asset Name"); 
+        ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, 60.0f); 
+        ImGui::TableHeadersRow(); 
+
+        for (const auto&preset : presets) {
+            std::string label = std::string("Add ") + preset.name; 
+            drawAssetTableRow(label, "Preset", [this, preset] () {
+                modelCachePtr->createPreset(preset.type); 
+                inspectorEngPtr->refreshUniforms(); 
+                ImGui::CloseCurrentPopup(); 
+            }); 
         }
-        ImGui::Spacing();
-        if (ImGui::Selectable("Add Pyramid")) {
-            modelCachePtr->createPreset(ModelType::PyramidPreset);
-            inspectorEngPtr->refreshUniforms();
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::Spacing();
-        if (ImGui::Selectable("Add Cube")) {
-            modelCachePtr->createPreset(ModelType::CubePreset);
-            inspectorEngPtr->refreshUniforms();
-            ImGui::CloseCurrentPopup();
-        }
+        ImGui::EndTable(); 
     }
     ImGui::EndChild();
 }
@@ -123,9 +128,17 @@ void AddObjectModal::drawImportedModelPage() {
         }
     
         if (!isFoundModels) {
-            ImGui::TextDisabled("No 3D models (.obj, .gltf, .glb, .fbx)\nfound in the project assets folder.");
+            ImGui::TextDisabled("No 3D models (.obj, .gltf, .glb, .fbx) found in the project assets folder.");
         } else {
-            drawDirectoryNode(assetsPath);
+            ImGuiTableFlags flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_ScrollY;
+            if (ImGui::BeginTable("##ImportedAssetsTable", 2, flags)) {
+                ImGui::TableSetupColumn("Asset Name"); 
+                ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, 50.0f); 
+                ImGui::TableHeadersRow(); 
+
+                drawDirectoryNode(assetsPath); 
+                ImGui::EndTable(); 
+            }
         }
     }
     ImGui::EndChild();
@@ -147,25 +160,37 @@ void AddObjectModal::drawDirectoryNode(const std::filesystem::path& dirPath) {
 
     // draw the folders/dropdowns 
     for (const auto& subdir : directories) {
+        ImGui::TableNextRow(); 
+        ImGui::TableNextColumn(); 
+
         std::string folderName = subdir.filename().string(); 
+        bool isNodeOpen = ImGui::TreeNodeEx(folderName.c_str(), ImGuiTreeNodeFlags_SpanFullWidth); 
 
-        if (ImGui::TreeNodeEx(folderName.c_str(), ImGuiTreeNodeFlags_SpanAvailWidth)) {
-            drawDirectoryNode(subdir);
-            ImGui::TreePop(); 
+        ImGui::TableNextColumn(); 
+        ImGui::TextDisabled("Folder"); 
+
+        if (isNodeOpen) {
+            drawDirectoryNode(subdir); 
+            ImGui::TreePop();
         }
+    
     }
+        
+    for (const auto& file : validFiles) {
+        std::string filename = file.filename().string(); 
+        std::string fileExt = file.extension().string(); 
 
-    if (validFiles.empty()) return;
+        if (!fileExt.empty() && fileExt[0] == '.') fileExt = fileExt.substr(1); 
+        std::transform(fileExt.begin(), fileExt.end(), fileExt.begin(), ::toupper); 
+        
+        std::string filePath = file.string(); 
 
-    // draw the selectable file names 
-    for (const auto& file : validFiles ) {
-        std::string filename = file.filename().string();
-        if(ImGui::Selectable(filename.c_str())) {
-            eventsPtr->TriggerEvent(Event {
-                EventType::LoadModel, false, LoadModelPayload{file.string()}
+        drawAssetTableRow(filename, fileExt, [this, filePath](){
+            eventsPtr->TriggerEvent(Event{
+                EventType::LoadModel, false, LoadModelPayload{filePath}
             }); 
             ImGui::CloseCurrentPopup(); 
-        }
+        });
     }
 }
 
@@ -176,4 +201,17 @@ bool AddObjectModal::isValidFileExtension(const std::filesystem::directory_entry
     if (supportedModelExtensions.contains(ext)) return true; 
     
     return false; 
+}
+
+void AddObjectModal::drawAssetTableRow(const std::string& name, const std::string& fileExt, std::function<void()> onClick) {
+    ImGui::TableNextRow(); 
+    ImGui::TableNextColumn(); 
+    ImGuiSelectableFlags flags = ImGuiSelectableFlags_SpanAllColumns;
+
+    // col 1
+    if (ImGui::Selectable(name.c_str(), false, flags)) onClick(); 
+
+    // col 2
+    ImGui::TableNextColumn(); 
+    ImGui::TextDisabled("%s", fileExt.c_str()); 
 }
