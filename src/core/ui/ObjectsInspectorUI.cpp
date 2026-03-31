@@ -187,7 +187,7 @@ void ObjectsInspectorUI::drawAddObjectMenu(Logger* loggerPtr, InspectorEngine* i
     //     inspectorEngPtr->refreshUniforms();
     // }
 
-    if (ImGui::Button("Add Object")) {
+    if (ImGui::Button("Add Object", ImVec2(-1, 30))) {
         if (modalManager) {
             modalManager->open("Add Object");
         } 
