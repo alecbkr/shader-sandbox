@@ -9,5 +9,5 @@ class ConsoleSink : public LogSink {
         void clearLogs(); 
     private: 
     std::deque<LogEntry> items; 
-    const size_t MAX_HISTORY = 1024; 
+    const size_t MAX_HISTORY = 2048; 
 }; 
