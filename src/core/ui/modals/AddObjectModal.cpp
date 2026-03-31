@@ -67,8 +67,6 @@ void AddObjectModal::draw() {
 }
 
 void AddObjectModal::drawPresetModelPage() {
-    ImGui::Text("Preset Objects"); 
-    ImGui::Separator(); 
     ImGui::Spacing(); 
 
     if (ImGui::BeginChild("##PresetObjectsList", ImVec2(0, 0), true)) {
@@ -94,8 +92,6 @@ void AddObjectModal::drawPresetModelPage() {
 }
 
 void AddObjectModal::drawImportedModelPage() {
-    ImGui::TextUnformatted("Imported Objects"); 
-    ImGui::Separator(); 
     ImGui::Spacing(); 
 
     if (ImGui::BeginChild("##ImportedObjectsList", ImVec2(0, 0), true)) { 
