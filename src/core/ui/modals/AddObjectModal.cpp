@@ -79,11 +79,13 @@ void AddObjectModal::drawPresetModelPage() {
     ImGuiTableFlags flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingStretchProp; 
 
     if (ImGui::BeginTable("##PresetAssetsTable", 2, flags)) {
-        
+        ImGui::TableSetupColumn("Object Name", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, 60.0f);
+
         // table headers
         ImGui::TableNextRow(ImGuiTableRowFlags_Headers); 
         ImGui::TableNextColumn();
-        ImGui::TextDisabled("Asset Name");        
+        ImGui::TextDisabled("Object Name");        
 
         ImGui::TableNextColumn();
 
@@ -143,7 +145,9 @@ void AddObjectModal::drawImportedModelPage() {
         } else {
             ImGuiTableFlags flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_ScrollY;
             if (ImGui::BeginTable("##ImportedObjectsTable", 2, flags)) {
-                
+                ImGui::TableSetupColumn("Object Name", ImGuiTableColumnFlags_WidthStretch);
+                ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, 60.0f);
+
                 // table headers
                 ImGui::TableNextRow(ImGuiTableRowFlags_Headers); 
                 ImGui::TableNextColumn();
@@ -186,7 +190,8 @@ void AddObjectModal::drawDirectoryNode(const std::filesystem::path& dirPath) {
         ImGui::TableNextColumn(); 
 
         std::string folderName = subdir.filename().string(); 
-        bool isNodeOpen = ImGui::TreeNodeEx(folderName.c_str(), ImGuiTreeNodeFlags_SpanFullWidth); 
+        ImGuiTreeNodeFlags nodeFlags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_SpanAllColumns;
+        bool isNodeOpen = ImGui::TreeNodeEx(folderName.c_str(), nodeFlags); 
 
         ImGui::TableNextColumn(); 
 
