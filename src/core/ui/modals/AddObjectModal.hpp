@@ -3,6 +3,7 @@
 #include "core/ui/modals/IModal.hpp"
 #include <string> 
 #include <unordered_set>
+#include <filesystem>
 
 class ModelCache; 
 class InspectorEngine;
@@ -39,4 +40,6 @@ class AddObjectModal final : public IModal{
 
     void drawPresetModelPage(); 
     void drawImportedModelPage(); 
+    void drawDirectoryNode(const std::filesystem::path& dirPath); 
+    bool isValidFileExtension(const std::filesystem::directory_entry &entry); 
 };

@@ -3,6 +3,7 @@
 #include "core/InspectorEngine.hpp"
 #include "application/Project.hpp"
 #include "core/EventDispatcher.hpp"
+#include <filesystem>
 
 bool AddObjectModal::initialize(ModelCache* _modelCachePtr, InspectorEngine* _inspectorEngPtr, Project* _projectPtr, EventDispatcher* _eventsPtr) {
     if (initialized) return false; 
@@ -115,33 +116,68 @@ void AddObjectModal::drawImportedModelPage() {
 
         bool isFoundModels = false; 
 
+        // check to see if there are any valid 3d files we can parse through the assets path 
         for (const auto& entry : std::filesystem::recursive_directory_iterator(assetsPath)) {
             if (entry.is_regular_file()) {
-                std::string ext = entry.path().extension().string();
-                std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-
-                if (supportedModelExtensions.contains(ext)) {
-                    isFoundModels = true;
-                    
-                    std::string displayPath = std::filesystem::relative(entry.path(), assetsPath).string();
-
-                    if (ImGui::Selectable(displayPath.c_str())) {
-                        eventsPtr->TriggerEvent(Event{
-                            EventType::LoadModel,
-                            false,
-                            LoadModelPayload{entry.path().string()}
-                        });
-                        
-                        ImGui::CloseCurrentPopup();
-                    }
-                
+                if(isValidFileExtension(entry)) {
+                    isFoundModels = true; 
+                    break; 
                 }
             }
         }
     
         if (!isFoundModels) {
             ImGui::TextDisabled("No 3D models (.obj, .gltf, .glb, .fbx)\nfound in the project assets folder.");
+        } else {
+            drawDirectoryNode(assetsPath);
         }
     }
     ImGui::EndChild();
+}
+
+// replicates the assets tab folder structure inside the modal 
+void AddObjectModal::drawDirectoryNode(const std::filesystem::path& dirPath) {
+    std::vector<std::filesystem::path> directories; 
+    std::vector<std::filesystem::path> validFiles; 
+
+    // grab the corresponding object files from the imported assets directory
+    for (const auto& entry : std::filesystem::directory_iterator(dirPath)) {
+        if (entry.is_directory()) {
+            directories.push_back(entry.path()); 
+        } else if (entry.is_regular_file()) {
+            if (isValidFileExtension(entry)) validFiles.push_back(entry.path()); 
+        }
+    }
+
+    // draw the folders/dropdowns 
+    for (const auto& subdir : directories) {
+        std::string folderName = subdir.filename().string(); 
+
+        if (ImGui::TreeNodeEx(folderName.c_str(), ImGuiTreeNodeFlags_SpanAvailWidth)) {
+            drawDirectoryNode(subdir);
+            ImGui::TreePop(); 
+        }
+    }
+
+    if (validFiles.empty()) return;
+
+    // draw the selectable file names 
+    for (const auto& file : validFiles ) {
+        std::string filename = file.filename().string();
+        if(ImGui::Selectable(filename.c_str())) {
+            eventsPtr->TriggerEvent(Event {
+                EventType::LoadModel, false, LoadModelPayload{file.string()}
+            }); 
+            ImGui::CloseCurrentPopup(); 
+        }
+    }
+}
+
+bool AddObjectModal::isValidFileExtension(const std::filesystem::directory_entry &entry) {
+    std::string ext = entry.path().extension().string(); 
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+    if (supportedModelExtensions.contains(ext)) return true; 
+    
+    return false; 
 }
