@@ -81,15 +81,13 @@ void ConsoleUI::render() {
 
     if (ImGui::Begin("Console", nullptr, flags)) {
         drawMenuBar();
-        // ImGuiWindowFlags consoleFlags = ImGuiWindowFlags_AlwaysHorizontalScrollbar; 
         ImGui::BeginChild("ShowLogs", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y * 0.95f), false);
-
         ImGui::PushFont(fontsPtr->getMonoFont());
         drawLogs();
         ImGui::PopFont();
-
         ImGui::EndChild();
     }
+    
     ImGui::End();
     ImGui::PopStyleVar();
     if (stylesPtr) ImGui::PopStyleColor(3); // number of style parameters that we passed to tweak the console 

@@ -210,7 +210,7 @@ namespace DefaultTheme {
         
         // Window & UI Elements
         styles.consoleWindowBgColor        = ImVec4(0.15686f, 0.16471f, 0.21176f, 1.00f); // Background (#282a36)
-        styles.consoleMenuBarBgColor       = ImVec4(0.12157f, 0.12549f, 0.16471f, 1.00f); // Darker Background (#1f202a)
+        styles.consoleMenuBarBgColor       = ImVec4(0.13922f, 0.14510f, 0.18824f, 1.00f); // Darker Background (#1f202a)
         styles.consoleTextSelectedBgColor  = ImVec4(0.26667f, 0.27843f, 0.35294f, 0.80f); // Selection (#44475a)
         styles.consoleSearchHighlightColor = ImVec4(0.74118f, 0.57647f, 0.97647f, 0.50f); // Purple Accent (#bd93f9)
 
