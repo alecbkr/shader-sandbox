@@ -84,8 +84,15 @@ void AddObjectModal::drawPresetModelPage() {
         ImGui::TableNextRow(ImGuiTableRowFlags_Headers); 
         ImGui::TableNextColumn();
         ImGui::TextDisabled("Asset Name");        
+
         ImGui::TableNextColumn();
-        ImGui::TextDisabled("Type");
+
+        // justify column to the right 
+        const std::string typeLabel = "Type"; 
+        float headerWidth = ImGui::CalcTextSize(typeLabel.c_str()).x;
+        float availableSpace = ImGui::GetContentRegionAvail().x;
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + availableSpace - headerWidth);
+        ImGui::TextDisabled("%s", typeLabel.c_str());
 
         for (const auto&preset : presets) {
             std::string label = std::string("Add ") + preset.name; 
@@ -135,14 +142,21 @@ void AddObjectModal::drawImportedModelPage() {
             ImGui::TextDisabled("No 3D models (.obj, .gltf, .glb, .fbx) found in the project assets folder.");
         } else {
             ImGuiTableFlags flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_ScrollY;
-            if (ImGui::BeginTable("##ImportedAssetsTable", 2, flags)) {
+            if (ImGui::BeginTable("##ImportedObjectsTable", 2, flags)) {
                 
                 // table headers
                 ImGui::TableNextRow(ImGuiTableRowFlags_Headers); 
                 ImGui::TableNextColumn();
-                ImGui::TextDisabled("Asset Name");        
-                ImGui::TableNextColumn();
-                ImGui::TextDisabled("Type");
+                ImGui::TextDisabled("Object Name");     
+                
+                ImGui::TableNextColumn();    
+
+                // justify column to the right 
+                const std::string typeLabel = "Type"; 
+                float headerWidth = ImGui::CalcTextSize(typeLabel.c_str()).x;
+                float availableSpace = ImGui::GetContentRegionAvail().x;
+                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + availableSpace - headerWidth);
+                ImGui::TextDisabled("%s", typeLabel.c_str());
 
                 drawDirectoryNode(assetsPath); 
                 ImGui::EndTable(); 
@@ -175,7 +189,13 @@ void AddObjectModal::drawDirectoryNode(const std::filesystem::path& dirPath) {
         bool isNodeOpen = ImGui::TreeNodeEx(folderName.c_str(), ImGuiTreeNodeFlags_SpanFullWidth); 
 
         ImGui::TableNextColumn(); 
-        ImGui::TextDisabled("Folder"); 
+
+        // right alignment
+        const std::string folderLabel = "Folder"; 
+        float textWidth = ImGui::CalcTextSize(folderLabel.c_str()).x;
+        float availableSpace = ImGui::GetContentRegionAvail().x;
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + availableSpace - textWidth);
+        ImGui::TextDisabled("%s", folderLabel.c_str());
 
         if (isNodeOpen) {
             drawDirectoryNode(subdir); 
@@ -221,5 +241,11 @@ void AddObjectModal::drawAssetTableRow(const std::string& name, const std::strin
 
     // col 2
     ImGui::TableNextColumn(); 
+
+    // justify column to the right 
+    float textWidth = ImGui::CalcTextSize(fileExt.c_str()).x;
+    float availableSpace = ImGui::GetContentRegionAvail().x;
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + availableSpace - textWidth);
+
     ImGui::TextDisabled("%s", fileExt.c_str()); 
 }
