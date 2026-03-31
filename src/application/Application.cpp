@@ -294,7 +294,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
         return false;
     }
-    loadPresetAssets(ctx);
+    //loadPresetAssets(ctx);
     addSubscriptions(ctx);
     initializeUI(ctx);
 

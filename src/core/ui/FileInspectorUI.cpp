@@ -22,7 +22,6 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
     if (ImGui::BeginChild("ShadersContent", ImVec2(0, 0), ImGuiChildFlags_AlwaysUseWindowPadding)) {
         float inner_padding = styles->shaderTitleInnerPadding;
         ImGui::PushFont(fonts->getL4());
-        float text_height = ImGui::CalcTextSize("Shaders").y;
         float directory_height = window_padding * 2 + inner_padding * 2 + ImGui::CalcTextSize("Shaders").y;
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
         ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(0,0,0,0));
@@ -47,20 +46,27 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
                 styles->shaderBorderThickness
             );
 
-            float centerY = directory_height * 0.5f;
-            float button_side = text_height - 2.0f;
-
             ImGui::SetCursorPosY(inner_padding + window_padding);
             ImGui::Dummy(ImVec2(styles->shaderTitleOffset, 0.0f));
             ImGui::SameLine();
             ImGui::TextUnformatted("Shaders");
 
-            ImGui::SetCursorPos(ImVec2(s.x - button_side- window_padding, centerY - (button_side * 0.5f)));
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0,0));
-            if (ImGui::Button("+##global_add", ImVec2(button_side, button_side))) {
+            ImVec2 plusSize = ImGui::CalcTextSize("+");
+            float buttonPaddingX = 6.5f;
+
+            float boxWidth = plusSize.x + (buttonPaddingX * 2.0f);
+            float boxHeight = plusSize.y;
+
+            ImGui::SameLine(ImGui::GetContentRegionAvail().x - boxWidth);
+
+            ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.6f, 0.6f)); 
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+
+            if (ImGui::Button("+##global_add", ImVec2(boxWidth, boxHeight))) {
                 ImGui::OpenPopup("GlobalAddPopup");
             }
-            ImGui::PopStyleVar();
+            ImGui::PopStyleVar(3);
 
             if (ImGui::BeginPopup("GlobalAddPopup")) {
                 ImGui::PushFont(fonts->getL2());
