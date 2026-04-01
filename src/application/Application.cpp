@@ -158,8 +158,9 @@ void loadPresetAssets(AppContext& ctx) {
 
 
     unsigned int bpID = ctx.assimp_importer.importModel("../assets/models/backpack/backpack.obj");
-    ctx.model_cache.changeModelMaterial(bpID, matID);
-    ctx.model_cache.getModel(bpID)->setInstanceCount(3);
+    ctx.model_cache.changeModelMaterial(bpID, 3);
+    ctx.material_cache.getMaterial(3)->setProgramID("instance");
+    ctx.model_cache.getModel(bpID)->setInstanceCount(1);
 
     unsigned int skyboxID = ctx.model_cache.createPreset(ModelType::CubePreset);
     ctx.model_cache.changeModelMaterial(skyboxID, skyMatID);
