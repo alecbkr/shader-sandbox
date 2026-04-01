@@ -13,7 +13,7 @@
 #include "core/InspectorEngine.hpp"
 #include "application/Project.hpp"
 
-#include <iostream>
+#include <iostream> //TEMPADD
 
 static const aiTextureType TexMap[13] {
     aiTextureType_NONE,              // TEX_UNDEFINED
@@ -80,20 +80,20 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
         if (reservationResult == false) continue;
 
         if (type != ModelType::Imported) {
-            modelCachePtr->setupPreset(ID, type);
+            modelCachePtr->addPresetMesh(ID, type);
         }
         else {
             Assimp::Importer import;
             const aiScene *scene = import.ReadFile(path.string(), aiProcess_Triangulate | aiProcess_FlipUVs);
             if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-                loggerPtr->addLog(LogLevel::WARNING, "ASSIMP_IMPORTER | loadAssetCachesFromSave()", "Skipping. Model not found with path " + path.string());
+                loggerPtr->addLog(LogLevel::WARNING, "ASSIMP_IMPORTER::loadAssetCachesFromSave()", "Skipping. Model not found with path " + path.string());
                 continue;
             }
             processNode(ID, scene->mRootNode, scene);
         }
-        modelCachePtr->finalizeMesh(ID);
-
         Model* model = modelCachePtr->getModel(ID);
+        model->finalizeMeshes();
+
         // LOAD BOUND MATERIALS PER MESH
         model->loadMeshMaterialIDs(meshMaterialIDs);
         model->setPosition(position);
@@ -102,7 +102,7 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
         model->setInstanceCount(instanceData.size());
         model->loadInstanceData(instanceData);     
 
-        modelCachePtr->sendToRenderer(ID);
+        modelCachePtr->trySendingToRenderer(ID);
 
         // inspectorEngPtr->refreshUniforms();
     }
@@ -114,22 +114,22 @@ unsigned int AssimpImporter::importModel(std::string path) {
     Assimp::Importer import;
     const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        loggerPtr->addLog(LogLevel::WARNING, "ASSIMP_IMPORTER | importModel()", "Model not found");
+        loggerPtr->addLog(LogLevel::WARNING, "ASSIMP_IMPORTER::importModel()", "Model not found");
         return INVALID_MODEL_ID;
     }
 
     unsigned int modelID = modelCachePtr->createModelForImportSetup(path);
     std::string directory = path.substr(0, path.find_last_of('/'));
     
-    // GRAB MATERIALS
-    for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
+    // GRAB MATERIALS -- starts as 1 to avoid creating an unused default mat from assimp
+    for (unsigned int i = 1; i < scene->mNumMaterials; i++) {
         processMaterial(scene->mMaterials[i], directory);
     }
 
     // PROCESS MESHES
     processNode(modelID, scene->mRootNode, scene);
-    modelCachePtr->finalizeMesh(modelID);
-    modelCachePtr->sendToRenderer(modelID);
+    modelCachePtr->getModel(modelID)->finalizeMeshes();
+    modelCachePtr->trySendingToRenderer(modelID);
     return modelID;
 }
 
@@ -139,14 +139,6 @@ void AssimpImporter::processNode(unsigned int modelID, aiNode* node, const aiSce
         
         aiMesh *aimesh = scene->mMeshes[node->mMeshes[i]];
         processMesh(modelID, aimesh);
-
-        // Material *mat = materialCachePtr->getMaterial(model.getMatVec()[aimesh->mMaterialIndex]);
-
-        // model.primitives.emplace_back(
-        //     model.getID(),                       // MODEL ID
-        //     model.getMeshVec().back().get()->ID, // MESH ID
-        //     mat->ID                              // MATERIAL ID
-        // );
     }
 
     for (unsigned int i = 0; i < node->mNumChildren; i++) {
@@ -226,7 +218,9 @@ void AssimpImporter::processMaterial(aiMaterial *aimat, std::string directory) {
 
 
     unsigned int materialID = materialCachePtr->createBlankMaterial();
-    materialCachePtr->getMaterial(materialID)->setProperties(properties);
+    Material* newMaterial = materialCachePtr->getMaterial(materialID);
+    newMaterial->setName("Imported_Mat");
+    // newMaterial->setProperties(properties);
     getTextures(materialID, aimat, directory);
 }
 
@@ -246,7 +240,7 @@ void AssimpImporter::getTextures(unsigned int materialID, aiMaterial *mat, std::
             }
 
             std::string filepath = directory + "/" + aiTex.C_Str();
-            materialCachePtr->addTextureToMaterial(materialID, filepath);
+            materialCachePtr->addTextureToMaterial(materialID, filepath, false);
         }
     }
 }

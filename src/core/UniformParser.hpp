@@ -1,6 +1,8 @@
 #pragma once 
 
+#include <memory>
 #include <unordered_map>
+#include <unordered_set>
 #include "UniformTypes.hpp"
 #include "ShaderRegistry.hpp"
 #include "logging/Logger.hpp"
@@ -8,7 +10,7 @@
 class UniformParser {
 public :
     UniformParser(Logger* _loggerPtr);
-    std::unordered_map<std::string, Uniform> parseUniforms(const ShaderProgram& program);
+    std::unordered_map<std::string, Uniform> parseUniforms(const ShaderProgram& program, std::unordered_set<std::string>* _namesToAvoid);
 
 private:
     struct UniformInStruct {
@@ -28,8 +30,16 @@ private:
         int tokenIndex,
         const std::string& structName = ""   // optional: "" at top level, parent name when recursing
     );
+    void addUniform(
+        std::unordered_map<std::string, Uniform>& programUniforms,
+        const std::string& uniformName,
+        const UniformType type
+    );
 
     // return a new vector of tokens
     std::vector<std::string>  processDefines(const std::vector<std::string>& tokens);
+
     Logger* loggerPtr;
+    std::unordered_set<std::string>* namesToAvoid;
+    
 };

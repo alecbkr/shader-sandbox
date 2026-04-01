@@ -1,8 +1,7 @@
 #pragma once
 
+#include <glm/glm.hpp>
 
 struct InstanceData {
-    float x_offset = 0.0f;
-    float y_offset = 0.0f;
-    float z_offset = 0.0f;
+    glm::vec3 pos = glm::vec3(0.0f);
 };

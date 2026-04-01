@@ -10,7 +10,6 @@
 #include <array>
 
 #include "application/Project.hpp"
-#include "core/ui/AssetsManager.hpp"
 
 class Fonts;
 struct SettingsStyles;

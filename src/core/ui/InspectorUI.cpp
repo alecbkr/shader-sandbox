@@ -1,6 +1,7 @@
 #include "core/ui/InspectorUI.hpp"
 #include "core/ui/UniformInspectorUI.hpp"
 #include "core/ui/ObjectsInspectorUI.hpp"
+#include "core/ui/MaterialsInspectorUI.hpp"
 #include "core/ui/AssetsInspectorUI.hpp"
 #include "core/ui/FileInspectorUI.hpp"
 #include "core/ui/modals/ModalManager.hpp"
@@ -9,6 +10,7 @@
 #include "core/InspectorEngine.hpp"
 #include "core/ShaderRegistry.hpp"
 #include "core/TextureRegistry.hpp"
+#include "texture/TextureCache.hpp"
 #include "core/UniformRegistry.hpp"
 #include "core/EventDispatcher.hpp"
 #include "core/UniformRegistry.hpp"
@@ -29,6 +31,7 @@ InspectorUI::InspectorUI() {
     loggerPtr = nullptr;
     inspectorEngPtr = nullptr;
     textureRegPtr = nullptr;
+    textureCachePtr = nullptr;
     shaderRegPtr = nullptr;
     uniformRegPtr = nullptr;
     eventsPtr = nullptr;
@@ -40,7 +43,7 @@ InspectorUI::InspectorUI() {
     width = 0;
 }
 
-bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr, Fonts* _fontsPtr, Project* _project, SettingsStyles* _styles, ModalManager* _modalManager) {
+bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, TextureCache* _textureCachePtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr, Fonts* _fontsPtr, Project* _project, SettingsStyles* _styles, ModalManager* _modalManager) {
     if (intitialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Inspector UI Initialization", "Inspector UI was already initialized.");
         return false;
@@ -48,14 +51,16 @@ bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngP
     loggerPtr = _loggerPtr;
     inspectorEngPtr = _inspectorEngPtr;
     textureRegPtr = _textureRegPtr;
+    textureCachePtr = _textureCachePtr;
     shaderRegPtr = _shaderRegPtr;
     uniformRegPtr = _uniformRegPtr;
     eventsPtr = _eventsPtr;
     modelCachePtr = _modelCachePtr;
     fileRegPtr = _fileRegPtr;
     assetsInspectorUI = std::make_unique<AssetsInspectorUI>(_fontsPtr, _project, _styles);
-    uniformInspectorUI = std::make_unique<UniformInspectorUI>(_styles);
+    uniformInspectorUI = std::make_unique<UniformInspectorUI>(_fontsPtr, _styles);
     objectsInspectorUI = std::make_unique<ObjectsInspectorUI>(_styles);
+    materialsInspectorUI = std::make_unique<MaterialsInspectorUI>(_fontsPtr, _styles, _materialCachePtr, _textureCachePtr, _shaderRegPtr, _project->projectAssetsDir);
     fileInspectorUI = std::make_unique<FileInspectorUI>();
     materialCachePtr = _materialCachePtr;
     fontsPtr = _fontsPtr;
@@ -72,6 +77,7 @@ void InspectorUI::shutdown() {
     loggerPtr = nullptr;
     inspectorEngPtr = nullptr;
     textureRegPtr = nullptr;
+    textureCachePtr = nullptr;
     shaderRegPtr = nullptr;
     uniformRegPtr = nullptr;
     eventsPtr = nullptr;
@@ -106,7 +112,11 @@ void InspectorUI::render() {
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Objects")) {
-                objectsInspectorUI->draw(loggerPtr, inspectorEngPtr, shaderRegPtr, textureRegPtr, modelCachePtr, materialCachePtr, modalManager);
+                objectsInspectorUI->draw(loggerPtr, inspectorEngPtr, shaderRegPtr, textureRegPtr, modelCachePtr, materialCachePtr, fontsPtr, modalManager);
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Materials")) {
+                materialsInspectorUI->draw();
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Assets")) {

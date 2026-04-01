@@ -16,7 +16,8 @@ private:
     enum QueueType {
         Opaque,
         Cutout,
-        Translucent
+        Translucent,
+        Skybox
     };
 
     struct Primitive {
@@ -47,9 +48,9 @@ private:
     std::vector<unsigned int> opaquePrimIDs;
     std::vector<unsigned int> cutoutPrimIDs;
     std::vector<unsigned int> translucentPrimIDs;
-    unsigned int skyboxPrimID;
+    unsigned int skyboxPrimID = UINT_MAX;
 
-    // void renderSkybox();
+    void renderSkybox();
     void renderOpaquePrimitives();
     void renderCutoutPrimitives();
     void renderTranslucentPrimitives();
@@ -58,6 +59,7 @@ private:
     void bindProgram(unsigned int materialID);
     void drawMesh(unsigned int modelID, unsigned int meshID);
     bool validateNextID();
+    bool validatePrimitive(unsigned int primitiveID);
     void placeInQueue(unsigned int primitiveID, QueueType queueType);
     void removeFromQueue(unsigned int primitiveIDToDelete, QueueType queueType);
 

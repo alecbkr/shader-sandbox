@@ -53,6 +53,7 @@ struct Project {
     bool previouslySaved = false;
     std::filesystem::path projectRoot;
     std::filesystem::path projectShadersDir;
+    std::filesystem::path projectAssetsDir;
     std::filesystem::path projectJSON;
 
     std::vector<ModelEntry> modelData;

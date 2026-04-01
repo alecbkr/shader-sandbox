@@ -19,7 +19,7 @@ class MeshA {
         MeshA(unsigned int meshID, std::vector<Vertex> vertices, std::vector<unsigned int> indices, bool hasPos, bool hasNorms, bool hasUVs);
         ~MeshA();
 
-        void bind();
+        void bind(std::vector<InstanceData>& instanceData);
         void unbind();
     
     private:
@@ -33,10 +33,11 @@ class MeshA {
         std::vector<unsigned int> indices;
         glm::vec4 baseColor = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
         
-        void loadToGPU();
+        void loadToGPU(std::vector<InstanceData>& instanceData);
         void unloadFromGPU();
         void setInstanceVBO(unsigned int modelInstanceCount, std::vector<InstanceData> instanceData);
+        void resizeInstanceVBO(std::vector<InstanceData>& instanceData);
+        void updateInstanceData(std::vector<InstanceData>& instanceData);
 
         friend class Model;
-        friend class CustomModel;
 };

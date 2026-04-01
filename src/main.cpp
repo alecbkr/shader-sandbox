@@ -16,11 +16,15 @@ int main(int argc, char** argv) {
 
     ctx.project.projectRoot = Paths::getProjectRootDir(ctx.settings.projectToOpen, ctx.project.projectTitle);
     ctx.project.projectShadersDir = ctx.project.projectRoot / "shaders";
+    ctx.project.projectAssetsDir = ctx.project.projectRoot / "assets";
     ctx.project.projectJSON = ctx.project.projectRoot / "project.json";
     ctx.project.shaderRegistry = &ctx.shader_registry;
     ctx.project.uniformRegistry = &ctx.uniform_registry;
     ctx.project.events = &ctx.events;
     // ProjectLoader::loadAssets(ctx.project);
+
+    ctx.settings.projectToOpen = ctx.project.projectTitle;
+    SettingsLoader::save(ctx.settings);
 
     if (!Application::initialize(ctx))
     {

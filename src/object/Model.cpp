@@ -5,14 +5,14 @@
 
 Model::Model(const unsigned int ID, std::string model_path, ModelType type)
     : ID(ID), model_path(model_path), type(type) {
-        instanceData.emplace_back(0.0f, 0.0f, 0.0f); //instace #1 value
+        instanceData.emplace_back(glm::vec3(0.0f, 0.0f, 0.0f)); //instace #1 value
     }
 
 
 void Model::drawMesh(unsigned int meshID) {
     MeshA* mesh = &meshes[meshID];
-    mesh->setInstanceVBO(modelInstanceCount, instanceData);
-    mesh->bind();
+    // mesh->setInstanceVBO(modelInstanceCount, instanceData);
+    mesh->bind(instanceData);
 
     if (modelInstanceCount > 1) {
         glDrawElementsInstanced(GL_TRIANGLES, mesh->indices.size(), GL_UNSIGNED_INT, 0, modelInstanceCount);
@@ -26,7 +26,7 @@ void Model::drawMesh(unsigned int meshID) {
 bool Model::addMeshByData(std::vector<float> raw_vertices, std::vector<unsigned int> indices, bool hasPos, bool hasNorm, bool hasUV) {
     // meshes->unloadFromGPU();
 
-    if (status == ModelStatus::Error) return false;
+    if (status.meshes == ModelState::Error || status.meshes == ModelState::Ready) return false;
 
     unsigned int rowstride = 0;
     rowstride += 3*hasPos;
@@ -34,7 +34,7 @@ bool Model::addMeshByData(std::vector<float> raw_vertices, std::vector<unsigned 
     rowstride += 2*hasUV;
 
     if (raw_vertices.size() % rowstride != 0) {
-        status = ModelStatus::Error;
+        status.meshes = ModelState::Error;
         return false;
     }
 
@@ -71,16 +71,9 @@ bool Model::addMeshByData(std::vector<float> raw_vertices, std::vector<unsigned 
     }
 
     meshes.emplace_back(MeshA(nextMeshIdx, vertices, indices, hasPos, hasNorm, hasUV));
-    meshInstances.emplace_back(nextMeshIdx, 0);
+    meshInstances.emplace_back(nextMeshIdx, UINT_MAX);
 
-    if (allMaterialReferences.contains(0)) {
-        allMaterialReferences.at(0)++;
-    }
-    else {
-        allMaterialReferences.emplace(0, 1);
-    }
-
-    status = ModelStatus::Building;
+    status.meshes = ModelState::Building;
     nextMeshIdx++;
     return true;
 }
@@ -88,16 +81,16 @@ bool Model::addMeshByData(std::vector<float> raw_vertices, std::vector<unsigned 
 
 void Model::addMeshByAssimp(std::vector<Vertex> vertices, std::vector<unsigned int> indices, bool hasPos, bool hasNorms, bool hasUVs) {
     meshes.push_back(MeshA(nextMeshIdx, vertices, indices, hasPos, hasNorms, hasUVs));
-    meshInstances.emplace_back(nextMeshIdx, 0);
+    meshInstances.emplace_back(nextMeshIdx, UINT_MAX);
     
-    if (allMaterialReferences.contains(0)) {
-        allMaterialReferences.at(0)++;
-    }
-    else {
-        allMaterialReferences.emplace(0, 1);
-    }
+    // if (allMaterialReferences.contains(0)) {
+    //     allMaterialReferences.at(0)++;
+    // }
+    // else {
+    //     allMaterialReferences.emplace(0, 1);
+    // }
 
-    status = ModelStatus::Building;
+    status.meshes = ModelState::Building;
     nextMeshIdx++;
 }
 
@@ -160,11 +153,12 @@ void Model::setRotation(float angle, glm::vec3 axis) {
 
 
 void Model::setInstancePosition(unsigned int instanceNum, glm::vec3 position) {
-    if (instanceNum > modelInstanceCount || instanceNum == 0) return;
+    if (instanceNum > modelInstanceCount) return;
     
-    instanceData[instanceNum - 1].x_offset = position.x;
-    instanceData[instanceNum - 1].y_offset = position.y;
-    instanceData[instanceNum - 1].z_offset = position.z;
+    instanceData[instanceNum].pos = position;
+    for (MeshA& mesh : meshes) {
+        mesh.updateInstanceData(instanceData);
+    }
 }
 
 
@@ -181,27 +175,32 @@ void Model::setInstanceCount(unsigned int newInstanceCount) {
 
     if (newInstanceCount > modelInstanceCount) {
         for (int i = modelInstanceCount; i < newInstanceCount; i++) {
-            instanceData.emplace_back(1.0f * (i - 1), 0.0f, 0.0f);
+            instanceData.emplace_back(glm::vec3(1.0f * i, 0.0f, 0.0f));
         }
     }
     else { //new count is less than model
-        for (int i = modelInstanceCount; i > newInstanceCount; i--) {
+        for (int i = modelInstanceCount - 1; i > newInstanceCount; i--) {
             instanceData.erase(instanceData.begin() + i);
         }
     }
     modelInstanceCount = newInstanceCount;
+    for (MeshA& mesh : meshes) {
+        mesh.resizeInstanceVBO(instanceData);
+    }
 }
 
 
-bool Model::setMeshMaterial(unsigned int meshIdx, unsigned int materialID) {
+void Model::setMeshMaterial(unsigned int meshIdx, unsigned int materialID) {
     MeshInstance* meshInstance = &meshInstances[meshIdx];
 
-    allMaterialReferences.at(meshInstance->materialID)--;
-    
-    if (allMaterialReferences.at(meshInstance->materialID) == 0) {
-        allMaterialReferences.erase(meshInstance->materialID);
+    if (meshInstance->materialID != UINT_MAX) {
+        allMaterialReferences.at(meshInstance->materialID)--;
+        if (allMaterialReferences.at(meshInstance->materialID) == 0) {
+            allMaterialReferences.erase(meshInstance->materialID);
+        }
     }
-
+    
+    
     meshInstance->materialID = materialID;
     if (allMaterialReferences.contains(materialID)) {
         allMaterialReferences.at(materialID)++;
@@ -209,26 +208,44 @@ bool Model::setMeshMaterial(unsigned int meshIdx, unsigned int materialID) {
     else {
         allMaterialReferences.emplace(materialID, 1);
     }
+
+    bool allMeshesHaveProgram = true;
+    for (MeshInstance& meshInstance : meshInstances) {
+        if (meshInstance.materialID == UINT_MAX) {
+            allMeshesHaveProgram = false;
+            break;
+        }
+    }
+
+    if (allMeshesHaveProgram == true) {
+        status.material = ModelState::Ready;
+    }
 }
 
 
 void Model::setModelMaterial(unsigned int materialID) {
     allMaterialReferences.clear();
-    allMaterialReferences.emplace(materialID, 0);
+    allMaterialReferences.emplace(materialID, 0); // adds material ID w/ reference cnt = 0
 
     for (MeshInstance& meshInstance : meshInstances) {
         meshInstance.materialID = materialID;
         allMaterialReferences.at(materialID)++;
     }
+    status.material = ModelState::Ready;
 }
 
 
-bool Model::setModelStateReady() {
-    if (status != ModelStatus::Building) {
+bool Model::finalizeMeshes() {
+    if (status.meshes != ModelState::Building) {
         return false;
     }
-    status = ModelStatus::Ready;
+    status.meshes = ModelState::Ready;
     return true;
+}
+
+
+void Model::setMaterialStateReady() {
+    status.material = ModelState::Ready;
 }
 
 
@@ -257,13 +274,13 @@ void Model::loadMeshMaterialIDs(std::vector<unsigned int> meshMaterialIDs) {
 
 unsigned int Model::getID() const { return ID; }
 std::string Model::getPath() const { return model_path; }
-ModelStatus Model::getModelStatus() const { return status; }
+ModelStatus& Model::getModelStatus() { return status; }
 glm::mat4 Model::getModelMatrix() const {return modelM;}
 glm::vec3 Model::getPosition()    const {return position;}
 glm::vec3 Model::getScale()       const {return scale;}
 glm::vec4 Model::getRotation()    const {return rotation;}
 unsigned int Model::getInstanceCount() const { return modelInstanceCount; }
-std::vector<InstanceData> Model::getInstanceData() const { return instanceData; }
+std::vector<InstanceData>& Model::getInstanceData() { return instanceData; }
 const std::vector<MeshInstance>& Model::getMeshInstances() const { return meshInstances; }
 const std::unordered_map<unsigned int, unsigned int>& Model::getAllMaterialReferences() const { return allMaterialReferences; }
 
