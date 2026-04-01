@@ -146,8 +146,9 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                 }
                 //ModelTextureMenu& textureMenu = modelTextureMenus[modelID];
         
-                std::string label = "model " + std::to_string(modelID);
-                ImGui::PushID(label.c_str());
+                // std::string label = "model " + std::to_string(modelID);
+                // ImGui::PushID(label.c_str());
+                ImGui::PushID(modelID); 
                 ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.bgColor); // Blue-ish background
                 ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);   // <-- rounding radius
                 ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f); // optional
@@ -155,8 +156,8 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                 ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.bgColorHovered);
                 ImGui::PushStyleColor(ImGuiCol_HeaderActive,  theme.bgColor);
                 ImGui::BeginChild("Container##", ImVec2(0, 0),  ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar);
-        
-                if (ImGui::CollapsingHeader(label.c_str())) {
+
+                if (drawModelHeader(model, modelCachePtr)) {
                     ImGui::Separator();
                     ImGui::Indent(theme.indentSize);
         
@@ -440,4 +441,53 @@ bool ObjectsInspectorUI::drawModelOrientationInput(Model& model) {
     ImGui::PopID();
     if (changed) model.setRotation(rotation.x, glm::vec3(rotation.y, rotation.z, rotation.w));
     return changed;
+}
+
+bool ObjectsInspectorUI::drawModelHeader(Model* model, ModelCache* modelCachePtr) {
+    unsigned int modelID = model->getID();
+    std::string label = model->getName() + "##" + std::to_string(modelID);
+
+    bool isOpen = ImGui::CollapsingHeader(label.c_str()); 
+
+    if (ImGui::BeginPopupContextItem(("Context##" + std::to_string(modelID)).c_str())) {
+        if (ImGui::Selectable("Rename")) {
+            renamingModelID = modelID; 
+            std::snprintf(renameBuffer, sizeof(renameBuffer), "%s", model->getName().c_str()); 
+        }
+        // TODO: if we want to add these
+        if (ImGui::Selectable("Duplicate")) {
+
+        }
+
+        if (ImGui::Selectable("Remove")) {
+
+        }
+
+        ImGui::EndPopup(); 
+    }
+
+    if (renamingModelID == modelID) ImGui::OpenPopup("Rename Object"); 
+
+    if (ImGui::BeginPopupModal("Rename Object", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("New name for %s:", model->getName().c_str());
+        
+        bool enterPressed = ImGui::InputText("##NewName", renameBuffer, sizeof(renameBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+        
+        if (ImGui::Button("Save", ImVec2(120, 0)) || enterPressed) {
+            modelCachePtr->changeModelName(modelID, std::string(renameBuffer));
+            renamingModelID = UINT_MAX; 
+            ImGui::CloseCurrentPopup();
+        }
+        
+        ImGui::SetItemDefaultFocus();
+        ImGui::SameLine();
+        
+        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+            renamingModelID = UINT_MAX; // Reset state
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    return isOpen;
 }

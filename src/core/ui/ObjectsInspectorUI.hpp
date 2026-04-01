@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <limits> 
 
 class ModalManager; 
 
@@ -50,6 +51,8 @@ private:
     std::unordered_map<unsigned int, MaterialShaderMenu> materialShaderMenus;
     std::unordered_map<unsigned int, ModelTextureMenu> modelTextureMenus;
     SettingsStyles* styles = nullptr;
+    unsigned int renamingModelID = std::numeric_limits<unsigned int>::max(); 
+    char renameBuffer[256] = ""; 
 
     //void drawAddObjectMenu(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, ModelCache* modelCachePtr);
     void initializeMenu(MaterialShaderMenu& menu, const std::vector<const char*>& shaderChoices, Logger* loggerPtr, ShaderRegistry* shaderRegPtr, MaterialCache* materialCachePtr);
@@ -62,6 +65,7 @@ private:
     bool drawModelPositionInput(Model& model);
     bool drawModelScaleInput(Model& model);
     bool drawModelOrientationInput(Model& model);
+    bool drawModelHeader(Model* model, ModelCache* modelCachePtr); 
     ObjectsInspectorThemeSettings theme;
 
 };
