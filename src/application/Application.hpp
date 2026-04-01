@@ -14,6 +14,7 @@ public:
     static void renderUI(AppContext& ctx);
     static void shutdown(AppContext& ctx);
     static void windowResize(AppContext& ctx, u32 width, u32 height);
+    static void loadDefaultScene(AppContext& ctx);
 private:
     static bool initialized;
     static bool shouldClose(AppContext& ctx);

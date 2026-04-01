@@ -44,6 +44,11 @@ unsigned int MaterialCache::createBlankMaterial() {
     }
     unsigned int newMaterialID = nextMaterialID;
     materialIDMap.emplace(newMaterialID, std::make_unique<Material>(nextMaterialID, MaterialType::Opaque));
+
+    unsigned int materialNumber = nextMaterialID;
+    while (changeMaterialName(newMaterialID, "Material" + std::to_string(materialNumber)) == false) {
+        materialNumber++;
+    }
     nextMaterialID++;
     return newMaterialID;
 }
@@ -52,12 +57,17 @@ unsigned int MaterialCache::createBlankMaterial() {
 unsigned int MaterialCache::createMaterial(MaterialType type, MaterialProperties properties, std::vector<unsigned int> textureIDs) {
     if (validateNextID() == false) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "MaterialCache::createMaterial",  "could not find a free next ID");
+        return UINT_MAX;
     }
 
     unsigned int newMaterialID = nextMaterialID;
     materialIDMap.emplace (newMaterialID, std::make_unique<Material>(nextMaterialID, type, properties, textureIDs));
-    nextMaterialID++;
 
+    unsigned int materialNumber = nextMaterialID;
+    while (changeMaterialName(newMaterialID, "Material" + std::to_string(materialNumber)) == false) {
+        materialNumber++;
+    }
+    nextMaterialID++;
     return newMaterialID;
 }
 
@@ -107,6 +117,22 @@ void MaterialCache::removeTextureFromMaterial(unsigned int materialID, unsigned 
             iter++;
         }
     }
+}
+
+
+bool MaterialCache::changeMaterialName(unsigned int materialID, std::string name) {
+    Material* foundMaterial = getMaterial(materialID);
+    if (foundMaterial == nullptr) {
+        return false;
+    }
+    if (usedMaterialNames.contains(name)) {
+        return false;
+    }
+
+    usedMaterialNames.erase(foundMaterial->getName());
+    foundMaterial->setName(name);
+    usedMaterialNames.insert(name);
+    return true;
 }
 
 

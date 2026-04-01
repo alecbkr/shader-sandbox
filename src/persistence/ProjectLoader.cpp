@@ -302,7 +302,7 @@ void ProjectLoader::save(Project& project, ModelCache* modelCachePtr, MaterialCa
     project.modelData.clear();
     for (auto& model : modelCachePtr->getAllModels()) {
         ModelEntry modelEntry = {
-            .name = model->name,
+            .name = model->getName(),
             .ID = model->getID(),
             .path = model->getPath(),
             .type = model->type,

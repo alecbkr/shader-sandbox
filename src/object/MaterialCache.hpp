@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include "object/Material.hpp"
 
@@ -27,6 +28,7 @@ public:
 
     void addTextureToMaterial(unsigned int materialID, std::string texture_path, bool isCubemap);
     void removeTextureFromMaterial(unsigned int materialID, unsigned int textureID);
+    bool changeMaterialName(unsigned int materialID, std::string name);
     void changeMaterialType(unsigned int materialID, MaterialType type);
     bool loadMaterialFromSave(unsigned int ID, MaterialType type, MaterialProperties properties, std::vector<std::string> texture_paths);
 
@@ -42,7 +44,7 @@ public:
 private:
     unsigned int nextMaterialID = 1;
     std::unordered_map<unsigned int, std::unique_ptr<Material>> materialIDMap;
-
+    std::unordered_set<std::string> usedMaterialNames;
     bool validateNextID();
 
     //SYSTEM POINTERS

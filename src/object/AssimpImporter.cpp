@@ -49,15 +49,18 @@ bool AssimpImporter::initialize(Logger* _loggerPtr, ModelCache* _modelCachePtr, 
 
 
 bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntries, std::vector<MaterialEntry>& materialEntries) {
+    // LOAD MATERIALS
     for (MaterialEntry& materialEntry : materialEntries) {
-        // std::string name = materialEntry.name;
+        std::string name = materialEntry.name;
         unsigned int ID = materialEntry.ID;
         MaterialType type = materialEntry.type;
         MaterialProperties properties = materialEntry.properties;
         std::vector<std::string>& texture_paths = materialEntry.texture_paths;
+
         bool loadResult = materialCachePtr->loadMaterialFromSave(ID, type, properties, texture_paths);
         if (loadResult == true) {
             materialCachePtr->getMaterial(ID)->setProgramID(materialEntry.programID);
+            materialCachePtr->changeMaterialName(ID, name);
         }
     }
     
@@ -94,15 +97,24 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
         Model* model = modelCachePtr->getModel(ID);
         model->finalizeMeshes();
 
+        unsigned int modelNumber = 0;
+        std::string extraIdentification = "";
+        while (modelCachePtr->changeModelName(ID, (name + extraIdentification)) == false) {
+            extraIdentification = std::to_string(++modelNumber);
+        }
+
         // LOAD BOUND MATERIALS PER MESH
         model->loadMeshMaterialIDs(meshMaterialIDs);
         model->setPosition(position);
         model->setScale(scale);
         // model->setRotation(rotation); //nd
         model->setInstanceCount(instanceData.size());
-        model->loadInstanceData(instanceData);     
+        model->loadInstanceData(instanceData);
 
-        modelCachePtr->trySendingToRenderer(ID);
+        bool fuck = modelCachePtr->trySendingToRenderer(ID);
+        if (!fuck) {
+            std::cout << "nut" << std::endl;
+        }
 
         // inspectorEngPtr->refreshUniforms();
     }
