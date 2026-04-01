@@ -177,13 +177,15 @@ void AssetsInspectorUI::draw() {
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.0f);
     float window_padding = styles->assetsBodyPadding;
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(window_padding, window_padding));
-    if (ImGui::BeginChild("AssetsContent", ImVec2(0, 0), ImGuiChildFlags_AlwaysUseWindowPadding)) {
+    if (ImGui::BeginChild("AssetsContent", ImVec2(0, 0), 
+                          ImGuiChildFlags_AlwaysUseWindowPadding)) {
         float inner_padding = styles->assetsTitleInnerPadding;
         ImGui::PushFont(fonts->getL4());
         float directory_height = window_padding * 2 + inner_padding * 2 + ImGui::CalcTextSize("Assets").y;
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
         ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(0,0,0,0));
-        if (ImGui::BeginChild("AssetsTitle", ImVec2(0, directory_height), ImGuiChildFlags_AlwaysUseWindowPadding)) {
+        if (ImGui::BeginChild("AssetsTitle", ImVec2(0, directory_height), 
+                              ImGuiChildFlags_AlwaysUseWindowPadding)) {
             ImVec2 p = ImGui::GetWindowPos();
             ImVec2 s = ImGui::GetWindowSize();
 
@@ -213,7 +215,8 @@ void AssetsInspectorUI::draw() {
         ImGui::PopStyleColor();
         ImGui::PopFont();
 
-        if (ImGui::BeginChild("AssetsTree", ImVec2(0, 0), ImGuiChildFlags_AlwaysUseWindowPadding)) {
+        if (ImGui::BeginChild("AssetsTree", ImVec2(0, 0), 
+                              ImGuiChildFlags_AlwaysUseWindowPadding)) {
             ImVec2 p = ImGui::GetWindowPos();
             ImVec2 s = ImGui::GetWindowSize();
 

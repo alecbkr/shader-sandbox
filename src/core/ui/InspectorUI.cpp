@@ -52,7 +52,7 @@ bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngP
     modelCachePtr = _modelCachePtr;
     fileRegPtr = _fileRegPtr;
     assetsInspectorUI = std::make_unique<AssetsInspectorUI>(_fontsPtr, _project, _styles);
-    uniformInspectorUI = std::make_unique<UniformInspectorUI>(_styles);
+    uniformInspectorUI = std::make_unique<UniformInspectorUI>(_fontsPtr, _styles);
     objectsInspectorUI = std::make_unique<ObjectsInspectorUI>(_styles);
     fileInspectorUI = std::make_unique<FileInspectorUI>();
     materialCachePtr = _materialCachePtr;

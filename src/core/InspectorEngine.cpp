@@ -1,4 +1,5 @@
 #include "InspectorEngine.hpp"
+#include "catch2/catch_amalgamated.hpp"
 #include "core/UniformParser.hpp"
 #include "core/logging/LogSink.hpp"
 #include "core/ui/ViewportUI.hpp"
@@ -26,6 +27,7 @@
 #include "core/ShaderRegistry.hpp"
 #include "core/UniformRegistry.hpp"
 #include "object/ModelCache.hpp"
+#include "platform/Platform.hpp"
 
 InspectorEngine::InspectorEngine() {
     loggerPtr = nullptr;
@@ -36,7 +38,7 @@ InspectorEngine::InspectorEngine() {
     initialized = false;
 }
 
-bool InspectorEngine::initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, ModelCache* _modelCachePtr, ViewportUI* _viewportUIPtr, MaterialCache* _materialCachePtr) {
+bool InspectorEngine::initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, ModelCache* _modelCachePtr, ViewportUI* _viewportUIPtr, MaterialCache* _materialCachePtr, Platform* _platform) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Inspector Engine Initialization", "Inspector Engine was already initialized.");
         return false;
@@ -48,6 +50,7 @@ bool InspectorEngine::initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegP
     viewportUIPtr = _viewportUIPtr;
     materialCachePtr = _materialCachePtr;
     modelCachePtr = _modelCachePtr;
+    platform = _platform;
 
     initialized = true;
     return true;
@@ -88,37 +91,42 @@ void InspectorEngine::refreshUniforms() {
         }
     }
 
-    // sry for the nesting
+    auto namesToAvoid = std::make_unique<std::unordered_set<std::string>>();
+    // hardcoding for now...
+    namesToAvoid->insert("model");
+    namesToAvoid->insert("view");
+    namesToAvoid->insert("projection");
+
     UniformParser parser(loggerPtr);
 
     for (const auto& [programName, program] : programs) {
-        auto parsedUniforms = parser.parseUniforms(*program);
+        auto parsedUniforms = parser.parseUniforms(*program, namesToAvoid.get());
         for (auto& [name, uniform] : parsedUniforms) {
             uniform.value = getDefaultValue(uniform.type);
         }
-        std::cout << programName << std::endl;
-        std::cout << programToMaterialList[programName].size() << std::endl;
+        //std::cout << programName << std::endl;
+        //std::cout << programToMaterialList[programName].size() << std::endl;
         for (unsigned int matID : programToMaterialList[programName]) {
-            std::cout << matID << " " << program->name << std::endl;
+            //std::cout << matID << " " << program->name << std::endl;
             const bool newModel = !uniformRegPtr->containsMaterial(matID);
             if (newModel) {
-                uniformRegPtr->insertUniformMap(matID, parsedUniforms);
-                applyAllUniformsForObject(matID);
+                uniformRegPtr->registerMaterialUniformMap(matID, parsedUniforms);
+                applyAllUniformsForMaterial(matID);
                 continue;
             }
 
             // if not a new object
-            const auto& objectUniforms = uniformRegPtr->tryReadUniforms(matID);
+            const auto& objectUniforms = uniformRegPtr->tryReadMaterialUniforms(matID);
             if (objectUniforms == nullptr) {
                 loggerPtr->addLog(LogLevel::WARNING, "refreshUniforms", "object does not exist in registry??? code should be unreachable");
                 continue;
             }
 
             for (const auto& [uniformName, parsedUniform] : parsedUniforms) {
-                const Uniform* existingUniform = uniformRegPtr->tryReadUniform(matID, uniformName);
+                const Uniform* existingUniform = uniformRegPtr->tryReadMaterialUniform(matID, uniformName);
                 const bool mustRegister = existingUniform == nullptr || existingUniform->type != parsedUniform.type;
                 
-                if (mustRegister) uniformRegPtr->registerInspectorUniform(matID, parsedUniform); 
+                if (mustRegister) uniformRegPtr->registerMaterialUniform(matID, parsedUniform); 
             }
 
             std::vector<std::string> uniformsToErase;
@@ -128,7 +136,7 @@ void InspectorEngine::refreshUniforms() {
             }
 
             for (const std::string& uniformName : uniformsToErase) {
-                uniformRegPtr->eraseUniform(matID, uniformName);
+                uniformRegPtr->eraseMaterialUniform(matID, uniformName);
             }
         }
     }
@@ -215,11 +223,11 @@ UniformValue InspectorEngine::getDefaultValue(UniformType type) {
 }
 
 void InspectorEngine::setUniform(unsigned int materialID, const std::string& uniformName, UniformValue value) {
-    const Uniform* const oldUniform = uniformRegPtr->tryReadUniform(materialID, uniformName);
+    const Uniform* const oldUniform = uniformRegPtr->tryReadMaterialUniform(materialID, uniformName);
     if (oldUniform != nullptr) {
         Uniform newUniform = *oldUniform;
         newUniform.value = value;
-        uniformRegPtr->registerInspectorUniform(materialID, newUniform);
+        uniformRegPtr->registerMaterialUniform(materialID, newUniform);
 
         applyUniform(materialID, newUniform);
     }
@@ -228,12 +236,12 @@ void InspectorEngine::setUniform(unsigned int materialID, const std::string& uni
     }
 }
 
-void InspectorEngine::applyAllUniformsForObject(unsigned int materialID) {
-    const auto objectUniforms = uniformRegPtr->tryReadUniforms(materialID);
+void InspectorEngine::applyAllUniformsForMaterial(unsigned int materialID) {
+    const auto objectUniforms = uniformRegPtr->tryReadMaterialUniforms(materialID);
 
     if (objectUniforms == nullptr) {
-        // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", modelID.c_str());
-        loggerPtr->addLog(LogLevel::WARNING, "applyAllUniformsForObject", "material not found in uniform registry: ", std::to_string(materialID)); 
+        // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForMaterial", "object not found in uniform registry: ", modelID.c_str());
+        loggerPtr->addLog(LogLevel::WARNING, "applyAllUniformsForMaterial", "material not found in uniform registry: ", std::to_string(materialID)); 
         return;
     }
 
@@ -338,7 +346,7 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
 
         if (currentFunction.useWorldData) {
             // need a better way of doing this...
-            if (currentFunction.useCamaraData) {
+            if (currentFunction.useWorldVariable) {
                 switch (currentFunction.returnType) {
                 case UniformType::Vec3: {
                     const Camera* const cam = viewportUIPtr->getCamera();
@@ -346,7 +354,7 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
                         loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", "camera is null!");
                         continue;
                     }
-                    if (function.referencedUniformName == "position") {
+                    if (function.referencedUniformName == "Camera Position") {
                         finalValue = uniform;
                         finalValue.name = uniform.name;
                         finalValue.isFunction = false;
@@ -356,6 +364,16 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
                     break;
                 }
                 case UniformType::Vec4: {
+                    break;
+                }
+                case UniformType::Float: {
+                    if (function.referencedUniformName == "Current Time") {
+                        finalValue = uniform;
+                        finalValue.name = uniform.name;
+                        finalValue.isFunction = false;
+                        finalValue.value = platform->getTime(); // doesn't render every frame yet
+                        validFunction = true;
+                    }
                     break;
                 }
                 default: 
@@ -413,7 +431,7 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
             break;
         }
 
-        const Uniform* referencedUniform = uniformRegPtr->tryReadUniform(currentFunction.referencedMaterialID, currentFunction.referencedUniformName); 
+        const Uniform* referencedUniform = uniformRegPtr->tryReadMaterialUniform(currentFunction.referencedMaterialID, currentFunction.referencedUniformName); 
         if (referencedUniform == nullptr) {
             loggerPtr->addLog(LogLevel::LOG_ERROR, "applyUniform: Function, ", "referenced uniform for " + std::to_string(currentFunction.referencedMaterialID) + ": " + currentFunction.referencedUniformName + "does not exist!");
             break;
@@ -458,7 +476,7 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
 
 // Include this along with setUniform because setUniform is used for other stuff.
 void InspectorEngine::applyInput(unsigned int matID, const Uniform& uniform) {
-    uniformRegPtr->registerInspectorUniform(matID, uniform);
+    uniformRegPtr->registerMaterialUniform(matID, uniform);
     applyUniform(matID, uniform);
 }
 void InspectorEngine::reloadUniforms(unsigned int materialID) {
@@ -474,8 +492,14 @@ void InspectorEngine::reloadUniforms(unsigned int materialID) {
         return;
     }
 
+    auto namesToAvoid = std::make_unique<std::unordered_set<std::string>>();
+    // hardcoding for now...
+    namesToAvoid->insert("model");
+    namesToAvoid->insert("view");
+    namesToAvoid->insert("projection");
+
     UniformParser parser(loggerPtr);
-    auto newUniforms = parser.parseUniforms(*matProgram);
+    auto newUniforms = parser.parseUniforms(*matProgram, namesToAvoid.get());
     for (auto& [name, uniform] : newUniforms) {
         uniform.value = getDefaultValue(uniform.type);
     }
@@ -484,7 +508,7 @@ void InspectorEngine::reloadUniforms(unsigned int materialID) {
         Material* matPtr = materialCachePtr->getMaterial(matID);
         if (matPtr && matPtr->getProgramID() == matProgram->name) {
             matPtr->setProgramID(matProgram->name); 
-            const auto existingRegistry = uniformRegPtr->tryReadUniforms(matID);
+            const auto existingRegistry = uniformRegPtr->tryReadMaterialUniforms(matID);
             if (existingRegistry) {
                 for (auto& [uName, uData] : newUniforms) {
                     if (existingRegistry->contains(uName)) {
@@ -493,9 +517,9 @@ void InspectorEngine::reloadUniforms(unsigned int materialID) {
                 }
             }
 
-            uniformRegPtr->insertUniformMap(matID, newUniforms);
+            uniformRegPtr->registerMaterialUniformMap(matID, newUniforms);
             matProgram->use();
-            applyAllUniformsForObject(matID);
+            applyAllUniformsForMaterial(matID);
         }
     }
 }
@@ -514,19 +538,6 @@ void InspectorEngine::applyAllUniformsForPrimitive(unsigned int modelID, unsigne
     }
     matProgram->use();
 
-    // temp fix cause we have a meeting in 2 hours
-    // I need to refactor the uniform registry cause it's current state is a mess
-    const auto uniforms = uniformRegPtr->tryReadUniforms(materialID);
-    if (uniforms == nullptr) {
-        // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", modelID.c_str());
-        // Logger::addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", std::to_string(modelID)); 
-        return;
-    }
-
-    for (auto& [uniformName, uniform] : *uniforms) {
-        applyUniform(*matProgram, uniform);
-    }
-
     applySceneUniforms(*matProgram);
     applyModelUniforms(*matProgram, modelID);
     applyMaterialUniforms(*matProgram, modelID, materialID);
@@ -537,8 +548,8 @@ void InspectorEngine::applyAllUniformsForPrimitive(unsigned int modelID, unsigne
 void InspectorEngine::applySceneUniforms(ShaderProgram& program) {
     const auto sceneUniforms = uniformRegPtr->tryReadSceneUniforms();
     if (sceneUniforms == nullptr) {
-        // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", modelID.c_str());
-        // Logger::addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", std::to_string(modelID)); 
+        // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForMaterial", "object not found in uniform registry: ", modelID.c_str());
+        // Logger::addLog(LogLevel::WARNING, "applyAllUniformsForMaterial", "object not found in uniform registry: ", std::to_string(modelID)); 
         return;
     }
 
@@ -551,8 +562,8 @@ void InspectorEngine::applySceneUniforms(ShaderProgram& program) {
 void InspectorEngine::applyModelUniforms(ShaderProgram& program, unsigned int modelID) {
     const auto modelUniforms = uniformRegPtr->tryReadModelUniforms(modelID);
     if (modelUniforms == nullptr) {
-        // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", modelID.c_str());
-        // Logger::addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", std::to_string(modelID)); 
+        // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForMaterial", "object not found in uniform registry: ", modelID.c_str());
+        // Logger::addLog(LogLevel::WARNING, "applyAllUniformsForMaterial", "object not found in uniform registry: ", std::to_string(modelID)); 
         return;
     }
 
@@ -565,8 +576,8 @@ void InspectorEngine::applyModelUniforms(ShaderProgram& program, unsigned int mo
 void InspectorEngine::applyMaterialUniforms(ShaderProgram& program, unsigned int modelID, unsigned int materialID) {
     const auto materialUniforms = uniformRegPtr->tryReadMaterialUniforms(materialID);
     if (materialUniforms == nullptr) {
-        // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", modelID.c_str());
-        // Logger::addLog(LogLevel::WARNING, "applyAllUniformsForObject", "object not found in uniform registry: ", std::to_string(modelID)); 
+        // ERRLOG.logEntry(EL_WARNING, "applyAllUniformsForMaterial", "object not found in uniform registry: ", modelID.c_str());
+        // Logger::addLog(LogLevel::WARNING, "applyAllUniformsForMaterial", "object not found in uniform registry: ", std::to_string(modelID)); 
         return;
     }
 

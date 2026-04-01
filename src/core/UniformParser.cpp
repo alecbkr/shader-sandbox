@@ -2,17 +2,17 @@
 #include "core/UniformTypes.hpp"
 #include "core/logging/LogSink.hpp"
 #include "core/logging/Logger.hpp"
-#include "engine/Errorlog.hpp"
 #include <sys/stat.h>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
-#include <stack>
 
 UniformParser::UniformParser(Logger* _loggerPtr) {
     loggerPtr = _loggerPtr;
 }
 
-std::unordered_map<std::string, Uniform> UniformParser::parseUniforms(const ShaderProgram& program) {
+std::unordered_map<std::string, Uniform> UniformParser::parseUniforms(const ShaderProgram& program, std::unordered_set<std::string>* _namesToAvoid) {
+    namesToAvoid = _namesToAvoid;
     std::unordered_map<std::string, Uniform> programUniforms;
     if (!program.isCompiled()) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "parseUniforms", "should not be parsing an invalid shader program!");
@@ -165,6 +165,7 @@ std::unordered_map<std::string, Uniform> UniformParser::parseUniforms(const Shad
         }
     }
 
+    namesToAvoid = nullptr;
     return programUniforms;
 }
 
@@ -261,7 +262,7 @@ void UniformParser::handleUniformName(
         }
         if (state == ParseState::UniformDeclaration) {
             UniformType type = glslTypeMap.at(typeName); 
-            programUniforms[uniformName] = Uniform{.name = uniformName, .type = type};
+            addUniform(programUniforms, uniformName, type);
         }
         else if (state == ParseState::StructDefinition) {
             std::vector<UniformInStruct>& uniformsInStruct = structDefinitions.at(structName);
@@ -353,3 +354,18 @@ std::vector<std::string>  UniformParser::processDefines(const std::vector<std::s
 
     return newTokens;
 }
+
+void UniformParser::addUniform(
+    std::unordered_map<std::string, Uniform>& programUniforms,
+    const std::string& uniformName,
+    const UniformType type
+) {
+    if (namesToAvoid == nullptr) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "UniformParser::addUniform", "nameToAvoid is null!");
+        // we can still run so it's probably fine to proceed. I'd rather "fail open" here.
+    }
+    else if (namesToAvoid->contains(uniformName)) return;
+
+    programUniforms[uniformName] = Uniform{.name = uniformName, .type = type};
+}
+

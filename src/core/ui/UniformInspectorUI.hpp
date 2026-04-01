@@ -14,12 +14,14 @@ class UniformRegistry;
 class ModelCache;
 struct Uniform;
 class ShaderProgram;
+class Fonts;
 struct SettingsStyles;
 
 class UniformInspectorUI {
 public:
     UniformInspectorUI() = default;
-    explicit UniformInspectorUI(SettingsStyles* styles);
+    UniformInspectorUI(Fonts* fonts, SettingsStyles* styles);
+    ~UniformInspectorUI();
 
     void draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr);
 
@@ -27,9 +29,10 @@ public:
         float inputWidth = 50.0f;
         float colorPickerWidthVec3 = 100.0f;
         float colorPickerWidthVec4 = 128.0f; // about 1.28x the width of vec3 color picker, otherwise it looks weird.
-        ImVec4 bgColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
-        ImVec4 bgColorHovered = ImVec4(bgColor.x * 1.5f, bgColor.y * 1.5f, bgColor.z * 1.5f, 1.0f);
-        float indentSize = 2.0f;
+        ImVec4 cardBGColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
+        ImVec4 headerColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
+        ImVec4 headerColorHovered = ImVec4(headerColor.x * 1.5f, headerColor.y * 1.5f, headerColor.z * 1.5f, 1.0f);
+        float indentSize = 5.0f;
     };
 
 private:
@@ -38,6 +41,7 @@ private:
     ModelCache* modelCachePtr_ = nullptr;
     MaterialCache* materialCachePtr_ = nullptr;
     InspectorEngine* inspectorEngPtr_ = nullptr;
+    Fonts* fonts_ = nullptr;
     SettingsStyles* styles_ = nullptr;
     
     void drawModelContainer(int& imGuiID, unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialRefernces);
@@ -50,9 +54,16 @@ private:
     bool drawInput(glm::quat* value, Uniform* uniform = nullptr);
     bool drawInput(InspectorSampler2D* value, Uniform* uniform = nullptr);
     bool drawInput(InspectorReference* value, Uniform* uniform = nullptr);
+    bool drawReferenceEditor(InspectorReference* value, Uniform* uniform);
     void drawUniformRow(Uniform& uniform, unsigned int matID);
+    bool drawModePicker(const char* id, int& mode, const char* const* labels, int labelCount);
+    void setReferenceMode(Uniform& uniform, bool useReference);
+    std::string makeUniformStateKey(unsigned int matID, const std::string& uniformName) const;
+    std::string getUniformSummary(const Uniform& uniform) const;
+    std::string getReferenceSummary(const Uniform& uniform) const;
     bool isSimpleType(UniformType type);
     void drawUniformsNested_byCursor(const std::unordered_map<std::string, Uniform>& uniforms, unsigned int matID, int& imGuiID);
+    bool drawCompactTreeNode(const std::string& label);
     
     UniformInspectorThemeSettings theme;
 };
