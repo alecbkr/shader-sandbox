@@ -53,5 +53,7 @@ private:
     void drawShaderLinkMenu(ShaderLinkMenu& menu,ShaderLinkMenuChoices& choices, InspectorEngine* inspectorEngPtr);
     void initializeMenu(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, ShaderRegistry* shaderRegPtr);
     bool showPresets = true;
+    bool newProgram = false;
+    char newProgramBuf[256] = "";
     Logger* loggerPtr = nullptr;
 };

@@ -74,15 +74,8 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
                     eventsPtr->TriggerEvent(Event{EventType::NewFile, false,{}});
                 }
                 if (ImGui::MenuItem("New shader program")) {
-                    static int newShaders = 0;
-                    std::string newName = "myShader_" + std::to_string(newShaders);
-
-                    shaderLinkMenus.emplace(std::make_pair(newName, ShaderLinkMenu{
-                        .shaderName = newName,
-                        .initialized = false
-                    }));
-
-                    newShaders++;
+                    newProgram = true;
+                    strncpy(newProgramBuf, "NewProgram", 255);
                 }
                 ImGui::PopFont();
                 ImGui::EndPopup();
@@ -155,6 +148,31 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
             const auto& programs = shaderRegPtr->getPrograms();
             if (!programs.empty() || !shaderLinkMenus.empty()){
                 ImGui::TextDisabled("Programs");
+                if (newProgram) {
+                    bool submitted = ImGui::InputText("##NewProgramInput", newProgramBuf, 256, ImGuiInputTextFlags_EnterReturnsTrue);
+                    
+                    ImGui::SameLine();
+                    if (ImGui::Button("OK") || submitted) {
+                        std::string newName = newProgramBuf;
+                        if (newName.empty()) {
+                            loggerPtr->addLog(LogLevel::LOG_ERROR, "UI", "Program name cannot be empty.");
+                        }
+                        else if (shaderLinkMenus.contains(newName)) {
+                            loggerPtr->addLog(LogLevel::LOG_ERROR, "UI", "Program \"" + newName + "\" already exists!");
+                        }
+                        else {
+                            shaderLinkMenus.emplace(newName, ShaderLinkMenu{
+                                .shaderName = newName,
+                                .initialized = false
+                            });
+                            newProgram = false; 
+                        }
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Cancel")) {
+                        newProgram = false;
+                    }
+                }
                 drawShaderLinkMenus(shaderLinkMenus, shaderRegPtr, fileRegPtr, inspectorEngPtr);
                 ImGui::Unindent(window_padding);
             }
