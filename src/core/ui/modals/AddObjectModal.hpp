@@ -2,9 +2,11 @@
 
 #include "core/ui/modals/IModal.hpp"
 #include "object/ModelCache.hpp"
+#include "imgui.h"
 #include <string> 
 #include <unordered_set>
 #include <filesystem>
+
 
 class InspectorEngine;
 class EventDispatcher;  
