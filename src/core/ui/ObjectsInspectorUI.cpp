@@ -327,12 +327,12 @@ bool ObjectsInspectorUI::drawInstancesMenu(Model* model, ModelCache* modelCacheP
         }
     }
 
-    std::vector<InstanceData>& instanceData = model->getInstanceData();
+    const std::vector<InstanceData>& instanceData = model->getInstanceData();
     for (unsigned int idx = 0; idx < model->getInstanceCount(); idx++) {
         ImGui::PushID(idx);
 
-        InstanceData& currInstanceData = instanceData[idx];
-        ImGui::Text(("Instance " + std::to_string(idx + 1)).c_str());
+        InstanceData currInstanceData = instanceData[idx];
+        ImGui::Text("%s", ("Instance " + std::to_string(idx + 1)).c_str());
         ImGui::SameLine();
         if (ImGui::DragFloat3("##Position##xx", &currInstanceData.pos.x, .05f)) {
             model->setInstancePosition(idx, currInstanceData.pos);

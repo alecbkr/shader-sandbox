@@ -190,6 +190,11 @@ void Model::setInstanceCount(unsigned int newInstanceCount) {
 }
 
 
+void Model::setName(std::string name) {
+    this->name = name;
+}
+
+
 void Model::setMeshMaterial(unsigned int meshIdx, unsigned int materialID) {
     MeshInstance* meshInstance = &meshInstances[meshIdx];
 
@@ -269,9 +274,11 @@ void Model::loadMeshMaterialIDs(std::vector<unsigned int> meshMaterialIDs) {
     for (unsigned int meshIdx = 0; meshIdx < meshInstances.size(); meshIdx++) {
         meshInstances[meshIdx].materialID = meshMaterialIDs[meshIdx];
     }
+    status.material = ModelState::Ready;
 }
 
 
+std::string Model::getName() const { return name; }
 unsigned int Model::getID() const { return ID; }
 std::string Model::getPath() const { return model_path; }
 ModelStatus& Model::getModelStatus() { return status; }
@@ -280,7 +287,7 @@ glm::vec3 Model::getPosition()    const {return position;}
 glm::vec3 Model::getScale()       const {return scale;}
 glm::vec4 Model::getRotation()    const {return rotation;}
 unsigned int Model::getInstanceCount() const { return modelInstanceCount; }
-std::vector<InstanceData>& Model::getInstanceData() { return instanceData; }
+const std::vector<InstanceData>& Model::getInstanceData() const { return instanceData; }
 const std::vector<MeshInstance>& Model::getMeshInstances() const { return meshInstances; }
 const std::unordered_map<unsigned int, unsigned int>& Model::getAllMaterialReferences() const { return allMaterialReferences; }
 
