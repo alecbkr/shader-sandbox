@@ -17,7 +17,6 @@ struct MeshInstance {
 
 class Model {
 public:
-    std::string name = "model"; // PLACEHOLDER does not do anything rn
     const unsigned int ID;
     const std::string model_path;
     const ModelType type;
@@ -39,10 +38,12 @@ public:
     void setRotation(float angle, glm::vec3 axis);
     void setInstancePosition(unsigned int instanceNum, glm::vec3 position);
     void setInstanceCount(unsigned int newInstanceCount);
+    void setName(std::string name);
     void setMeshMaterial(unsigned int meshIdx, unsigned int materialID);
     void setModelMaterial(unsigned int materialID);
 
     // GETTERS
+    std::string getName() const;
     unsigned int getID() const;
     std::string getPath() const;
     ModelStatus& getModelStatus();
@@ -51,7 +52,7 @@ public:
     glm::vec3 getScale() const;
     glm::vec4 getRotation() const;
     unsigned int getInstanceCount() const;
-    std::vector<InstanceData>& getInstanceData();
+    const std::vector<InstanceData>& getInstanceData() const;
     const std::vector<MeshInstance>& getMeshInstances() const;
     const std::unordered_map<unsigned int, unsigned int>& getAllMaterialReferences() const;
 
@@ -68,6 +69,7 @@ public:
     static void setProgramID(std::string programID); //ALSO DUMMY
 
 private:
+    std::string name = "model";
     unsigned int nextMeshIdx = 0;
     std::vector<MeshA> meshes;
     std::unordered_map<unsigned int, unsigned int> allMaterialReferences; //[material id] <-> [# of meshes using material]

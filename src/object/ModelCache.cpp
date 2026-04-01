@@ -70,57 +70,34 @@ unsigned int ModelCache::createPreset(ModelType type) {
     unsigned int presetModelID = nextModelID;
     modelIDMap.emplace(presetModelID, std::make_unique<Model>(presetModelID, "preset", type));
     addPresetMesh(presetModelID, type);
-
     getModel(presetModelID)->finalizeMeshes();
+
+    unsigned int modelNumber = nextModelID;
+    while (changeModelName(presetModelID, "Model" + std::to_string(modelNumber)) == false) {
+        modelNumber++;
+    }
+
     trySendingToRenderer(presetModelID);
     nextModelID++;
     return presetModelID;
 }
 
 
-//DO NOT CALL THIS OUTSIDE MODELIMPORTER
-unsigned int ModelCache::createModelForImportSetup(std::string model_path) {
-    if (validateNextID() == false) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::createEmptyModel()", "failed to validate next model ID on model creation");
-        return INVALID_MODEL_ID;
-    }
-    unsigned int emptyModelID = nextModelID;
-    modelIDMap.emplace(nextModelID, std::make_unique<Model>(emptyModelID, model_path, ModelType::Imported));
-    
-    nextModelID++;
-    return emptyModelID;
-}
-
-
-bool ModelCache::reserveModelID(unsigned int modelID, std::string model_path, ModelType type) {
-    if (modelIDMap.contains(modelID)) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::reserveModelID()", "reservation failed. ModelCache already contains ID " + std::to_string(modelID));
+bool ModelCache::changeModelName(unsigned int modelID, std::string name) {
+    Model* foundModel = getModel(modelID);
+    if (foundModel == nullptr) {
+        loggerPtr->addLog(LogLevel::WARNING, "MODELCACHE::changeModelName", "model not found with ID " + std::to_string(modelID));
         return false;
     }
-    modelIDMap.emplace(modelID, std::make_unique<Model>(modelID, model_path, type));
-    return true;
-}
-
-
-void ModelCache::trySendingToRenderer(unsigned int modelID) {
-    ModelStatus& status = getModel(modelID)->getModelStatus();
-    if (status.wasSentToRenderer == true) return;
-
-    if (status.meshes != ModelState::Ready || status.material != ModelState::Ready)  {
-        if (status.meshes == ModelState::Error) {
-            loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::trySendingToRenderer()", "mesh is in error state for model " + std::to_string(modelID));
-        }
-        if (status.material == ModelState::Error) {
-            loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::trySendingToRenderer()", "material(s) in error state for model " + std::to_string(modelID));
-        }
-        return;
+    if (usedModelNames.contains(name)) {
+        loggerPtr->addLog(LogLevel::WARNING, "MODELCACHE::changeModelName", "new name must be unique");
+        return false;
     }
 
-    bool isSkybox;
-    modelID == skyboxModelID ? isSkybox = true : isSkybox = false;
-
-    eventsPtr->TriggerEvent(Event { EventType::CreateModel, false, ModelCreationPayload{modelID, isSkybox} });
-    status.wasSentToRenderer = true;
+    usedModelNames.erase(foundModel->getName());
+    foundModel->setName(name);
+    usedModelNames.insert(name);
+    return true;
 }
 
 
@@ -146,7 +123,6 @@ void ModelCache::setAsSkybox(unsigned int modelID) {
         loggerPtr->addLog(LogLevel::WARNING, "MODELCACHE::setAsSkyBox()", "Model not found with ID " + std::to_string(modelID));
         return;
     }
-
     if (model->type != ModelType::CubePreset) {
         loggerPtr->addLog(LogLevel::WARNING, "MODELCACHE::setAsSkyBox()", "Model given is not of the type CubePreset");
         return;
@@ -232,18 +208,6 @@ int ModelCache::getNumberOfModels() {
 }
 
 
-bool ModelCache::validateNextID() {
-    unsigned int numOfChecks = 0;
-    while (modelIDMap.contains(nextModelID) == true) {
-        if (numOfChecks > 1000) return false;
-        
-        nextModelID++;
-        numOfChecks++;
-    }
-    return true;
-}
-
-
 void ModelCache::addPresetMesh(unsigned int modelID, ModelType type) {
     MeshPreset preset;
     switch(type) {
@@ -256,4 +220,67 @@ void ModelCache::addPresetMesh(unsigned int modelID, ModelType type) {
     MeshData presetData = presetsPtr->getPresetMesh(preset);
     Model* presetModel = getModel(modelID);
     presetModel->addMeshByData(presetData.verts, presetData.indices, true, false, true);
+}
+
+
+unsigned int ModelCache::createModelForImportSetup(std::string model_path) {
+    if (validateNextID() == false) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::createEmptyModel()", "failed to validate next model ID on model creation");
+        return INVALID_MODEL_ID;
+    }
+    unsigned int emptyModelID = nextModelID;
+    modelIDMap.emplace(nextModelID, std::make_unique<Model>(emptyModelID, model_path, ModelType::Imported));
+    
+    unsigned int modelNumber = nextModelID;
+    while (changeModelName(emptyModelID, "Model" + std::to_string(modelNumber)) == false) {
+        modelNumber++;
+    }
+
+    nextModelID++;
+    return emptyModelID;
+}
+
+
+bool ModelCache::reserveModelID(unsigned int modelID, std::string model_path, ModelType type) {
+    if (modelIDMap.contains(modelID)) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::reserveModelID()", "reservation failed. ModelCache already contains ID " + std::to_string(modelID));
+        return false;
+    }
+    modelIDMap.emplace(modelID, std::make_unique<Model>(modelID, model_path, type));
+    return true;
+}
+
+
+bool ModelCache::trySendingToRenderer(unsigned int modelID) {
+    ModelStatus& status = getModel(modelID)->getModelStatus();
+    if (status.wasSentToRenderer == true) return true;
+
+    if (status.meshes != ModelState::Ready || status.material != ModelState::Ready)  {
+        if (status.meshes == ModelState::Error) {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::trySendingToRenderer()", "mesh is in error state for model " + std::to_string(modelID));
+        }
+        if (status.material == ModelState::Error) {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::trySendingToRenderer()", "material(s) in error state for model " + std::to_string(modelID));
+        }
+        return false;
+    }
+
+    bool isSkybox;
+    modelID == skyboxModelID ? isSkybox = true : isSkybox = false;
+
+    eventsPtr->TriggerEvent(Event { EventType::CreateModel, false, ModelCreationPayload{modelID, isSkybox} });
+    status.wasSentToRenderer = true;
+    return true;
+}
+
+
+bool ModelCache::validateNextID() {
+    unsigned int numOfChecks = 0;
+    while (modelIDMap.contains(nextModelID) == true) {
+        if (numOfChecks > 1000) return false;
+        
+        nextModelID++;
+        numOfChecks++;
+    }
+    return true;
 }

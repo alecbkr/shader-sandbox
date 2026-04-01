@@ -143,64 +143,43 @@ void Application::initializeUI(AppContext& ctx) {
     }
 }
 
-void loadPresetAssets(AppContext& ctx) {
-    // ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::WATER));
-    // ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::FACE));
-    // ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::METAL));
-    // ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::GRID));
-
-
-    ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "color.vert", ctx.project.projectShadersDir / "color.frag", "color");
-    ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "tex.vert", ctx.project.projectShadersDir / "tex.frag", "tex");
-    ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "skybox.vert", ctx.project.projectShadersDir / "skybox.frag", "skybox");
-    ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "instance.vert", ctx.project.projectShadersDir / "instance.frag", "instance");
+void Application::loadDefaultScene(AppContext& ctx) {
     
+    // ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "skybox.vert", ctx.project.projectShadersDir / "skybox.frag", "skybox");
+
+    // unsigned int skyMatID = ctx.material_cache.createBlankMaterial();
+    // ctx.material_cache.addTextureToMaterial(skyMatID, "../assets/textures/skybox", true);
+    // ctx.material_cache.getMaterial(skyMatID)->setProgramID("skybox");
+
+    // unsigned int skyboxID = ctx.model_cache.createPreset(ModelType::CubePreset);
+    // ctx.model_cache.changeModelMaterial(skyboxID, skyMatID);
+    // ctx.model_cache.setAsSkybox(skyboxID);
 
 
-    unsigned int matID = ctx.material_cache.createBlankMaterial();
-    ctx.material_cache.getMaterial(matID)->setProgramID("instance");
-    ctx.material_cache.getMaterial(matID)->setName("instanced_Tex");
+    //DEFAULT SCENE STARTS
+    ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "color.vert", ctx.project.projectShadersDir / "color.frag", "color_program");
+    ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "gridplane.vert", ctx.project.projectShadersDir / "gridplane.frag", "gridplane_program");
 
 
-    unsigned int winMatID = ctx.material_cache.createBlankMaterial();
-    ctx.material_cache.addTextureToMaterial(winMatID, "../assets/textures/window.png", false);
-    ctx.material_cache.getMaterial(winMatID)->setProgramID("tex");
+    // ctx.shader_registry.registerProgram(std::filesystem::path("../shaders/color.vert"), std::filesystem::path("../shaders/color.frag"), "color_program");
+    // ctx.shader_registry.registerProgram("../shaders/gridplane.vert", "../../shaders/gridplane.frag", "gridplane_program");
+
     
+    unsigned int colorMatID = ctx.material_cache.createBlankMaterial();
+    ctx.material_cache.getMaterial(colorMatID)->setProgramID("color_program");
+    ctx.material_cache.getMaterial(colorMatID)->setName("color_material");
 
-    unsigned int skyMatID = ctx.material_cache.createBlankMaterial();
-    ctx.material_cache.addTextureToMaterial(skyMatID, "../assets/textures/skybox", true);
-    ctx.material_cache.getMaterial(skyMatID)->setProgramID("skybox");
-
-
-
-    unsigned int bpID = ctx.assimp_importer.importModel("../assets/models/backpack/backpack.obj");
-    ctx.model_cache.changeModelMaterial(bpID, 3);
-    ctx.material_cache.getMaterial(3)->setProgramID("instance");
-    ctx.model_cache.getModel(bpID)->setInstanceCount(1);
-
-    unsigned int skyboxID = ctx.model_cache.createPreset(ModelType::CubePreset);
-    ctx.model_cache.changeModelMaterial(skyboxID, skyMatID);
-    ctx.model_cache.setAsSkybox(skyboxID);
-
-    // unsigned int window1ID = ctx.model_cache.createPreset(ModelType::PlanePreset);
-    // ctx.model_cache.changeMeshMaterial(window1ID, 0, winMatID);
-
-    // unsigned int window2ID = ctx.model_cache.createPreset(ModelType::PlanePreset);
-    // ctx.model_cache.changeModelMaterial(window2ID, winMatID);
-
-    // unsigned int windowMatID = ctx.material_cache.createBlankMaterial();
-    // ctx.material_cache.addTextureToMaterial(windowMatID, "../assets/textures/window.png");
-    // ctx.material_cache.getMaterial(windowMatID)->setProgramID(texPtr->name);
-    // // ctx.material_cache.changeMaterialType(windowMatID, MaterialType::Translucent);
-
-    // unsigned int window1_ID = ctx.model_cache.createPreset(ModelType::PlanePreset);
-    // ctx.model_cache.changeModelMaterial(window1_ID, windowMatID);
+    unsigned int gridplaneMatID = ctx.material_cache.createBlankMaterial();
+    ctx.material_cache.getMaterial(gridplaneMatID)->setProgramID("gridplane_program");
+    ctx.material_cache.getMaterial(gridplaneMatID)->setName("gridplane_material");
     
+    unsigned int cubeID = ctx.model_cache.createPreset(ModelType::CubePreset);
+    ctx.model_cache.changeModelMaterial(cubeID, colorMatID);
+    ctx.model_cache.getModel(cubeID)->setPosition(glm::vec3(0.0f, 0.5f, 0.0f));
 
-    // ctx.model_cache.changeModelMaterial(window2_ID, windowMatID);
-    // unsigned int window2_ID = ctx.model_cache.createPreset(ModelType::PlanePreset);
-
-    // ctx.model_cache.getModel(window1_ID)->setInstanceCount(5);
+    unsigned int gridplaneID = ctx.model_cache.createPreset(ModelType::PlanePreset);
+    ctx.model_cache.changeModelMaterial(gridplaneID, gridplaneMatID);
+    ctx.model_cache.getModel(gridplaneID)->setScale(glm::vec3(50.0f));
 
     ctx.inspector_engine.refreshUniforms();
 }
@@ -323,9 +302,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
         return false;
     }
-    //loadPresetAssets(ctx);
     addSubscriptions(ctx);
-    loadPresetAssets(ctx);
     initializeUI(ctx);
 
     ctx.logger.addLog(LogLevel::INFO, "Application Initialization", "Application Layer Initialized.");
