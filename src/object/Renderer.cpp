@@ -375,7 +375,16 @@ bool Renderer::validatePrimitive(unsigned int primitiveID) {
         result = false;
     }
 
-    Material* foundMaterial = materialCachePtr->getMaterial(primitive.materialID);  
+    // no material to be found if matID is 0 so we always return false in this case. this is intentional
+    // so its not an error to report, but we also want to check if other errors previously occured and report those.
+    if (primitive.materialID == 0) {
+        if (result == false) {
+            if (!feedback.empty()) loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER::validatePrimitive()", feedback);
+        }
+        return false;
+    }
+
+    Material* foundMaterial = materialCachePtr->getMaterial(primitive.materialID);
     if (foundMaterial == nullptr) {
         feedback += "\nmaterial not found with ID: " + std::to_string(primitive.materialID) + ". Removing materialID from model";
         result = false;
@@ -386,7 +395,16 @@ bool Renderer::validatePrimitive(unsigned int primitiveID) {
     }
 
     if (result == false) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER::validatePrimitive()", feedback);
+        if (!feedback.empty()) loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER::validatePrimitive()", feedback);
     }
     return result;
+}
+
+void Renderer::setMeshMaterial(unsigned int modelID, unsigned int meshID, unsigned int materialID) {
+    for (auto& [primID, primitive] : primitiveIDMap) {
+        if (primitive.modelID == modelID && primitive.meshIdx == meshID) {
+            primitive.materialID = materialID;
+            return;
+        }
+    }
 }

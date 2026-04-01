@@ -9,12 +9,15 @@
 class Logger;
 class EventDispatcher;
 class TextureCache;
+class ModelCache;
+class Renderer;
 
 
 class MaterialCache {
 public:
     MaterialCache();
-    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, TextureCache* _textureCachePtr, bool previouslySaved);
+    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, TextureCache* _textureCachePtr, ModelCache* _modelCachePtr, bool previouslySaved);
+    void initializeAfterRenderer(Renderer* _rendererPtr);
     void shutdown();
     
     unsigned int createBlankMaterial();
@@ -37,7 +40,7 @@ public:
     int getSize();
 
 private:
-    unsigned int nextMaterialID = 0;
+    unsigned int nextMaterialID = 1;
     std::unordered_map<unsigned int, std::unique_ptr<Material>> materialIDMap;
 
     bool validateNextID();
@@ -47,4 +50,6 @@ private:
     Logger* loggerPtr             = nullptr;
     EventDispatcher* eventsPtr    = nullptr;
     TextureCache* textureCachePtr = nullptr;
+    ModelCache* modelCachePtr     = nullptr;
+    Renderer* rendererPtr         = nullptr;
 };

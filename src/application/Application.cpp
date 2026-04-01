@@ -144,27 +144,20 @@ void Application::initializeUI(AppContext& ctx) {
 }
 
 void loadPresetAssets(AppContext& ctx) {
-    // ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::WATER));
-    // ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::FACE));
-    // ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::METAL));
-    // ctx.texture_registry.registerTexture(&ctx.preset_assets.getPresetTexture(TexturePreset::GRID));
-
-
-    ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "color.vert", ctx.project.projectShadersDir / "color.frag", "color");
-    ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "tex.vert", ctx.project.projectShadersDir / "tex.frag", "tex");
+    // ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "color.vert", ctx.project.projectShadersDir / "color.frag", "color");
+    // ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "tex.vert", ctx.project.projectShadersDir / "tex.frag", "tex");
     ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "skybox.vert", ctx.project.projectShadersDir / "skybox.frag", "skybox");
-    ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "instance.vert", ctx.project.projectShadersDir / "instance.frag", "instance");
+    // ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "instance.vert", ctx.project.projectShadersDir / "instance.frag", "instance");
     
 
+    // unsigned int matID = ctx.material_cache.createBlankMaterial();
+    // ctx.material_cache.getMaterial(matID)->setProgramID("instance");
+    // ctx.material_cache.getMaterial(matID)->setName("instanced_Tex");
 
-    unsigned int matID = ctx.material_cache.createBlankMaterial();
-    ctx.material_cache.getMaterial(matID)->setProgramID("instance");
-    ctx.material_cache.getMaterial(matID)->setName("instanced_Tex");
 
-
-    unsigned int winMatID = ctx.material_cache.createBlankMaterial();
-    ctx.material_cache.addTextureToMaterial(winMatID, "../assets/textures/window.png", false);
-    ctx.material_cache.getMaterial(winMatID)->setProgramID("tex");
+    // unsigned int winMatID = ctx.material_cache.createBlankMaterial();
+    // ctx.material_cache.addTextureToMaterial(winMatID, "../assets/textures/window.png", false);
+    // ctx.material_cache.getMaterial(winMatID)->setProgramID("tex");
     
 
     unsigned int skyMatID = ctx.material_cache.createBlankMaterial();
@@ -172,11 +165,10 @@ void loadPresetAssets(AppContext& ctx) {
     ctx.material_cache.getMaterial(skyMatID)->setProgramID("skybox");
 
 
-
-    unsigned int bpID = ctx.assimp_importer.importModel("../assets/models/backpack/backpack.obj");
-    ctx.model_cache.changeModelMaterial(bpID, 3);
-    ctx.material_cache.getMaterial(3)->setProgramID("instance");
-    ctx.model_cache.getModel(bpID)->setInstanceCount(1);
+    // unsigned int bpID = ctx.assimp_importer.importModel("../assets/models/backpack/backpack.obj");
+    // ctx.model_cache.changeModelMaterial(bpID, 3);
+    // ctx.material_cache.getMaterial(3)->setProgramID("instance");
+    // ctx.model_cache.getModel(bpID)->setInstanceCount(1);
 
     unsigned int skyboxID = ctx.model_cache.createPreset(ModelType::CubePreset);
     ctx.model_cache.changeModelMaterial(skyboxID, skyMatID);
@@ -250,16 +242,16 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Uniform Registry was not initialized successfully.");
         return false;
     }
-    if (!ctx.material_cache.initialize(&ctx.logger, &ctx.events, &ctx.texture_cache, ctx.project.previouslySaved)) {
+    if (!ctx.model_cache.initialize(&ctx.logger, &ctx.events, &ctx.preset_assets)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
+        return false;
+    }
+    if (!ctx.material_cache.initialize(&ctx.logger, &ctx.events, &ctx.texture_cache, &ctx.model_cache, ctx.project.previouslySaved)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Material Cache was not initialized successfully.");
         return false;
     }
     if (!ctx.texture_cache.initialize(&ctx.logger)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Texture Cache was not initialized successfully.");
-        return false;
-    }
-    if (!ctx.model_cache.initialize(&ctx.logger, &ctx.events, &ctx.preset_assets)) {
-        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
         return false;
     }
     if (!ctx.inspector_engine.initialize(&ctx.logger, &ctx.shader_registry, &ctx.uniform_registry, &ctx.model_cache, &ctx.viewport_ui, &ctx.material_cache, &ctx.platform)) {
@@ -311,6 +303,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Renderer was not initialized successfully.");
         return false;
     }
+    ctx.material_cache.initializeAfterRenderer(&ctx.renderer);
     if (!ctx.viewport_ui.initialize(&ctx.logger, &ctx.platform, &ctx.renderer, &ctx.timer, &ctx.inputs)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Viewport UI was not initialized successfully.");
         return false;

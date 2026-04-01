@@ -4,16 +4,19 @@
 #include "core/EventDispatcher.hpp"
 #include "object/Material.hpp"
 #include "texture/TextureCache.hpp"
+#include "object/ModelCache.hpp"
+#include "object/Renderer.hpp"
 #include <memory>
 
 #include <iostream> //TEMPADD
 
 MaterialCache::MaterialCache() = default;
 
-bool MaterialCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, TextureCache* _textureCachePtr, bool previouslySaved) {
+bool MaterialCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, TextureCache* _textureCachePtr, ModelCache* _modelCachePtr, bool previouslySaved) {
     loggerPtr = _loggerPtr;
     eventsPtr = _eventsPtr;
     textureCachePtr = _textureCachePtr;
+    modelCachePtr = _modelCachePtr;
 
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Material Cache Initialization", "Material Cache was already initialized.");
@@ -23,6 +26,10 @@ bool MaterialCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, 
 
     initialized = true;
     return true;
+}
+
+void MaterialCache::initializeAfterRenderer(Renderer* _rendererPtr) {
+    rendererPtr = _rendererPtr;
 }
 
 void MaterialCache::shutdown() {
@@ -52,6 +59,19 @@ unsigned int MaterialCache::createMaterial(MaterialType type, MaterialProperties
     nextMaterialID++;
 
     return newMaterialID;
+}
+
+void MaterialCache::deleteMaterial(unsigned int materialID) {
+    for (auto& model : modelCachePtr->getAllModels()) {
+        for (auto& meshInstance : model->getMeshInstances()) {
+            if (meshInstance.materialID == materialID) {
+                model->setMeshMaterial(meshInstance.meshIdx, 0);
+                rendererPtr->setMeshMaterial(model->getID(), meshInstance.meshIdx, 0);
+            }
+        }
+    }
+
+    materialIDMap.erase(materialID);
 }
 
 

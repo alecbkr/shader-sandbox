@@ -14,6 +14,62 @@
 
 MaterialsInspectorUI::MaterialsInspectorUI(Fonts* fonts, SettingsStyles* styles, MaterialCache* matCache, TextureCache* texCache, ShaderRegistry* shaderReg, std::filesystem::path assetsDirPath) : fonts(fonts), styles(styles), matCache(matCache), texCache(texCache), shaderReg(shaderReg), assetsDirPath(assetsDirPath) {}
 
+bool MaterialsInspectorUI::drawRenameField(Material* mat) {
+    ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+
+    if (renameJustStarted) ImGui::SetKeyboardFocusHere();
+
+    const bool enter = ImGui::InputText(
+        ("##material" + std::to_string(mat->ID)).c_str(),
+        renameBuf,
+        sizeof(renameBuf),
+        ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll
+    );
+
+    if (renameJustStarted && ImGui::IsItemActive()) renameJustStarted = false;
+
+    const bool hovered = ImGui::IsItemHovered();
+
+    ImGui::PopStyleVar();
+
+    const bool deactivateAfterEdit = ImGui::IsItemDeactivatedAfterEdit();
+
+    if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+        renamingID = std::numeric_limits<unsigned int>::max();
+        currRenaming = false;
+        return false;
+    }
+
+    const bool clicked_elsewhere = (ImGui::IsMouseClicked(ImGuiMouseButton_Left) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)) && !hovered;
+
+    if ((enter || deactivateAfterEdit || clicked_elsewhere) && renameBuf[0] != '\0') {
+        std::string newName = renameBuf;
+        pendingRename = newName;
+        pendingRenameMat = mat;
+        renamingID = std::numeric_limits<unsigned int>::max();
+        currRenaming = false;
+        return true;
+    }
+
+    return false;
+}
+
+void MaterialsInspectorUI::handlePendingRename() {
+    if (!pendingRename.empty()) {
+        pendingRenameMat->setName(pendingRename);
+        pendingRename = "";
+        pendingRenameMat = nullptr;
+    }
+}
+
+void MaterialsInspectorUI::handlePendingDelete() {
+    if (pendingDeleteMat != nullptr) {
+        matCache->deleteMaterial(pendingDeleteMat->ID);
+        pendingDeleteMat = nullptr;
+    }
+}
+
 void MaterialsInspectorUI::draw() {
     ImGui::PushStyleColor(ImGuiCol_ChildBg, styles->materialsTabBackgroundColor);
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.0f);
@@ -58,17 +114,21 @@ void MaterialsInspectorUI::draw() {
             ImGui::TextUnformatted("Materials");
             
             ImVec2 plusSize = ImGui::CalcTextSize("+");
-            float buttonPaddingY = 0.0f;
-            float buttonPaddingX = 6.0f;
+            float buttonPaddingX = 6.5f;
             
-            float buttonWidth = buttonPaddingX * 2 + plusSize.x;
+            float buttonWidth = plusSize.x + buttonPaddingX * 2;
+            float buttonHeight = plusSize.y;
             
             ImGui::SameLine(ImGui::GetContentRegionAvail().x - buttonWidth);
 
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(buttonPaddingX, buttonPaddingY));
+            ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.6f, 0.6f));
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
-            ImGui::Button("+", ImVec2(buttonPaddingX * 2 + plusSize.x, buttonPaddingY * 2 + plusSize.y));
-            ImGui::PopStyleVar(2);
+            
+            if (ImGui::Button("+##addmaterial", ImVec2(buttonWidth, buttonHeight))) {
+                matCache->createBlankMaterial();
+            }
+            ImGui::PopStyleVar(3);
         }
         ImGui::EndChild();
         ImGui::PopStyleColor();
@@ -97,19 +157,33 @@ void MaterialsInspectorUI::draw() {
             );
 
             for (auto& mat : matCache->getAllMaterials()) {
-                std::string label = mat->getName() + " (" + std::to_string(mat->ID) + ")" + "##" + std::to_string(mat->ID);
+                const bool renaming = renamingID == mat->ID;
+
+                std::string label = renaming
+                    ? ("##material_header_" + std::to_string(mat->ID))
+                    : (mat->getName() + " (" + std::to_string(mat->ID) + ")##" + std::to_string(mat->ID));
+                
+                if (renaming) ImGui::PushItemFlag(ImGuiItemFlags_NoNav, true);
                 bool matOpen = ImGui::CollapsingHeader(label.c_str());
+                if (renaming) ImGui::PopItemFlag();
 
-                if (ImGui::BeginPopupContextItem()) {
-                    if (ImGui::MenuItem("Rename")) {
-                        // start rename process
+                if (!renaming && !currRenaming) {
+                    if (ImGui::BeginPopupContextItem()) {
+                        if (ImGui::MenuItem("Rename")) {
+                            renamingID = mat->ID;
+                            renameJustStarted = true;
+                            currRenaming = true;
+                        }
+                        
+                        if (ImGui::MenuItem("Delete")) {
+                            pendingDeleteMat = mat;
+                        }
+                        
+                        ImGui::EndPopup();
                     }
-
-                    if (ImGui::MenuItem("Delete")) {
-                        // prompt delete process
-                    }
-
-                    ImGui::EndPopup();
+                } else if (renaming) {
+                    ImGui::SameLine();
+                    drawRenameField(mat);
                 }
 
                 if (matOpen) {
@@ -175,4 +249,7 @@ void MaterialsInspectorUI::draw() {
     ImGui::EndChild();
     ImGui::PopStyleVar(2);
     ImGui::PopStyleColor();
+
+    handlePendingRename();
+    handlePendingDelete();
 }
