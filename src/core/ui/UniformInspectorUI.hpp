@@ -29,9 +29,10 @@ public:
         float inputWidth = 50.0f;
         float colorPickerWidthVec3 = 100.0f;
         float colorPickerWidthVec4 = 128.0f; // about 1.28x the width of vec3 color picker, otherwise it looks weird.
-        ImVec4 bgColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
-        ImVec4 bgColorHovered = ImVec4(bgColor.x * 1.5f, bgColor.y * 1.5f, bgColor.z * 1.5f, 1.0f);
-        float indentSize = 2.0f;
+        ImVec4 cardBGColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
+        ImVec4 headerColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
+        ImVec4 headerColorHovered = ImVec4(headerColor.x * 1.5f, headerColor.y * 1.5f, headerColor.z * 1.5f, 1.0f);
+        float indentSize = 5.0f;
     };
 
 private:
@@ -55,16 +56,14 @@ private:
     bool drawInput(InspectorReference* value, Uniform* uniform = nullptr);
     bool drawReferenceEditor(InspectorReference* value, Uniform* uniform);
     void drawUniformRow(Uniform& uniform, unsigned int matID);
-    void drawUniformRowInline(Uniform& uniform, unsigned int matID);
     bool drawModePicker(const char* id, int& mode, const char* const* labels, int labelCount);
     void setReferenceMode(Uniform& uniform, bool useReference);
     std::string makeUniformStateKey(unsigned int matID, const std::string& uniformName) const;
     std::string getUniformSummary(const Uniform& uniform) const;
     std::string getReferenceSummary(const Uniform& uniform) const;
-    std::string getUniformTypeSummary(const Uniform& uniform) const;
     bool isSimpleType(UniformType type);
     void drawUniformsNested_byCursor(const std::unordered_map<std::string, Uniform>& uniforms, unsigned int matID, int& imGuiID);
+    bool drawCompactTreeNode(const std::string& label);
     
     UniformInspectorThemeSettings theme;
-    std::unordered_map<std::string, bool> advancedOpenState_;
 };

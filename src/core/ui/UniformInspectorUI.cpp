@@ -19,59 +19,39 @@
 #include <vector>
 
 namespace {
-void drawCompactUniformHeader(bool& open, const char* toggleId, const std::string& name, const std::string& type, const SettingsStyles* styles) {
-    const float compactButtonPad = styles ? styles->assetsTitleInnerPadding : 1.0f;
-    const float toggleWidth = ImGui::GetFontSize() + compactButtonPad * 2.0f;
-    const float typeWidth = ImGui::CalcTextSize(type.c_str()).x;
-
-    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.0f, 0.0f));
-    if (ImGui::BeginTable("##UniformHeader", 3, ImGuiTableFlags_NoPadOuterX | ImGuiTableFlags_NoPadInnerX | ImGuiTableFlags_NoBordersInBody)) {
-        ImGui::TableSetupColumn("##toggle", ImGuiTableColumnFlags_WidthFixed, toggleWidth);
-        ImGui::TableSetupColumn("##name", ImGuiTableColumnFlags_WidthStretch);
-        ImGui::TableSetupColumn("##type", ImGuiTableColumnFlags_WidthFixed, typeWidth);
-        ImGui::TableNextRow();
-
-        ImGui::TableSetColumnIndex(0);
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(compactButtonPad, 0.0f));
-        if (ImGui::SmallButton((std::string(open ? "v##" : ">##") + toggleId).c_str())) {
-            open = !open;
-        }
-        ImGui::PopStyleVar();
-
-        ImGui::TableSetColumnIndex(1);
-        ImGui::AlignTextToFramePadding();
-        ImGui::TextUnformatted(name.c_str());
-
-        ImGui::TableSetColumnIndex(2);
-        ImGui::AlignTextToFramePadding();
-        const float typeAvail = ImGui::GetContentRegionAvail().x;
-        if (typeAvail > typeWidth) {
-            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (typeAvail - typeWidth));
-        }
-        ImGui::TextDisabled("%s", type.c_str());
-
-        ImGui::EndTable();
-    }
-    ImGui::PopStyleVar();
+    const std::string worldVariableLabel = "World Variable";
 }
 
-bool drawCompactSectionHeader(const std::string& label) {
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.0f, 0.0f));
-    const bool open = ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth);
-    ImGui::PopStyleVar();
+bool UniformInspectorUI::drawCompactTreeNode(const std::string& label) {
+
+    // Set the header button color
+    ImGui::PushStyleColor(ImGuiCol_Header, theme.headerColor);
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.headerColorHovered);
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.headerColor);
+    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize); 
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f)); 
+
+    const bool open = ImGui::TreeNodeEx(
+        label.c_str(),
+        ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed
+    );
+
+    ImGui::PopStyleColor(3); // pop header colors
+    ImGui::PopStyleVar(2);
+
     return open;
-}
 }
 
 UniformInspectorUI::UniformInspectorUI(Fonts* fonts, SettingsStyles* styles) : fonts_(fonts), styles_(styles) {
     if (styles_) {
-        theme.bgColor = styles_->assetsFileBackgroundColor;
+        theme.cardBGColor = styles_->assetsFileBackgroundColor;
+        theme.headerColor = styles_->assetsTitleBackgroundColor;
         // Derive a hover color from the base color so it always differs visibly.
-        theme.bgColorHovered = ImVec4(
-            theme.bgColor.x * 1.3f,
-            theme.bgColor.y * 1.3f,
-            theme.bgColor.z * 1.3f,
-            theme.bgColor.w
+        theme.headerColorHovered = ImVec4(
+            theme.headerColor.x * 1.2f,
+            theme.headerColor.y * 1.2f,
+            theme.headerColor.z * 1.2f,
+            theme.headerColor.w
         );
         theme.indentSize = styles_->assetsTitleInnerPadding + 2.0f;
     }
@@ -114,12 +94,11 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
 
     if (ImGui::BeginChild("UniformsContent", ImVec2(0, 0), 
                           ImGuiChildFlags_AlwaysUseWindowPadding)) {
-    const float inner_padding = styles_->assetsTitleInnerPadding;
+        const float inner_padding = styles_->assetsTitleInnerPadding;
         ImGui::PushFont(fonts_->getL4());
         const float directory_height = window_padding * 2 + inner_padding * 2 + ImGui::CalcTextSize("Uniforms").y;
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
         ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(0,0,0,0));
-
         if (ImGui::BeginChild("UniformsTitle", ImVec2(0, directory_height), 
                               ImGuiChildFlags_AlwaysUseWindowPadding)) {
             ImVec2 p = ImGui::GetWindowPos();
@@ -151,7 +130,7 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
         ImGui::PopStyleColor();
         ImGui::PopFont();
 
-        if (ImGui::BeginChild("UniformsBody", ImVec2(0, 0), 
+        if (ImGui::BeginChild("UniformsTree", ImVec2(0, 0), 
                               ImGuiChildFlags_AlwaysUseWindowPadding)) {
             ImVec2 p = ImGui::GetWindowPos();
             ImVec2 s = ImGui::GetWindowSize();
@@ -209,20 +188,22 @@ void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, 
 
     ImGui::PushID(modelLabel.c_str());
 
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.bgColor);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.cardBGColor);
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles_->assetsBodyRounding);
     ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles_->assetsBorderThickness);
-    ImGui::PushStyleColor(ImGuiCol_Header, theme.bgColor);
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.bgColorHovered);
-    ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.bgColor);
+
+    ImGui::PushStyleColor(ImGuiCol_Header, theme.headerColor);
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.headerColorHovered);
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.headerColor);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 4.0f));
 
     ImGui::BeginChild("UniformContainer", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding);
 
     std::string headerLabel = modelLabel + "##uniform_model_" + std::to_string(modelID);
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.0f, 0.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
     if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth)) {
         drawMaterialContainer(modelID, materialReferences, imGuiID);
+
     }
     ImGui::PopStyleVar();
 
@@ -234,16 +215,16 @@ void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, 
 }
 
 void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences, int& imGuiID) {
-    ImGui::Dummy(ImVec2(0.0f, 2.0f));
     ImGui::Indent(theme.indentSize);
 
     size_t i = 0;
     for (auto& [matID, matRefCount] : materialReferences) {
         bool useMaterialHeader = materialReferences.size() > 1;
         bool showUniforms = true;
+        bool mustTreePop = false;
         if (useMaterialHeader) {
             std::string matHeader = "Material " + std::to_string(matID) + "##uniform_mat_" + std::to_string(matID);
-            showUniforms = drawCompactSectionHeader(matHeader);
+            showUniforms = mustTreePop = drawCompactTreeNode(matHeader);
             if (showUniforms) {
                 ImGui::Dummy(ImVec2(0.0f, 2.0f));
             }
@@ -257,14 +238,13 @@ void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::
                 continue;
             }
 
-            ImGui::Indent(theme.indentSize);
             drawUniformsNested_byCursor(*uniformMap, matID, imGuiID);
-            ImGui::Unindent(theme.indentSize);
         }
         ++i;
         if (i < materialReferences.size()) {
             ImGui::Dummy(ImVec2(0.0f, 4.0f));
         }
+        if (mustTreePop) ImGui::TreePop();
     }
 
     ImGui::Unindent(theme.indentSize);
@@ -339,7 +319,7 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
         }
 
         if (!hasChildren) {
-            if (hasUniform) {
+            if (hasUniform || !node.uniform->invisible) {
                 ImGui::PushID(imGuiID);
                 Uniform uniformCopy = *node.uniform;
                 drawUniformRow(uniformCopy, matID);
@@ -349,29 +329,30 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
             return;
         }
 
-        std::string headerLabel = segment + "##group_" + std::to_string(matID) + "_" + path;
-        bool open = drawCompactSectionHeader(headerLabel);
-        if (!open) {
-            return;
+        // Determine label
+        const std::string groupTypeLabel =
+            (!segment.empty() && segment[0] == '[') ? "Array" : "Struct";
+
+        std::string label = groupTypeLabel + " " + segment + "##uniform_";
+
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.cardBGColor); 
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles_->assetsBodyRounding);
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles_->assetsBorderThickness);
+        ImGui::BeginChild(("Group##" + label).c_str(), ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding);
+
+        if (drawCompactTreeNode(label)) {
+            ImGui::Dummy(ImVec2(0, .5));
+            ImGui::Separator();
+            for (const auto& [childSeg, childNode] : node.children) {
+                const std::string childPath = path.empty() ? childSeg : (path + "." + childSeg);
+                self(self, childSeg, childNode, childPath);
+            }
+
+            ImGui::TreePop();
         }
-
-        ImGui::Dummy(ImVec2(0.0f, 2.0f));
-        ImGui::Indent(theme.indentSize);
-
-        if (hasUniform) {
-            ImGui::PushID(imGuiID);
-            Uniform uniformCopy = *node.uniform;
-            drawUniformRow(uniformCopy, matID);
-            ImGui::PopID();
-            ++imGuiID;
-        }
-
-        for (const auto& [childSeg, childNode] : node.children) {
-            const std::string childPath = path.empty() ? childSeg : (path + "." + childSeg);
-            self(self, childSeg, childNode, childPath);
-        }
-
-        ImGui::Unindent(theme.indentSize);
+        ImGui::EndChild();
+        ImGui::PopStyleVar(2);
+        ImGui::PopStyleColor(1);
     };
 
     for (const auto& [seg, childNode] : root.children) {
@@ -379,14 +360,9 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
     }
 }
 
-void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
-    if (uniform.invisible) return;
-    drawUniformRowInline(uniform, matID);
-}
-
 bool UniformInspectorUI::drawModePicker(const char* id, int& mode, const char* const* labels, int labelCount) {
     bool changed = false;
-    static constexpr const char* compactLabels[] = { "Const", "Ref" };
+    static constexpr const char* compactLabels[] = { "Constant", "Reference" };
     const char* buttonLabel = (labelCount == 2 && mode >= 0 && mode < 2) ? compactLabels[mode] : labels[mode];
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.0f, 0.0f));
@@ -441,8 +417,8 @@ std::string UniformInspectorUI::getReferenceSummary(const Uniform& uniform) cons
     }
 
     std::string target;
-    if (ref->useCamaraData) {
-        target = "Camera";
+    if (ref->useWorldVariable) {
+        target = worldVariableLabel;
     } else if (ref->referencedModelID != 0) {
         target = "Object " + std::to_string(ref->referencedModelID);
     } else {
@@ -454,10 +430,6 @@ std::string UniformInspectorUI::getReferenceSummary(const Uniform& uniform) cons
     }
 
     return target;
-}
-
-std::string UniformInspectorUI::getUniformTypeSummary(const Uniform& uniform) const {
-    return to_string(uniform.type);
 }
 
 std::string UniformInspectorUI::getUniformSummary(const Uniform& uniform) const {
@@ -498,31 +470,34 @@ std::string UniformInspectorUI::getUniformSummary(const Uniform& uniform) const 
     }, uniform.value);
 }
 
-void UniformInspectorUI::drawUniformRowInline(Uniform& uniform, unsigned int matID) {
+void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
     bool changed = false;
-    const std::string stateKey = makeUniformStateKey(matID, uniform.name);
-    bool& open = advancedOpenState_[stateKey];
     int mode = uniform.isFunction ? 1 : 0;
     static constexpr const char* modeLabels[] = { "Constant", "Reference" };
-    const std::string typeSummary = getUniformTypeSummary(uniform);
+    const std::string typeSummary = to_string(uniform.type);
 
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, styles_->assetsFileBackgroundColor);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 4.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 2.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 4.0f);
-    if (ImGui::BeginChild("InlineUniformRow", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysUseWindowPadding)) {
-        drawCompactUniformHeader(open, "InlineToggle", uniform.name, typeSummary, styles_);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.cardBGColor); // same card background as model card
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles_->assetsBodyRounding);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles_->assetsBorderThickness);
+
+    if (ImGui::BeginChild(("UniformCard##" + uniform.name).c_str(), ImVec2(0, 0),
+                          ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders)) {
+        
+        std::string label = typeSummary + " " + uniform.name + "##uniform_";
+        bool open = drawCompactTreeNode(label);
 
         if (open) {
-            ImGui::Dummy(ImVec2(0.0f, 3.0f));
-            ImGui::Indent(theme.indentSize);
-            ImGui::TextDisabled("Mode");
+            ImGui::Dummy(ImVec2(0, .5));
+            ImGui::Separator();
+
+            ImGui::TextDisabled("Mode:  ");
+            ImGui::SameLine();
             if (drawModePicker("InlineMode", mode, modeLabels, IM_ARRAYSIZE(modeLabels))) {
                 setReferenceMode(uniform, mode == 1);
                 changed = true;
             }
 
+            // Value editor
             if (!uniform.isFunction) {
                 std::visit([&](auto& val) {
                     changed |= drawInput(&val, &uniform);
@@ -530,12 +505,14 @@ void UniformInspectorUI::drawUniformRowInline(Uniform& uniform, unsigned int mat
             } else if (auto* value = std::get_if<InspectorReference>(&uniform.value)) {
                 changed |= drawReferenceEditor(value, &uniform);
             }
-            ImGui::Unindent(theme.indentSize);
+            ImGui::Dummy(ImVec2(0, .5));
+            ImGui::TreePop();
         }
     }
     ImGui::EndChild();
-    ImGui::PopStyleVar(4);
+    ImGui::PopStyleVar(2);
     ImGui::PopStyleColor();
+    // --- End uniform card ---
 
     if (changed) {
         inspectorEngPtr_->applyInput(matID, uniform);
@@ -630,8 +607,14 @@ bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) 
 }
 
 bool UniformInspectorUI::drawReferenceEditor(InspectorReference* value, Uniform* uniform) {
+    if (value->materialSelection < 0 || value->modelSelection < 0 || value->uniformSelection < 0) {
+        value->materialSelection = 0;
+        value->modelSelection = 0;
+        value->uniformSelection = 0;
+        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawReferenceEditor", "selection outside of bounds!");
+    }
     value->initialized = false;
-    value->useCamaraData = false;
+    value->useWorldVariable = false;
     bool changed = false;
     std::vector<std::string> modelNames;
     std::vector<const char*> modelChoices{""};
@@ -643,7 +626,14 @@ bool UniformInspectorUI::drawReferenceEditor(InspectorReference* value, Uniform*
     std::optional<std::vector<std::string>> worldData = getWorldData(uniform->type);
 
     if (worldData || value->useWorldData) {
-        changed |= ImGui::Checkbox("Use World Data##Use_world_data", &value->useWorldData);
+        bool changedWorldDataBox = ImGui::Checkbox("Use World Data##Use_world_data", &value->useWorldData);
+        if (changedWorldDataBox) {
+            value->materialSelection = 0;
+            value->modelSelection = 0;
+            value->uniformSelection = 0;
+        }
+        changed |= changedWorldDataBox;
+        
     }
 
     int i = 0;
@@ -655,8 +645,9 @@ bool UniformInspectorUI::drawReferenceEditor(InspectorReference* value, Uniform*
     }
 
     if (value->useWorldData) {
-        modelChoices.push_back("Camera");
+        modelChoices.push_back(worldVariableLabel.c_str());
     }
+
 
     ImGui::TextDisabled("Source Object");
     ImGui::SetNextItemWidth(-1);
@@ -671,8 +662,8 @@ bool UniformInspectorUI::drawReferenceEditor(InspectorReference* value, Uniform*
         return changed;
     }
 
-    if (std::string(modelChoices[value->modelSelection]) == "Camera") {
-        value->useCamaraData = true;
+    if (std::string(modelChoices[value->modelSelection]) == worldVariableLabel) {
+        value->useWorldVariable = true;
     } else {
         value->referencedModelID = modelIDs[value->modelSelection];
     }

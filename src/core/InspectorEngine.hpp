@@ -3,7 +3,6 @@
 #include <string>
 #include <glm/glm.hpp>
 #include "UniformTypes.hpp"
-#include "core/ui/ViewportUI.hpp"
 
 class Logger;
 class ShaderRegistry;
@@ -12,11 +11,12 @@ class UniformRegistry;
 class ModelCache;
 class MaterialCache;
 class ViewportUI;
+class Platform;
 
 class InspectorEngine {
 public:
     InspectorEngine();
-    bool initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, ModelCache* _modelCachePtr, ViewportUI* _viewportUIPtr, MaterialCache* _materialCachePtr);
+    bool initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, ModelCache* _modelCachePtr, ViewportUI* _viewportUIPtr, MaterialCache* _materialCachePtr, Platform* _platform);
     void shutdown();
     void refreshUniforms();
     void applyAllUniformsForMaterial(unsigned int modelID);
@@ -41,6 +41,7 @@ private:
     ModelCache* modelCachePtr = nullptr;
     ViewportUI* viewportUIPtr = nullptr;
     MaterialCache* materialCachePtr = nullptr;
+    Platform* platform = nullptr;
     void applyUniform(unsigned int modelID, const Uniform& uniform);
     void applyUniform(ShaderProgram& program, const Uniform& uniform);
 };

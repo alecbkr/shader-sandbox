@@ -41,7 +41,7 @@ namespace {
         const char* referencedUniformName = "referencedUniformName";
         const char* returnType           = "returnType";
         const char* useWorldData         = "useWorldData";
-        const char* useCamaraData        = "useCamaraData";
+        const char* useWorldVariable        = "useCamaraData";
         const char* initialized          = "initialized";
     } referenceLabels;
 
@@ -112,7 +112,7 @@ namespace {
                         { referenceLabels.referencedUniformName, ref.referencedUniformName },
                         { referenceLabels.returnType, to_string(ref.returnType) },
                         { referenceLabels.useWorldData, ref.useWorldData },
-                        { referenceLabels.useCamaraData, ref.useCamaraData },
+                        { referenceLabels.useWorldVariable, ref.useWorldVariable },
                         { referenceLabels.initialized, ref.initialized },
                     };
                 },
@@ -181,7 +181,7 @@ namespace {
                     ref.returnType = UniformType::NoType;
                 }
                 ref.useWorldData  = j.value(referenceLabels.useWorldData, false);
-                ref.useCamaraData = j.value(referenceLabels.useCamaraData, false);
+                ref.useWorldVariable = j.value(referenceLabels.useWorldVariable, false);
                 ref.initialized   = j.value(referenceLabels.initialized, false);
                 out               = ref;
                 return true;

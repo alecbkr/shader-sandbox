@@ -5,6 +5,7 @@
 #include <string>
 #include <variant>
 #include <glm/glm.hpp>
+#include <vector>
 
 enum class UniformType {
     NoType,
@@ -56,7 +57,7 @@ struct InspectorReference {
     std::string referencedUniformName;
     UniformType returnType;
     bool useWorldData = false;
-    bool useCamaraData = false;
+    bool useWorldVariable = false;
     bool initialized = false;
 };
 
@@ -78,6 +79,7 @@ inline std::optional<std::vector<std::string>> getWorldData(UniformType type) {
     switch (type) {
         case UniformType::Vec3:       return std::vector<std::string>{"position", "scale"};
         case UniformType::Vec4:       return std::vector<std::string>{"orientation"};
+        case UniformType::Float:      return std::vector<std::string>{"getTime"};
         default: return std::nullopt;
     }
     return std::nullopt;

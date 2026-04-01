@@ -27,6 +27,7 @@
 #include "core/ShaderRegistry.hpp"
 #include "core/UniformRegistry.hpp"
 #include "object/ModelCache.hpp"
+#include "platform/Platform.hpp"
 
 InspectorEngine::InspectorEngine() {
     loggerPtr = nullptr;
@@ -37,7 +38,7 @@ InspectorEngine::InspectorEngine() {
     initialized = false;
 }
 
-bool InspectorEngine::initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, ModelCache* _modelCachePtr, ViewportUI* _viewportUIPtr, MaterialCache* _materialCachePtr) {
+bool InspectorEngine::initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, ModelCache* _modelCachePtr, ViewportUI* _viewportUIPtr, MaterialCache* _materialCachePtr, Platform* _platform) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Inspector Engine Initialization", "Inspector Engine was already initialized.");
         return false;
@@ -49,6 +50,7 @@ bool InspectorEngine::initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegP
     viewportUIPtr = _viewportUIPtr;
     materialCachePtr = _materialCachePtr;
     modelCachePtr = _modelCachePtr;
+    platform = _platform;
 
     initialized = true;
     return true;
@@ -344,7 +346,7 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
 
         if (currentFunction.useWorldData) {
             // need a better way of doing this...
-            if (currentFunction.useCamaraData) {
+            if (currentFunction.useWorldVariable) {
                 switch (currentFunction.returnType) {
                 case UniformType::Vec3: {
                     const Camera* const cam = viewportUIPtr->getCamera();
@@ -352,7 +354,7 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
                         loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", "camera is null!");
                         continue;
                     }
-                    if (function.referencedUniformName == "position") {
+                    if (function.referencedUniformName == "Camera Position") {
                         finalValue = uniform;
                         finalValue.name = uniform.name;
                         finalValue.isFunction = false;
@@ -362,6 +364,16 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
                     break;
                 }
                 case UniformType::Vec4: {
+                    break;
+                }
+                case UniformType::Float: {
+                    if (function.referencedUniformName == "Current Time") {
+                        finalValue = uniform;
+                        finalValue.name = uniform.name;
+                        finalValue.isFunction = false;
+                        finalValue.value = platform->getTime(); // doesn't render every frame yet
+                        validFunction = true;
+                    }
                     break;
                 }
                 default: 
