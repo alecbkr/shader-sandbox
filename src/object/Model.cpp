@@ -10,6 +10,7 @@ Model::Model(const unsigned int ID, std::string model_path, ModelType type)
 
 
 void Model::drawMesh(unsigned int meshID) {
+    if (meshID >= meshes.size()) return;
     MeshA* mesh = &meshes[meshID];
     // mesh->setInstanceVBO(modelInstanceCount, instanceData);
     mesh->bind(instanceData);
@@ -196,47 +197,56 @@ void Model::setName(std::string name) {
 
 
 void Model::setMeshMaterial(unsigned int meshIdx, unsigned int materialID) {
-    MeshInstance* meshInstance = &meshInstances[meshIdx];
+    if (meshIdx >= meshInstances.size()) {
+        return;
+    }
 
-    if (meshInstance->materialID != UINT_MAX) {
-        allMaterialReferences.at(meshInstance->materialID)--;
-        if (allMaterialReferences.at(meshInstance->materialID) == 0) {
-            allMaterialReferences.erase(meshInstance->materialID);
+    MeshInstance& meshInstance = meshInstances[meshIdx];
+
+    // Remove old real material reference
+    if (meshInstance.materialID != UINT_MAX) {
+        auto it = allMaterialReferences.find(meshInstance.materialID);
+        if (it != allMaterialReferences.end()) {
+            if (--(it->second) == 0) {
+                allMaterialReferences.erase(it);
+            }
         }
     }
-    
-    
-    meshInstance->materialID = materialID;
-    if (allMaterialReferences.contains(materialID)) {
-        allMaterialReferences.at(materialID)++;
-    }
-    else {
-        allMaterialReferences.emplace(materialID, 1);
+
+    // Assign new material
+    meshInstance.materialID = materialID;
+
+    // Only track real materials
+    if (materialID != UINT_MAX) {
+        allMaterialReferences[materialID]++;
     }
 
-    bool allMeshesHaveProgram = true;
-    for (MeshInstance& meshInstance : meshInstances) {
-        if (meshInstance.materialID == UINT_MAX) {
-            allMeshesHaveProgram = false;
+    // Model is renderable only if every mesh has a real material
+    bool allMeshesHaveMaterial = true;
+    for (const MeshInstance& mi : meshInstances) {
+        if (mi.materialID == UINT_MAX) {
+            allMeshesHaveMaterial = false;
             break;
         }
     }
 
-    if (allMeshesHaveProgram == true) {
-        status.material = ModelState::Ready;
-    }
+    status.material = allMeshesHaveMaterial ? ModelState::Ready : ModelState::Building;
 }
 
 
 void Model::setModelMaterial(unsigned int materialID) {
     allMaterialReferences.clear();
-    allMaterialReferences.emplace(materialID, 0); // adds material ID w/ reference cnt = 0
 
     for (MeshInstance& meshInstance : meshInstances) {
         meshInstance.materialID = materialID;
-        allMaterialReferences.at(materialID)++;
     }
-    status.material = ModelState::Ready;
+
+    if (materialID != UINT_MAX) {
+        allMaterialReferences.emplace(materialID, static_cast<unsigned int>(meshInstances.size()));
+        status.material = ModelState::Ready;
+    } else {
+        status.material = ModelState::Building;
+    }
 }
 
 
@@ -262,10 +272,17 @@ void Model::calcModelM() {
     this->modelM = model;
 }
 
-
 void Model::loadInstanceData(std::vector<InstanceData> data) {
-    for (unsigned int instanceIdx = 0; instanceIdx < modelInstanceCount; instanceIdx++) {
-        instanceData[instanceIdx] = data[instanceIdx];
+    instanceData = std::move(data);
+    modelInstanceCount = static_cast<unsigned int>(instanceData.size());
+
+    if (modelInstanceCount < 1) {
+        instanceData.emplace_back(glm::vec3(0.0f, 0.0f, 0.0f));
+        modelInstanceCount = 1;
+    }
+
+    for (MeshA& mesh : meshes) {
+        mesh.resizeInstanceVBO(instanceData);
     }
 }
 
@@ -274,7 +291,8 @@ void Model::loadMeshMaterialIDs(std::vector<unsigned int> meshMaterialIDs) {
     for (unsigned int meshIdx = 0; meshIdx < meshInstances.size(); meshIdx++) {
         meshInstances[meshIdx].materialID = meshMaterialIDs[meshIdx];
     }
-    status.material = ModelState::Ready;
+
+    rebuildMaterialReferences();
 }
 
 
@@ -312,4 +330,41 @@ std::string Model::getProgramID() {
 
 void Model::setProgramID(std::string programID) {
     // loggerPtr->Logger::addLog(LogLevel::LOG_ERROR, "MODEL-setProgramID()", "doing nothing");
+}
+
+bool Model::eraseMaterial(unsigned int materialID) {
+    bool found = false;
+
+    for (MeshInstance& meshInstance : meshInstances) {
+        if (meshInstance.materialID == materialID) {
+            meshInstance.materialID = UINT_MAX;
+            found = true;
+        }
+    }
+
+    rebuildMaterialReferences();
+    return found;
+}
+
+void Model::rebuildMaterialReferences() {
+    allMaterialReferences.clear();
+
+    for (const MeshInstance& meshInstance : meshInstances) {
+        if (meshInstance.materialID != UINT_MAX) {
+            if (allMaterialReferences.contains(meshInstance.materialID)) {
+                allMaterialReferences.at(meshInstance.materialID)++;
+            } else {
+                allMaterialReferences.emplace(meshInstance.materialID, 1);
+            }
+        }
+    }
+
+    for (const MeshInstance& meshInstance : meshInstances) {
+        if (meshInstance.materialID == UINT_MAX) {
+            status.material = ModelState::Building;
+            return;
+        }
+    }
+
+    status.material = ModelState::Ready;
 }

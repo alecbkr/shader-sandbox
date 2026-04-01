@@ -206,7 +206,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
         return false;
     }
-    if (!ctx.material_cache.initialize(&ctx.logger, &ctx.events, &ctx.texture_cache, &ctx.model_cache, ctx.project.previouslySaved)) {
+    if (!ctx.material_cache.initialize(&ctx.logger, &ctx.events, &ctx.texture_cache, &ctx.model_cache, &ctx.uniform_registry, &ctx.shader_registry, ctx.project.previouslySaved)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Material Cache was not initialized successfully.");
         return false;
     }
@@ -263,7 +263,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Renderer was not initialized successfully.");
         return false;
     }
-    ctx.material_cache.initializeAfterRenderer(&ctx.renderer);
+    ctx.material_cache.initializeAfterRenderer(&ctx.renderer, &ctx.inspector_engine);
     if (!ctx.viewport_ui.initialize(&ctx.logger, &ctx.platform, &ctx.renderer, &ctx.timer, &ctx.inputs)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Viewport UI was not initialized successfully.");
         return false;

@@ -234,7 +234,7 @@ void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::
             const auto uniformMap = uniformRegPtr_->tryReadMaterialUniforms(matID);
 
             if (uniformMap == nullptr) {
-                loggerPtr_->addLog(LogLevel::WARNING, "drawUniformInspector", "Model not found in registry: ", std::to_string(modelID));
+                loggerPtr_->addLog(LogLevel::WARNING, "drawMaterialContainer", "Material uniforms not found in registry for material: ", std::to_string(matID));
                 continue;
             }
 

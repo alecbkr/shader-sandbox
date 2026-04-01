@@ -189,7 +189,7 @@ void MaterialsInspectorUI::draw() {
                 if (matOpen) {
                     const auto& programs = shaderReg->getPrograms();
 
-                    static int currentType = (int)mat->getMaterialType();
+                    int currentType = (int)mat->getMaterialType();
                     static const char* materialTypes[3] = {"Opaque", "Cutout", "Translucent"};
 
                     if (ImGui::Combo("Type", &currentType, materialTypes, 3)) {
@@ -202,6 +202,7 @@ void MaterialsInspectorUI::draw() {
                             bool isSelected = (mat->getProgramID() == name);
 
                             if (ImGui::Selectable(name.c_str(), isSelected)) {
+                                matCache->changeMaterialProgram(mat->ID, name);
                                 mat->setProgramID(name);
                             }
 

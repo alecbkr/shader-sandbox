@@ -225,3 +225,13 @@ const std::unique_ptr<std::unordered_map<std::string, Uniform>> UniformRegistry:
 
     return unis;
 }
+
+void UniformRegistry::eraseMaterial(unsigned int matID) {
+    if (!materialUniforms.contains(matID)) return;
+
+    for (const auto& [name, uniformID] : materialUniforms.at(matID)) {
+        project->uniforms.erase(uniformID);
+    }
+
+    materialUniforms.erase(matID);
+}
