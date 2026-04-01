@@ -354,7 +354,7 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
                         loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", "camera is null!");
                         continue;
                     }
-                    if (function.referencedUniformName == "Camera Position") {
+                    if (function.referencedUniformName == "position") {
                         finalValue = uniform;
                         finalValue.name = uniform.name;
                         finalValue.isFunction = false;
@@ -367,7 +367,7 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
                     break;
                 }
                 case UniformType::Float: {
-                    if (function.referencedUniformName == "Current Time") {
+                    if (function.referencedUniformName == "getTime") {
                         finalValue = uniform;
                         finalValue.name = uniform.name;
                         finalValue.isFunction = false;
