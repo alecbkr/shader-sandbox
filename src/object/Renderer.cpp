@@ -375,9 +375,9 @@ bool Renderer::validatePrimitive(unsigned int primitiveID) {
         result = false;
     }
 
-    // no material to be found if matID is 0 so we always return false in this case. this is intentional
+    // no material to be found if matID is max so we always return false in this case. this is intentional
     // so its not an error to report, but we also want to check if other errors previously occured and report those.
-    if (primitive.materialID == 0) {
+    if (primitive.materialID == std::numeric_limits<unsigned int>::max()) {
         if (result == false) {
             if (!feedback.empty()) loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER::validatePrimitive()", feedback);
         }

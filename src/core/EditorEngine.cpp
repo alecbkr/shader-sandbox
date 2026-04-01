@@ -24,12 +24,11 @@ std::string getFileContents(std::string filename) {
     return "";
 }
 
-Editor::Editor(std::string filePath, std::string fileName, unsigned int modelID, SettingsStyles* styles, bool readOnly) {
+Editor::Editor(std::string filePath, std::string fileName, SettingsStyles* styles, bool readOnly) {
     searcher.setSearchFlag(SearchUIFlags::ADVANCED | SearchUIFlags::REPLACE);
 
     this->filePath = std::move(filePath);
     this->fileName = std::move(fileName);
-    this->modelID = modelID;
     this->stylesPtr = styles;
     this->readOnly = readOnly;
     seenPaletteVersion = std::numeric_limits<u32>::max();
@@ -132,23 +131,23 @@ void EditorEngine::shutdown() {
 
 bool EditorEngine::spawnEditor(const EventPayload& payload) {
     if (const auto* data = std::get_if<OpenFilePayload>(&payload)) {
-        unsigned int linkedID = data->modelID;
+        // unsigned int linkedID = data->modelID;
 
-        if (linkedID == 0) {
-            for (auto const& model : modelCachePtr->getAllModels()) {
+        // if (linkedID == 0) {
+        //     for (auto const& model : modelCachePtr->getAllModels()) {
 
-                ShaderProgram* modelProgram = shaderRegPtr->getProgram(model->getProgramID()); //SHOULD NOT BE HERE getProgramID call from model is dummy
-                if (modelProgram != nullptr) {
-                    if (modelProgram->fragPath == data->filePath || 
-                        modelProgram->vertPath == data->filePath) {
-                        linkedID = model->ID;
-                        break;
-                    }
-                }
-            }
-        }
+        //         ShaderProgram* modelProgram = shaderRegPtr->getProgram(model->getProgramID()); //SHOULD NOT BE HERE getProgramID call from model is dummy
+        //         if (modelProgram != nullptr) {
+        //             if (modelProgram->fragPath == data->filePath || 
+        //                 modelProgram->vertPath == data->filePath) {
+        //                 linkedID = model->ID;
+        //                 break;
+        //             }
+        //         }
+        //     }
+        // }
         if (!data->filePath.empty() && std::filesystem::exists(data->filePath)) {
-            editors.push_back(new Editor(data->filePath, data->fileName, linkedID, stylesPtr, data->readOnly));
+            editors.push_back(new Editor(data->filePath, data->fileName, stylesPtr, data->readOnly));
         }
 
         return true;
@@ -157,7 +156,7 @@ bool EditorEngine::spawnEditor(const EventPayload& payload) {
             const std::string fileName = findNextFileNumber("Untitled");
             const std::string filePath = (projectPtr->projectShadersDir /  fileName).string();
             createFile(filePath);
-            editors.push_back(new Editor(filePath, fileName, 0, stylesPtr, false));
+            editors.push_back(new Editor(filePath, fileName, stylesPtr, false));
             return true;
         } catch (const std::filesystem::filesystem_error& e) {
             loggerPtr->addLog(LogLevel::LOG_ERROR, "EditorEngine::createFile", std::string("Filesystem error: ") + e.what());

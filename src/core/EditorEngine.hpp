@@ -17,11 +17,10 @@ struct SettingsStyles;
 struct Editor {
     TextEditor textEditor;
     SearchText searcher;
-    Editor(std::string filePath, std::string fileName, unsigned int modelID, SettingsStyles* styles, bool readOnly);
+    Editor(std::string filePath, std::string fileName, SettingsStyles* styles, bool readOnly);
     std::string filePath;
     std::string fileName;
     bool readOnly;
-    unsigned int modelID;
 
     SettingsStyles* stylesPtr = nullptr;
     u32 seenPaletteVersion = 0;

@@ -7,6 +7,7 @@
 #include "object/ModelCache.hpp"
 #include "object/Renderer.hpp"
 #include <memory>
+#include <limits>
 
 #include <iostream> //TEMPADD
 
@@ -75,8 +76,8 @@ void MaterialCache::deleteMaterial(unsigned int materialID) {
     for (auto& model : modelCachePtr->getAllModels()) {
         for (auto& meshInstance : model->getMeshInstances()) {
             if (meshInstance.materialID == materialID) {
-                model->setMeshMaterial(meshInstance.meshIdx, 0);
-                rendererPtr->setMeshMaterial(model->getID(), meshInstance.meshIdx, 0);
+                model->setMeshMaterial(meshInstance.meshIdx, std::numeric_limits<unsigned int>::max());
+                rendererPtr->setMeshMaterial(model->getID(), meshInstance.meshIdx, std::numeric_limits<unsigned int>::max());
             }
         }
     }

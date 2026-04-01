@@ -233,7 +233,7 @@ void FileInspectorUI::drawStandardFileEntry(ShaderFile* fileData, EventDispatche
             Event{
                 EventType::OpenFile,
                 false,
-                OpenFilePayload{ fileData->filePath, fileData->fileName, 0, false }
+                OpenFilePayload{ fileData->filePath, fileData->fileName, false }
             }
         );
     }
@@ -248,7 +248,7 @@ void FileInspectorUI::drawPresetShaderEntry(std::filesystem::path filePath, Even
             Event{
                 EventType::OpenFile,
                 false,
-                OpenFilePayload{ filePath.string(), filePath.filename().string(), 0, true }
+                OpenFilePayload{ filePath.string(), filePath.filename().string(), true }
             }
         );
     }

@@ -226,13 +226,12 @@ TEST_CASE("EventDispatcher: payload arrives intact (OpenFile)", "[event][dispatc
         return true;
     });
 
-    d.TriggerEvent(OpenFileEvent("C:/x/y", "file.glsl", 9, false));
+    d.TriggerEvent(OpenFileEvent("C:/x/y", "file.glsl", false));
     d.ProcessQueue();
 
     REQUIRE(calls == 1);
     REQUIRE(got.filePath == "C:/x/y");
     REQUIRE(got.fileName == "file.glsl");
-    REQUIRE(got.modelID == 9u);
 }
 
 TEST_CASE("EventDispatcher: payload arrives intact (WindowResize)", "[event][dispatcher][payload]") {

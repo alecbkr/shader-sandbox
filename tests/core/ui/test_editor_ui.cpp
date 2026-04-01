@@ -62,8 +62,8 @@ TEST_CASE("EditorUI: Tab Management", "[editor_ui]") {
     ui.initialize(&logger, &engine, &context, &events, &project, &fonts);
 
     SECTION("Closing a tab removes it from engine") {
-        events.TriggerEvent(OpenFileEvent("file1.frag", "file1.frag", 0, false));
-        events.TriggerEvent(OpenFileEvent("file2.frag", "file2.frag", 0, false));
+        events.TriggerEvent(OpenFileEvent("file1.frag", "file1.frag", false));
+        events.TriggerEvent(OpenFileEvent("file2.frag", "file2.frag", false));
         events.ProcessQueue();
 
         REQUIRE(engine.editors.size() == 2);

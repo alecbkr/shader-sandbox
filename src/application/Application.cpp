@@ -143,18 +143,18 @@ void Application::initializeUI(AppContext& ctx) {
     }
 }
 
-void loadPresetAssets(AppContext& ctx) {
-    ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "skybox.vert", ctx.project.projectShadersDir / "skybox.frag", "skybox");
+void Application::loadDefaultScene(AppContext& ctx) {
+    // ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "skybox.vert", ctx.project.projectShadersDir / "skybox.frag", "skybox");
 
-    unsigned int skyMatID = ctx.material_cache.createBlankMaterial();
-    ctx.material_cache.addTextureToMaterial(skyMatID, "../assets/textures/skybox", true);
-    ctx.material_cache.getMaterial(skyMatID)->setProgramID("skybox");
+    // unsigned int skyMatID = ctx.material_cache.createBlankMaterial();
+    // ctx.material_cache.addTextureToMaterial(skyMatID, "../assets/textures/skybox", true);
+    // ctx.material_cache.getMaterial(skyMatID)->setProgramID("skybox");
 
-    unsigned int skyboxID = ctx.model_cache.createPreset(ModelType::CubePreset);
-    ctx.model_cache.changeModelMaterial(skyboxID, skyMatID);
-    ctx.model_cache.setAsSkybox(skyboxID);
+    // unsigned int skyboxID = ctx.model_cache.createPreset(ModelType::CubePreset);
+    // ctx.model_cache.changeModelMaterial(skyboxID, skyMatID);
+    // ctx.model_cache.setAsSkybox(skyboxID);
 
-    ctx.inspector_engine.refreshUniforms();
+    // ctx.inspector_engine.refreshUniforms();
 }
 
 bool Application::initialize(AppContext& ctx) {

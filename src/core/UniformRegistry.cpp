@@ -8,6 +8,9 @@ UniformRegistry::UniformRegistry() {
     materialUniforms.clear();
     sceneUniforms.clear();
     modelUniforms.clear();
+
+    project = nullptr;
+    loggerPtr = nullptr;
 }
 
 bool UniformRegistry::initialize(Logger* _loggerPtr, Project* _project) {
@@ -26,6 +29,7 @@ bool UniformRegistry::initialize(Logger* _loggerPtr, Project* _project) {
 
 void UniformRegistry::shutdown() {
     loggerPtr = nullptr;
+    project = nullptr;
     materialUniforms.clear();
     sceneUniforms.clear();
     modelUniforms.clear();
