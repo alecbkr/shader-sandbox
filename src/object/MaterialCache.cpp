@@ -6,6 +6,8 @@
 #include "texture/TextureCache.hpp"
 #include <memory>
 
+#include <iostream> //TEMPADD
+
 MaterialCache::MaterialCache() = default;
 
 bool MaterialCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, TextureCache* _textureCachePtr, bool previouslySaved) {
@@ -17,13 +19,6 @@ bool MaterialCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, 
         loggerPtr->addLog(LogLevel::WARNING, "Material Cache Initialization", "Material Cache was already initialized.");
         return false;
     }
-
-    // loggerPtr->addLog(LogLevel::INFO, "TEST", "here: " + std::to_string(previouslySaved)); //TEMPPRINT
-    //DEFAULT MATERIAL TO BE USED BY ALL NEWLY CREATED PRESET MODELS | ID = 0
-    // if (previouslySaved == false) {
-    //     materialIDMap.emplace(0, std::make_unique<Material>(0, MaterialType::Opaque));
-        // nextMaterialID = 1;
-    // }
     
 
     initialized = true;
@@ -60,13 +55,19 @@ unsigned int MaterialCache::createMaterial(MaterialType type, MaterialProperties
 }
 
 
-void MaterialCache::addTextureToMaterial(unsigned int materialID, std::string texture_path) {
+void MaterialCache::addTextureToMaterial(unsigned int materialID, std::string texture_path, bool isCubemap) {
     Material* foundMaterial = getMaterial(materialID);
     if (foundMaterial == nullptr) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "addTextureToMaterial", "materialID out of bounds: ", std::to_string(materialID));
         return;
     }
-    unsigned int textureID = textureCachePtr->createTexture2D(texture_path);
+
+
+    unsigned int textureID;
+    switch (isCubemap) {
+        case true:  textureID = textureCachePtr->createCubeMap(texture_path);   break;
+        case false: textureID = textureCachePtr->createTexture2D(texture_path); break;
+    }
     foundMaterial->addTexture(textureID);
 }
 
@@ -110,7 +111,7 @@ bool MaterialCache::loadMaterialFromSave(unsigned int materialID, MaterialType t
     }
     materialIDMap.emplace(materialID, std::make_unique<Material>(materialID, type));
     for(std::string texture_path : texture_paths) {
-        addTextureToMaterial(materialID, texture_path);
+        addTextureToMaterial(materialID, texture_path, false);
     }
     getMaterial(materialID)->setProperties(properties);
     return true;

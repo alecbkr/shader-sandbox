@@ -50,18 +50,23 @@ bool Renderer::initialize(
             Model* newModel = modelCachePtr->getModel(data->modelID);
             for (const MeshInstance& meshInstance : newModel->getMeshInstances()) {
                 if (validateNextID() == false) {
-                    loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER", "failed to validate next primitive ID on model creation");
+                    loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER::Event", "failed to validate next primitive ID on model creation");
                     break;
                 }
 
                 QueueType queueType;
-                MaterialType materialType = materialCachePtr->getMaterial(meshInstance.materialID)->getMaterialType();
-                switch (materialType) {
-                    case MaterialType::Opaque:      queueType = Opaque;      break;
-                    case MaterialType::Cutout:      queueType = Cutout;      break;
-                    case MaterialType::Translucent: queueType = Translucent; break;
-                }   
-
+                if (data->isSkyBox == true) {
+                    queueType = Skybox;
+                }
+                else {
+                    MaterialType materialType = materialCachePtr->getMaterial(meshInstance.materialID)->getMaterialType();
+                    switch (materialType) {
+                        case MaterialType::Opaque:      queueType = Opaque;      break;
+                        case MaterialType::Cutout:      queueType = Cutout;      break;
+                        case MaterialType::Translucent: queueType = Translucent; break;
+                    }   
+                }
+                
                 primitiveIDMap.emplace(
                     nextPrimitiveID, 
                     Primitive{
@@ -92,6 +97,7 @@ bool Renderer::initialize(
                 else {
                     iter++;
                 }
+            
             }
             return true;
         }
@@ -126,9 +132,10 @@ bool Renderer::initialize(
 
     eventsPtr->Subscribe(EventType::MaterialTypeChange, [this](const EventPayload& payload) -> bool {
         if (const auto* data = std::get_if<MaterialTypeChangePayload>(&payload)) {
-            
+
             for (auto iter = primitiveIDMap.begin(); iter != primitiveIDMap.end(); ) {
                 if (iter->second.materialID == data->materialID) {
+                    
                     QueueType newHostQueueType;
                     switch (data->newType) {
                         case MaterialType::Opaque:      newHostQueueType = Opaque;      break;
@@ -137,12 +144,12 @@ bool Renderer::initialize(
                     }
                     unsigned int primitiveID = iter->first;
                     QueueType oldHostQueueType = iter->second.queuetype;
+                    iter->second.queuetype = newHostQueueType;
+
                     removeFromQueue(primitiveID, oldHostQueueType);
                     placeInQueue(primitiveID, newHostQueueType);
                 }
-                else {
-                    iter++;
-                }
+                iter++;
             }
             return true;
         }
@@ -161,10 +168,13 @@ void Renderer::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camPos
             .name = "view", .type = UniformType::Mat4, .value = view, .invisible = true
     });
 
+    unsigned int skyboxModelID = modelCachePtr->getSkyboxModelID();
     for (auto& model : modelCachePtr->getAllModels()) {
+        if (model->ID == skyboxModelID) continue;
         uniformRegPtr->registerModelUniform(model->ID, {"model", UniformType::Mat4, model->getModelMatrix(), 0, 0, false, false, false, true});
     }
     
+    renderSkybox();
     renderOpaquePrimitives();
     renderCutoutPrimitives();
     reorderTranslucentPrimitives(view);
@@ -172,20 +182,35 @@ void Renderer::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camPos
 }
 
 
-// void Renderer::renderSkybox() {
+void Renderer::renderSkybox() {
+    if (skyboxPrimID == UINT_MAX) return;
+
+    if (validatePrimitive(skyboxPrimID) == false) {
+        // primitiveIDMap.erase(skyboxPrimID);
+        skyboxPrimID = UINT_MAX;
+        return;
+    }
     
-//     glDepthFunc(GL_LEQUAL);
-//     glDepthMask(GL_FALSE);
-//     inspectorEngPtr->applyAllUniformsForPrimitive(*skyboxPrim);
-//     modelCachePtr->getSkybox()->drawMesh(0);
-//     glDepthMask(GL_TRUE);
-//     glDepthFunc(GL_LESS);
-// }
+    Primitive* skyboxPrimitive = &primitiveIDMap.at(skyboxPrimID);
+    glDepthFunc(GL_LEQUAL);
+    glDepthMask(GL_FALSE);
+    bindProgram(skyboxPrimitive->materialID);
+    inspectorEngPtr->applyAllUniformsForPrimitive(skyboxPrimitive->modelID, skyboxPrimitive->meshIdx, skyboxPrimitive->materialID);
+    bindTextures(skyboxPrimitive->materialID);
+    drawMesh(skyboxPrimitive->modelID, skyboxPrimitive->meshIdx);
+    glDepthMask(GL_TRUE);
+    glDepthFunc(GL_LESS);
+}
 
 
 void Renderer::renderOpaquePrimitives() {
     for (unsigned int primitiveID : opaquePrimIDs) {
-    
+        
+        if (validatePrimitive(primitiveID) == false) {
+            // removeFromQueue(primitiveID, QueueType::Opaque);
+            continue;
+        }
+
         Primitive* currPrimitive = &primitiveIDMap.at(primitiveID);
         bindProgram(currPrimitive->materialID);
         inspectorEngPtr->applyAllUniformsForPrimitive(currPrimitive->modelID, currPrimitive->meshIdx, currPrimitive->materialID);
@@ -197,6 +222,11 @@ void Renderer::renderOpaquePrimitives() {
 
 void Renderer::renderCutoutPrimitives() {
     for (unsigned int primitiveID : cutoutPrimIDs) {
+
+        if (validatePrimitive(primitiveID) == false) {
+            // removeFromQueue(primitiveID, QueueType::Cutout);
+            continue;
+        }
 
         Primitive* currPrimitive = &primitiveIDMap.at(primitiveID);
         bindProgram(currPrimitive->materialID);
@@ -211,6 +241,11 @@ void Renderer::renderTranslucentPrimitives() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
     for (unsigned int primitiveID : translucentPrimIDs) {
+
+        if (validatePrimitive(primitiveID) == false) {
+            // removeFromQueue(primitiveID, QueueType::Translucent);
+            continue;
+        }
 
         Primitive* currPrimitive = &primitiveIDMap.at(primitiveID);
         bindProgram(currPrimitive->materialID);
@@ -244,10 +279,6 @@ void Renderer::reorderTranslucentPrimitives(glm::mat4 viewMat) {
 
 void Renderer::bindTextures(unsigned int materialID) {
     Material* foundMaterial = materialCachePtr->getMaterial(materialID);
-    if (foundMaterial == nullptr) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER |bindTextures()", "materialID out of bounds: ", std::to_string(materialID));
-        return;
-    }
 
     const auto& textureIDs = foundMaterial->getMaterialTextureIDs();
     if (textureIDs.empty() == false) {
@@ -265,34 +296,13 @@ void Renderer::bindTextures(unsigned int materialID) {
 
 void Renderer::bindProgram(unsigned int materialID) {
     Material* foundMaterial = materialCachePtr->getMaterial(materialID);  
-
-    if (foundMaterial == nullptr) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER | bindProgram()", "materialID out of bounds: ", std::to_string(materialID));
-        return;
-    }
-
     ShaderProgram* program = shaderRegPtr->getProgram(foundMaterial->getProgramID());
-    if (program == nullptr) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER | bindProgram()", "shader program not found: ", foundMaterial->getProgramID());
-        return;
-    }
-
     program->use();
 }
 
 
 void Renderer::drawMesh(unsigned int modelID, unsigned int meshIdx) {
     Model* foundModel = modelCachePtr->getModel(modelID);
-    if (foundModel == nullptr) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER | drawMesh()", "model not found with ID " + std::to_string(modelID));
-        return;
-    }
-
-    if (meshIdx >= foundModel->getNumberOfMeshes()) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER | drawMesh()", "meshIdx " + std::to_string(meshIdx) + " out of bounds for model " + std::to_string(modelID));
-        return;
-    }
-
     foundModel->drawMesh(meshIdx);
 }
 
@@ -315,6 +325,9 @@ void Renderer::placeInQueue(unsigned int primitiveID, QueueType queueType) {
         case Opaque:      hostQueue = &opaquePrimIDs;      break;
         case Cutout:      hostQueue = &cutoutPrimIDs;      break;
         case Translucent: hostQueue = &translucentPrimIDs; break;
+        case Skybox:
+            skyboxPrimID = primitiveID;
+            return;
     }
     hostQueue->push_back(primitiveID);
 }
@@ -326,6 +339,9 @@ void Renderer::removeFromQueue(unsigned int primitiveIDToDelete, QueueType queue
         case Opaque:      hostQueue = &opaquePrimIDs;      break;
         case Cutout:      hostQueue = &cutoutPrimIDs;      break;
         case Translucent: hostQueue = &translucentPrimIDs; break;
+        case Skybox:
+            skyboxPrimID = UINT_MAX;
+            return;
     }
     for (auto iter = hostQueue->begin(); iter != hostQueue->end(); ) {
         if (*iter == primitiveIDToDelete) {
@@ -336,4 +352,41 @@ void Renderer::removeFromQueue(unsigned int primitiveIDToDelete, QueueType queue
             iter++;
         }
     }
+}
+
+
+bool Renderer::validatePrimitive(unsigned int primitiveID) {
+    if (primitiveIDMap.contains(primitiveID) == false) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER::validatePrimitive", "primitive not found in map with ID " + std::to_string(primitiveID));
+        return false;
+    }
+
+    Primitive& primitive = primitiveIDMap.at(primitiveID);
+    bool result = true;
+    std::string feedback = "";
+
+    Model* foundModel = modelCachePtr->getModel(primitive.modelID);
+    if (foundModel == nullptr) {
+        feedback += "\nmodel not found with ID " + std::to_string(primitive.modelID);
+        result = false;
+    }
+    else if (primitive.meshIdx >= foundModel->getNumberOfMeshes()) {
+        feedback += "\nmesh with Index " + std::to_string(primitive.meshIdx) + " out of bounds for model " + std::to_string(primitive.modelID);
+        result = false;
+    }
+
+    Material* foundMaterial = materialCachePtr->getMaterial(primitive.materialID);  
+    if (foundMaterial == nullptr) {
+        feedback += "\nmaterial not found with ID: " + std::to_string(primitive.materialID) + ". Removing materialID from model";
+        result = false;
+    }
+    else if (shaderRegPtr->getProgram(foundMaterial->getProgramID()) == nullptr) {
+        feedback += "\nshader program not found: " + foundMaterial->getProgramID();
+        result = false;
+    }
+
+    if (result == false) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "RENDERER::validatePrimitive()", feedback);
+    }
+    return result;
 }

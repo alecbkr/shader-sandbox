@@ -36,7 +36,7 @@ struct OpenFilePayload { std::string filePath; std::string fileName; unsigned in
 struct RenameFilePayload { std::string oldName, newName; };
 struct DeleteFilePayload { std::string fileName; };
 struct CloneFilePayload {std::string fileName; };
-struct ModelCreationPayload { unsigned int modelID; };
+struct ModelCreationPayload { unsigned int modelID; bool isSkyBox; };
 struct ModelDeletionPayload { unsigned int modelID; };
 struct ModelMaterialChangePayload { unsigned int modelID; unsigned int meshIdx; unsigned int materialID; };
 struct MaterialTypeChangePayload { unsigned int materialID; MaterialType newType; };

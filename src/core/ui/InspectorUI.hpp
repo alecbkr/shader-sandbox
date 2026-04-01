@@ -8,6 +8,7 @@
 class Logger;
 class InspectorEngine;
 class TextureRegistry;
+class TextureCache;
 class ShaderRegistry;
 class UniformRegistry;
 class FileRegistry;
@@ -15,6 +16,7 @@ class EventDispatcher;
 class ModelCache;
 class UniformInspectorUI;
 class ObjectsInspectorUI;
+class MaterialsInspectorUI;
 class AssetsInspectorUI;
 class FileInspectorUI;
 class Fonts;
@@ -25,7 +27,7 @@ class InspectorUI {
 public:
     InspectorUI();
     ~InspectorUI();
-    bool initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr, Fonts* _fontsPtr, Project* _project, SettingsStyles* _styles);
+    bool initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngPtr, TextureRegistry* _textureRegPtr, TextureCache* _textureCachePtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, EventDispatcher* _eventsPtr, ModelCache* _modelCachePtr, FileRegistry* _fileRegPtr, MaterialCache* _materialCachePtr, Fonts* _fontsPtr, Project* _project, SettingsStyles* _styles);
     void shutdown();
     void render();
   
@@ -34,6 +36,7 @@ private:
     Logger* loggerPtr = nullptr;
     InspectorEngine* inspectorEngPtr = nullptr;
     TextureRegistry* textureRegPtr = nullptr;
+    TextureCache* textureCachePtr = nullptr;
     ShaderRegistry* shaderRegPtr = nullptr;
     UniformRegistry* uniformRegPtr = nullptr;
     EventDispatcher* eventsPtr = nullptr;
@@ -46,6 +49,7 @@ private:
     std::unique_ptr<ObjectsInspectorUI> objectsInspectorUI;
     std::unique_ptr<AssetsInspectorUI> assetsInspectorUI;
     std::unique_ptr<FileInspectorUI> fileInspectorUI;
+    std::unique_ptr<MaterialsInspectorUI> materialsInspectorUI;
     int height = 0;
     int width = 0;
 };

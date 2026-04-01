@@ -187,6 +187,28 @@ namespace DefaultTheme {
         styles.paletteVersion++;
 
         // ---------- Custom inspector values ----------
+        styles.inspectorBodyPadding = 12.0f;
+        styles.inspectorBodyRounding = 6.0f;
+        styles.inspectorBorderThickness = 1.0f;
+        styles.inspectorTitleInnerPadding = 1.0f;
+        styles.inspectorTitleOffset = 6.0f;
+
+        styles.inspectorBorderColor = ImVec4(0.1764705926179886f, 0.18431372940540314f, 0.24705882370471954f, 1.0f);
+        styles.inspectorTabBackgroundColor = ImVec4(0.10196078568696976f, 0.10588235408067703f, 0.12941177189350128f, 1.0f);
+        styles.inspectorTitleBackgroundColor = ImVec4(0.12156862765550613f, 0.125490203499794f, 0.16470588743686676f, 1.0f);
+        styles.inspectorBodyColor = ImVec4(0.10980392247438431f, 0.11764705926179886f, 0.14901961386203766f, 1.0f);
+
+        styles.materialsBodyPadding = 12.0f;
+        styles.materialsBodyRounding = 6.0f;
+        styles.materialsBorderThickness = 1.0f;
+        styles.materialsTitleInnerPadding = 1.0f;
+        styles.materialsTitleOffset = 6.0f;
+
+        styles.materialsBorderColor = ImVec4(0.1764705926179886f, 0.18431372940540314f, 0.24705882370471954f, 1.0f);
+        styles.materialsTabBackgroundColor = ImVec4(0.10196078568696976f, 0.10588235408067703f, 0.12941177189350128f, 1.0f);
+        styles.materialsTitleBackgroundColor = ImVec4(0.12156862765550613f, 0.125490203499794f, 0.16470588743686676f, 1.0f);
+        styles.materialsTreeBodyColor = ImVec4(0.10980392247438431f, 0.11764705926179886f, 0.14901961386203766f, 1.0f);
+
         styles.assetsBodyPadding = 12.0f;
         styles.assetsBodyRounding = 6.0f;
         styles.assetsBorderThickness = 1.0f;
