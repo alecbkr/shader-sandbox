@@ -7,27 +7,57 @@
 #include "core/UniformRegistry.hpp"
 #include "core/UniformTypes.hpp"
 #include "core/ShaderRegistry.hpp"
+#include "core/ui/Fonts.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "imgui.h"
 #include "object/MaterialCache.hpp"
 #include "object/ModelCache.hpp"
+#include <sstream>
+#include <iomanip>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-UniformInspectorUI::UniformInspectorUI(SettingsStyles* styles) : styles_(styles) {
+namespace {
+    const std::string worldVariableLabel = "World Variable";
+}
+
+bool UniformInspectorUI::drawCompactTreeNode(const std::string& label) {
+
+    // Set the header button color
+    ImGui::PushStyleColor(ImGuiCol_Header, theme.headerColor);
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.headerColorHovered);
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.headerColor);
+    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize); 
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f)); 
+
+    const bool open = ImGui::TreeNodeEx(
+        label.c_str(),
+        ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed
+    );
+
+    ImGui::PopStyleColor(3); // pop header colors
+    ImGui::PopStyleVar(2);
+
+    return open;
+}
+
+UniformInspectorUI::UniformInspectorUI(Fonts* fonts, SettingsStyles* styles) : fonts_(fonts), styles_(styles) {
     if (styles_) {
-        theme.bgColor = styles_->assetsTreeBodyColor;
+        theme.cardBGColor = styles_->assetsFileBackgroundColor;
+        theme.headerColor = styles_->assetsTitleBackgroundColor;
         // Derive a hover color from the base color so it always differs visibly.
-        theme.bgColorHovered = ImVec4(
-            theme.bgColor.x * 1.3f,
-            theme.bgColor.y * 1.3f,
-            theme.bgColor.z * 1.3f,
-            theme.bgColor.w
+        theme.headerColorHovered = ImVec4(
+            theme.headerColor.x * 1.2f,
+            theme.headerColor.y * 1.2f,
+            theme.headerColor.z * 1.2f,
+            theme.headerColor.w
         );
-        theme.indentSize = styles_->indentSpacing * 0.5f;
+        theme.indentSize = styles_->assetsTitleInnerPadding + 2.0f;
     }
 }
+
+UniformInspectorUI::~UniformInspectorUI() = default;
 
 void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr) {
     loggerPtr_ = loggerPtr;
@@ -39,78 +69,182 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
     int imGuiID = 0;
     int modelIndex = 0;
     const int modelCount = static_cast<int>(modelCachePtr->getNumberOfModels());
+    bool hasActivePrograms = false;
 
-    ImGui::Dummy(ImVec2(0, 3)); // some padding
     for (auto& model : modelCachePtr->getAllModels()) {
-        const std::unordered_map<unsigned int, unsigned int>& materialReferences = model->getAllMaterialReferences();
-        drawModelContainer(imGuiID, model->ID, materialReferences);
+        for (auto& [matID, matRefCount] : model->getAllMaterialReferences()) {
+            Material* material = materialCachePtr_->getMaterial(matID);
+            if (material == nullptr) {
+                continue;
+            }
 
-        modelIndex++;
-        if (modelIndex < modelCount) {
-            ImGui::Dummy(ImVec2(0, 2));
-            ImGui::Separator();
-            ImGui::Dummy(ImVec2(0, 2));
+            ShaderProgram* program = shaderRegPtr->getProgram(material->getProgramID());
+            if (program != nullptr && program->isCompiled()) {
+                hasActivePrograms = true;
+                break;
+            }
         }
     }
+
+
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, styles_->assetsTabBackgroundColor);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.0f);
+    const float window_padding = styles_->assetsBodyPadding;
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(window_padding, window_padding));
+
+    if (ImGui::BeginChild("UniformsContent", ImVec2(0, 0), 
+                          ImGuiChildFlags_AlwaysUseWindowPadding)) {
+        const float inner_padding = styles_->assetsTitleInnerPadding;
+        ImGui::PushFont(fonts_->getL4());
+        const float directory_height = window_padding * 2 + inner_padding * 2 + ImGui::CalcTextSize("Uniforms").y;
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(0,0,0,0));
+        if (ImGui::BeginChild("UniformsTitle", ImVec2(0, directory_height), 
+                              ImGuiChildFlags_AlwaysUseWindowPadding)) {
+            ImVec2 p = ImGui::GetWindowPos();
+            ImVec2 s = ImGui::GetWindowSize();
+
+            ImGui::GetWindowDrawList()->AddRectFilled(
+                p,
+                ImVec2(p.x + s.x, p.y + s.y),
+                ImGui::ColorConvertFloat4ToU32(styles_->assetsTitleBackgroundColor),
+                styles_->assetsBodyRounding,
+                ImDrawFlags_RoundCornersTop
+            );
+
+            ImGui::GetWindowDrawList()->AddRect(
+                p,
+                ImVec2(p.x + s.x, p.y + s.y),
+                ImGui::ColorConvertFloat4ToU32(styles_->assetsBorderColor),
+                styles_->assetsBodyRounding,
+                ImDrawFlags_RoundCornersTop,
+                styles_->assetsBorderThickness
+            );
+
+            ImGui::SetCursorPosY(inner_padding + window_padding);
+            ImGui::Dummy(ImVec2(styles_->assetsTitleOffset, 0.0f));
+            ImGui::SameLine();
+            ImGui::TextUnformatted("Uniforms");
+        }
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+        ImGui::PopFont();
+
+        if (ImGui::BeginChild("UniformsTree", ImVec2(0, 0), 
+                              ImGuiChildFlags_AlwaysUseWindowPadding)) {
+            ImVec2 p = ImGui::GetWindowPos();
+            ImVec2 s = ImGui::GetWindowSize();
+
+            ImGui::GetWindowDrawList()->AddRectFilled(
+                p,
+                ImVec2(p.x + s.x, p.y + s.y),
+                ImGui::ColorConvertFloat4ToU32(styles_->assetsTreeBodyColor),
+                styles_->assetsBodyRounding,
+                ImDrawFlags_RoundCornersBottom
+            );
+
+            ImGui::GetWindowDrawList()->AddRect(
+                p,
+                ImVec2(p.x + s.x, p.y + s.y),
+                ImGui::ColorConvertFloat4ToU32(styles_->assetsBorderColor),
+                styles_->assetsBodyRounding,
+                ImDrawFlags_RoundCornersBottom,
+                styles_->assetsBorderThickness
+            );
+
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 8.0f));
+            ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
+
+            if (modelCount == 0) {
+                ImGui::TextDisabled("No objects");
+            } 
+            else if (!hasActivePrograms) {
+                ImGui::TextDisabled("No active programs");
+            }
+            else {
+                for (auto& model : modelCachePtr->getAllModels()) {
+                    const std::unordered_map<unsigned int, unsigned int>& materialReferences = model->getAllMaterialReferences();
+                    drawModelContainer(imGuiID, model->ID, materialReferences);
+
+                    modelIndex++;
+                    if (modelIndex < modelCount) {
+                        ImGui::Dummy(ImVec2(0.0f, 6.0f));
+                    }
+                }
+            }
+            ImGui::PopStyleVar(2);
+        }
+        ImGui::EndChild();
+        ImGui::PopStyleVar();
+    }
+    ImGui::EndChild();
+    ImGui::PopStyleVar();
+    ImGui::PopStyleVar();
+    ImGui::PopStyleColor();
 }
 
 void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences) {
-    std::string modelLabel = "Model " + std::to_string(modelID);
+    std::string modelLabel = "Object " + std::to_string(modelID);
 
     ImGui::PushID(modelLabel.c_str());
 
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.bgColor);
-    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f);
-    ImGui::PushStyleColor(ImGuiCol_Header, theme.bgColor);
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.bgColorHovered);
-    ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.bgColor);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.cardBGColor);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles_->assetsBodyRounding);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles_->assetsBorderThickness);
 
-    ImGui::BeginChild("UniformContainer", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar);
+    ImGui::PushStyleColor(ImGuiCol_Header, theme.headerColor);
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.headerColorHovered);
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.headerColor);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 4.0f));
+
+    ImGui::BeginChild("UniformContainer", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding);
 
     std::string headerLabel = modelLabel + "##uniform_model_" + std::to_string(modelID);
-    if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth)) {
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
+    if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth)) {
         drawMaterialContainer(modelID, materialReferences, imGuiID);
+
     }
+    ImGui::PopStyleVar();
 
     ImGui::EndChild();
     ImGui::PopStyleColor(3);
     ImGui::PopStyleColor();
-    ImGui::PopStyleVar(2);
+    ImGui::PopStyleVar(3);
     ImGui::PopID();
 }
 
 void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences, int& imGuiID) {
-    ImGui::Separator();
     ImGui::Indent(theme.indentSize);
 
-    int i = 0;
+    size_t i = 0;
     for (auto& [matID, matRefCount] : materialReferences) {
         bool useMaterialHeader = materialReferences.size() > 1;
         bool showUniforms = true;
+        bool mustTreePop = false;
         if (useMaterialHeader) {
             std::string matHeader = "Material " + std::to_string(matID) + "##uniform_mat_" + std::to_string(matID);
-            showUniforms = ImGui::CollapsingHeader(matHeader.c_str(), ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth);
+            showUniforms = mustTreePop = drawCompactTreeNode(matHeader);
             if (showUniforms) {
-                ImGui::Separator();
+                ImGui::Dummy(ImVec2(0.0f, 2.0f));
             }
         }
 
         if (showUniforms) {
-            const auto uniformMap = uniformRegPtr_->tryReadUniforms(matID);
+            const auto uniformMap = uniformRegPtr_->tryReadMaterialUniforms(matID);
 
             if (uniformMap == nullptr) {
                 loggerPtr_->addLog(LogLevel::WARNING, "drawUniformInspector", "Model not found in registry: ", std::to_string(modelID));
                 continue;
             }
 
-            ImGui::Indent(theme.indentSize);
             drawUniformsNested_byCursor(*uniformMap, matID, imGuiID);
-            ImGui::Unindent(theme.indentSize);
         }
+        ++i;
         if (i < materialReferences.size()) {
-            ImGui::Dummy(ImVec2(0, 4));
+            ImGui::Dummy(ImVec2(0.0f, 4.0f));
         }
+        if (mustTreePop) ImGui::TreePop();
     }
 
     ImGui::Unindent(theme.indentSize);
@@ -185,7 +319,7 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
         }
 
         if (!hasChildren) {
-            if (hasUniform) {
+            if (hasUniform || !node.uniform->invisible) {
                 ImGui::PushID(imGuiID);
                 Uniform uniformCopy = *node.uniform;
                 drawUniformRow(uniformCopy, matID);
@@ -195,29 +329,30 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
             return;
         }
 
-        std::string headerLabel = segment + "##group_" + std::to_string(matID) + "_" + path;
-        bool open = ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth);
-        if (!open) {
-            return;
+        // Determine label
+        const std::string groupTypeLabel =
+            (!segment.empty() && segment[0] == '[') ? "Array" : "Struct";
+
+        std::string label = groupTypeLabel + " " + segment + "##uniform_";
+
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.cardBGColor); 
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles_->assetsBodyRounding);
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles_->assetsBorderThickness);
+        ImGui::BeginChild(("Group##" + label).c_str(), ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding);
+
+        if (drawCompactTreeNode(label)) {
+            ImGui::Dummy(ImVec2(0, .5));
+            ImGui::Separator();
+            for (const auto& [childSeg, childNode] : node.children) {
+                const std::string childPath = path.empty() ? childSeg : (path + "." + childSeg);
+                self(self, childSeg, childNode, childPath);
+            }
+
+            ImGui::TreePop();
         }
-
-        ImGui::Separator();
-        ImGui::Indent(theme.indentSize);
-
-        if (hasUniform) {
-            ImGui::PushID(imGuiID);
-            Uniform uniformCopy = *node.uniform;
-            drawUniformRow(uniformCopy, matID);
-            ImGui::PopID();
-            ++imGuiID;
-        }
-
-        for (const auto& [childSeg, childNode] : node.children) {
-            const std::string childPath = path.empty() ? childSeg : (path + "." + childSeg);
-            self(self, childSeg, childNode, childPath);
-        }
-
-        ImGui::Unindent(theme.indentSize);
+        ImGui::EndChild();
+        ImGui::PopStyleVar(2);
+        ImGui::PopStyleColor(1);
     };
 
     for (const auto& [seg, childNode] : root.children) {
@@ -225,54 +360,172 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
     }
 }
 
-void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
-    bool nodeOpen = ImGui::CollapsingHeader(uniform.name.c_str(), ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_AllowOverlap);
+bool UniformInspectorUI::drawModePicker(const char* id, int& mode, const char* const* labels, int labelCount) {
+    bool changed = false;
+    static constexpr const char* compactLabels[] = { "Constant", "Reference" };
+    const char* buttonLabel = (labelCount == 2 && mode >= 0 && mode < 2) ? compactLabels[mode] : labels[mode];
 
-    if (nodeOpen) {
-        ImGui::Indent(theme.indentSize);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.0f, 0.0f));
+    if (ImGui::SmallButton((std::string(buttonLabel) + "##" + id).c_str())) {
+        ImGui::OpenPopup((std::string("ModePopup##") + id).c_str());
+    }
 
-        bool changed = false;
-        bool changedFunctionBox = false;
-
-        ImGui::AlignTextToFramePadding();
-        ImGui::Text("Reference Another Value");
-        ImGui::SameLine();
-        changedFunctionBox |= ImGui::Checkbox("##changedFunctionCheckbox", &uniform.isFunction);
-
-        if (changedFunctionBox) {
-            if (uniform.isFunction) {
-                uniform.isFunction = true;
-                uniform.value = InspectorReference{
-                    .modelSelection = 0, .uniformSelection = 0,
-                    .returnType = uniform.type,
-                    .initialized = false,
-                };
-            } else {
-                uniform.isFunction = false;
-                uniform.value = inspectorEngPtr_->getDefaultValue(uniform.type);
+    if (ImGui::BeginPopup((std::string("ModePopup##") + id).c_str())) {
+        for (int i = 0; i < labelCount; ++i) {
+            if (ImGui::MenuItem(labels[i], nullptr, mode == i)) {
+                mode = i;
+                changed = true;
             }
         }
+        ImGui::EndPopup();
+    }
+    ImGui::PopStyleVar();
 
-        ImGui::Spacing();
-        std::visit([&](auto& val) {
-            changed = drawInput(&val, &uniform);
-        }, uniform.value);
+    return changed;
+}
 
-        if (changed || changedFunctionBox) {
-            inspectorEngPtr_->applyInput(matID, uniform);
+void UniformInspectorUI::setReferenceMode(Uniform& uniform, bool useReference) {
+    if (useReference) {
+        if (!std::holds_alternative<InspectorReference>(uniform.value)) {
+            uniform.value = InspectorReference{
+                .modelSelection = 0,
+                .uniformSelection = 0,
+                .returnType = uniform.type,
+                .initialized = false,
+            };
         }
+        uniform.isFunction = true;
+        return;
+    }
 
-        ImGui::Unindent(theme.indentSize);
+    uniform.isFunction = false;
+    uniform.value = inspectorEngPtr_->getDefaultValue(uniform.type);
+}
+
+std::string UniformInspectorUI::makeUniformStateKey(unsigned int matID, const std::string& uniformName) const {
+    return std::to_string(matID) + "::" + uniformName;
+}
+
+std::string UniformInspectorUI::getReferenceSummary(const Uniform& uniform) const {
+    const auto* ref = std::get_if<InspectorReference>(&uniform.value);
+    if (ref == nullptr || !uniform.isFunction) {
+        return "Constant";
+    }
+
+    if (!ref->initialized) {
+        return "Reference: Unconfigured";
+    }
+
+    std::string target;
+    if (ref->useWorldVariable) {
+        target = worldVariableLabel;
+    } else if (ref->referencedModelID != 0) {
+        target = "Object " + std::to_string(ref->referencedModelID);
+    } else {
+        target = "Reference";
+    }
+
+    if (!ref->referencedUniformName.empty()) {
+        target += " -> " + ref->referencedUniformName;
+    }
+
+    return target;
+}
+
+std::string UniformInspectorUI::getUniformSummary(const Uniform& uniform) const {
+    if (uniform.isFunction) {
+        return getReferenceSummary(uniform);
+    }
+
+    std::ostringstream stream;
+    stream << std::fixed << std::setprecision(2);
+
+    return std::visit([&](const auto& value) -> std::string {
+        using T = std::decay_t<decltype(value)>;
+        if constexpr (std::is_same_v<T, int>) {
+            return std::to_string(value);
+        } else if constexpr (std::is_same_v<T, float>) {
+            stream.str("");
+            stream.clear();
+            stream << value;
+            return stream.str();
+        } else if constexpr (std::is_same_v<T, glm::vec3>) {
+            stream.str("");
+            stream.clear();
+            stream << "(" << value.x << ", " << value.y << ", " << value.z << ")";
+            return stream.str();
+        } else if constexpr (std::is_same_v<T, glm::vec4>) {
+            stream.str("");
+            stream.clear();
+            stream << "(" << value.x << ", " << value.y << ", " << value.z << ", " << value.w << ")";
+            return stream.str();
+        } else if constexpr (std::is_same_v<T, glm::mat4>) {
+            return "Matrix";
+        } else if constexpr (std::is_same_v<T, InspectorSampler2D>) {
+            return "Texture unit " + std::to_string(value.textureUnit);
+        } else if constexpr (std::is_same_v<T, InspectorReference>) {
+            return getReferenceSummary(uniform);
+        }
+        return "Value";
+    }, uniform.value);
+}
+
+void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
+    bool changed = false;
+    int mode = uniform.isFunction ? 1 : 0;
+    static constexpr const char* modeLabels[] = { "Constant", "Reference" };
+    const std::string typeSummary = to_string(uniform.type);
+
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.cardBGColor); // same card background as model card
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles_->assetsBodyRounding);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles_->assetsBorderThickness);
+
+    if (ImGui::BeginChild(("UniformCard##" + uniform.name).c_str(), ImVec2(0, 0),
+                          ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders)) {
+        
+        std::string label = typeSummary + " " + uniform.name + "##uniform_";
+        bool open = drawCompactTreeNode(label);
+
+        if (open) {
+            ImGui::Dummy(ImVec2(0, .5));
+            ImGui::Separator();
+
+            ImGui::TextDisabled("Mode:  ");
+            ImGui::SameLine();
+            if (drawModePicker("InlineMode", mode, modeLabels, IM_ARRAYSIZE(modeLabels))) {
+                setReferenceMode(uniform, mode == 1);
+                changed = true;
+            }
+
+            // Value editor
+            if (!uniform.isFunction) {
+                std::visit([&](auto& val) {
+                    changed |= drawInput(&val, &uniform);
+                }, uniform.value);
+            } else if (auto* value = std::get_if<InspectorReference>(&uniform.value)) {
+                changed |= drawReferenceEditor(value, &uniform);
+            }
+            ImGui::Dummy(ImVec2(0, .5));
+            ImGui::TreePop();
+        }
+    }
+    ImGui::EndChild();
+    ImGui::PopStyleVar(2);
+    ImGui::PopStyleColor();
+    // --- End uniform card ---
+
+    if (changed) {
+        inspectorEngPtr_->applyInput(matID, uniform);
     }
 }
 
 bool UniformInspectorUI::drawInput(int* value, Uniform* uniform) {
-    ImGui::SetNextItemWidth(theme.inputWidth);
+    ImGui::SetNextItemWidth(-1);
     return ImGui::DragInt("##Value", value);
 }
 
 bool UniformInspectorUI::drawInput(float* value, Uniform* uniform) {
-    ImGui::SetNextItemWidth(theme.inputWidth);
+    ImGui::SetNextItemWidth(-1);
     return ImGui::DragFloat("##Value", value, .1f);
 }
 
@@ -280,9 +533,7 @@ bool UniformInspectorUI::drawInput(glm::vec3* value, Uniform* uniform) {
     bool changed = false;
     bool useColorPicker = false;
     if (uniform != nullptr) {
-        ImGui::Text("Color Picker");
-        ImGui::SameLine();
-        changed |= ImGui::Checkbox("##vec3colorOption", &uniform->useAlternateEditor);
+        changed |= ImGui::Checkbox("Color Picker##vec3colorOption", &uniform->useAlternateEditor);
         useColorPicker = uniform->useAlternateEditor;
     }
 
@@ -290,8 +541,8 @@ bool UniformInspectorUI::drawInput(glm::vec3* value, Uniform* uniform) {
         ImGui::SetNextItemWidth(theme.colorPickerWidthVec3);
         changed |= ImGui::ColorPicker3("##vec3color", &value->x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
     } else {
-        ImGui::Text("xyz");
-        ImGui::SameLine();
+        ImGui::TextDisabled("xyz");
+        ImGui::SetNextItemWidth(-1);
         changed |= ImGui::DragFloat3("##xyz", &value->x, .1f);
     }
     return changed;
@@ -301,9 +552,7 @@ bool UniformInspectorUI::drawInput(glm::vec4* value, Uniform* uniform) {
     bool changed = false;
     bool useColorPicker = false;
     if (uniform != nullptr) {
-        ImGui::Text("Color Picker");
-        ImGui::SameLine();
-        changed |= ImGui::Checkbox("##vec4colorOption", &uniform->useAlternateEditor);
+        changed |= ImGui::Checkbox("Color Picker##vec4colorOption", &uniform->useAlternateEditor);
         useColorPicker = uniform->useAlternateEditor;
     }
 
@@ -311,20 +560,18 @@ bool UniformInspectorUI::drawInput(glm::vec4* value, Uniform* uniform) {
         ImGui::SetNextItemWidth(theme.colorPickerWidthVec4);
         changed |= ImGui::ColorPicker4("##vec4color", &value->x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_AlphaBar);
     } else {
-        ImGui::Text("xyzw");
-        ImGui::SameLine();
+        ImGui::TextDisabled("xyzw");
+        ImGui::SetNextItemWidth(-1);
         changed |= ImGui::DragFloat4("##xyzw", &value->x, .1f);
     }
     return changed;
 }
 
 bool UniformInspectorUI::drawInput(glm::quat* value, Uniform* uniform) {
-    ImGui::PushItemWidth(theme.inputWidth);
     bool changed = false;
-    ImGui::Text("wxyz");
-    ImGui::SameLine();
+    ImGui::TextDisabled("wxyz");
+    ImGui::SetNextItemWidth(-1);
     changed |= ImGui::DragFloat4("##quat", &value->w);
-    ImGui::PopItemWidth();
     return changed;
 }
 
@@ -350,15 +597,24 @@ bool UniformInspectorUI::drawInput(glm::mat4* value, Uniform* uniform) {
 }
 
 bool UniformInspectorUI::drawInput(InspectorSampler2D* value, Uniform* uniform) {
-    ImGui::Text("Texture Unit");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(theme.inputWidth);
+    ImGui::TextDisabled("Texture Unit");
+    ImGui::SetNextItemWidth(-1);
     return ImGui::DragInt("##Texture_unit", &value->textureUnit, 0, 16);
 }
 
 bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) {
+    return drawReferenceEditor(value, uniform);
+}
+
+bool UniformInspectorUI::drawReferenceEditor(InspectorReference* value, Uniform* uniform) {
+    if (value->materialSelection < 0 || value->modelSelection < 0 || value->uniformSelection < 0) {
+        value->materialSelection = 0;
+        value->modelSelection = 0;
+        value->uniformSelection = 0;
+        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawReferenceEditor", "selection outside of bounds!");
+    }
     value->initialized = false;
-    value->useCamaraData = false;
+    value->useWorldVariable = false;
     bool changed = false;
     std::vector<std::string> modelNames;
     std::vector<const char*> modelChoices{""};
@@ -370,27 +626,34 @@ bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) 
     std::optional<std::vector<std::string>> worldData = getWorldData(uniform->type);
 
     if (worldData || value->useWorldData) {
-        ImGui::Text("Use World Data?");
-        ImGui::SameLine();
-        changed |= ImGui::Checkbox("##Use_world_data", &value->useWorldData);
+        bool changedWorldDataBox = ImGui::Checkbox("Use World Data##Use_world_data", &value->useWorldData);
+        if (changedWorldDataBox) {
+            value->materialSelection = 0;
+            value->modelSelection = 0;
+            value->uniformSelection = 0;
+        }
+        changed |= changedWorldDataBox;
+        
     }
 
     int i = 0;
     for (auto& model : modelCachePtr_->getAllModels()) {
-        modelNames.push_back("Model " + std::to_string(model->ID));
+        modelNames.push_back("Object " + std::to_string(model->ID));
         modelChoices.push_back(modelNames[i].c_str());
         modelIDs.push_back(model->ID);
         i++;
     }
 
     if (value->useWorldData) {
-        modelChoices.push_back("Camera");
+        modelChoices.push_back(worldVariableLabel.c_str());
     }
 
-    ImGui::Text("Source Model");
-    ImGui::SameLine();
+
+    ImGui::TextDisabled("Source Object");
     ImGui::SetNextItemWidth(-1);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(styles_->framePadding.x, 0.0f));
     changed |= ImGui::Combo("##Source_model", &value->modelSelection, modelChoices.data(), static_cast<int>(modelChoices.size()));
+    ImGui::PopStyleVar();
 
     if (changed) {
         value->materialSelection = 0;
@@ -399,8 +662,8 @@ bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) 
         return changed;
     }
 
-    if (std::string(modelChoices[value->modelSelection]) == "Camera") {
-        value->useCamaraData = true;
+    if (std::string(modelChoices[value->modelSelection]) == worldVariableLabel) {
+        value->useWorldVariable = true;
     } else {
         value->referencedModelID = modelIDs[value->modelSelection];
     }
@@ -507,10 +770,11 @@ bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) 
                 matIDs.push_back(matID);
                 i++;
             }
-            ImGui::Text("Source Material");
-            ImGui::SameLine();
+            ImGui::TextDisabled("Source Material");
             ImGui::SetNextItemWidth(-1);
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(styles_->framePadding.x, 0.0f));
             changed |= ImGui::Combo("##Source_material", &value->materialSelection, matChoices.data(), static_cast<int>(matChoices.size()));
+            ImGui::PopStyleVar();
         }
 
         if (changed) {
@@ -521,7 +785,7 @@ bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) 
             return changed;
         }
 
-        const auto uniforms = uniformRegPtr_->tryReadUniforms(matIDs[value->materialSelection]);
+        const auto uniforms = uniformRegPtr_->tryReadMaterialUniforms(matIDs[value->materialSelection]);
         if (uniforms == nullptr) {
             loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput (function)", "uniform list not found");
         }
@@ -532,10 +796,11 @@ bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) 
         }
     }
 
-    ImGui::Text("Source Uniform");
-    ImGui::SameLine();
+    ImGui::TextDisabled("Source Uniform");
     ImGui::SetNextItemWidth(-1);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(styles_->framePadding.x, 0.0f));
     changed |= ImGui::Combo("##Source_uniform", &value->uniformSelection, uniformChoices.data(), static_cast<int>(uniformChoices.size()));
+    ImGui::PopStyleVar();
 
     if (value->uniformSelection > 0) {
         value->referencedUniformName = uniformChoices[value->uniformSelection];

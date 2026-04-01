@@ -41,7 +41,7 @@ namespace {
         const char* referencedUniformName = "referencedUniformName";
         const char* returnType           = "returnType";
         const char* useWorldData         = "useWorldData";
-        const char* useCamaraData        = "useCamaraData";
+        const char* useWorldVariable        = "useCamaraData";
         const char* initialized          = "initialized";
     } referenceLabels;
 
@@ -112,7 +112,7 @@ namespace {
                         { referenceLabels.referencedUniformName, ref.referencedUniformName },
                         { referenceLabels.returnType, to_string(ref.returnType) },
                         { referenceLabels.useWorldData, ref.useWorldData },
-                        { referenceLabels.useCamaraData, ref.useCamaraData },
+                        { referenceLabels.useWorldVariable, ref.useWorldVariable },
                         { referenceLabels.initialized, ref.initialized },
                     };
                 },
@@ -181,7 +181,7 @@ namespace {
                     ref.returnType = UniformType::NoType;
                 }
                 ref.useWorldData  = j.value(referenceLabels.useWorldData, false);
-                ref.useCamaraData = j.value(referenceLabels.useCamaraData, false);
+                ref.useWorldVariable = j.value(referenceLabels.useWorldVariable, false);
                 ref.initialized   = j.value(referenceLabels.initialized, false);
                 out               = ref;
                 return true;
@@ -240,9 +240,9 @@ bool UniformPersistence::load(Project& project, json& j) {
             loaded.isReadOnly = item.value(uniformLabels.isReadOnly, false);
             loaded.useAlternateEditor = item.value(uniformLabels.useAlternateEditor, false);
 
-            const Uniform* existing = uniReg->tryReadUniform(materialId, name);
+            const Uniform* existing = uniReg->tryReadMaterialUniform(materialId, name);
             if (existing != nullptr && existing->type != loaded.type) {
-                uniReg->eraseUniform(materialId, name);
+                uniReg->eraseMaterialUniform(materialId, name);
                 existing = nullptr;
             }
 
@@ -252,10 +252,10 @@ bool UniformPersistence::load(Project& project, json& j) {
                 merged.isFunction = loaded.isFunction;
                 merged.isReadOnly = loaded.isReadOnly;
                 merged.useAlternateEditor = loaded.useAlternateEditor;
-                uniReg->registerInspectorUniform(materialId, merged);
+                uniReg->registerMaterialUniform(materialId, merged);
             }
             else {
-                uniReg->registerInspectorUniform(materialId, loaded);
+                uniReg->registerMaterialUniform(materialId, loaded);
             }
         }
     }
@@ -277,7 +277,7 @@ bool UniformPersistence::save(const Project& project, json& j) {
     j[uniformLabels.listLabel] = json::array();
 
     for (const auto& [id, uni] : project.uniforms) {
-        const Uniform* regUni = uniReg->tryReadUniform(uni.materialID, uni.name);
+        const Uniform* regUni = uniReg->tryReadMaterialUniform(uni.materialID, uni.name);
         if (regUni == nullptr || regUni->ID != id) {
             continue;
         }

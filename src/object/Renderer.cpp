@@ -161,8 +161,12 @@ bool Renderer::initialize(
 
 
 void Renderer::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camPos) {
-    uniformRegPtr->registerSceneUniform({"projection", UniformType::Mat4, perspective});
-    uniformRegPtr->registerSceneUniform({"view", UniformType::Mat4, view});
+    uniformRegPtr->registerSceneUniform(Uniform{
+        .name = "projection", .type = UniformType::Mat4, .value = perspective, .invisible = true
+    });
+    uniformRegPtr->registerSceneUniform(Uniform{
+            .name = "view", .type = UniformType::Mat4, .value = view, .invisible = true
+    });
 
     unsigned int skyboxModelID = modelCachePtr->getSkyboxModelID();
     for (auto& model : modelCachePtr->getAllModels()) {

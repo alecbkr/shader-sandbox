@@ -8,6 +8,11 @@ bool Fonts::initialize(u8 index) {
             "../assets/fonts/Roboto-VariableFont_wdth,wght.ttf",
             (STARTING_FONT_SIZE + (INCREMENT_BETWEEN_LEVELS * i))
         );
+
+        monoFonts[i] = io.Fonts->AddFontFromFileTTF(
+            "../assets/fonts/RobotoMono-VariableFont_wght.ttf",
+            (STARTING_FONT_SIZE + (INCREMENT_BETWEEN_LEVELS * i))
+        );
     }
     setFontIndex(index);
     io.FontDefault = fonts[L1_INDEX];
@@ -81,4 +86,9 @@ ImFont* Fonts::getL9() {
 ImFont* Fonts::getL10() {
     if (fontIdx >= NUMBER_OF_FONT_SIZES) fontIdx = STARTING_FONT_INDEX;
     return fonts[L10_INDEX];
+}
+
+ImFont* Fonts::getMonoFont() {
+    if (fontIdx >= NUMBER_OF_FONT_SIZES) fontIdx = STARTING_FONT_INDEX;
+    return monoFonts[L1_INDEX];
 }

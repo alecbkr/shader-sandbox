@@ -98,6 +98,7 @@ bool Application::addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI
     actionRegPtr->bind(Action::ScreenshotViewport, [](){});
     actionRegPtr->bind(Action::FullscreenViewport, [](){});
     actionRegPtr->bind(Action::MouseMove, [viewportUIPtr]() { viewportUIPtr->getCamera()->ProcessMouseMovement(); });
+    actionRegPtr->bind(Action::EditorFind, [eventsPtr](){ eventsPtr->TriggerEvent({ EventType::ToggleEditorFind, false, std::monostate{} }); });
     return true;
 }
 
@@ -246,7 +247,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
         return false;
     }
-    if (!ctx.inspector_engine.initialize(&ctx.logger, &ctx.shader_registry, &ctx.uniform_registry, &ctx.model_cache, &ctx.viewport_ui, &ctx.material_cache)) {
+    if (!ctx.inspector_engine.initialize(&ctx.logger, &ctx.shader_registry, &ctx.uniform_registry, &ctx.model_cache, &ctx.viewport_ui, &ctx.material_cache, &ctx.platform)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Inspector Engine was not initialized successfully.");
         return false;
     }
@@ -283,7 +284,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Menu UI was not initialized successfully.");
         return false;
     }
-    if (!ctx.editor_ui.initialize(&ctx.logger, &ctx.editor_engine, &ctx.ctx_manager, &ctx.events, &ctx.project)) {
+    if (!ctx.editor_ui.initialize(&ctx.logger, &ctx.editor_engine, &ctx.ctx_manager, &ctx.events, &ctx.project, &ctx.fonts)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Editor UI was not initialized successfully.");
         return false;
     }
@@ -307,6 +308,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
         return false;
     }
+    //loadPresetAssets(ctx);
     addSubscriptions(ctx);
     loadPresetAssets(ctx);
     initializeUI(ctx);

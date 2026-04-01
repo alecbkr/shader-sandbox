@@ -24,7 +24,8 @@ enum class EventType {
     DeleteModel,
     ModelMaterialChange,
     MaterialTypeChange,
-    CloneFile
+    CloneFile,
+    ToggleEditorFind,
 };
 
 struct SaveActiveShaderFilePayload { std::string filePath; unsigned int modelID; };

@@ -23,6 +23,9 @@ int main(int argc, char** argv) {
     ctx.project.events = &ctx.events;
     // ProjectLoader::loadAssets(ctx.project);
 
+    ctx.settings.projectToOpen = ctx.project.projectTitle;
+    SettingsLoader::save(ctx.settings);
+
     if (!Application::initialize(ctx))
     {
         std::cerr << "Application failed to initialize" << std::endl;
