@@ -171,7 +171,7 @@ void Renderer::renderAll(glm::mat4 perspective, glm::mat4 view, glm::vec3 camPos
     unsigned int skyboxModelID = modelCachePtr->getSkyboxModelID();
     for (auto& model : modelCachePtr->getAllModels()) {
         if (model->ID == skyboxModelID) continue;
-        uniformRegPtr->registerModelUniform(model->ID, {"model", UniformType::Mat4, model->getModelMatrix()});
+        uniformRegPtr->registerModelUniform(model->ID, {"model", UniformType::Mat4, model->getModelMatrix(), 0, 0, false, false, false, true});
     }
     
     renderSkybox();
