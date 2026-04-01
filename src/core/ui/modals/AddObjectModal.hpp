@@ -11,7 +11,7 @@ class EventDispatcher;
 struct Project; 
 
 static const std::unordered_set<std::string> supportedModelExtensions = {
-    ".obj", ".gltf", ".gldb", ".fbx"
+    ".obj", ".gltf", ".glb", ".fbx"
 }; 
 
 enum class AddObjectPage {
