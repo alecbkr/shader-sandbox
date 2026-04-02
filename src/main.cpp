@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     ctx.project.shaderRegistry = &ctx.shader_registry;
     ctx.project.uniformRegistry = &ctx.uniform_registry;
     ctx.project.events = &ctx.events;
-    // bool assetsAreLoaded = ProjectLoader::loadAssets(ctx.project);
+    bool assetsAreLoaded = ProjectLoader::loadAssets(ctx.project);
 
     ctx.settings.projectToOpen = ctx.project.projectTitle;
     SettingsLoader::save(ctx.settings);
@@ -31,12 +31,12 @@ int main(int argc, char** argv) {
         std::cerr << "Application failed to initialize" << std::endl;
         return 1;
     }
-    // if (assetsAreLoaded) {
+    if (assetsAreLoaded) {
         ProjectLoader::load(ctx.project);
-    // }
-    // else {
+    }
+    else {
         Application::loadDefaultScene(ctx);
-    // }
+    }
 
     Application::runLoop(ctx);
     Application::shutdown(ctx);
