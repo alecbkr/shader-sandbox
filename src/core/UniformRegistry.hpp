@@ -33,6 +33,7 @@ class UniformRegistry {
     bool containsMaterial(unsigned int matID);
     bool containsMaterialUniform(unsigned int matID, const std::string& uniformName);
     void eraseMaterialUniform(unsigned int matID, const std::string& uniformName);
+    void eraseMaterial(unsigned int matID);
 
     private:
     unsigned int nextID = 0;

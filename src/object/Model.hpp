@@ -41,6 +41,7 @@ public:
     void setName(std::string name);
     void setMeshMaterial(unsigned int meshIdx, unsigned int materialID);
     void setModelMaterial(unsigned int materialID);
+    bool eraseMaterial(unsigned int materialID);
 
     // GETTERS
     std::string getName() const;
@@ -69,6 +70,8 @@ public:
     static void setProgramID(std::string programID); //ALSO DUMMY
 
 private:
+    void rebuildMaterialReferences();
+
     std::string name = "model";
     unsigned int nextMeshIdx = 0;
     std::vector<MeshA> meshes;

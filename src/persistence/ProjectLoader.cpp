@@ -272,7 +272,7 @@ bool ProjectLoader::load(Project& project) {
                             Event{
                                 EventType::OpenFile,
                                 false,
-                                OpenFilePayload{ filePath.string(), fileName, 0, false }
+                                OpenFilePayload{ filePath.string(), fileName, false }
                             }
                         );
                     }
