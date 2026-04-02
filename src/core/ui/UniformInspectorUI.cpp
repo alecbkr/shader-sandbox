@@ -184,7 +184,8 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
 }
 
 void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences) {
-    std::string modelLabel = "Object " + std::to_string(modelID);
+    Model* model = modelCachePtr_->getModel(modelID);
+    std::string modelLabel = model ? model->getName() : "Object " + std::to_string(modelID);
 
     ImGui::PushID(modelLabel.c_str());
 
@@ -420,8 +421,8 @@ std::string UniformInspectorUI::getReferenceSummary(const Uniform& uniform) cons
     if (ref->useWorldVariable) {
         target = worldVariableLabel;
     } else if (ref->referencedModelID != 0) {
-        target = "Object " + std::to_string(ref->referencedModelID);
-    } else {
+        Model* model = modelCachePtr_->getModel(ref->referencedModelID);
+        target = model ? model->getName() : "Object " + std::to_string(ref->referencedModelID);    } else {
         target = "Reference";
     }
 
@@ -638,7 +639,7 @@ bool UniformInspectorUI::drawReferenceEditor(InspectorReference* value, Uniform*
 
     int i = 0;
     for (auto& model : modelCachePtr_->getAllModels()) {
-        modelNames.push_back("Object " + std::to_string(model->ID));
+        modelNames.push_back(model->getName());
         modelChoices.push_back(modelNames[i].c_str());
         modelIDs.push_back(model->ID);
         i++;
