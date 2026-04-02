@@ -192,12 +192,12 @@ void MaterialsInspectorUI::draw() {
                     int currentType = (int)mat->getMaterialType();
                     static const char* materialTypes[3] = {"Opaque", "Cutout", "Translucent"};
 
-                    if (ImGui::Combo("Type", &currentType, materialTypes, 3)) {
+                    if (ImGui::Combo(("Type##" + std::to_string(mat->ID)).c_str(), &currentType, materialTypes, 3)) {
                         matCache->changeMaterialType(mat->ID, (MaterialType)currentType);
                         
                     }
 
-                    if (ImGui::BeginCombo("Program", mat->getProgramID().c_str())) {
+                    if (ImGui::BeginCombo(("Program##" + std::to_string(mat->ID)).c_str(), mat->getProgramID().c_str())) {
                         for (auto& [name, program] : programs) {
                             bool isSelected = (mat->getProgramID() == name);
 
