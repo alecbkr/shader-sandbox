@@ -59,6 +59,12 @@ struct InspectorReference {
     bool useWorldData = false;
     bool useWorldVariable = false;
     bool initialized = false;
+
+    void resetSelections() {
+        materialSelection = 0;
+        modelSelection = 0;
+        uniformSelection = 0;
+    }
 };
 
 using UniformValue = std::variant<int, float, glm::vec3, glm::vec4, glm::mat4, InspectorSampler2D, InspectorReference>;
