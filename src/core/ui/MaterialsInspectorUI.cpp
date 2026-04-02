@@ -5,6 +5,8 @@
 #include "object/MaterialCache.hpp"
 #include "texture/TextureCache.hpp"
 #include "core/ShaderRegistry.hpp"
+#include "core/ui/modals/ModalManager.hpp"
+#include "core/ui/modals/AddTextureModal.hpp"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
@@ -12,7 +14,11 @@
 #include <string>
 #include <vector>
 
-MaterialsInspectorUI::MaterialsInspectorUI(Fonts* fonts, SettingsStyles* styles, MaterialCache* matCache, TextureCache* texCache, ShaderRegistry* shaderReg, std::filesystem::path assetsDirPath) : fonts(fonts), styles(styles), matCache(matCache), texCache(texCache), shaderReg(shaderReg), assetsDirPath(assetsDirPath) {}
+MaterialsInspectorUI::MaterialsInspectorUI(Fonts* fonts, SettingsStyles* styles, MaterialCache* matCache, TextureCache* texCache, ShaderRegistry* shaderReg, ModalManager* modalManager, std::filesystem::path assetsDirPath) : fonts(fonts), styles(styles), matCache(matCache), texCache(texCache), shaderReg(shaderReg), assetsDirPath(assetsDirPath), modalManager(modalManager) {
+    addTextureModal = dynamic_cast<AddTextureModal*>(
+        modalManager->getModalPtr("Add Texture")
+    );
+}
 
 bool MaterialsInspectorUI::drawRenameField(Material* mat) {
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
@@ -242,15 +248,11 @@ void MaterialsInspectorUI::draw() {
                         }
 
                         if (ImGui::CollapsingHeader(("Textures##" + std::to_string(mat->ID)).c_str())) {
-                            static char textureAddBuf[256] = "";
-
-                            ImGui::InputText(("##TextureInput" + std::to_string(mat->ID)).c_str(),
-                                            textureAddBuf, sizeof(textureAddBuf));
-                            ImGui::SameLine();
-
-                            if (ImGui::Button(("+##TextureInput" + std::to_string(mat->ID)).c_str())) {
-                                unsigned int id = texCache->createTexture2D((assetsDirPath / textureAddBuf).string().c_str());
-                                mat->addTexture(id);
+                            if (ImGui::Button(("Add Texture##" + std::to_string(mat->ID)).c_str())) {
+                                if (addTextureModal) {
+                                    addTextureModal->setTargetMaterial(mat);
+                                    modalManager->open("Add Texture");
+                                }
                             }
 
                             auto textures = mat->getAllTexturePaths(texCache);
@@ -262,16 +264,16 @@ void MaterialsInspectorUI::draw() {
 
                                 if (ImGui::BeginPopupContextItem("TexturePopup")) {
                                     if (ImGui::MenuItem("Remove")) {
+                                        // remove texture here when your material API supports it
                                     }
                                     ImGui::EndPopup();
                                 }
 
                                 ImGui::PopID();
                             }
-                            }
-
-                            ImGui::Unindent(8.0f);
                         }
+                        ImGui::Unindent(8.0f);
+                    }
 
                     ImGui::PopStyleVar(); // FramePadding
                 }

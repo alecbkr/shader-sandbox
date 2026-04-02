@@ -132,11 +132,13 @@ void Application::initializeUI(AppContext& ctx) {
     ctx.settingsModal.initialize(&ctx.logger, &ctx.inputs, &ctx.keybinds, &ctx.platform, &ctx.settings);
     ctx.saveAsModal.initialize(&ctx.logger, &ctx.project, &ctx.events, &ctx.settings, &ctx.projectSwitch);
     ctx.openProjectModal.initialize(&ctx.project, &ctx.settings, &ctx.model_cache, &ctx.material_cache, &ctx.projectSwitch);
-    ctx.addObjectModal.initialize(&ctx.model_cache, &ctx.inspector_engine, &ctx.project, &ctx.events); 
+    ctx.addObjectModal.initialize(&ctx.model_cache, &ctx.inspector_engine, &ctx.project, &ctx.events);
+    ctx.addTextureModal.initialize(&ctx.texture_cache, ctx.project.projectAssetsDir);
     ctx.modals.registerModal(&ctx.settingsModal);
     ctx.modals.registerModal(&ctx.saveAsModal);
     ctx.modals.registerModal(&ctx.openProjectModal);
     ctx.modals.registerModal(&ctx.addObjectModal); 
+    ctx.modals.registerModal(&ctx.addTextureModal);
 
     if (!ctx.settings.settingsFound) {
         DefaultTheme::applyDefaultTheme(ctx.settings.styles);
@@ -250,6 +252,7 @@ bool Application::initialize(AppContext& ctx) {
         return false;
     }
     ctx.inspector_engine.refreshUniforms();
+    initializeUI(ctx);
     if (!ctx.console_ui.initialize(&ctx.logger, &ctx.console_engine, &ctx.settings.styles, &ctx.fonts)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Console UI was not initialized successfully.");
         return false;
@@ -284,7 +287,6 @@ bool Application::initialize(AppContext& ctx) {
         return false;
     }
     addSubscriptions(ctx);
-    initializeUI(ctx);
 
     ctx.logger.addLog(LogLevel::INFO, "Application Initialization", "Application Layer Initialized.");
     Application::initialized = true;

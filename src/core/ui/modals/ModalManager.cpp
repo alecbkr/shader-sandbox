@@ -39,3 +39,11 @@ void ModalManager::render() {
         }
     }
 }
+
+IModal* ModalManager::getModalPtr(const std::string& modalId) {
+    auto it = modals.find(modalId);
+    if (it != modals.end()) {
+        return it->second;
+    }
+    return nullptr;
+}

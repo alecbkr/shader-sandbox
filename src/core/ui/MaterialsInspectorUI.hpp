@@ -13,11 +13,13 @@ class MaterialCache;
 class TextureCache;
 class ShaderRegistry;
 class Material;
+class ModalManager;
+class AddTextureModal;
 
 class MaterialsInspectorUI {
 public:
     MaterialsInspectorUI() = delete;
-    MaterialsInspectorUI(Fonts* fonts, SettingsStyles* styles, MaterialCache* matCache, TextureCache* texCache, ShaderRegistry* shaderReg, std::filesystem::path assetsDirPath);
+    MaterialsInspectorUI(Fonts* fonts, SettingsStyles* styles, MaterialCache* matCache, TextureCache* texCache, ShaderRegistry* shaderReg, ModalManager* modalManager, std::filesystem::path assetsDirPath);
     void draw();
 
 private:
@@ -40,4 +42,7 @@ private:
     std::string pendingRename;
     Material* pendingRenameMat;
     Material* pendingDeleteMat = nullptr;
+
+    ModalManager* modalManager;
+    AddTextureModal* addTextureModal;
 };
