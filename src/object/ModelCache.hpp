@@ -23,7 +23,7 @@ public:
     void changeMeshMaterial(unsigned int modelID, unsigned int meshIdx, unsigned int materialID);
     void changeModelMaterial(unsigned int modelID, unsigned int materialID);
     void deleteModel(unsigned int modelID);
-    void setAsSkybox(unsigned int modelID);
+    void toggleAsSkybox(unsigned int modelID);
     
     Model* getModel(unsigned int modelID);
     std::vector<Model*> getAllModels() const;

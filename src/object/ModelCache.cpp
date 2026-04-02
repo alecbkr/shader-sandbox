@@ -117,7 +117,7 @@ void ModelCache::deleteModel(unsigned int modelID) {
 }
 
 
-void ModelCache::setAsSkybox(unsigned int modelID) {
+void ModelCache::toggleAsSkybox(unsigned int modelID) {
     Model* model = getModel(modelID);
     if (model == nullptr) {
         loggerPtr->addLog(LogLevel::WARNING, "MODELCACHE::setAsSkyBox()", "Model not found with ID " + std::to_string(modelID));
@@ -128,12 +128,12 @@ void ModelCache::setAsSkybox(unsigned int modelID) {
         return;
     }
 
+    modelID == skyboxModelID ? skyboxModelID = INVALID_MODEL_ID : skyboxModelID = modelID;
     if (model->getModelStatus().wasSentToRenderer == true) {
         eventsPtr->TriggerEvent(Event { EventType::DeleteModel, false, ModelDeletionPayload{modelID} });
         model->getModelStatus().wasSentToRenderer = false;
     }
 
-    skyboxModelID = modelID;
     trySendingToRenderer(modelID);
 }
 
