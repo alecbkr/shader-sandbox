@@ -28,8 +28,7 @@ bool UniformInspectorUI::drawCompactTreeNode(const std::string& label) {
     ImGui::PushStyleColor(ImGuiCol_Header, theme.headerColor);
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.headerColorHovered);
     ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.headerColor);
-    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize); 
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f)); 
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 
     const bool open = ImGui::TreeNodeEx(
         label.c_str(),
@@ -37,7 +36,7 @@ bool UniformInspectorUI::drawCompactTreeNode(const std::string& label) {
     );
 
     ImGui::PopStyleColor(3); // pop header colors
-    ImGui::PopStyleVar(2);
+    ImGui::PopStyleVar(1);
 
     return open;
 }
@@ -85,7 +84,6 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
             }
         }
     }
-
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, styles_->assetsTabBackgroundColor);
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.0f);
@@ -201,10 +199,12 @@ void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, 
 
     std::string headerLabel = modelLabel + "##uniform_model_" + std::to_string(modelID);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
-    if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth)) {
+    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
+    if (drawCompactTreeNode(headerLabel.c_str())) {
         drawMaterialContainer(modelID, materialReferences, imGuiID);
-
+        ImGui::TreePop();
     }
+    ImGui::PopStyleVar();
     ImGui::PopStyleVar();
 
     ImGui::EndChild();
@@ -215,14 +215,13 @@ void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, 
 }
 
 void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences, int& imGuiID) {
-    ImGui::Indent(theme.indentSize);
-
     size_t i = 0;
+    bool useMaterialHeader = materialReferences.size() > 1;
     for (auto& [matID, matRefCount] : materialReferences) {
-        bool useMaterialHeader = materialReferences.size() > 1;
         bool showUniforms = true;
         bool mustTreePop = false;
         if (useMaterialHeader) {
+            ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
             std::string matHeader = "Material " + std::to_string(matID) + "##uniform_mat_" + std::to_string(matID);
             showUniforms = mustTreePop = drawCompactTreeNode(matHeader);
             if (showUniforms) {
@@ -236,18 +235,21 @@ void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::
             if (uniformMap == nullptr) {
                 loggerPtr_->addLog(LogLevel::WARNING, "drawMaterialContainer", "Material uniforms not found in registry for material: ", std::to_string(matID));
                 continue;
+            } else {
+                drawUniformsNested_byCursor(*uniformMap, matID, imGuiID);
             }
-
-            drawUniformsNested_byCursor(*uniformMap, matID, imGuiID);
         }
         ++i;
+        if (mustTreePop) {
+            ImGui::TreePop();
+        }
+        if (useMaterialHeader) {
+            ImGui::PopStyleVar();
+        }
         if (i < materialReferences.size()) {
             ImGui::Dummy(ImVec2(0.0f, 4.0f));
         }
-        if (mustTreePop) ImGui::TreePop();
     }
-
-    ImGui::Unindent(theme.indentSize);
 }
 
 void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<std::string, Uniform>& uniforms, unsigned int matID, int& imGuiID) {
@@ -340,6 +342,7 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
         ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles_->assetsBorderThickness);
         ImGui::BeginChild(("Group##" + label).c_str(), ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding);
 
+        ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
         if (drawCompactTreeNode(label)) {
             ImGui::Dummy(ImVec2(0, .5));
             ImGui::Separator();
@@ -350,6 +353,7 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
 
             ImGui::TreePop();
         }
+        ImGui::PopStyleVar();
         ImGui::EndChild();
         ImGui::PopStyleVar(2);
         ImGui::PopStyleColor(1);
@@ -484,6 +488,7 @@ void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
                           ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders)) {
         
         std::string label = typeSummary + " " + uniform.name + "##uniform_";
+        ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
         bool open = drawCompactTreeNode(label);
 
         if (open) {
@@ -508,6 +513,7 @@ void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
             ImGui::Dummy(ImVec2(0, .5));
             ImGui::TreePop();
         }
+        ImGui::PopStyleVar();
     }
     ImGui::EndChild();
     ImGui::PopStyleVar(2);

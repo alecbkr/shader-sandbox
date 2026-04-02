@@ -405,9 +405,11 @@ void FileInspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuCho
     if (ImGui::Combo("Vertex Shader", &menu.vertSelection, choices.vertChars.data(), (int)choices.vertChars.size())) {
         changed = true;
     }
+    /*
     if (ImGui::Combo("Geometry Shader", &menu.geometrySelection, choices.geoChars.data(), (int)choices.geoChars.size())) {
         changed = true;
     }
+    */
     if (ImGui::Combo("Fragment Shader", &menu.fragSelection, choices.fragChars.data(), (int)choices.fragChars.size())) {
         changed = true;
     }
