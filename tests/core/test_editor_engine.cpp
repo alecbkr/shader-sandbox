@@ -72,7 +72,7 @@ TEST_CASE("EditorEngine: Editor Management via Events", "[editor_engine][events]
     CreateDummyFile(testPath, testContent);
 
     SECTION("Spawning an editor via OpenFile event") {
-        events.TriggerEvent(OpenFileEvent(testPath, "test_shader.frag", 0, false));
+        events.TriggerEvent(OpenFileEvent(testPath, "test_shader.frag", false));
         events.ProcessQueue();
 
         REQUIRE(engine.editors.size() == 1);
@@ -92,7 +92,7 @@ TEST_CASE("EditorEngine: Editor Management via Events", "[editor_engine][events]
     }
 
     SECTION("Deleting an editor") {
-        events.TriggerEvent(OpenFileEvent(testPath, "to_delete.frag", 0, false));
+        events.TriggerEvent(OpenFileEvent(testPath, "to_delete.frag", false));
         events.ProcessQueue();
         REQUIRE(engine.editors.size() == 1);
 
@@ -139,27 +139,5 @@ TEST_CASE("EditorEngine: Untitled File Generation", "[editor_engine][filesystem]
 
         // Cleanup the created file
         std::filesystem::remove(engine.editors[0]->filePath);
-    }
-}
-
-TEST_CASE("EditorEngine: Model ID Linking", "[editor_engine]") {
-    Logger logger;
-    EventDispatcher events;
-    ModelCache cache;
-    ShaderRegistry registry;
-    SettingsStyles styles;
-    Project project;
-
-    initTestLogger(logger);
-    events.initialize(&logger);
-
-    EditorEngine engine;
-    engine.initialize(&logger, &events, &cache, &registry, &styles, &project);
-
-    SECTION("Editor inherits ModelID from payload") {
-        events.TriggerEvent(OpenFileEvent("path.glsl", "name.glsl", 1234u, false));
-        events.ProcessQueue();
-
-        REQUIRE(engine.editors.back()->modelID == 1234u);
     }
 }

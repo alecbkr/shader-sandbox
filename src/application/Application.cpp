@@ -144,7 +144,6 @@ void Application::initializeUI(AppContext& ctx) {
 }
 
 void Application::loadDefaultScene(AppContext& ctx) {
-    
     // ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "skybox.vert", ctx.project.projectShadersDir / "skybox.frag", "skybox");
 
     // unsigned int skyMatID = ctx.material_cache.createBlankMaterial();
@@ -155,33 +154,7 @@ void Application::loadDefaultScene(AppContext& ctx) {
     // ctx.model_cache.changeModelMaterial(skyboxID, skyMatID);
     // ctx.model_cache.setAsSkybox(skyboxID);
 
-
-    //DEFAULT SCENE STARTS
-    ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "color.vert", ctx.project.projectShadersDir / "color.frag", "color_program");
-    ctx.shader_registry.registerProgram(ctx.project.projectShadersDir / "gridplane.vert", ctx.project.projectShadersDir / "gridplane.frag", "gridplane_program");
-
-
-    // ctx.shader_registry.registerProgram(std::filesystem::path("../shaders/color.vert"), std::filesystem::path("../shaders/color.frag"), "color_program");
-    // ctx.shader_registry.registerProgram("../shaders/gridplane.vert", "../../shaders/gridplane.frag", "gridplane_program");
-
-    
-    unsigned int colorMatID = ctx.material_cache.createBlankMaterial();
-    ctx.material_cache.getMaterial(colorMatID)->setProgramID("color_program");
-    ctx.material_cache.getMaterial(colorMatID)->setName("color_material");
-
-    unsigned int gridplaneMatID = ctx.material_cache.createBlankMaterial();
-    ctx.material_cache.getMaterial(gridplaneMatID)->setProgramID("gridplane_program");
-    ctx.material_cache.getMaterial(gridplaneMatID)->setName("gridplane_material");
-    
-    unsigned int cubeID = ctx.model_cache.createPreset(ModelType::CubePreset);
-    ctx.model_cache.changeModelMaterial(cubeID, colorMatID);
-    ctx.model_cache.getModel(cubeID)->setPosition(glm::vec3(0.0f, 0.5f, 0.0f));
-
-    unsigned int gridplaneID = ctx.model_cache.createPreset(ModelType::PlanePreset);
-    ctx.model_cache.changeModelMaterial(gridplaneID, gridplaneMatID);
-    ctx.model_cache.getModel(gridplaneID)->setScale(glm::vec3(50.0f));
-
-    ctx.inspector_engine.refreshUniforms();
+    // ctx.inspector_engine.refreshUniforms();
 }
 
 bool Application::initialize(AppContext& ctx) {
@@ -229,16 +202,16 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Uniform Registry was not initialized successfully.");
         return false;
     }
-    if (!ctx.material_cache.initialize(&ctx.logger, &ctx.events, &ctx.texture_cache, ctx.project.previouslySaved)) {
+    if (!ctx.model_cache.initialize(&ctx.logger, &ctx.events, &ctx.preset_assets)) {
+        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
+        return false;
+    }
+    if (!ctx.material_cache.initialize(&ctx.logger, &ctx.events, &ctx.texture_cache, &ctx.model_cache, &ctx.uniform_registry, &ctx.shader_registry, ctx.project.previouslySaved)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Material Cache was not initialized successfully.");
         return false;
     }
     if (!ctx.texture_cache.initialize(&ctx.logger)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Texture Cache was not initialized successfully.");
-        return false;
-    }
-    if (!ctx.model_cache.initialize(&ctx.logger, &ctx.events, &ctx.preset_assets)) {
-        ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
         return false;
     }
     if (!ctx.inspector_engine.initialize(&ctx.logger, &ctx.shader_registry, &ctx.uniform_registry, &ctx.model_cache, &ctx.viewport_ui, &ctx.material_cache, &ctx.platform)) {
@@ -290,6 +263,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Renderer was not initialized successfully.");
         return false;
     }
+    ctx.material_cache.initializeAfterRenderer(&ctx.renderer, &ctx.inspector_engine);
     if (!ctx.viewport_ui.initialize(&ctx.logger, &ctx.platform, &ctx.renderer, &ctx.timer, &ctx.inputs)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Viewport UI was not initialized successfully.");
         return false;

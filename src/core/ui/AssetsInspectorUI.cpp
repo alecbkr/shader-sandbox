@@ -210,10 +210,37 @@ void AssetsInspectorUI::draw() {
             ImGui::Dummy(ImVec2(styles->assetsTitleOffset, 0.0f));
             ImGui::SameLine();
             ImGui::TextUnformatted("Assets");
+
+            ImVec2 plusSize = ImGui::CalcTextSize("+");
+            float buttonPaddingX = 6.5f;
+
+            float boxWidth = plusSize.x + (buttonPaddingX * 2.0f);
+            float boxHeight = plusSize.y;
+
+            ImGui::SameLine(ImGui::GetContentRegionAvail().x - boxWidth);
+
+            ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.6f, 0.6f)); 
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+
+            if (ImGui::Button("+##global_add", ImVec2(boxWidth, boxHeight))) {
+                ImGui::OpenPopup("AddAsset");
+            }
+            ImGui::PopStyleVar(3);
+            ImGui::PopFont();
+
+            auto rootEntry = std::filesystem::directory_entry(project->projectRoot / "assets");
+            if (ImGui::BeginPopup("AddAsset")) {
+                if (ImGui::MenuItem("Import Asset")) importAsset(rootEntry);
+                if (ImGui::MenuItem("New Folder")) {
+                    std::filesystem::create_directory(rootEntry.path() / "untitled");
+                    beginRename((rootEntry.path() / "untitled").string(), "untitled");
+                }
+                ImGui::EndPopup();
+            }
         }
         ImGui::EndChild();
         ImGui::PopStyleColor();
-        ImGui::PopFont();
 
         if (ImGui::BeginChild("AssetsTree", ImVec2(0, 0), 
                               ImGuiChildFlags_AlwaysUseWindowPadding)) {

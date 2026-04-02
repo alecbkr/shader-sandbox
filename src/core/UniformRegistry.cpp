@@ -8,6 +8,9 @@ UniformRegistry::UniformRegistry() {
     materialUniforms.clear();
     sceneUniforms.clear();
     modelUniforms.clear();
+
+    project = nullptr;
+    loggerPtr = nullptr;
 }
 
 bool UniformRegistry::initialize(Logger* _loggerPtr, Project* _project) {
@@ -26,6 +29,7 @@ bool UniformRegistry::initialize(Logger* _loggerPtr, Project* _project) {
 
 void UniformRegistry::shutdown() {
     loggerPtr = nullptr;
+    project = nullptr;
     materialUniforms.clear();
     sceneUniforms.clear();
     modelUniforms.clear();
@@ -220,4 +224,14 @@ const std::unique_ptr<std::unordered_map<std::string, Uniform>> UniformRegistry:
     }
 
     return unis;
+}
+
+void UniformRegistry::eraseMaterial(unsigned int matID) {
+    if (!materialUniforms.contains(matID)) return;
+
+    for (const auto& [name, uniformID] : materialUniforms.at(matID)) {
+        project->uniforms.erase(uniformID);
+    }
+
+    materialUniforms.erase(matID);
 }

@@ -37,42 +37,40 @@ bool HotReloader::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, Sh
     contextManagerPtr = _contextManagerPtr;
 
     eventsPtr->Subscribe(EventType::SaveActiveShaderFile, [this](const EventPayload& payload) -> bool {
-    int activeIdx = editorEngPtr->activeEditor;
-    if (activeIdx == -1 || editorEngPtr->editors.empty()) {
-        loggerPtr->addLog(LogLevel::WARNING, "HotReloader", "No active shader editor open");
-        return false; 
-    }
-    auto* active = editorEngPtr->editors[activeIdx];
-        if (!active) return false;
-
-        std::ofstream out(active->filePath, std::ios::binary);
-        if (out.is_open()) {
-            out << active->textEditor.GetText();
-            out.close();
+        int activeIdx = editorEngPtr->activeEditor;
+        if (activeIdx == -1 || editorEngPtr->editors.empty()) {
+            loggerPtr->addLog(LogLevel::WARNING, "HotReloader", "No active shader editor open");
+            return false; 
         }
+        Editor* active = editorEngPtr->editors[activeIdx];
+            if (!active) return false;
 
-        std::string targetProgram = "";
-        std::string absSavedPath = std::filesystem::weakly_canonical(active->filePath).string();
-
-        for (auto const& [name, prog] : shaderRegPtr->getPrograms()) {
-            if (std::filesystem::weakly_canonical(prog->vertPath).string() == absSavedPath ||
-                std::filesystem::weakly_canonical(prog->fragPath).string() == absSavedPath) {
-                targetProgram = name;
-                break;
+            std::ofstream out(active->filePath, std::ios::binary);
+            if (out.is_open()) {
+                out << active->textEditor.GetText();
+                out.close();
             }
-        }
 
-        if (!targetProgram.empty()) {
-            if (this->compile(active->filePath, targetProgram)) {
-                inspectorEngPtr->reloadUniforms(active->modelID);
-                return true;
+            std::string absSavedPath = std::filesystem::weakly_canonical(active->filePath).string();
+
+            bool updatedOneProgram = false;
+            for (auto const& [name, prog] : shaderRegPtr->getPrograms()) {
+                if (std::filesystem::weakly_canonical(prog->vertPath).string() == absSavedPath ||
+                    std::filesystem::weakly_canonical(prog->fragPath).string() == absSavedPath) {
+                    if (!name.empty()) {
+                        updatedOneProgram = true;
+                        this->compile(active->filePath, name);
+                    }
+                }
             }
-        } else {
-             loggerPtr->addLog(LogLevel::WARNING, "HotReloader", "Saved file not associated with any program.");
-        }
 
-        return false;
-    });
+            if (!updatedOneProgram) {
+                loggerPtr->addLog(LogLevel::WARNING, "HotReloader", "Saved file not associated with any program.");
+            }
+
+            return false;
+        }
+    );
 
     initialized = true;
     return true;

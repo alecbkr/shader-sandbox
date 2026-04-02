@@ -528,7 +528,7 @@ void InspectorEngine::reloadUniforms(unsigned int materialID) {
 void InspectorEngine::applyAllUniformsForPrimitive(unsigned int modelID, unsigned int meshID, unsigned int materialID) {
     Material* mat = materialCachePtr->getMaterial(materialID);
     if (mat == nullptr) {
-        loggerPtr->addLog(LogLevel::WARNING, "reloadUniforms", "material " + std::to_string(materialID) + " does not exist!");
+        loggerPtr->addLog(LogLevel::WARNING, "applyAllUniformsForPrimitive", "material " + std::to_string(materialID) + " does not exist!");
         return;
     }
     ShaderProgram* matProgram = shaderRegPtr->getProgram(mat->getProgramID());

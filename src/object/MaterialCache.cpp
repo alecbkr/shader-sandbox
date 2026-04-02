@@ -4,16 +4,25 @@
 #include "core/EventDispatcher.hpp"
 #include "object/Material.hpp"
 #include "texture/TextureCache.hpp"
+#include "object/ModelCache.hpp"
+#include "object/Renderer.hpp"
+#include "core/UniformRegistry.hpp"
+#include "core/ShaderRegistry.hpp"
+#include "core/InspectorEngine.hpp"
 #include <memory>
+#include <limits>
 
 #include <iostream> //TEMPADD
 
 MaterialCache::MaterialCache() = default;
 
-bool MaterialCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, TextureCache* _textureCachePtr, bool previouslySaved) {
+bool MaterialCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, TextureCache* _textureCachePtr, ModelCache* _modelCachePtr, UniformRegistry* _uniformRegPtr, ShaderRegistry* _shaderRegPtr, bool previouslySaved) {
     loggerPtr = _loggerPtr;
     eventsPtr = _eventsPtr;
     textureCachePtr = _textureCachePtr;
+    modelCachePtr = _modelCachePtr;
+    uniformRegPtr = _uniformRegPtr;
+    shaderRegPtr = _shaderRegPtr;
 
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Material Cache Initialization", "Material Cache was already initialized.");
@@ -23,6 +32,11 @@ bool MaterialCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, 
 
     initialized = true;
     return true;
+}
+
+void MaterialCache::initializeAfterRenderer(Renderer* _rendererPtr, InspectorEngine* _inspectorEngPtr) {
+    rendererPtr = _rendererPtr;
+    inspectorEngPtr = _inspectorEngPtr;
 }
 
 void MaterialCache::shutdown() {
@@ -62,6 +76,20 @@ unsigned int MaterialCache::createMaterial(MaterialType type, MaterialProperties
     }
     nextMaterialID++;
     return newMaterialID;
+}
+
+void MaterialCache::deleteMaterial(unsigned int materialID) {
+    for (auto& model : modelCachePtr->getAllModels()) {
+        for (auto& meshInstance : model->getMeshInstances()) {
+            if (meshInstance.materialID == materialID) {
+                model->setMeshMaterial(meshInstance.meshIdx, std::numeric_limits<unsigned int>::max());
+                rendererPtr->setMeshMaterial(model->getID(), meshInstance.meshIdx, std::numeric_limits<unsigned int>::max());
+            }
+        }
+    }
+
+    uniformRegPtr->eraseMaterial(materialID);
+    materialIDMap.erase(materialID);
 }
 
 
@@ -127,6 +155,34 @@ void MaterialCache::changeMaterialType(unsigned int materialID, MaterialType typ
 
     foundMaterial->setMaterialType(type);
     eventsPtr->TriggerEvent(Event{ EventType::MaterialTypeChange, false, MaterialTypeChangePayload{materialID, type} });
+}
+
+
+void MaterialCache::changeMaterialProgram(unsigned int materialID, const std::string& programName) {
+    Material* foundMaterial = getMaterial(materialID);
+    if (foundMaterial == nullptr) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MATERIALCACHE | changeMaterialProgram",
+            "material not found with ID " + std::to_string(materialID));
+        return;
+    }
+
+    if (foundMaterial->getProgramID() == programName) {
+        return;
+    }
+
+    ShaderProgram* program = shaderRegPtr->getProgram(programName);
+    if (program == nullptr) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MATERIALCACHE | changeMaterialProgram",
+            "program not found: " + programName);
+        return;
+    }
+
+    foundMaterial->setProgramID(programName);
+
+    // Clear old uniforms for this material, then let refreshUniforms rebuild them
+    uniformRegPtr->eraseMaterial(materialID);
+
+    inspectorEngPtr->refreshUniforms();
 }
 
 

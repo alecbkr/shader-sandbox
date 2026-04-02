@@ -33,7 +33,7 @@ struct SaveActiveShaderFilePayload { std::string filePath; unsigned int modelID;
 struct ReloadShaderPayload { std::string programName; };
 struct WindowResizePayload { int w, h; };
 struct KeyPressedPayload { int key; };
-struct OpenFilePayload { std::string filePath; std::string fileName; unsigned int modelID; bool readOnly; };
+struct OpenFilePayload { std::string filePath; std::string fileName; bool readOnly; };
 struct RenameFilePayload { std::string oldName, newName; };
 struct DeleteFilePayload { std::string fileName; };
 struct CloneFilePayload {std::string fileName; };
@@ -86,8 +86,8 @@ inline Event MakeQuitAppEvent() {
     return { EventType::Quit, false, std::monostate{} };
 };
 
-inline Event OpenFileEvent(std::string filePath, std::string fileName, unsigned int modelID, bool readOnly) {
-    return { EventType::OpenFile, false, OpenFilePayload{filePath, fileName, modelID, readOnly} };
+inline Event OpenFileEvent(std::string filePath, std::string fileName, bool readOnly) {
+    return { EventType::OpenFile, false, OpenFilePayload{filePath, fileName, readOnly} };
 }
 
 inline Event NewFileEvent() {
