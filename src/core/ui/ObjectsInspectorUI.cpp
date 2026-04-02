@@ -454,14 +454,14 @@ bool ObjectsInspectorUI::drawModelHeader(Model* model, ModelCache* modelCachePtr
             renamingModelID = modelID; 
             std::snprintf(renameBuffer, sizeof(renameBuffer), "%s", model->getName().c_str()); 
         }
-        // TODO: if we want to add these
-        if (ImGui::Selectable("Duplicate")) {
+        // // TODO: if we want to add these
+        // if (ImGui::Selectable("Duplicate")) {
 
-        }
+        // }
 
-        if (ImGui::Selectable("Remove")) {
+        // if (ImGui::Selectable("Remove")) {
 
-        }
+        // }
 
         ImGui::EndPopup(); 
     }
