@@ -447,6 +447,26 @@ bool ObjectsInspectorUI::drawModelHeader(Model* model, ModelCache* modelCachePtr
     unsigned int modelID = model->getID();
     std::string label = model->getName() + "##" + std::to_string(modelID);
 
+    if (renamingModelID == modelID) {
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+        bool enterPressed = ImGui::InputText(("##RenameInput_" + std::to_string(modelID)).c_str(), renameBuffer, sizeof(renameBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+    
+        ImGui::SameLine();
+        bool okPressed = ImGui::Button(("OK##" + std::to_string(modelID)).c_str());
+        
+        ImGui::SameLine();
+        bool cancelPressed = ImGui::Button(("CANCEL##" + std::to_string(modelID)).c_str());
+        ImGui::PopStyleVar();
+        if (enterPressed || okPressed) {
+            if (strlen(renameBuffer) > 0) modelCachePtr->changeModelName(modelID, std::string(renameBuffer));
+            renamingModelID = std::numeric_limits<unsigned int>::max(); 
+        }
+
+        if (cancelPressed) renamingModelID = std::numeric_limits<unsigned int>::max();     
+        return false;
+        
+    }
+
     bool isOpen = ImGui::CollapsingHeader(label.c_str()); 
 
     if (ImGui::BeginPopupContextItem(("Context##" + std::to_string(modelID)).c_str())) {
@@ -462,32 +482,7 @@ bool ObjectsInspectorUI::drawModelHeader(Model* model, ModelCache* modelCachePtr
         // if (ImGui::Selectable("Remove")) {
 
         // }
-
         ImGui::EndPopup(); 
     }
-
-    if (renamingModelID == modelID) ImGui::OpenPopup("Rename Object"); 
-
-    if (ImGui::BeginPopupModal("Rename Object", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("New name for %s:", model->getName().c_str());
-        
-        bool enterPressed = ImGui::InputText("##NewName", renameBuffer, sizeof(renameBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
-        
-        if (ImGui::Button("Save", ImVec2(120, 0)) || enterPressed) {
-            modelCachePtr->changeModelName(modelID, std::string(renameBuffer));
-            renamingModelID = UINT_MAX; 
-            ImGui::CloseCurrentPopup();
-        }
-        
-        ImGui::SetItemDefaultFocus();
-        ImGui::SameLine();
-        
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-            renamingModelID = UINT_MAX; // Reset state
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-
     return isOpen;
 }
