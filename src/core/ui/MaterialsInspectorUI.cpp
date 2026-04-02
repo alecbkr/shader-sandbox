@@ -5,6 +5,8 @@
 #include "object/MaterialCache.hpp"
 #include "texture/TextureCache.hpp"
 #include "core/ShaderRegistry.hpp"
+#include "core/ui/modals/ModalManager.hpp"
+#include "core/ui/modals/AddTextureModal.hpp"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
@@ -12,7 +14,11 @@
 #include <string>
 #include <vector>
 
-MaterialsInspectorUI::MaterialsInspectorUI(Fonts* fonts, SettingsStyles* styles, MaterialCache* matCache, TextureCache* texCache, ShaderRegistry* shaderReg, std::filesystem::path assetsDirPath) : fonts(fonts), styles(styles), matCache(matCache), texCache(texCache), shaderReg(shaderReg), assetsDirPath(assetsDirPath) {}
+MaterialsInspectorUI::MaterialsInspectorUI(Fonts* fonts, SettingsStyles* styles, MaterialCache* matCache, TextureCache* texCache, ShaderRegistry* shaderReg, ModalManager* modalManager, std::filesystem::path assetsDirPath) : fonts(fonts), styles(styles), matCache(matCache), texCache(texCache), shaderReg(shaderReg), assetsDirPath(assetsDirPath), modalManager(modalManager) {
+    addTextureModal = dynamic_cast<AddTextureModal*>(
+        modalManager->getModalPtr("Add Texture")
+    );
+}
 
 bool MaterialsInspectorUI::drawRenameField(Material* mat) {
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
@@ -156,94 +162,132 @@ void MaterialsInspectorUI::draw() {
                 styles->materialsBorderThickness
             );
 
-            for (auto& mat : matCache->getAllMaterials()) {
+            for (size_t i = 0; i < matCache->getAllMaterials().size(); ++i) {
+                Material* mat = matCache->getAllMaterials()[i];
                 const bool renaming = renamingID == mat->ID;
 
                 std::string label = renaming
                     ? ("##material_header_" + std::to_string(mat->ID))
                     : (mat->getName() + " (" + std::to_string(mat->ID) + ")##" + std::to_string(mat->ID));
-                
-                if (renaming) ImGui::PushItemFlag(ImGuiItemFlags_NoNav, true);
-                bool matOpen = ImGui::CollapsingHeader(label.c_str());
-                if (renaming) ImGui::PopItemFlag();
 
-                if (!renaming && !currRenaming) {
-                    if (ImGui::BeginPopupContextItem()) {
-                        if (ImGui::MenuItem("Rename")) {
-                            renamingID = mat->ID;
-                            renameJustStarted = true;
-                            currRenaming = true;
+                ImGui::PushID(mat->ID);
+
+                // Card styling
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, styles->materialsTreeBodyColor);
+                ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles->materialsBodyRounding);
+                ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles->materialsBorderThickness);
+
+                // Header styling
+                ImGui::PushStyleColor(ImGuiCol_Header, styles->materialsTitleBackgroundColor);
+                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(
+                    styles->materialsTitleBackgroundColor.x * 1.15f,
+                    styles->materialsTitleBackgroundColor.y * 1.15f,
+                    styles->materialsTitleBackgroundColor.z * 1.15f,
+                    styles->materialsTitleBackgroundColor.w
+                ));
+                ImGui::PushStyleColor(ImGuiCol_HeaderActive, styles->materialsTitleBackgroundColor);
+
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
+
+                if (ImGui::BeginChild(("MaterialCard##" + std::to_string(mat->ID)).c_str(),
+                                    ImVec2(0, 0),
+                                    ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding)) {
+
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
+
+                    if (renaming) ImGui::PushItemFlag(ImGuiItemFlags_NoNav, true);
+                    bool matOpen = ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_SpanAvailWidth);
+                    if (renaming) ImGui::PopItemFlag();
+
+                    if (!renaming && !currRenaming) {
+                        if (ImGui::BeginPopupContextItem()) {
+                            if (ImGui::MenuItem("Rename")) {
+                                renamingID = mat->ID;
+                                renameJustStarted = true;
+                                currRenaming = true;
+                            }
+                            if (ImGui::MenuItem("Delete")) {
+                                pendingDeleteMat = mat;
+                            }
+                            ImGui::EndPopup();
                         }
-                        
-                        if (ImGui::MenuItem("Delete")) {
-                            pendingDeleteMat = mat;
-                        }
-                        
-                        ImGui::EndPopup();
+                    } else if (renaming) {
+                        ImGui::SameLine();
+                        drawRenameField(mat);
                     }
-                } else if (renaming) {
-                    ImGui::SameLine();
-                    drawRenameField(mat);
+
+                    if (matOpen) {
+                        ImGui::Separator();
+                        ImGui::Dummy(ImVec2(0.0f, 2.0f));
+                        ImGui::Indent(8.0f);
+
+                        const auto& programs = shaderReg->getPrograms();
+
+                        int currentType = (int)mat->getMaterialType();
+                        static const char* materialTypes[3] = {"Opaque", "Cutout", "Translucent"};
+
+                        if (ImGui::Combo(("Type##" + std::to_string(mat->ID)).c_str(), &currentType, materialTypes, 3)) {
+                            matCache->changeMaterialType(mat->ID, (MaterialType)currentType);
+                            
+                        }
+
+                        if (ImGui::BeginCombo(("Program##" + std::to_string(mat->ID)).c_str(), mat->getProgramID().c_str())) {
+                            for (auto& [name, program] : programs) {
+                                bool isSelected = (mat->getProgramID() == name);
+
+                                if (ImGui::Selectable(name.c_str(), isSelected)) {
+                                    matCache->changeMaterialProgram(mat->ID, name);
+                                    mat->setProgramID(name);
+                                }
+
+                                if (isSelected) {
+                                    ImGui::SetItemDefaultFocus();
+                                }
+                            }
+                            ImGui::EndCombo();
+                        }
+
+                        if (ImGui::CollapsingHeader(("Textures##" + std::to_string(mat->ID)).c_str())) {
+                            if (ImGui::Button(("Add Texture##" + std::to_string(mat->ID)).c_str())) {
+                                if (addTextureModal) {
+                                    addTextureModal->setTargetMaterial(mat);
+                                    modalManager->open("Add Texture");
+                                }
+                            }
+
+                            auto textures = mat->getAllTexturePaths(texCache);
+
+                            for (int i = 0; i < (int)textures.size(); i++) {
+                                ImGui::PushID(i);
+
+                                ImGui::TextUnformatted(textures[i].c_str());
+
+                                if (ImGui::BeginPopupContextItem("TexturePopup")) {
+                                    if (ImGui::MenuItem("Remove")) {
+                                        // remove texture here when your material API supports it
+                                    }
+                                    ImGui::EndPopup();
+                                }
+
+                                ImGui::PopID();
+                            }
+                        }
+                        ImGui::Unindent(8.0f);
+                    }
+
+                    ImGui::PopStyleVar(); // FramePadding
                 }
 
-                if (matOpen) {
-                    const auto& programs = shaderReg->getPrograms();
+                ImGui::EndChild();
 
-                    int currentType = (int)mat->getMaterialType();
-                    static const char* materialTypes[3] = {"Opaque", "Cutout", "Translucent"};
+                ImGui::PopStyleVar(3);   // WindowPadding, ChildBorderSize, ChildRounding
+                ImGui::PopStyleColor(4); // ChildBg + 3 header colors
+                ImGui::PopID();
 
-                    if (ImGui::Combo("Type", &currentType, materialTypes, 3)) {
-                        matCache->changeMaterialType(mat->ID, (MaterialType)currentType);
-                        
-                    }
-
-                    if (ImGui::BeginCombo("Program", mat->getProgramID().c_str())) {
-                        for (auto& [name, program] : programs) {
-                            bool isSelected = (mat->getProgramID() == name);
-
-                            if (ImGui::Selectable(name.c_str(), isSelected)) {
-                                matCache->changeMaterialProgram(mat->ID, name);
-                                mat->setProgramID(name);
-                            }
-
-                            if (isSelected) {
-                                ImGui::SetItemDefaultFocus();
-                            }
-                        }
-                        ImGui::EndCombo();
-                    }
-
-                    if (ImGui::CollapsingHeader(("Textures##" + std::to_string(mat->ID)).c_str())) {
-                        static char textureAddBuf[256] = "";
-
-                        ImGui::InputText(("##TextureInput" + std::to_string(mat->ID)).c_str(),
-                                        textureAddBuf, sizeof(textureAddBuf));
-                        ImGui::SameLine();
-
-                        if (ImGui::Button(("+##TextureInput" + std::to_string(mat->ID)).c_str())) {
-                            unsigned int id = texCache->createTexture2D((assetsDirPath / textureAddBuf).string().c_str());
-                            mat->addTexture(id);
-                        }
-
-                        auto textures = mat->getAllTexturePaths(texCache);
-
-                        for (int i = 0; i < (int)textures.size(); i++) {
-                            ImGui::PushID(i);
-
-                            ImGui::TextUnformatted(textures[i].c_str());
-
-                            if (ImGui::BeginPopupContextItem("TexturePopup")) {
-                                if (ImGui::MenuItem("Remove")) {
-                                }
-                                ImGui::EndPopup();
-                            }
-
-                            ImGui::PopID();
-                        }
-                    }
+                if (i + 1 < matCache->getAllMaterials().size()) {
+                    ImGui::Dummy(ImVec2(0.0f, 6.0f));
                 }
             }
-
         }
         ImGui::EndChild();
     }

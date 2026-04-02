@@ -28,8 +28,7 @@ bool UniformInspectorUI::drawCompactTreeNode(const std::string& label) {
     ImGui::PushStyleColor(ImGuiCol_Header, theme.headerColor);
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.headerColorHovered);
     ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.headerColor);
-    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize); 
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f)); 
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 
     const bool open = ImGui::TreeNodeEx(
         label.c_str(),
@@ -37,7 +36,7 @@ bool UniformInspectorUI::drawCompactTreeNode(const std::string& label) {
     );
 
     ImGui::PopStyleColor(3); // pop header colors
-    ImGui::PopStyleVar(2);
+    ImGui::PopStyleVar(1);
 
     return open;
 }
@@ -85,7 +84,6 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
             }
         }
     }
-
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, styles_->assetsTabBackgroundColor);
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.0f);
@@ -201,10 +199,12 @@ void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, 
 
     std::string headerLabel = modelLabel + "##uniform_model_" + std::to_string(modelID);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
-    if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth)) {
+    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
+    if (drawCompactTreeNode(headerLabel.c_str())) {
         drawMaterialContainer(modelID, materialReferences, imGuiID);
-
+        ImGui::TreePop();
     }
+    ImGui::PopStyleVar();
     ImGui::PopStyleVar();
 
     ImGui::EndChild();
@@ -215,14 +215,13 @@ void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, 
 }
 
 void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences, int& imGuiID) {
-    ImGui::Indent(theme.indentSize);
-
     size_t i = 0;
+    bool useMaterialHeader = materialReferences.size() > 1;
     for (auto& [matID, matRefCount] : materialReferences) {
-        bool useMaterialHeader = materialReferences.size() > 1;
         bool showUniforms = true;
         bool mustTreePop = false;
         if (useMaterialHeader) {
+            ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
             std::string matHeader = "Material " + std::to_string(matID) + "##uniform_mat_" + std::to_string(matID);
             showUniforms = mustTreePop = drawCompactTreeNode(matHeader);
             if (showUniforms) {
@@ -236,18 +235,21 @@ void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::
             if (uniformMap == nullptr) {
                 loggerPtr_->addLog(LogLevel::WARNING, "drawMaterialContainer", "Material uniforms not found in registry for material: ", std::to_string(matID));
                 continue;
+            } else {
+                drawUniformsNested_byCursor(*uniformMap, matID, imGuiID);
             }
-
-            drawUniformsNested_byCursor(*uniformMap, matID, imGuiID);
         }
         ++i;
+        if (mustTreePop) {
+            ImGui::TreePop();
+        }
+        if (useMaterialHeader) {
+            ImGui::PopStyleVar();
+        }
         if (i < materialReferences.size()) {
             ImGui::Dummy(ImVec2(0.0f, 4.0f));
         }
-        if (mustTreePop) ImGui::TreePop();
     }
-
-    ImGui::Unindent(theme.indentSize);
 }
 
 void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<std::string, Uniform>& uniforms, unsigned int matID, int& imGuiID) {
@@ -340,6 +342,7 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
         ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles_->assetsBorderThickness);
         ImGui::BeginChild(("Group##" + label).c_str(), ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding);
 
+        ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
         if (drawCompactTreeNode(label)) {
             ImGui::Dummy(ImVec2(0, .5));
             ImGui::Separator();
@@ -350,6 +353,7 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
 
             ImGui::TreePop();
         }
+        ImGui::PopStyleVar();
         ImGui::EndChild();
         ImGui::PopStyleVar(2);
         ImGui::PopStyleColor(1);
@@ -484,6 +488,7 @@ void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
                           ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders)) {
         
         std::string label = typeSummary + " " + uniform.name + "##uniform_";
+        ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
         bool open = drawCompactTreeNode(label);
 
         if (open) {
@@ -503,11 +508,12 @@ void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
                     changed |= drawInput(&val, &uniform);
                 }, uniform.value);
             } else if (auto* value = std::get_if<InspectorReference>(&uniform.value)) {
-                changed |= drawReferenceEditor(value, &uniform);
+                changed |= drawInput(value, &uniform);
             }
             ImGui::Dummy(ImVec2(0, .5));
             ImGui::TreePop();
         }
+        ImGui::PopStyleVar();
     }
     ImGui::EndChild();
     ImGui::PopStyleVar(2);
@@ -603,19 +609,16 @@ bool UniformInspectorUI::drawInput(InspectorSampler2D* value, Uniform* uniform) 
 }
 
 bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) {
-    return drawReferenceEditor(value, uniform);
-}
-
-bool UniformInspectorUI::drawReferenceEditor(InspectorReference* value, Uniform* uniform) {
+    // validation
     if (value->materialSelection < 0 || value->modelSelection < 0 || value->uniformSelection < 0) {
-        value->materialSelection = 0;
-        value->modelSelection = 0;
-        value->uniformSelection = 0;
-        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawReferenceEditor", "selection outside of bounds!");
+        value->resetSelections();
+        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawReferenceEditor", "selection outside of bounds! Resetting value");
     }
+
     value->initialized = false;
     value->useWorldVariable = false;
     bool changed = false;
+
     std::vector<std::string> modelNames;
     std::vector<const char*> modelChoices{""};
     std::vector<unsigned int> modelIDs{0};
@@ -625,15 +628,15 @@ bool UniformInspectorUI::drawReferenceEditor(InspectorReference* value, Uniform*
 
     std::optional<std::vector<std::string>> worldData = getWorldData(uniform->type);
 
-    if (worldData || value->useWorldData) {
+    if (worldData) {
         bool changedWorldDataBox = ImGui::Checkbox("Use World Data##Use_world_data", &value->useWorldData);
         if (changedWorldDataBox) {
-            value->materialSelection = 0;
-            value->modelSelection = 0;
-            value->uniformSelection = 0;
+            value->resetSelections();
         }
         changed |= changedWorldDataBox;
-        
+    } 
+    else {
+        value->useWorldData = false;
     }
 
     int i = 0;
@@ -652,7 +655,7 @@ bool UniformInspectorUI::drawReferenceEditor(InspectorReference* value, Uniform*
     ImGui::TextDisabled("Source Object");
     ImGui::SetNextItemWidth(-1);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(styles_->framePadding.x, 0.0f));
-    changed |= ImGui::Combo("##Source_model", &value->modelSelection, modelChoices.data(), static_cast<int>(modelChoices.size()));
+    changed |= ImGui::Combo("##Source_model", &value->modelSelection, modelChoices.data(), modelChoices.size());
     ImGui::PopStyleVar();
 
     if (changed) {
@@ -680,61 +683,7 @@ bool UniformInspectorUI::drawReferenceEditor(InspectorReference* value, Uniform*
             uniformChoices.push_back(worldDataStr.c_str());
         }
     }
-
-    //++++++++++++++++START
-
-    // Model* chosenModel = modelCachePtr_->getModel(modelIDs[value->modelSelection]);
-    // if (!chosenModel) {
-    //     loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model not found!");
-    //     value->modelSelection = 0;
-    //     return false;
-    // }
-
-    // auto& chosenModelMatIDReferences = chosenModel->getAllMaterialReferences();
-    // std::vector<unsigned int> matIDs{0};
-
-    // if (chosenModelMatIDReferences.size() < 1) {
-    //     loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model has no materials!");
-    //     value->modelSelection = 0;
-    //     return false;
-    // }
-    // // If model only has one material, we can just show them the uniforms on the only material since there's only one material.
-    // else if (chosenModelMatIDReferences.size() < 2) {
-    //     changed = value->materialSelection != 1;
-    //     auto& [matID, matRefCount] = *chosenModelMatIDReferences.begin(); //gets the only entry
-    //     matIDs.push_back(matID);
-    //     value->materialSelection = 1;
-    // }
-    // else {
-    //     std::vector<std::string> matNames{""};
-    //     std::vector<const char*> matChoices{""};
-    //     matNames.reserve(chosenModelMatIDReferences.size() + 1);
-    //     matIDs.reserve(chosenModelMatIDReferences.size() + 1);
-    //     matChoices.reserve(chosenModelMatIDReferences.size() + 1);
-    //     i = 0;
-    //     for (auto& [matID, matRefCount] : chosenModelMatIDReferences) {
-    //         matNames.push_back("Material " + std::to_string(matID));
-    //         matChoices.push_back(matNames[i].c_str());
-    //         matIDs.push_back(matID);
-    //         i++;
-    //     }
-    //     ImGui::Text("Source Material");
-    //     ImGui::SameLine();
-    //     ImGui::SetNextItemWidth(-1);
-    //     changed |= ImGui::Combo("##Source_material", &value->materialSelection, matChoices.data(), static_cast<int>(matChoices.size()));
-    // }
-
-    // if (changed) {
-    //     value->referencedMaterialID = matIDs[value->materialSelection];
-    //     value->uniformSelection = 0;
-    // }
-    // if (value->materialSelection == 0) {
-    //     return changed;
-    // }
-
-    //+++++++++++++++++++++END
-
-    if (!value->useWorldData) {
+    else {
         Model* chosenModel = modelCachePtr_->getModel(modelIDs[value->modelSelection]);
         if (!chosenModel) {
             loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model not found!");
@@ -809,4 +758,3 @@ bool UniformInspectorUI::drawReferenceEditor(InspectorReference* value, Uniform*
 
     return changed;
 }
-

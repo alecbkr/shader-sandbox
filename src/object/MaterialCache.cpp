@@ -45,10 +45,11 @@ void MaterialCache::shutdown() {
 }
 
 unsigned int MaterialCache::createBlankMaterial() {
-    if (materialIDMap.contains(nextMaterialID)) {
-        // This should never happen. material sets it's own ID using MateralCache::getNextMaterialID
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "MaterialCache::createMaterial",  "overlapping material IDs! this should never happen!");
+    if (validateNextID() == false) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MaterialCache::createMaterial",  "could not find a free next ID");
+        return UINT_MAX;
     }
+
     unsigned int newMaterialID = nextMaterialID;
     materialIDMap.emplace(newMaterialID, std::make_unique<Material>(nextMaterialID, MaterialType::Opaque));
 

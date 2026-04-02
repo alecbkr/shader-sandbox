@@ -18,6 +18,8 @@ public:
     // Close current popup (optional convenience).
     void closeCurrent();
 
+    IModal* getModalPtr(const std::string& modalId);
+
     // Call every frame from a central place (e.g., Application UI pass).
     void render();
 
