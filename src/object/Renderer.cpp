@@ -31,19 +31,6 @@ bool Renderer::initialize(
     uniformRegPtr    = _uniformRegPtr;
     inspectorEngPtr  = _inspectorEngPtr;
 
-    // GRAB PRELOADED MODELS
-    // Model* skybox = modelCachePtr->getSkybox();
-    // primitiveIDMap.emplace(
-    //     nextPrimitiveID,
-    //     Primitive {
-    //         .modelID = data->modelID, 
-    //         .meshIdx = meshInstance.meshIdx, 
-    //         .materialID = meshInstance.materialID, 
-    //         .depth = 0,
-    //         .queuetype = queueType
-    //     }
-    // );
-
     eventsPtr->Subscribe(EventType::CreateModel, [this](const EventPayload& payload) -> bool {
         if (const auto* data = std::get_if<ModelCreationPayload>(&payload)) {
             
@@ -239,7 +226,8 @@ void Renderer::renderCutoutPrimitives() {
 
 void Renderer::renderTranslucentPrimitives() {
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // glDepthMask(GL_FALSE);
     for (unsigned int primitiveID : translucentPrimIDs) {
 
         if (validatePrimitive(primitiveID) == false) {
@@ -253,6 +241,7 @@ void Renderer::renderTranslucentPrimitives() {
         bindTextures(currPrimitive->materialID);
         drawMesh(currPrimitive->modelID, currPrimitive->meshIdx);
     }
+    // glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
 }
 
