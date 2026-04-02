@@ -146,7 +146,7 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
             }
             ImGui::Dummy(ImVec2(0, 20.0f));
             const auto& programs = shaderRegPtr->getPrograms();
-            if (!programs.empty() || !shaderLinkMenus.empty()){
+            if (newProgram || !programs.empty() || !shaderLinkMenus.empty()){
                 ImGui::TextDisabled("Programs");
                 if (newProgram) {
                     bool submitted = ImGui::InputText("##NewProgramInput", newProgramBuf, 256, ImGuiInputTextFlags_EnterReturnsTrue);
