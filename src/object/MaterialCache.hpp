@@ -45,7 +45,7 @@ public:
     int getSize();
 
 private:
-    unsigned int nextMaterialID = 1;
+    unsigned int nextMaterialID = 0;
     std::unordered_map<unsigned int, std::unique_ptr<Material>> materialIDMap;
     std::unordered_set<std::string> usedMaterialNames;
     bool validateNextID();
