@@ -3,6 +3,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <limits>
 
 #include "MaterialType.hpp"
 #include "MaterialProperties.hpp"
@@ -27,11 +28,11 @@ public:
     void setName(std::string name);
     void setProperties(MaterialProperties properties);
     void setMaterialType(MaterialType type);
-    void setProgramID(std::string programID);
+    void setProgramID(unsigned int programID);
     void addTexture(unsigned int textureID);
 
     std::string getName();
-    std::string getProgramID();
+    unsigned int getProgramID();
     MaterialType getMaterialType();
     float getOpacity();
     float getShininess();
@@ -42,7 +43,7 @@ public:
     
 private:
     std::string name = "material";
-    std::string programID = "";
+    unsigned int programID = std::numeric_limits<unsigned int>::max();
     std::vector<unsigned int> textureIDs;
     MaterialType type = MaterialType::Opaque;
 

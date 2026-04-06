@@ -159,7 +159,7 @@ void MaterialCache::changeMaterialType(unsigned int materialID, MaterialType typ
 }
 
 
-void MaterialCache::changeMaterialProgram(unsigned int materialID, const std::string& programName) {
+void MaterialCache::changeMaterialProgram(unsigned int materialID, unsigned int programID) {
     Material* foundMaterial = getMaterial(materialID);
     if (foundMaterial == nullptr) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "MATERIALCACHE | changeMaterialProgram",
@@ -167,18 +167,18 @@ void MaterialCache::changeMaterialProgram(unsigned int materialID, const std::st
         return;
     }
 
-    if (foundMaterial->getProgramID() == programName) {
+    if (foundMaterial->getProgramID() == programID) {
         return;
     }
 
-    ShaderProgram* program = shaderRegPtr->getProgram(programName);
+    ShaderProgram* program = shaderRegPtr->getProgram(programID);
     if (program == nullptr) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "MATERIALCACHE | changeMaterialProgram",
-            "program not found: " + programName);
+            "program not found with ID: " + programID);
         return;
     }
 
-    foundMaterial->setProgramID(programName);
+    foundMaterial->setProgramID(programID);
 
     // Clear old uniforms for this material, then let refreshUniforms rebuild them
     uniformRegPtr->eraseMaterial(materialID);

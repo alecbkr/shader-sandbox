@@ -230,14 +230,16 @@ void MaterialsInspectorUI::draw() {
                             matCache->changeMaterialType(mat->ID, (MaterialType)currentType);
                             
                         }
+                        ShaderProgram* prog = shaderReg->getProgram(mat->getProgramID());
+                        std::string progName = prog ? prog->name : "select program";
 
-                        if (ImGui::BeginCombo(("Program##" + std::to_string(mat->ID)).c_str(), mat->getProgramID().c_str())) {
-                            for (auto& [name, program] : programs) {
-                                bool isSelected = (mat->getProgramID() == name);
+                        if (ImGui::BeginCombo(("Program##" + std::to_string(mat->ID)).c_str(), progName.c_str())) {
+                            for (auto& [ID, program] : programs) {
+                                bool isSelected = (mat->getProgramID() == ID);
 
-                                if (ImGui::Selectable(name.c_str(), isSelected)) {
-                                    matCache->changeMaterialProgram(mat->ID, name);
-                                    mat->setProgramID(name);
+                                if (ImGui::Selectable(program->name.c_str(), isSelected)) {
+                                    matCache->changeMaterialProgram(mat->ID, ID);
+                                    mat->setProgramID(ID);
                                 }
 
                                 if (isSelected) {

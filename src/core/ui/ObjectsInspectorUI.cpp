@@ -196,7 +196,7 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
 }
 
 
-void ObjectsInspectorUI::initializeMenu(MaterialShaderMenu& menu, const std::vector<const char*>& shaderChoices, Logger* loggerPtr, ShaderRegistry* shaderRegPtr, MaterialCache* materialCachePtr) {
+void ObjectsInspectorUI::initializeMenu(MaterialShaderMenu& menu, const std::vector<unsigned int>& shaderChoices, Logger* loggerPtr, ShaderRegistry* shaderRegPtr, MaterialCache* materialCachePtr) {
     int i = 0;
     if (!materialCachePtr->contains(menu.matID)) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "ObjectsInspectorUI::initializeMenu (ModelShaderMenu)", "couldn't find material: " + std::to_string(menu.matID));
@@ -204,8 +204,8 @@ void ObjectsInspectorUI::initializeMenu(MaterialShaderMenu& menu, const std::vec
     }
     Material* mat  = materialCachePtr->getMaterial(menu.matID);
 
-    for (auto& shaderName : shaderChoices) {
-        const ShaderProgram* shader = shaderRegPtr->getProgram(shaderName);
+    for (auto& shaderID : shaderChoices) {
+        const ShaderProgram* shader = shaderRegPtr->getProgram(shaderID);
         if (shader == nullptr) {
             continue;
         }
@@ -217,7 +217,7 @@ void ObjectsInspectorUI::initializeMenu(MaterialShaderMenu& menu, const std::vec
             return;
         }
 
-        if (shaderName == modelProgram->name) {
+        if (shaderID == modelProgram->ID) {
             menu.selection = i;
             menu.initialized = true;
         }

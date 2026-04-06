@@ -127,7 +127,7 @@ inline void from_json(const json& j, MaterialEntry& materialData) {
 
     materialData.properties = j.at("properties").get<MaterialProperties>();
     materialData.texture_paths = j.at("texture_paths").get<std::vector<std::string>>();
-    materialData.programID = j.at("programID").get<std::string>();
+    materialData.programID = j.at("programID").get<unsigned int>();
 }
 
 
@@ -163,14 +163,16 @@ bool loadShaders(Project& project, json& j) {
             shaderData.frag_path  = d.at(shaderLabels.fragPath).get<std::string>();
             shaderData.isCompiled = d.at(shaderLabels.compiled).get<bool>();
 
-            bool shaderExists = project.shaderRegistry->getProgram(shaderData.name) != nullptr;
-            if (!shaderExists) {
-                project.shaderRegistry->registerProgram(shaderData.vert_path, shaderData.frag_path, shaderData.name);
-            }
-            else {
-                project.shaderRegistry->replaceProgram(shaderData.vert_path, shaderData.frag_path, shaderData.name);
-                std::cerr << "Shader \"" << shaderData.name << "\" already exists, replacing!" << std::endl;
-            }
+            project.shaderRegistry->registerProgram(shaderData.vert_path, shaderData.frag_path, shaderData.name);
+            // ShaderProgram* prevProg = project.shaderRegistry->getProgram(shaderData.ID);
+            // bool shaderExists = prevProg != nullptr;
+            // if (!shaderExists) {
+            //     project.shaderRegistry->registerProgram(shaderData.vert_path, shaderData.frag_path, shaderData.name, shaderData.ID);
+            // }
+            // else {
+            //     project.shaderRegistry->replaceProgram(shaderData.vert_path, shaderData.frag_path, shaderData.name);
+            //     std::cerr << "Shader \"" << shaderData.name << "\" already exists, replacing!" << std::endl;
+            // }
         }
     }
     catch (...) {

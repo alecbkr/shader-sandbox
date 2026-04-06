@@ -17,7 +17,7 @@ public:
     bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, ShaderRegistry* _shaderRegPtr, ModelCache* _modelCachePtr, EditorEngine* _editorEngPtr, InspectorEngine* _inspectorEngPtr, ContextManager* _contextManagerPtr);
     void shutdown();
     void update();
-    bool compile(const std::string &filepath, const std::string &programName);
+    bool compile(const std::string &filepath, const std::string &programName, const unsigned int progID);
 
 private:
     bool initialized = false;
@@ -32,7 +32,7 @@ private:
 
     std::string readSourceFile(const std::string &filepath);
     void scanSourceFiles(const std::string &sourceCode);
-    bool attemptCompile(const std::string &fragShaderPath, const std::string &programName);
+    bool attemptCompile(const std::string &fragShaderPath, const std::string &programName, const unsigned int progID);
 };
 
 #endif 

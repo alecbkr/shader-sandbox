@@ -70,9 +70,9 @@ void InspectorEngine::refreshUniforms() {
     
     // NOTE: this will break if we do any multithreading with the program list.
     // Please be careful.
-    std::unordered_map<std::string, std::vector<unsigned int>> programToMaterialList;
-    for (const auto& [programName, program] : programs) {
-        programToMaterialList[programName] = std::vector<unsigned int>();
+    std::unordered_map<unsigned int, std::vector<unsigned int>> programToMaterialList;
+    for (const auto& [ID, program] : programs) {
+        programToMaterialList[ID] = std::vector<unsigned int>();
     }
 
     const std::vector<unsigned int> materials = materialCachePtr->getAllMaterialIDs();
@@ -154,10 +154,10 @@ bool InspectorEngine::handleEditShaderProgram(const std::string& vertexPath, con
     }
 
     // Otherwise, we need to go through this mess.
-    auto newProgram = std::make_unique<ShaderProgram>(vertexPath.c_str(), fragmentPath.c_str(), programName.c_str(), loggerPtr);
+    auto newProgram = std::make_unique<ShaderProgram>(vertexPath.c_str(), fragmentPath.c_str(), programName.c_str(), oldProgram->ID, loggerPtr);
     if (!newProgram->isCompiled()) return false;
 
-    shaderRegPtr->replaceProgram(programName, std::move(newProgram));
+    shaderRegPtr->replaceProgram(oldProgram->ID, std::move(newProgram));
 
     InspectorEngine::refreshUniforms();
     return true;
@@ -506,8 +506,8 @@ void InspectorEngine::reloadUniforms(unsigned int materialID) {
 
     for (const unsigned int matID : materialCachePtr->getAllMaterialIDs()) {
         Material* matPtr = materialCachePtr->getMaterial(matID);
-        if (matPtr && matPtr->getProgramID() == matProgram->name) {
-            matPtr->setProgramID(matProgram->name); 
+        if (matPtr && matPtr->getProgramID() == matProgram->ID) {
+            matPtr->setProgramID(matProgram->ID); 
             const auto existingRegistry = uniformRegPtr->tryReadMaterialUniforms(matID);
             if (existingRegistry) {
                 for (auto& [uName, uData] : newUniforms) {

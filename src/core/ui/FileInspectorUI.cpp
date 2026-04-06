@@ -156,15 +156,21 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
                         std::string newName = newProgramBuf;
                         if (newName.empty()) {
                             loggerPtr->addLog(LogLevel::LOG_ERROR, "UI", "Program name cannot be empty.");
-                        }
-                        else if (shaderLinkMenus.contains(newName)) {
-                            loggerPtr->addLog(LogLevel::LOG_ERROR, "UI", "Program \"" + newName + "\" already exists!");
-                        }
-                        else {
-                            shaderLinkMenus.emplace(newName, ShaderLinkMenu{
-                                .shaderName = newName,
-                                .initialized = false
-                            });
+                        } else {
+                            bool repeatName = false;
+                            for (auto& [ID, menu] : shaderLinkMenus) {
+                                if (menu.shaderName == newName) {
+                                    repeatName = true;
+                                    loggerPtr->addLog(LogLevel::LOG_ERROR, "UI", "Program \"" + newName + "\" already exists!");
+                                    break;
+                                }
+                            }
+                            if (!repeatName) {
+                                shaderLinkMenus.emplace(newName, ShaderLinkMenu{
+                                    .shaderName = newName,
+                                    .initialized = false
+                                });
+                            }
                             newProgram = false; 
                         }
                     }
@@ -279,10 +285,10 @@ void FileInspectorUI::drawPresetShaderEntry(std::filesystem::path filePath, Even
 }
 
 void FileInspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, InspectorEngine* inspectorEngPtr) {
-    for (const auto& [shaderName, shader] : shaderRegPtr->getPrograms()) {
-        if (!menus.contains(shaderName)) {
-            menus[shaderName] = ShaderLinkMenu{
-                .shaderName = shaderName,
+    for (const auto& [ID, shader] : shaderRegPtr->getPrograms()) {
+        if (!menus.contains(shader->name)) {
+            menus[shader->name] = ShaderLinkMenu{
+                .shaderName = shader->name,
                 .initialized = false,
             };
         }

@@ -22,13 +22,13 @@ TEST_CASE("ShaderRegistry: initialize(false) produces empty registry", "[shader]
     ShaderRegistry reg;
 
     // Factory won't be used because we disable defaults + don't register programs here
-    reg.setFactory([](const char*, const char*, const char*, Logger*) -> ShaderProgram* {
+    reg.setFactory([](const char*, const char*, const char*, unsigned int, Logger*) -> ShaderProgram* {
         return nullptr;
     });
 
     REQUIRE(reg.initialize(&logger, &project, false) == true);
     REQUIRE(reg.getNumberOfPrograms() == 0);
-    REQUIRE(reg.getProgram("anything") == nullptr);
+    REQUIRE(reg.getProgram(1) == nullptr);
 }
 
 TEST_CASE("ShaderRegistry: registerProgram rejects empty name", "[shader][registry]") {
@@ -39,7 +39,7 @@ TEST_CASE("ShaderRegistry: registerProgram rejects empty name", "[shader][regist
     ShaderRegistry reg;
 
     // Even if called, it returns nullptr; we only care about empty-name rejection
-    reg.setFactory([](const char*, const char*, const char*, Logger*) -> ShaderProgram* {
+    reg.setFactory([](const char*, const char*, const char*, unsigned int, Logger*) -> ShaderProgram* {
         return nullptr;
     });
 
