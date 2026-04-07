@@ -509,7 +509,7 @@ void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
                     changed |= drawInput(&val, &uniform);
                 }, uniform.value);
             } else if (auto* value = std::get_if<InspectorReference>(&uniform.value)) {
-                changed |= drawReferenceEditor(value, &uniform);
+                changed |= drawInput(value, &uniform);
             }
             ImGui::Dummy(ImVec2(0, .5));
             ImGui::TreePop();
@@ -610,19 +610,16 @@ bool UniformInspectorUI::drawInput(InspectorSampler2D* value, Uniform* uniform) 
 }
 
 bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) {
-    return drawReferenceEditor(value, uniform);
-}
-
-bool UniformInspectorUI::drawReferenceEditor(InspectorReference* value, Uniform* uniform) {
+    // validation
     if (value->materialSelection < 0 || value->modelSelection < 0 || value->uniformSelection < 0) {
-        value->materialSelection = 0;
-        value->modelSelection = 0;
-        value->uniformSelection = 0;
-        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawReferenceEditor", "selection outside of bounds!");
+        value->resetSelections();
+        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawReferenceEditor", "selection outside of bounds! Resetting value");
     }
+
     value->initialized = false;
     value->useWorldVariable = false;
     bool changed = false;
+
     std::vector<std::string> modelNames;
     std::vector<const char*> modelChoices{""};
     std::vector<unsigned int> modelIDs{0};
@@ -632,15 +629,15 @@ bool UniformInspectorUI::drawReferenceEditor(InspectorReference* value, Uniform*
 
     std::optional<std::vector<std::string>> worldData = getWorldData(uniform->type);
 
-    if (worldData || value->useWorldData) {
+    if (worldData) {
         bool changedWorldDataBox = ImGui::Checkbox("Use World Data##Use_world_data", &value->useWorldData);
         if (changedWorldDataBox) {
-            value->materialSelection = 0;
-            value->modelSelection = 0;
-            value->uniformSelection = 0;
+            value->resetSelections();
         }
         changed |= changedWorldDataBox;
-        
+    } 
+    else {
+        value->useWorldData = false;
     }
 
     int i = 0;
@@ -659,7 +656,7 @@ bool UniformInspectorUI::drawReferenceEditor(InspectorReference* value, Uniform*
     ImGui::TextDisabled("Source Object");
     ImGui::SetNextItemWidth(-1);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(styles_->framePadding.x, 0.0f));
-    changed |= ImGui::Combo("##Source_model", &value->modelSelection, modelChoices.data(), static_cast<int>(modelChoices.size()));
+    changed |= ImGui::Combo("##Source_model", &value->modelSelection, modelChoices.data(), modelChoices.size());
     ImGui::PopStyleVar();
 
     if (changed) {
@@ -687,61 +684,7 @@ bool UniformInspectorUI::drawReferenceEditor(InspectorReference* value, Uniform*
             uniformChoices.push_back(worldDataStr.c_str());
         }
     }
-
-    //++++++++++++++++START
-
-    // Model* chosenModel = modelCachePtr_->getModel(modelIDs[value->modelSelection]);
-    // if (!chosenModel) {
-    //     loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model not found!");
-    //     value->modelSelection = 0;
-    //     return false;
-    // }
-
-    // auto& chosenModelMatIDReferences = chosenModel->getAllMaterialReferences();
-    // std::vector<unsigned int> matIDs{0};
-
-    // if (chosenModelMatIDReferences.size() < 1) {
-    //     loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model has no materials!");
-    //     value->modelSelection = 0;
-    //     return false;
-    // }
-    // // If model only has one material, we can just show them the uniforms on the only material since there's only one material.
-    // else if (chosenModelMatIDReferences.size() < 2) {
-    //     changed = value->materialSelection != 1;
-    //     auto& [matID, matRefCount] = *chosenModelMatIDReferences.begin(); //gets the only entry
-    //     matIDs.push_back(matID);
-    //     value->materialSelection = 1;
-    // }
-    // else {
-    //     std::vector<std::string> matNames{""};
-    //     std::vector<const char*> matChoices{""};
-    //     matNames.reserve(chosenModelMatIDReferences.size() + 1);
-    //     matIDs.reserve(chosenModelMatIDReferences.size() + 1);
-    //     matChoices.reserve(chosenModelMatIDReferences.size() + 1);
-    //     i = 0;
-    //     for (auto& [matID, matRefCount] : chosenModelMatIDReferences) {
-    //         matNames.push_back("Material " + std::to_string(matID));
-    //         matChoices.push_back(matNames[i].c_str());
-    //         matIDs.push_back(matID);
-    //         i++;
-    //     }
-    //     ImGui::Text("Source Material");
-    //     ImGui::SameLine();
-    //     ImGui::SetNextItemWidth(-1);
-    //     changed |= ImGui::Combo("##Source_material", &value->materialSelection, matChoices.data(), static_cast<int>(matChoices.size()));
-    // }
-
-    // if (changed) {
-    //     value->referencedMaterialID = matIDs[value->materialSelection];
-    //     value->uniformSelection = 0;
-    // }
-    // if (value->materialSelection == 0) {
-    //     return changed;
-    // }
-
-    //+++++++++++++++++++++END
-
-    if (!value->useWorldData) {
+    else {
         Model* chosenModel = modelCachePtr_->getModel(modelIDs[value->modelSelection]);
         if (!chosenModel) {
             loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model not found!");
@@ -816,4 +759,3 @@ bool UniformInspectorUI::drawReferenceEditor(InspectorReference* value, Uniform*
 
     return changed;
 }
-

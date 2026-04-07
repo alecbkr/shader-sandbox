@@ -54,7 +54,6 @@ private:
     bool drawInput(glm::quat* value, Uniform* uniform = nullptr);
     bool drawInput(InspectorSampler2D* value, Uniform* uniform = nullptr);
     bool drawInput(InspectorReference* value, Uniform* uniform = nullptr);
-    bool drawReferenceEditor(InspectorReference* value, Uniform* uniform);
     void drawUniformRow(Uniform& uniform, unsigned int matID);
     bool drawModePicker(const char* id, int& mode, const char* const* labels, int labelCount);
     void setReferenceMode(Uniform& uniform, bool useReference);
