@@ -18,10 +18,6 @@
 #include <unordered_map>
 #include <vector>
 
-namespace {
-    const std::string worldVariableLabel = "World Variable";
-}
-
 bool UniformInspectorUI::drawCompactTreeNode(const std::string& label) {
 
     // Set the header button color
@@ -64,6 +60,7 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
     modelCachePtr_ = modelCachePtr;
     materialCachePtr_ = materialCachePtr;
     inspectorEngPtr_ = inspectorEngPtr;
+    inspectorEngPtr_->queueUpdateChoices();
     
     int imGuiID = 0;
     int modelIndex = 0;
@@ -364,50 +361,64 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
     }
 }
 
-bool UniformInspectorUI::drawModePicker(const char* id, int& mode, const char* const* labels, int labelCount) {
+bool UniformInspectorUI::drawReferenceModePicker(bool *isRef) {
     bool changed = false;
-    static constexpr const char* compactLabels[] = { "Constant", "Reference" };
-    const char* buttonLabel = (labelCount == 2 && mode >= 0 && mode < 2) ? compactLabels[mode] : labels[mode];
+    const size_t labelCount = 2;
+
+    const char* compactLabels[labelCount] = { "Constant", "Reference" };
+    const char* buttonLabel = *isRef ? compactLabels[1] : compactLabels[0];
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.0f, 0.0f));
-    if (ImGui::SmallButton((std::string(buttonLabel) + "##" + id).c_str())) {
-        ImGui::OpenPopup((std::string("ModePopup##") + id).c_str());
+
+    if (ImGui::SmallButton((std::string(buttonLabel) + "##inlineMode").c_str())) {
+        ImGui::OpenPopup("ModePopup##inlineMode");
     }
 
-    if (ImGui::BeginPopup((std::string("ModePopup##") + id).c_str())) {
+    if (ImGui::BeginPopup("ModePopup##inlineMode")) {
         for (int i = 0; i < labelCount; ++i) {
-            if (ImGui::MenuItem(labels[i], nullptr, mode == i)) {
-                mode = i;
+            bool selected = (*isRef == (i == 1));
+
+            if (ImGui::MenuItem(compactLabels[i], nullptr, selected)) {
+                *isRef = (i == 1);
                 changed = true;
             }
         }
         ImGui::EndPopup();
     }
-    ImGui::PopStyleVar();
 
+    ImGui::PopStyleVar();
     return changed;
 }
 
-void UniformInspectorUI::setReferenceMode(Uniform& uniform, bool useReference) {
-    if (useReference) {
-        if (!std::holds_alternative<InspectorReference>(uniform.value)) {
-            uniform.value = InspectorReference{
-                .modelSelection = 0,
-                .uniformSelection = 0,
-                .returnType = uniform.type,
-                .initialized = false,
-            };
-        }
-        uniform.isFunction = true;
-        return;
+bool UniformInspectorUI::drawReferenceTypePicker(InspectorReferenceType* referenceType) {
+    bool changed = false;
+
+    const char* labels[] = { "Uniform", "Object Data", sceneVariableLabel.c_str() };
+    const int count = 3;
+
+    int currentIndex = static_cast<int>(*referenceType);
+    const char* buttonLabel = labels[currentIndex];
+
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.0f, 0.0f));
+
+    if (ImGui::SmallButton((std::string(buttonLabel) + "##refType").c_str())) {
+        ImGui::OpenPopup("RefTypePopup##refType");
     }
 
-    uniform.isFunction = false;
-    uniform.value = inspectorEngPtr_->getDefaultValue(uniform.type);
-}
+    if (ImGui::BeginPopup("RefTypePopup##refType")) {
+        for (int i = 0; i < count; ++i) {
+            bool selected = (currentIndex == i);
 
-std::string UniformInspectorUI::makeUniformStateKey(unsigned int matID, const std::string& uniformName) const {
-    return std::to_string(matID) + "::" + uniformName;
+            if (ImGui::MenuItem(labels[i], nullptr, selected)) {
+                *referenceType = static_cast<InspectorReferenceType>(i);
+                changed = true;
+            }
+        }
+        ImGui::EndPopup();
+    }
+
+    ImGui::PopStyleVar();
+    return changed;
 }
 
 std::string UniformInspectorUI::getReferenceSummary(const Uniform& uniform) const {
@@ -421,16 +432,24 @@ std::string UniformInspectorUI::getReferenceSummary(const Uniform& uniform) cons
     }
 
     std::string target;
-    if (ref->useWorldVariable) {
-        target = worldVariableLabel;
-    } else if (ref->referencedModelID != 0) {
-        target = "Object " + std::to_string(ref->referencedModelID);
-    } else {
-        target = "Reference";
+    switch (ref->referenceType) {
+        case InspectorReferenceType::Uniform: 
+            target = "Uniform";
+            break;
+        case InspectorReferenceType::ObjectData:
+            if (ref->referencedModelID != 0) {
+                target = "Object " + std::to_string(ref->referencedModelID);
+            } else {
+                target = "Object";
+            }
+            break;
+        case InspectorReferenceType::SceneVariable:
+            target = sceneVariableLabel;
+            break;
     }
 
-    if (!ref->referencedUniformName.empty()) {
-        target += " -> " + ref->referencedUniformName;
+    if (!ref->referencedValueName.empty()) {
+        target += " -> " + ref->referencedValueName;
     }
 
     return target;
@@ -476,8 +495,6 @@ std::string UniformInspectorUI::getUniformSummary(const Uniform& uniform) const 
 
 void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
     bool changed = false;
-    int mode = uniform.isFunction ? 1 : 0;
-    static constexpr const char* modeLabels[] = { "Constant", "Reference" };
     const std::string typeSummary = to_string(uniform.type);
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.cardBGColor); // same card background as model card
@@ -497,9 +514,17 @@ void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
 
             ImGui::TextDisabled("Mode:  ");
             ImGui::SameLine();
-            if (drawModePicker("InlineMode", mode, modeLabels, IM_ARRAYSIZE(modeLabels))) {
-                setReferenceMode(uniform, mode == 1);
+            if (drawReferenceModePicker(&uniform.isFunction)) {
                 changed = true;
+                if (uniform.isFunction) {
+                    uniform.value = InspectorReference{
+                        .returnType = uniform.type,
+                        .initialized = false
+                    };
+                }
+                else {
+                    uniform.value = inspectorEngPtr_->getDefaultValue(uniform.type);
+                }
             }
 
             // Value editor
@@ -610,52 +635,148 @@ bool UniformInspectorUI::drawInput(InspectorSampler2D* value, Uniform* uniform) 
 
 bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) {
     // validation
-    if (value->materialSelection < 0 || value->modelSelection < 0 || value->uniformSelection < 0) {
+    if (value->materialSelection < 0 || value->modelSelection < 0 || value->valueSelection < 0) {
         value->resetSelections();
-        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawReferenceEditor", "selection outside of bounds! Resetting value");
+        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput (InspectorReference)", "selection outside of bounds! Resetting value");
+    }
+
+    ImGui::TextDisabled("Reference Type:  ");
+    ImGui::SameLine();
+    bool changed = false;
+    changed = drawReferenceTypePicker(&value->referenceType);
+
+    if (changed) {
+        value->resetSelections();
+        return true;
+    }
+
+    switch (value->referenceType) {
+        case InspectorReferenceType::ObjectData:
+            changed = drawRefInput_ObjectData(value, uniform);
+            break;
+        case InspectorReferenceType::Uniform:
+            changed = drawRefInput_Uniform(value, uniform);
+            break;
+        case InspectorReferenceType::SceneVariable:
+            changed = drawRefInput_SceneVar(value, uniform);
+            break;
+    }
+
+    return changed;
+
+}
+
+bool UniformInspectorUI::drawRefInput_Uniform(InspectorReference* value, Uniform* uniform) {
+    if (value->referenceType != InspectorReferenceType::Uniform) {
+        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawRefInput_Uniform", "Wrong reference type! not drawing this");
+        return false;
     }
 
     value->initialized = false;
-    value->useWorldVariable = false;
     bool changed = false;
 
-    std::vector<std::string> modelNames;
-    std::vector<const char*> modelChoices{""};
-    std::vector<unsigned int> modelIDs{0};
-    modelNames.reserve(modelCachePtr_->getNumberOfModels());
-    modelChoices.reserve(modelCachePtr_->getNumberOfModels() + 1);
-    modelIDs.reserve(modelCachePtr_->getNumberOfModels() + 1);
-
-    std::optional<std::vector<std::string>> worldData = getWorldData(uniform->type);
-
-    if (worldData) {
-        bool changedWorldDataBox = ImGui::Checkbox("Use World Data##Use_world_data", &value->useWorldData);
-        if (changedWorldDataBox) {
-            value->resetSelections();
-        }
-        changed |= changedWorldDataBox;
-    } 
-    else {
-        value->useWorldData = false;
-    }
-
-    int i = 0;
-    for (auto& model : modelCachePtr_->getAllModels()) {
-        modelNames.push_back("Object " + std::to_string(model->ID));
-        modelChoices.push_back(modelNames[i].c_str());
-        modelIDs.push_back(model->ID);
-        i++;
-    }
-
-    if (value->useWorldData) {
-        modelChoices.push_back(worldVariableLabel.c_str());
-    }
-
-
+    auto modelChoices = inspectorEngPtr_->getModelChoices();
     ImGui::TextDisabled("Source Object");
     ImGui::SetNextItemWidth(-1);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(styles_->framePadding.x, 0.0f));
-    changed |= ImGui::Combo("##Source_model", &value->modelSelection, modelChoices.data(), modelChoices.size());
+    changed |= ImGui::Combo("##Source_model", &value->modelSelection, modelChoices.cstrings.data(), modelChoices.cstrings.size());
+    ImGui::PopStyleVar();
+
+    if (changed) {
+        value->materialSelection = 0;
+    }
+    if (value-> modelSelection >= modelChoices.ids.size()) {
+        value->modelSelection = 0;
+    }
+    if (value->modelSelection == 0) {
+        return changed;
+    }
+
+    unsigned int chosenID = modelChoices.ids[value->modelSelection];
+    auto matChoicesOptional = inspectorEngPtr_->getMatChoices(chosenID);
+    if (!matChoicesOptional) {
+        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model not found!");
+        value->modelSelection = 0;
+        return false;
+    }
+
+    auto matChoices = matChoicesOptional.value();
+    int matCount = matChoices->ids.size() - 1;
+    if (matCount < 1) {
+        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model has no materials!");
+        value->modelSelection = 0;
+        return false;
+    }
+    // If model only has one material, we can just show them the uniforms on the only material since there's only one material.
+    else if (matCount < 2) {
+        changed = value->materialSelection != 1;
+        value->materialSelection = 1;
+    }
+    else {
+        ImGui::TextDisabled("Source Material");
+        ImGui::SetNextItemWidth(-1);
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(styles_->framePadding.x, 0.0f));
+        changed |= ImGui::Combo("##Source_material", &value->materialSelection, matChoices->cstrings.data(), static_cast<int>(matChoices->cstrings.size()));
+        ImGui::PopStyleVar();
+    }
+
+    if (value->materialSelection >= matChoices->ids.size()) {
+        value->materialSelection = 0;
+    }
+    if (changed) {
+        value->referencedMaterialID = matChoices->ids[value->materialSelection];
+        value->valueSelection = 0;
+    }
+    if (value->materialSelection == 0) {
+        return changed;
+    }
+
+    auto uniformChoicesOptional = inspectorEngPtr_->getUniformChoices(value->referencedMaterialID, value->returnType);
+    if (!uniformChoicesOptional) {
+        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "material not found!");
+        value->modelSelection = 0;
+        return false;
+    }
+
+    auto uniformChoices = uniformChoicesOptional.value();
+    ImGui::TextDisabled("Source Uniform");
+    ImGui::SetNextItemWidth(-1);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(styles_->framePadding.x, 0.0f));
+    changed |= ImGui::Combo("##Source_uniform", &value->valueSelection, uniformChoices.data(), static_cast<int>(uniformChoices.size()));
+    ImGui::PopStyleVar();
+
+    if (value->valueSelection >= uniformChoices.size()) {
+        value->valueSelection = 0;
+    }
+    if (value->valueSelection > 0) {
+        std::string referencedName = uniformChoices[value->valueSelection];
+        value->referencedValueName = referencedName;
+        value->initialized = true;
+    }
+
+    return changed;
+}
+
+bool UniformInspectorUI::drawRefInput_ObjectData(InspectorReference* value, Uniform* uniform) {
+    if (value->referenceType != InspectorReferenceType::ObjectData) {
+        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawRefInput_ObjectData", "Wrong reference type! not drawing this");
+        return false;
+    }
+
+    std::optional<std::vector<std::string>> objectDataOptional = getObjectData(uniform->type);
+    if (!objectDataOptional) {
+        ImGui::TextDisabled("%s", "No object data available for this type!");
+        return false;
+    }
+
+    value->initialized = false;
+    bool changed = false;
+
+    auto modelChoices = inspectorEngPtr_->getModelChoices();
+    ImGui::TextDisabled("Source Object");
+    ImGui::SetNextItemWidth(-1);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(styles_->framePadding.x, 0.0f));
+    changed |= ImGui::Combo("##Source_model", &value->modelSelection, modelChoices.cstrings.data(), modelChoices.cstrings.size());
     ImGui::PopStyleVar();
 
     if (changed) {
@@ -665,94 +786,58 @@ bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) 
         return changed;
     }
 
-    if (std::string(modelChoices[value->modelSelection]) == worldVariableLabel) {
-        value->useWorldVariable = true;
-    } else {
-        value->referencedModelID = modelIDs[value->modelSelection];
+    value->referencedModelID = modelChoices.ids[value->modelSelection];
+
+    std::vector<const char*> objectData = {""};
+    for (int i = 0; i < objectDataOptional.value().size(); i++) {
+        objectData.push_back(objectDataOptional.value()[i].c_str());
     }
 
-    std::vector<const char*> uniformChoices{""};
-
-    if (value->useWorldData) {
-        if (!worldData) {
-            loggerPtr_->addLog(LogLevel::LOG_ERROR, "drawInput", "world data is not enabled for this type");
-            value->modelSelection = 0;
-            return false;
-        }
-        for (const std::string& worldDataStr : worldData.value()) {
-            uniformChoices.push_back(worldDataStr.c_str());
-        }
-    }
-    else {
-        Model* chosenModel = modelCachePtr_->getModel(modelIDs[value->modelSelection]);
-        if (!chosenModel) {
-            loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model not found!");
-            value->modelSelection = 0;
-            return false;
-        }
-
-        auto& chosenModelMatReferences = chosenModel->getAllMaterialReferences();
-        std::vector<unsigned int> matIDs{0};
-
-        if (chosenModelMatReferences.size() < 1) {
-            loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "model has no materials!");
-            value->modelSelection = 0;
-            return false;
-        }
-        // If model only has one material, we can just show them the uniforms on the only material since there's only one material.
-        else if (chosenModelMatReferences.size() < 2) {
-            changed = value->materialSelection != 1;
-            auto& [matID, matRefCount] = *chosenModelMatReferences.begin(); //same as getting front, retrieves only entry
-            matIDs.push_back(matID);
-            value->materialSelection = 1;
-        }
-        else {
-            std::vector<std::string> matNames{""};
-            std::vector<const char*> matChoices{""};
-            matNames.reserve(chosenModelMatReferences.size() + 1);
-            matIDs.reserve(chosenModelMatReferences.size() + 1);
-            matChoices.reserve(chosenModelMatReferences.size() + 1);
-            i = 0;
-            for (auto& [matID, matRefCount] : chosenModelMatReferences) {
-                matNames.push_back("Material " + std::to_string(matID));
-                matChoices.push_back(matNames[i].c_str());
-                matIDs.push_back(matID);
-                i++;
-            }
-            ImGui::TextDisabled("Source Material");
-            ImGui::SetNextItemWidth(-1);
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(styles_->framePadding.x, 0.0f));
-            changed |= ImGui::Combo("##Source_material", &value->materialSelection, matChoices.data(), static_cast<int>(matChoices.size()));
-            ImGui::PopStyleVar();
-        }
-
-        if (changed) {
-            value->referencedMaterialID = matIDs[value->materialSelection];
-            value->uniformSelection = 0;
-        }
-        if (value->materialSelection == 0) {
-            return changed;
-        }
-
-        const auto uniforms = uniformRegPtr_->tryReadMaterialUniforms(matIDs[value->materialSelection]);
-        if (uniforms == nullptr) {
-            loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput (function)", "uniform list not found");
-        }
-
-        uniformChoices.reserve(uniforms->size() + 1);
-        for (const auto& [name, uniform] : *uniforms) {
-            if (uniform.type == value->returnType) uniformChoices.push_back(name.c_str());
-        }
-    }
-
-    ImGui::TextDisabled("Source Uniform");
+    ImGui::TextDisabled("Source Value");
     ImGui::SetNextItemWidth(-1);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(styles_->framePadding.x, 0.0f));
-    changed |= ImGui::Combo("##Source_uniform", &value->uniformSelection, uniformChoices.data(), static_cast<int>(uniformChoices.size()));
+    changed |= ImGui::Combo("##Source_value", &value->valueSelection, objectData.data(), objectData.size());
     ImGui::PopStyleVar();
 
-    if (value->uniformSelection > 0) {
-        value->referencedUniformName = uniformChoices[value->uniformSelection];
+    if (value->valueSelection > 0) {
+        std::string referencedName = objectData[value->valueSelection];
+        value->referencedValueName = referencedName;
+        value->initialized = true;
+    }
+
+    return changed;
+}
+bool UniformInspectorUI::drawRefInput_SceneVar(InspectorReference* value, Uniform* uniform) {
+    if (value->referenceType != InspectorReferenceType::SceneVariable) {
+        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawRefInput_SceneVar", "Wrong reference type! not drawing this");
+        return false;
+    }
+
+    std::optional<std::vector<std::string>> sceneVarsOpt = getSceneVariables(uniform->type);
+    if (!sceneVarsOpt) {
+        ImGui::TextDisabled("%s", "No scene variables available for this type!");
+        return false;
+    }
+
+    bool changed = false;
+
+    std::vector<const char*> sceneVars{""};
+    for (int i = 0; i < sceneVarsOpt.value().size(); i++) {
+        sceneVars.push_back(sceneVarsOpt.value()[i].c_str());
+    }
+
+    ImGui::TextDisabled("Source Value");
+    ImGui::SetNextItemWidth(-1);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(styles_->framePadding.x, 0.0f));
+    changed |= ImGui::Combo("##Source_value", &value->valueSelection, sceneVars.data(), sceneVars.size());
+    ImGui::PopStyleVar();
+
+    if (value->valueSelection >= sceneVars.size()) {
+        value->valueSelection = 0;
+    }
+    if (value->valueSelection > 0) {
+        std::string referencedName = sceneVars[value->valueSelection];
+        value->referencedValueName = referencedName;
         value->initialized = true;
     }
 
