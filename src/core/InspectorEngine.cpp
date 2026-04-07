@@ -305,7 +305,6 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
         program.setUniform_mat4float(uniform.name.c_str(), std::get<glm::mat4>(uniform.value));
         break;
     case UniformType::Sampler2D: {
-        break; // don't do anything yet
         const InspectorSampler2D& sampler = std::get<InspectorSampler2D>(uniform.value);
         program.setUniform_int(uniform.name.c_str(), sampler.textureUnit);
         break;
