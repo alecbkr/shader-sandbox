@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <limits>
+#include <unordered_map>
 
 #include "MaterialType.hpp"
 #include "MaterialProperties.hpp"
@@ -39,6 +40,7 @@ public:
     float getRoughness();
     float getMetalness();
     std::vector<unsigned int>& getMaterialTextureIDs();
+    std::unordered_map<unsigned int, std::string> getAllTextureUnitsAndPaths(TextureCache* texCache);
     std::vector<std::string> getAllTexturePaths(TextureCache* texCache);
     
 private:

@@ -76,6 +76,24 @@ void MaterialsInspectorUI::handlePendingDelete() {
     }
 }
 
+std::string makeRelativeToAssets(const std::string& fullPath) {
+    std::string key = "assets\\";
+    size_t pos = fullPath.find(key);
+
+    if (pos != std::string::npos) {
+        return fullPath.substr(pos + key.length());
+    }
+
+    key = "assets/";
+    pos = fullPath.find(key);
+
+    if (pos != std::string::npos) {
+        return fullPath.substr(pos + key.length());
+    }
+
+    return fullPath;
+}
+
 void MaterialsInspectorUI::draw() {
     ImGui::PushStyleColor(ImGuiCol_ChildBg, styles->materialsTabBackgroundColor);
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.0f);
@@ -257,12 +275,15 @@ void MaterialsInspectorUI::draw() {
                                 }
                             }
 
-                            auto textures = mat->getAllTexturePaths(texCache);
+                            auto textureData = mat->getAllTextureUnitsAndPaths(texCache);
 
-                            for (int i = 0; i < (int)textures.size(); i++) {
+                            int i = 0;
+                            for (auto& [texUnit, path] : textureData) {
                                 ImGui::PushID(i);
 
-                                ImGui::TextUnformatted(textures[i].c_str());
+                                std::string relativePath = makeRelativeToAssets(path);
+
+                                ImGui::TextUnformatted(("Texture Unit: " + std::to_string(texUnit) + " | " + relativePath).c_str());
 
                                 if (ImGui::BeginPopupContextItem("TexturePopup")) {
                                     if (ImGui::MenuItem("Remove")) {
@@ -272,6 +293,7 @@ void MaterialsInspectorUI::draw() {
                                 }
 
                                 ImGui::PopID();
+                                i++;
                             }
                         }
                         ImGui::Unindent(8.0f);

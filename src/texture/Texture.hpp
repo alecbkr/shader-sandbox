@@ -12,7 +12,6 @@ class Logger;
 class Texture {
     
 public:
-    
     Texture(std::string texture_path);
     virtual ~Texture();
     virtual bool bind(unsigned int texUnit) = 0;
@@ -20,6 +19,7 @@ public:
 
     void setPath(std::string path);
     const std::string getPath() const;
+    const unsigned int getTexUnit() const;
     TextureStatus getStatus() const;
     
 

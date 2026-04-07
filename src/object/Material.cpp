@@ -47,6 +47,15 @@ unsigned int Material::getProgramID() { return programID; }
 MaterialType Material::getMaterialType() { return type; }
 std::vector<unsigned int>& Material::getMaterialTextureIDs() { return textureIDs; }
 
+std::unordered_map<unsigned int, std::string> Material::getAllTextureUnitsAndPaths(TextureCache* texCache) {
+    std::unordered_map<unsigned int, std::string> data;
+
+    for (auto texID : textureIDs) {
+        data.emplace(texCache->getTextureTexUnit(texID), texCache->getTexturePath(texID));
+    }
+
+    return data;
+}
 
 std::vector<std::string> Material::getAllTexturePaths(TextureCache* texCache) {
     std::vector<std::string> paths;
