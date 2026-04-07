@@ -16,14 +16,16 @@ struct Uniform;
 class ShaderProgram;
 class Fonts;
 struct SettingsStyles;
+class TextureCache;
+class Material;
 
 class UniformInspectorUI {
 public:
     UniformInspectorUI() = default;
-    UniformInspectorUI(Fonts* fonts, SettingsStyles* styles);
+    UniformInspectorUI(Fonts* fonts, SettingsStyles* styles, Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr, TextureCache* textureCachePtr);
     ~UniformInspectorUI();
 
-    void draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr);
+    void draw();
 
     struct UniformInspectorThemeSettings {
         float inputWidth = 50.0f;
@@ -40,20 +42,22 @@ private:
     UniformRegistry* uniformRegPtr_ = nullptr;
     ModelCache* modelCachePtr_ = nullptr;
     MaterialCache* materialCachePtr_ = nullptr;
+    ShaderRegistry* shaderRegPtr_ = nullptr;
     InspectorEngine* inspectorEngPtr_ = nullptr;
+    TextureCache* textureCachePtr_ = nullptr;
     Fonts* fonts_ = nullptr;
     SettingsStyles* styles_ = nullptr;
     
     void drawModelContainer(int& imGuiID, unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialRefernces);
     void drawMaterialContainer(unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences, int& imGuiID);
-    bool drawInput(int* value, Uniform* uniform = nullptr);
-    bool drawInput(float* value, Uniform* uniform = nullptr);
-    bool drawInput(glm::vec3* value, Uniform* uniform = nullptr);
-    bool drawInput(glm::vec4* value, Uniform* uniform = nullptr);
-    bool drawInput(glm::mat4* value, Uniform* uniform = nullptr);
-    bool drawInput(glm::quat* value, Uniform* uniform = nullptr);
-    bool drawInput(InspectorSampler2D* value, Uniform* uniform = nullptr);
-    bool drawInput(InspectorReference* value, Uniform* uniform = nullptr);
+    bool drawInput(int* value, Uniform* uniform = nullptr, Material* material = nullptr);
+    bool drawInput(float* value, Uniform* uniform = nullptr, Material* material = nullptr);
+    bool drawInput(glm::vec3* value, Uniform* uniform = nullptr, Material* material = nullptr);
+    bool drawInput(glm::vec4* value, Uniform* uniform = nullptr, Material* material = nullptr);
+    bool drawInput(glm::mat4* value, Uniform* uniform = nullptr, Material* material = nullptr);
+    bool drawInput(glm::quat* value, Uniform* uniform = nullptr, Material* material = nullptr);
+    bool drawInput(InspectorSampler2D* value, Uniform* uniform = nullptr, Material* material = nullptr);
+    bool drawInput(InspectorReference* value, Uniform* uniform = nullptr, Material* material = nullptr);
     void drawUniformRow(Uniform& uniform, unsigned int matID);
     bool drawModePicker(const char* id, int& mode, const char* const* labels, int labelCount);
     void setReferenceMode(Uniform& uniform, bool useReference);

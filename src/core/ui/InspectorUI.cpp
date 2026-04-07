@@ -58,7 +58,7 @@ bool InspectorUI::initialize(Logger* _loggerPtr, InspectorEngine* _inspectorEngP
     modelCachePtr = _modelCachePtr;
     fileRegPtr = _fileRegPtr;
     assetsInspectorUI = std::make_unique<AssetsInspectorUI>(_fontsPtr, _project, _styles);
-    uniformInspectorUI = std::make_unique<UniformInspectorUI>(_fontsPtr, _styles);
+    uniformInspectorUI = std::make_unique<UniformInspectorUI>(_fontsPtr, _styles, _loggerPtr, _inspectorEngPtr, _shaderRegPtr, _uniformRegPtr, _modelCachePtr, _materialCachePtr, _textureCachePtr);
     objectsInspectorUI = std::make_unique<ObjectsInspectorUI>(_styles);
     materialsInspectorUI = std::make_unique<MaterialsInspectorUI>(_fontsPtr, _styles, _materialCachePtr, _textureCachePtr, _shaderRegPtr, _modalManager, _project->projectAssetsDir);
     fileInspectorUI = std::make_unique<FileInspectorUI>();
@@ -108,7 +108,7 @@ void InspectorUI::render() {
         if (ImGui::BeginTabBar("Inspector tabs")) {
             
             if (ImGui::BeginTabItem("Uniforms")) {
-                uniformInspectorUI->draw(loggerPtr, inspectorEngPtr, shaderRegPtr, uniformRegPtr, modelCachePtr, materialCachePtr);
+                uniformInspectorUI->draw();
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Objects")) {

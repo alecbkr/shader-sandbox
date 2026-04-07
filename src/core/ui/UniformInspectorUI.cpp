@@ -12,6 +12,7 @@
 #include "imgui.h"
 #include "object/MaterialCache.hpp"
 #include "object/ModelCache.hpp"
+#include "texture/TextureCache.hpp"
 #include <sstream>
 #include <iomanip>
 #include <string>
@@ -41,7 +42,7 @@ bool UniformInspectorUI::drawCompactTreeNode(const std::string& label) {
     return open;
 }
 
-UniformInspectorUI::UniformInspectorUI(Fonts* fonts, SettingsStyles* styles) : fonts_(fonts), styles_(styles) {
+UniformInspectorUI::UniformInspectorUI(Fonts* fonts, SettingsStyles* styles, Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr, TextureCache* textureCachePtr) : fonts_(fonts), styles_(styles) {
     if (styles_) {
         theme.cardBGColor = styles_->assetsFileBackgroundColor;
         theme.headerColor = styles_->assetsTitleBackgroundColor;
@@ -54,30 +55,33 @@ UniformInspectorUI::UniformInspectorUI(Fonts* fonts, SettingsStyles* styles) : f
         );
         theme.indentSize = styles_->assetsTitleInnerPadding + 2.0f;
     }
-}
 
-UniformInspectorUI::~UniformInspectorUI() = default;
-
-void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr) {
     loggerPtr_ = loggerPtr;
     uniformRegPtr_ = uniformRegPtr;
     modelCachePtr_ = modelCachePtr;
     materialCachePtr_ = materialCachePtr;
+    shaderRegPtr_ = shaderRegPtr;
     inspectorEngPtr_ = inspectorEngPtr;
+    textureCachePtr_ = textureCachePtr;
+}
+
+UniformInspectorUI::~UniformInspectorUI() = default;
+
+void UniformInspectorUI::draw() {
     
     int imGuiID = 0;
     int modelIndex = 0;
-    const int modelCount = static_cast<int>(modelCachePtr->getNumberOfModels());
+    const int modelCount = static_cast<int>(modelCachePtr_->getNumberOfModels());
     bool hasActivePrograms = false;
 
-    for (auto& model : modelCachePtr->getAllModels()) {
+    for (auto& model : modelCachePtr_->getAllModels()) {
         for (auto& [matID, matRefCount] : model->getAllMaterialReferences()) {
             Material* material = materialCachePtr_->getMaterial(matID);
             if (material == nullptr) {
                 continue;
             }
 
-            ShaderProgram* program = shaderRegPtr->getProgram(material->getProgramID());
+            ShaderProgram* program = shaderRegPtr_->getProgram(material->getProgramID());
             if (program != nullptr && program->isCompiled()) {
                 hasActivePrograms = true;
                 break;
@@ -160,7 +164,7 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                 ImGui::TextDisabled("No active programs");
             }
             else {
-                for (auto& model : modelCachePtr->getAllModels()) {
+                for (auto& model : modelCachePtr_->getAllModels()) {
                     const std::unordered_map<unsigned int, unsigned int>& materialReferences = model->getAllMaterialReferences();
                     drawModelContainer(imGuiID, model->ID, materialReferences);
 
@@ -502,13 +506,15 @@ void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
                 changed = true;
             }
 
+            Material* mat = materialCachePtr_->getMaterial(matID);
+
             // Value editor
             if (!uniform.isFunction) {
                 std::visit([&](auto& val) {
-                    changed |= drawInput(&val, &uniform);
+                    changed |= drawInput(&val, &uniform, mat);
                 }, uniform.value);
             } else if (auto* value = std::get_if<InspectorReference>(&uniform.value)) {
-                changed |= drawInput(value, &uniform);
+                changed |= drawInput(value, &uniform, mat);
             }
             ImGui::Dummy(ImVec2(0, .5));
             ImGui::TreePop();
@@ -525,17 +531,17 @@ void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
     }
 }
 
-bool UniformInspectorUI::drawInput(int* value, Uniform* uniform) {
+bool UniformInspectorUI::drawInput(int* value, Uniform* uniform, Material* mat) {
     ImGui::SetNextItemWidth(-1);
     return ImGui::DragInt("##Value", value);
 }
 
-bool UniformInspectorUI::drawInput(float* value, Uniform* uniform) {
+bool UniformInspectorUI::drawInput(float* value, Uniform* uniform, Material* mat) {
     ImGui::SetNextItemWidth(-1);
     return ImGui::DragFloat("##Value", value, .1f);
 }
 
-bool UniformInspectorUI::drawInput(glm::vec3* value, Uniform* uniform) {
+bool UniformInspectorUI::drawInput(glm::vec3* value, Uniform* uniform, Material* mat) {
     bool changed = false;
     bool useColorPicker = false;
     if (uniform != nullptr) {
@@ -554,7 +560,7 @@ bool UniformInspectorUI::drawInput(glm::vec3* value, Uniform* uniform) {
     return changed;
 }
 
-bool UniformInspectorUI::drawInput(glm::vec4* value, Uniform* uniform) {
+bool UniformInspectorUI::drawInput(glm::vec4* value, Uniform* uniform, Material* mat) {
     bool changed = false;
     bool useColorPicker = false;
     if (uniform != nullptr) {
@@ -573,7 +579,7 @@ bool UniformInspectorUI::drawInput(glm::vec4* value, Uniform* uniform) {
     return changed;
 }
 
-bool UniformInspectorUI::drawInput(glm::quat* value, Uniform* uniform) {
+bool UniformInspectorUI::drawInput(glm::quat* value, Uniform* uniform, Material* mat) {
     bool changed = false;
     ImGui::TextDisabled("wxyz");
     ImGui::SetNextItemWidth(-1);
@@ -581,7 +587,7 @@ bool UniformInspectorUI::drawInput(glm::quat* value, Uniform* uniform) {
     return changed;
 }
 
-bool UniformInspectorUI::drawInput(glm::mat4* value, Uniform* uniform) {
+bool UniformInspectorUI::drawInput(glm::mat4* value, Uniform* uniform, Material* mat) {
     static int tableID = 0;
     const int columns = 4;
     tableID++;
@@ -602,13 +608,71 @@ bool UniformInspectorUI::drawInput(glm::mat4* value, Uniform* uniform) {
     return changed;
 }
 
-bool UniformInspectorUI::drawInput(InspectorSampler2D* value, Uniform* uniform) {
-    ImGui::TextDisabled("Texture Unit");
-    ImGui::SetNextItemWidth(-1);
-    return ImGui::DragInt("##Texture_unit", &value->textureUnit, 0, 16);
+std::string makeRelativeToAssetsFolder(const std::string& fullPath) {
+    std::string key = "assets\\";
+    size_t pos = fullPath.find(key);
+
+    if (pos != std::string::npos) {
+        return fullPath.substr(pos + key.length());
+    }
+
+    key = "assets/";
+    pos = fullPath.find(key);
+
+    if (pos != std::string::npos) {
+        return fullPath.substr(pos + key.length());
+    }
+
+    return fullPath;
 }
 
-bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform) {
+bool UniformInspectorUI::drawInput(InspectorSampler2D* value, Uniform* uniform, Material* material) {
+    if (!value || !material || !textureCachePtr_) {
+        ImGui::TextDisabled("No textures available");
+        return false;
+    }
+
+    std::vector<std::string> texPaths = material->getAllTexturePaths(textureCachePtr_);
+
+    ImGui::TextDisabled("Texture Unit");
+    ImGui::SetNextItemWidth(-1);
+
+    if (texPaths.empty()) {
+        ImGui::TextDisabled("This material has no textures");
+        return false;
+    }
+
+    bool changed = false;
+
+    std::string preview;
+    if (value->textureUnit >= 0 && value->textureUnit < static_cast<int>(texPaths.size())) {
+        preview = "Unit " + std::to_string(value->textureUnit) + " | " + makeRelativeToAssetsFolder(texPaths[value->textureUnit]);
+    } else {
+        preview = "None";
+    }
+
+    if (ImGui::BeginCombo("##Texture_unit", preview.c_str())) {
+        for (int i = 0; i < static_cast<int>(texPaths.size()); i++) {
+            std::string label = "Unit " + std::to_string(i) + " | " + makeRelativeToAssetsFolder(texPaths[i]);
+            bool selected = (value->textureUnit == i);
+
+            if (ImGui::Selectable(label.c_str(), selected)) {
+                value->textureUnit = i;
+                changed = true;
+            }
+
+            if (selected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    return changed;
+}
+
+bool UniformInspectorUI::drawInput(InspectorReference* value, Uniform* uniform, Material* mat) {
     // validation
     if (value->materialSelection < 0 || value->modelSelection < 0 || value->uniformSelection < 0) {
         value->resetSelections();
