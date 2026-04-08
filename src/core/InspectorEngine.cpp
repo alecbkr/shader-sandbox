@@ -592,7 +592,7 @@ const InspectorEngine::ModelChoices& InspectorEngine::getModelChoices() {
 
     int i = 0;
     for (auto& model : modelCachePtr->getAllModels()) {
-        modelChoices.strings.push_back("Object " + std::to_string(model->ID));
+        modelChoices.strings.push_back(model->getName());
         modelChoices.cstrings.push_back(modelChoices.strings[i].c_str());
         modelChoices.ids.push_back(model->ID);
         i++;
@@ -622,7 +622,9 @@ const std::optional<InspectorEngine::MatChoices*> InspectorEngine::getMatChoices
     choices.cstrings.reserve(chosenModelMatReferences.size() + 1);
     int i = 0;
     for (auto& [matID, matRefCount] : chosenModelMatReferences) {
-        choices.strings.push_back("Material " + std::to_string(matID));
+        Material* mat = materialCachePtr->getMaterial(matID);
+        if (mat == nullptr) continue;
+        choices.strings.push_back(mat->getName());
         choices.cstrings.push_back(choices.strings[i].c_str());
         choices.ids.push_back(matID);
         i++;
