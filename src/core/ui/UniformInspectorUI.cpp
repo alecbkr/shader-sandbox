@@ -13,6 +13,7 @@
 #include "object/MaterialCache.hpp"
 #include "object/ModelCache.hpp"
 #include "texture/TextureCache.hpp"
+#include <cmath>
 #include <sstream>
 #include <iomanip>
 #include <string>
@@ -786,6 +787,7 @@ bool UniformInspectorUI::drawRefInput_Uniform(InspectorReference* value, Uniform
     }
 
     if (value->materialSelection >= matChoices->ids.size()) {
+        loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput (InspectorReference)", "material selection greater than choices size");
         value->materialSelection = 0;
     }
     if (changed) {
@@ -801,6 +803,20 @@ bool UniformInspectorUI::drawRefInput_Uniform(InspectorReference* value, Uniform
         loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawInput(InspectorReference)", "material not found!");
         value->modelSelection = 0;
         return false;
+    }
+
+    auto uniformChoices = uniformChoicesOptional.value();
+
+    ImGui::TextDisabled("Source Value");
+    ImGui::SetNextItemWidth(-1);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(styles_->framePadding.x, 0.0f));
+    changed |= ImGui::Combo("##Source_value", &value->valueSelection, uniformChoices.data(), uniformChoices.size());
+    ImGui::PopStyleVar();
+
+    if (value->valueSelection > 0) {
+        std::string referencedName = uniformChoices[value->valueSelection];
+        value->referencedValueName = referencedName;
+        value->initialized = true;
     }
 
     return changed;
