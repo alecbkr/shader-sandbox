@@ -75,6 +75,8 @@ struct InspectorReference {
         materialSelection = 0;
         modelSelection = 0;
         valueSelection = 0;
+        referencedValueName = "";
+        referencedMaterialID = 0;
     }
 };
 
