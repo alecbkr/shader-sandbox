@@ -18,6 +18,10 @@ enum class UniformType {
     SamplerCube
 };
 
+enum class InspectorReferenceType {
+    Uniform, ObjectData, SceneVariable 
+};
+
 inline std::string to_string(UniformType type) {
     switch (type) {
         case UniformType::NoType:     return "NoType";
@@ -28,6 +32,14 @@ inline std::string to_string(UniformType type) {
         case UniformType::Mat4:       return "Mat4";
         case UniformType::Sampler2D:  return "Sampler2D";
         case UniformType::SamplerCube: return "SamplerCube";
+    }
+    return "Unknown(string for this type not added yet!";
+}
+inline std::string to_string(InspectorReferenceType type) {
+    switch (type) {
+        case InspectorReferenceType::ObjectData: return "Object Data";
+        case InspectorReferenceType::SceneVariable: return "Scene Variable";
+        case InspectorReferenceType::Uniform: return "Uniform";
     }
     return "Unknown(string for this type not added yet!";
 }
@@ -50,20 +62,21 @@ struct InspectorSampler2D {
 
 struct InspectorReference {
     int modelSelection = 0; 
-    int uniformSelection = 0;
+    int valueSelection = 0;
     int materialSelection = 0;
     unsigned int referencedModelID;
     unsigned int referencedMaterialID;
-    std::string referencedUniformName;
+    std::string referencedValueName;
     UniformType returnType;
-    bool useWorldData = false;
-    bool useWorldVariable = false;
     bool initialized = false;
+    InspectorReferenceType referenceType = InspectorReferenceType::Uniform;
 
     void resetSelections() {
         materialSelection = 0;
         modelSelection = 0;
-        uniformSelection = 0;
+        valueSelection = 0;
+        referencedValueName = "";
+        referencedMaterialID = 0;
     }
 };
 
@@ -81,10 +94,20 @@ struct Uniform {
     bool invisible = false;
 };
 
-inline std::optional<std::vector<std::string>> getWorldData(UniformType type) {
+inline std::optional<std::vector<std::string>> getObjectData(UniformType type) {
     switch (type) {
         case UniformType::Vec3:       return std::vector<std::string>{"position", "scale"};
         case UniformType::Vec4:       return std::vector<std::string>{"orientation"};
+        case UniformType::Float:      return std::vector<std::string>{"getTime"};
+        default: return std::nullopt;
+    }
+    return std::nullopt;
+}
+
+const std::string sceneVariableLabel = "Scene Variable";
+inline std::optional<std::vector<std::string>> getSceneVariables(UniformType type) {
+    switch (type) {
+        case UniformType::Vec3:       return std::vector<std::string>{"Camera Position"};
         case UniformType::Float:      return std::vector<std::string>{"getTime"};
         default: return std::nullopt;
     }
