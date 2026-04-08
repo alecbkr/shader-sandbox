@@ -29,6 +29,7 @@ enum class Action {
     ScreenshotViewport,
     FullscreenViewport,
     EditorFind,
+    fastCameraMove,
     Count,
     NewProject,
     RenameProject,

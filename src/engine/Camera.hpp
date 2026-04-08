@@ -24,6 +24,7 @@ class Camera {
         float Yaw;
         float Pitch;
 
+        bool moveFast = false;
         float MovementSpeed;
         float CameraSensitivity;
         float Zoom;
@@ -39,6 +40,8 @@ class Camera {
         void MoveRight();
         void MoveUp();
         void MoveDown();
+        void MoveFast();
+        void reset();
     
     private:
         AppTimer* timerPtr = nullptr;

@@ -112,6 +112,7 @@ bool Application::addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI
     actionRegPtr->bind(Action::FullscreenViewport, [](){});
     actionRegPtr->bind(Action::MouseMove, [viewportUIPtr]() { viewportUIPtr->getCamera()->ProcessMouseMovement(); });
     actionRegPtr->bind(Action::EditorFind, [eventsPtr](){ eventsPtr->TriggerEvent({ EventType::ToggleEditorFind, false, std::monostate{} }); });
+    actionRegPtr->bind(Action::fastCameraMove, [viewportUIPtr](){ viewportUIPtr->getCamera()->MoveFast(); });
     return true;
 }
 
@@ -302,6 +303,7 @@ void Application::runLoop(AppContext& ctx) {
     while (!Application::shouldClose(ctx)) {
         ctx.timer.update();
         ctx.inputs.beginFrame();
+        ctx.viewport_ui.getCamera()->reset();
         ctx.platform.pollEvents();
         ctx.platform.processInput();
         ctx.hot_reloader.update();

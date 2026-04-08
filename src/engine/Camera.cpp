@@ -8,7 +8,7 @@
 // DEFAULT CAMERA VALUES
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
-const float SPEED = 2.5f;
+const float SPEED = 3.5f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
 
@@ -38,29 +38,40 @@ glm::mat4 Camera::GetViewMatrix() {
 }
 
 void Camera::MoveForward() {
-    float velocity = MovementSpeed * timerPtr->getDt();
+    float speedMult = moveFast ? 2.0 : 1.0;
+    float velocity = MovementSpeed * speedMult * timerPtr->getDt();
     Position += Front * velocity;
-    
 }
 void Camera::MoveBack() {
-    float velocity = MovementSpeed * timerPtr->getDt();
+    float speedMult = moveFast ? 2.0 : 1.0;
+    float velocity = MovementSpeed * speedMult * timerPtr->getDt();
     Position -= Front * velocity;
 }
 void Camera::MoveLeft() {
-    float velocity = MovementSpeed * timerPtr->getDt();
+    float speedMult = moveFast ? 2.0 : 1.0;
+    float velocity = MovementSpeed * speedMult * timerPtr->getDt();
     Position -= Right * velocity;
 }
 void Camera::MoveRight() {
-    float velocity = MovementSpeed * timerPtr->getDt();
+    float speedMult = moveFast ? 2.0 : 1.0;
+    float velocity = MovementSpeed * speedMult * timerPtr->getDt();
     Position += Right * velocity;
 }
 void Camera::MoveUp() {
-    float velocity = MovementSpeed * timerPtr->getDt();
+    float speedMult = moveFast ? 2.0 : 1.0;
+    float velocity = MovementSpeed * speedMult * timerPtr->getDt();
     Position += WorldUp * velocity;
 }
 void Camera::MoveDown() {
-    float velocity = MovementSpeed * timerPtr->getDt();
+    float speedMult = moveFast ? 2.0 : 1.0;
+    float velocity = MovementSpeed * speedMult * timerPtr->getDt();
     Position -= WorldUp * velocity;
+}
+void Camera::MoveFast() {
+    moveFast = true;
+}
+void Camera::reset() {
+    moveFast = false;
 }
 
 void Camera::ProcessKeyboard(Camera_Movement dir, float deltaTime) {
