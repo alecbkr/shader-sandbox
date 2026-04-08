@@ -186,7 +186,7 @@ void MaterialsInspectorUI::draw() {
 
                 std::string label = renaming
                     ? ("##material_header_" + std::to_string(mat->ID))
-                    : (mat->getName() + " (" + std::to_string(mat->ID) + ")##" + std::to_string(mat->ID));
+                    : (mat->getName() + "##" + std::to_string(mat->ID));
 
                 ImGui::PushID(mat->ID);
 
