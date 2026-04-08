@@ -32,6 +32,10 @@ void Material::setProgramID(unsigned int programID) {
     this->programID = programID;
 }
 
+void Material::setProgramName(std::string programName) {
+    this->programName = programName;
+}
+
 
 void Material::setMaterialType(MaterialType type) {
     this->type = type;
@@ -44,6 +48,7 @@ void Material::addTexture(unsigned int textureID) {
 
 std::string Material::getName() {return name; }
 unsigned int Material::getProgramID() { return programID; }
+std::string Material::getProgramName() { return programName; }
 MaterialType Material::getMaterialType() { return type; }
 std::vector<unsigned int>& Material::getMaterialTextureIDs() { return textureIDs; }
 

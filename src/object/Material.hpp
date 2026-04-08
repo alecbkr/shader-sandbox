@@ -30,10 +30,12 @@ public:
     void setProperties(MaterialProperties properties);
     void setMaterialType(MaterialType type);
     void setProgramID(unsigned int programID);
+    void setProgramName(std::string programName);
     void addTexture(unsigned int textureID);
 
     std::string getName();
     unsigned int getProgramID();
+    std::string getProgramName();
     MaterialType getMaterialType();
     float getOpacity();
     float getShininess();
@@ -46,6 +48,7 @@ public:
 private:
     std::string name = "material";
     unsigned int programID = std::numeric_limits<unsigned int>::max();
+    std::string programName;
     std::vector<unsigned int> textureIDs;
     MaterialType type = MaterialType::Opaque;
 

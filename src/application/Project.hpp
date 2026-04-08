@@ -42,7 +42,7 @@ struct MaterialEntry {
 
     MaterialProperties properties; //struct
     std::vector<std::string> texture_paths;
-    unsigned int programID;
+    std::string programName;
 };
 
 

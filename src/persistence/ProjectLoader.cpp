@@ -70,7 +70,7 @@ inline void to_json(json& j, const MaterialEntry& materialData) {
 
         {"properties", materialData.properties},
         {"texture_paths", materialData.texture_paths},
-        {"programID", materialData.programID}
+        {"programName", materialData.programName}
     };
 }
 
@@ -127,7 +127,7 @@ inline void from_json(const json& j, MaterialEntry& materialData) {
 
     materialData.properties = j.at("properties").get<MaterialProperties>();
     materialData.texture_paths = j.at("texture_paths").get<std::vector<std::string>>();
-    materialData.programID = j.at("programID").get<unsigned int>();
+    materialData.programName = j.at("programName").get<std::string>();
 }
 
 
@@ -297,7 +297,7 @@ bool ProjectLoader::load(Project& project) {
     return true;
 }
 
-void ProjectLoader::save(Project& project, ModelCache* modelCachePtr, MaterialCache* materialCachePtr) {
+void ProjectLoader::save(Project& project, ModelCache* modelCachePtr, MaterialCache* materialCachePtr, ShaderRegistry* shaderRegPtr) {
     std::filesystem::create_directories(project.projectRoot);
     std::filesystem::create_directories(project.projectShadersDir);
 
@@ -328,7 +328,7 @@ void ProjectLoader::save(Project& project, ModelCache* modelCachePtr, MaterialCa
             
             .properties = material->properties,
             .texture_paths = materialCachePtr->getAllTexturePathsForMaterial(material->ID),
-            .programID = material->getProgramID()
+            .programName = shaderRegPtr->getProgramName(material->getProgramID())
         };
         project.materialData.push_back(materialEntry);
     }

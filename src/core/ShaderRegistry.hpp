@@ -21,6 +21,7 @@ public:
     bool registerProgram(const std::filesystem::path& vertex_file, const std::filesystem::path& fragment_file, const std::string& programName);
     ShaderProgram* getProgram(const unsigned int ID) const;
     ShaderProgram* getProgram(const std::string& name) const;
+    std::string getProgramName(const unsigned int ID) const;
     void replaceProgram(const unsigned int ID, std::unique_ptr<ShaderProgram> newProgram);
     // void replaceProgram(const std::string& vertex_file, const std::string& fragment_file, const std::string& programName);
     const std::unordered_map<unsigned int, std::unique_ptr<ShaderProgram>>& getPrograms() const;

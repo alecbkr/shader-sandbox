@@ -91,6 +91,14 @@ ShaderProgram* ShaderRegistry::getProgram(const std::string& name) const {
     return progIt->second.get();
 }
 
+std::string ShaderRegistry::getProgramName(const unsigned int ID) const {
+    ShaderProgram* prog = getProgram(ID);
+    if (prog) {
+        return prog->name;
+    }
+    return "";
+}
+
 void ShaderRegistry::replaceProgram(const unsigned int ID, std::unique_ptr<ShaderProgram> newProgram) {
     if (!newProgram) return;
 

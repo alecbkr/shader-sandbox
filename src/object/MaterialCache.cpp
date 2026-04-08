@@ -267,3 +267,10 @@ bool MaterialCache::validateNextID() {
     }
     return true;
 }
+
+void MaterialCache::updateMatIDs() {
+    for (auto& [ID, mat] : materialIDMap) {
+        ShaderProgram* prog = shaderRegPtr->getProgram(mat->getProgramName());
+        mat->setProgramID(prog->ID);
+    }
+}

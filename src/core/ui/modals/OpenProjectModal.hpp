@@ -5,12 +5,13 @@
 
 class ModelCache;
 class MaterialCache;
+class ShaderRegistry;
 
 class OpenProjectModal final : public IModal {
 public:
     OpenProjectModal() = default;
 
-    bool initialize(Project* project, AppSettings* settings, ModelCache* _modelCachePtr, MaterialCache* _materialCachePtr, bool* projectSwitch);
+    bool initialize(Project* project, AppSettings* settings, ModelCache* _modelCachePtr, MaterialCache* _materialCachePtr, ShaderRegistry* _shaderRegPtr, bool* projectSwitch);
     static constexpr const char* ID = "Open Project";
     std::string_view id() const override { return ID; }
     void draw() override;
@@ -20,6 +21,7 @@ private:
     AppSettings* settingsPtr = nullptr;
     ModelCache* modelCachePtr = nullptr;
     MaterialCache* materialCachePtr = nullptr;
+    ShaderRegistry* shaderRegPtr = nullptr;
     bool* projectSwitchPtr = nullptr;
     bool initialized = false;
 };

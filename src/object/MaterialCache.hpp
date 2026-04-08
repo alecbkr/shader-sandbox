@@ -34,6 +34,7 @@ public:
     void changeMaterialType(unsigned int materialID, MaterialType type);
     void changeMaterialProgram(unsigned int materialID, unsigned int programID);
     bool loadMaterialFromSave(unsigned int ID, MaterialType type, MaterialProperties properties, std::vector<std::string> texture_paths);
+    void updateMatIDs();
 
     Material* getMaterial(unsigned int materialID);
     std::vector<unsigned int> getAllMaterialIDs();
