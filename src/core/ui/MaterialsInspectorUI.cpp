@@ -186,12 +186,13 @@ void MaterialsInspectorUI::draw() {
 
                 std::string label = renaming
                     ? ("##material_header_" + std::to_string(mat->ID))
-                    : (mat->getName() + " (" + std::to_string(mat->ID) + ")##" + std::to_string(mat->ID));
+                    : (mat->getName() + "##" + std::to_string(mat->ID));
 
                 ImGui::PushID(mat->ID);
 
                 // Card styling
-                ImGui::PushStyleColor(ImGuiCol_ChildBg, styles->materialsTreeBodyColor);
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, styles->materialsTitleBackgroundColor);
+                ImGui::PushStyleColor(ImGuiCol_Border, styles->materialsBorderColor);
                 ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles->materialsBodyRounding);
                 ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles->materialsBorderThickness);
 
@@ -235,7 +236,9 @@ void MaterialsInspectorUI::draw() {
                     }
 
                     if (matOpen) {
+                        ImGui::PushStyleColor(ImGuiCol_Separator, styles->materialsBorderColor);
                         ImGui::Separator();
+                        ImGui::PopStyleColor();
                         ImGui::Dummy(ImVec2(0.0f, 2.0f));
                         ImGui::Indent(8.0f);
 
@@ -305,11 +308,11 @@ void MaterialsInspectorUI::draw() {
                 ImGui::EndChild();
 
                 ImGui::PopStyleVar(3);   // WindowPadding, ChildBorderSize, ChildRounding
-                ImGui::PopStyleColor(4); // ChildBg + 3 header colors
+                ImGui::PopStyleColor(5); // ChildBg + 3 header colors
                 ImGui::PopID();
 
                 if (i + 1 < matCache->getAllMaterials().size()) {
-                    ImGui::Dummy(ImVec2(0.0f, 6.0f));
+                    ImGui::Dummy(ImVec2(0.0f, 2.0f));
                 }
             }
         }
