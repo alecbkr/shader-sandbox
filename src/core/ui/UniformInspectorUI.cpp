@@ -739,14 +739,6 @@ bool UniformInspectorUI::drawRefInput_Uniform(InspectorReference* value, Uniform
         return false;
     }
 
-    int i = 0;
-    for (auto& model : modelCachePtr_->getAllModels()) {
-        modelNames.push_back(model->getName());
-        modelChoices.push_back(modelNames[i].c_str());
-        modelIDs.push_back(model->ID);
-        i++;
-    }
-
     return changed;
 }
 
