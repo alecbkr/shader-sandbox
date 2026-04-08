@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <glm/glm.hpp>
 #include "UniformTypes.hpp"
@@ -15,6 +16,18 @@ class Platform;
 
 class InspectorEngine {
 public:
+    // pls don't ever construct this yourself, let the inspector engine do it.
+    struct ModelChoices {
+        std::vector<std::string> strings;
+        std::vector<const char*> cstrings;
+        std::vector<unsigned int> ids;
+    };
+    struct MatChoices {
+        std::vector<std::string> strings;
+        std::vector<const char*> cstrings;
+        std::vector<unsigned int> ids;
+    };
+
     InspectorEngine();
     bool initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegPtr, UniformRegistry* _uniformRegPtr, ModelCache* _modelCachePtr, ViewportUI* _viewportUIPtr, MaterialCache* _materialCachePtr, Platform* _platform);
     void shutdown();
@@ -31,6 +44,10 @@ public:
     void applySceneUniforms(ShaderProgram& program);
     void applyModelUniforms(ShaderProgram& program, unsigned int modelID);
     void applyMaterialUniforms(ShaderProgram& program, unsigned int modelID, unsigned int materialID);
+    void queueUpdateChoices();
+    const ModelChoices& getModelChoices();
+    const std::optional<MatChoices*> getMatChoices(unsigned int modelID);
+    const std::optional<std::vector<const char*>> getUniformChoices(unsigned int materialID, UniformType returnType);
 
 private:
     void applyFunction(ShaderProgram& program, const Uniform& uniform, const InspectorReference& function);
@@ -44,4 +61,8 @@ private:
     Platform* platform = nullptr;
     void applyUniform(unsigned int modelID, const Uniform& uniform);
     void applyUniform(ShaderProgram& program, const Uniform& uniform);
+
+    bool mustUpdateChoices = true; // for now we can just set this to true every frame
+    ModelChoices modelChoices;
+    std::unordered_map<unsigned int, MatChoices> matChoices;
 };

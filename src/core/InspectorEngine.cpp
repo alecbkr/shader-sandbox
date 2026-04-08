@@ -1,19 +1,14 @@
 #include "InspectorEngine.hpp"
-#include "catch2/catch_amalgamated.hpp"
 #include "core/UniformParser.hpp"
 #include "core/logging/LogSink.hpp"
 #include "core/ui/ViewportUI.hpp"
 #include "engine/Camera.hpp"
-#include "engine/Errorlog.hpp"
 #include "logging/Logger.hpp"
 #include "core/UniformRegistry.hpp"
-#include <functional>
 #include <memory>
-#include <stack>
+#include <optional>
 #include <string>
 #include <unordered_map>
-#include <sstream>
-#include <iostream>
 #include <unordered_set>
 #include <vector>
 #include "core/UniformTypes.hpp"
@@ -22,7 +17,6 @@
 #include "object/Material.hpp"
 #include "object/MaterialCache.hpp"
 #include "object/Model.hpp"
-#include "engine/Errorlog.hpp"
 #include "core/logging/Logger.hpp"
 #include "core/ShaderRegistry.hpp"
 #include "core/UniformRegistry.hpp"
@@ -51,6 +45,7 @@ bool InspectorEngine::initialize(Logger* _loggerPtr, ShaderRegistry* _shaderRegP
     materialCachePtr = _materialCachePtr;
     modelCachePtr = _modelCachePtr;
     platform = _platform;
+    mustUpdateChoices = true;
 
     initialized = true;
     return true;
@@ -343,44 +338,8 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
             break;
         }
 
-        if (currentFunction.useWorldData) {
+        if (currentFunction.referenceType == InspectorReferenceType::ObjectData) {
             // need a better way of doing this...
-            if (currentFunction.useWorldVariable) {
-                switch (currentFunction.returnType) {
-                case UniformType::Vec3: {
-                    const Camera* const cam = viewportUIPtr->getCamera();
-                    if (cam == nullptr) {
-                        loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", "camera is null!");
-                        continue;
-                    }
-                    if (function.referencedUniformName == "Camera Position") {
-                        finalValue = uniform;
-                        finalValue.name = uniform.name;
-                        finalValue.isFunction = false;
-                        finalValue.value = cam->Position;
-                        validFunction = true;
-                    }
-                    break;
-                }
-                case UniformType::Vec4: {
-                    break;
-                }
-                case UniformType::Float: {
-                    if (function.referencedUniformName == "Current Time") {
-                        finalValue = uniform;
-                        finalValue.name = uniform.name;
-                        finalValue.isFunction = false;
-                        finalValue.value = platform->getTime(); // doesn't render every frame yet
-                        validFunction = true;
-                    }
-                    break;
-                }
-                default: 
-                    loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", "This type " + to_string(function.returnType) + " does not support world Data!");
-                    break;
-                }
-                break;
-            }
             Model* referencedModel = modelCachePtr->getModel(function.referencedModelID);
             if (referencedModel == nullptr) {
                 loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", "referenced Model does not exist!");
@@ -390,14 +349,14 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
 
             switch (function.returnType) {
             case UniformType::Vec3: {
-                if (function.referencedUniformName == "position") {
+                if (function.referencedValueName == "position") {
                     finalValue = uniform;
                     finalValue.name = uniform.name;
                     finalValue.isFunction = false;
                     finalValue.value = referencedModel->getPosition();
                     validFunction = true;
                 }
-                else if (function.referencedUniformName == "scale") {
+                else if (function.referencedValueName == "scale") {
                     finalValue = uniform;
                     finalValue.name = uniform.name;
                     finalValue.isFunction = false;
@@ -407,7 +366,7 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
                 break;
             }
             case UniformType::Vec4: {
-                if (function.referencedUniformName == "orientation") {
+                if (function.referencedValueName == "orientation") {
                     finalValue = uniform;
                     finalValue.name = uniform.name;
                     finalValue.isFunction = false;
@@ -423,6 +382,40 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
 
             break;
         }
+        else if (currentFunction.referenceType == InspectorReferenceType::SceneVariable) {
+            switch (currentFunction.returnType) {
+            case UniformType::Vec3: {
+                const Camera* const cam = viewportUIPtr->getCamera();
+                if (cam == nullptr) {
+                    loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", "camera is null!");
+                    continue;
+                }
+                if (function.referencedValueName == "Camera Position") {
+                    finalValue = uniform;
+                    finalValue.name = uniform.name;
+                    finalValue.isFunction = false;
+                    finalValue.value = cam->Position;
+                    validFunction = true;
+                }
+                break;
+            }
+            case UniformType::Float: {
+                if (function.referencedValueName == "getTime") {
+                    finalValue = uniform;
+                    finalValue.name = uniform.name;
+                    finalValue.isFunction = false;
+                    finalValue.value = platform->getTime(); // doesn't render every frame yet
+                    validFunction = true;
+                }
+                break;
+            }
+            default: 
+                // UI will show this, no need to log it
+                //loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", "This type " + to_string(function.returnType) + " does not support world Data!");
+                break;
+            }
+            break;
+        }
 
         if (matIDs.contains(currentFunction.referencedMaterialID)) {
             loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", 
@@ -430,9 +423,10 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
             break;
         }
 
-        const Uniform* referencedUniform = uniformRegPtr->tryReadMaterialUniform(currentFunction.referencedMaterialID, currentFunction.referencedUniformName); 
+        const Uniform* referencedUniform = uniformRegPtr->tryReadMaterialUniform(currentFunction.referencedMaterialID, currentFunction.referencedValueName); 
         if (referencedUniform == nullptr) {
-            loggerPtr->addLog(LogLevel::LOG_ERROR, "applyUniform: Function, ", "referenced uniform for " + std::to_string(currentFunction.referencedMaterialID) + ": " + currentFunction.referencedUniformName + "does not exist!");
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "applyUniform: Function", "referenced uniform for " + std::to_string(currentFunction.referencedMaterialID) + ": " + currentFunction.referencedValueName + "does not exist!");
+            validFunction = false;
             break;
         }
 
@@ -584,5 +578,75 @@ void InspectorEngine::applyMaterialUniforms(ShaderProgram& program, unsigned int
     }
 }
 
+const InspectorEngine::ModelChoices& InspectorEngine::getModelChoices() {
+    if (!mustUpdateChoices) {
+        return modelChoices;
+    }
 
+    modelChoices.strings = {};
+    modelChoices.cstrings = {""};
+    modelChoices.ids = {0};
+    modelChoices.strings.reserve(modelCachePtr->getNumberOfModels());
+    modelChoices.cstrings.reserve(modelCachePtr->getNumberOfModels() + 1);
+    modelChoices.ids.reserve(modelCachePtr->getNumberOfModels() + 1);
 
+    int i = 0;
+    for (auto& model : modelCachePtr->getAllModels()) {
+        modelChoices.strings.push_back("Object " + std::to_string(model->ID));
+        modelChoices.cstrings.push_back(modelChoices.strings[i].c_str());
+        modelChoices.ids.push_back(model->ID);
+        i++;
+    }
+
+    mustUpdateChoices = false;
+    return modelChoices;
+}
+
+const std::optional<InspectorEngine::MatChoices*> InspectorEngine::getMatChoices(unsigned int modelID) {
+    Model* chosenModel = modelCachePtr->getModel(modelID);
+    if (chosenModel == nullptr) {
+        return std::nullopt;
+    }
+
+    auto& chosenModelMatReferences = chosenModel->getAllMaterialReferences();
+    if (chosenModelMatReferences.size() < 1) {
+        return std::nullopt;
+    }
+
+    MatChoices choices;
+    choices.ids = {0};
+    choices.strings = {""};
+    choices.cstrings = {""};
+    choices.ids.reserve(chosenModelMatReferences.size() + 1);
+    choices.strings.reserve(chosenModelMatReferences.size() + 1);
+    choices.cstrings.reserve(chosenModelMatReferences.size() + 1);
+    int i = 0;
+    for (auto& [matID, matRefCount] : chosenModelMatReferences) {
+        choices.strings.push_back("Material " + std::to_string(matID));
+        choices.cstrings.push_back(choices.strings[i].c_str());
+        choices.ids.push_back(matID);
+        i++;
+    }
+
+    matChoices[modelID] = choices;
+    return &matChoices[modelID];
+}
+
+const std::optional<std::vector<const char*>> InspectorEngine::getUniformChoices(unsigned int materialID, UniformType returnType) {
+    const auto uniforms = uniformRegPtr->tryReadMaterialUniforms(materialID);
+    if (uniforms == nullptr) {
+        return std::nullopt;
+    }
+
+    std::vector<const char*> uniformChoices{""};
+    uniformChoices.reserve(uniforms->size() + 1);
+    for (const auto& [name, uniform] : *uniforms) {
+        if (uniform.type == returnType) uniformChoices.push_back(name.c_str());
+    }
+
+    return uniformChoices;
+}
+
+void InspectorEngine::queueUpdateChoices() {
+    mustUpdateChoices = true;
+}
