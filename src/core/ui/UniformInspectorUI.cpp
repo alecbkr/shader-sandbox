@@ -179,7 +179,8 @@ void UniformInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
 }
 
 void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences) {
-    std::string modelLabel = "Object " + std::to_string(modelID);
+    Model* model = modelCachePtr_->getModel(modelID);
+    std::string modelLabel = model ? model->getName() : "Object " + std::to_string(modelID);
 
     ImGui::PushID(modelLabel.c_str());
 
@@ -738,20 +739,12 @@ bool UniformInspectorUI::drawRefInput_Uniform(InspectorReference* value, Uniform
         return false;
     }
 
-    auto uniformChoices = uniformChoicesOptional.value();
-    ImGui::TextDisabled("Source Uniform");
-    ImGui::SetNextItemWidth(-1);
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(styles_->framePadding.x, 0.0f));
-    changed |= ImGui::Combo("##Source_uniform", &value->valueSelection, uniformChoices.data(), static_cast<int>(uniformChoices.size()));
-    ImGui::PopStyleVar();
-
-    if (value->valueSelection >= uniformChoices.size()) {
-        value->valueSelection = 0;
-    }
-    if (value->valueSelection > 0) {
-        std::string referencedName = uniformChoices[value->valueSelection];
-        value->referencedValueName = referencedName;
-        value->initialized = true;
+    int i = 0;
+    for (auto& model : modelCachePtr_->getAllModels()) {
+        modelNames.push_back(model->getName());
+        modelChoices.push_back(modelNames[i].c_str());
+        modelIDs.push_back(model->ID);
+        i++;
     }
 
     return changed;
