@@ -15,7 +15,6 @@ Material::Material(unsigned int ID, MaterialType type, MaterialProperties props,
     this->properties = props;
     this->textureIDs = textureIDs;
     this->type = type;
-    programID = "empty";
 }
 
 
@@ -29,8 +28,12 @@ void Material::setProperties(MaterialProperties properties) {
 }
 
 
-void Material::setProgramID(std::string programID) {
+void Material::setProgramID(unsigned int programID) {
     this->programID = programID;
+}
+
+void Material::setProgramName(std::string programName) {
+    this->programName = programName;
 }
 
 
@@ -44,10 +47,20 @@ void Material::addTexture(unsigned int textureID) {
 }
 
 std::string Material::getName() {return name; }
-std::string Material::getProgramID() { return programID; }
+unsigned int Material::getProgramID() { return programID; }
+std::string Material::getProgramName() { return programName; }
 MaterialType Material::getMaterialType() { return type; }
 std::vector<unsigned int>& Material::getMaterialTextureIDs() { return textureIDs; }
 
+std::unordered_map<unsigned int, std::string> Material::getAllTextureUnitsAndPaths(TextureCache* texCache) {
+    std::unordered_map<unsigned int, std::string> data;
+
+    for (auto texID : textureIDs) {
+        data.emplace(texCache->getTextureTexUnit(texID), texCache->getTexturePath(texID));
+    }
+
+    return data;
+}
 
 std::vector<std::string> Material::getAllTexturePaths(TextureCache* texCache) {
     std::vector<std::string> paths;

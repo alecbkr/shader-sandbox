@@ -4,6 +4,7 @@
 class ModelCache;
 class MaterialCache;
 class AssimpImporter;
+class ShaderRegistry;
 
 struct Project;
 
@@ -12,6 +13,6 @@ struct ProjectLoader {
 
     static bool load(Project& project);
     static bool loadAssets(Project& project);
-    static void save(Project& project, ModelCache* modelCachePtr, MaterialCache* materialCachePtr);
+    static void save(Project& project, ModelCache* modelCachePtr, MaterialCache* materialCachePtr, ShaderRegistry* shaderRegPtr);
 };
 

@@ -6,13 +6,14 @@
 #include "persistence/ProjectLoader.hpp"
 
 bool OpenProjectModal::initialize(
-    Project* project, AppSettings* settings, ModelCache* _modelCachePtr, MaterialCache* _materialCachePtr, bool* projectSwitch) {
+    Project* project, AppSettings* settings, ModelCache* _modelCachePtr, MaterialCache* _materialCachePtr, ShaderRegistry* _shaderRegPtr, bool* projectSwitch) {
     if (initialized) return false;
     projectPtr = project;
     settingsPtr = settings;
     modelCachePtr = _modelCachePtr;
     materialCachePtr = _materialCachePtr;
     projectSwitchPtr = projectSwitch;
+    shaderRegPtr = _shaderRegPtr;
     return true;
 }
 
@@ -26,7 +27,7 @@ void OpenProjectModal::draw() {
         ImGui::Selectable(fileName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick | ImGuiSelectableFlags_DontClosePopups);
 
         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
-            ProjectLoader::save(*projectPtr, modelCachePtr, materialCachePtr);
+            ProjectLoader::save(*projectPtr, modelCachePtr, materialCachePtr, shaderRegPtr);
             settingsPtr->projectToOpen = fileName;
             *projectSwitchPtr = true;
             ImGui::CloseCurrentPopup();

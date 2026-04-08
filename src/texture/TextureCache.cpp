@@ -152,3 +152,12 @@ std::string TextureCache::getTexturePath(unsigned int textureID) {
 
     return textureIDMap.at(textureID)->texture->getPath();
 }
+
+unsigned int TextureCache::getTextureTexUnit(unsigned int textureID) {
+    if (!textureIDMap.contains(textureID)) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURECACHE | getTextureTexUnit", "texture not found with ID " + std::to_string(textureID));
+        return 0;
+    }
+
+    return textureIDMap.at(textureID)->texture->getTexUnit();
+}

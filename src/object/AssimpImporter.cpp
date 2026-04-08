@@ -10,6 +10,7 @@
 #include "core/logging/Logger.hpp"
 #include "ModelCache.hpp"
 #include "MaterialCache.hpp"
+#include "core/ShaderRegistry.hpp"
 #include "core/InspectorEngine.hpp"
 #include "application/Project.hpp"
 
@@ -37,10 +38,11 @@ AssimpImporter::AssimpImporter() {
 }
 
 
-bool AssimpImporter::initialize(Logger* _loggerPtr, ModelCache* _modelCachePtr, MaterialCache* _materialCachePtr, InspectorEngine* _inspectorEngPtr, Project* projectData) {
+bool AssimpImporter::initialize(Logger* _loggerPtr, ModelCache* _modelCachePtr, MaterialCache* _materialCachePtr, ShaderRegistry* _shaderRegPtr, InspectorEngine* _inspectorEngPtr, Project* projectData) {
     loggerPtr        = _loggerPtr;
     modelCachePtr    = _modelCachePtr;
     materialCachePtr = _materialCachePtr;
+    shaderRegPtr     = _shaderRegPtr;
     inspectorEngPtr  = _inspectorEngPtr; 
 
     loadAssetCachesFromSave(projectData->modelData, projectData->materialData);
@@ -59,7 +61,7 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
 
         bool loadResult = materialCachePtr->loadMaterialFromSave(ID, type, properties, texture_paths);
         if (loadResult == true) {
-            materialCachePtr->getMaterial(ID)->setProgramID(materialEntry.programID);
+            materialCachePtr->getMaterial(ID)->setProgramName(materialEntry.programName);
             materialCachePtr->changeMaterialName(ID, name);
         }
     }
@@ -111,9 +113,9 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
         model->setInstanceCount(instanceData.size());
         model->loadInstanceData(instanceData);
 
-        bool fuck = modelCachePtr->trySendingToRenderer(ID);
-        if (!fuck) {
-            std::cout << "nut" << std::endl;
+        bool success = modelCachePtr->trySendingToRenderer(ID);
+        if (!success) {
+            std::cout << "bad joojoo" << std::endl;
         }
 
         // inspectorEngPtr->refreshUniforms();

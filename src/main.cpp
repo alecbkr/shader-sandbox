@@ -33,6 +33,7 @@ int main(int argc, char** argv) {
     }
     if (assetsAreLoaded) {
         ProjectLoader::load(ctx.project);
+        ctx.material_cache.updateMatIDs();
     }
     else {
         Application::loadDefaultScene(ctx);
@@ -42,7 +43,7 @@ int main(int argc, char** argv) {
     Application::shutdown(ctx);
 
     if (!ctx.projectSwitch) ctx.settings.projectToOpen = ctx.project.projectTitle;
-    ProjectLoader::save(ctx.project, &ctx.model_cache, &ctx.material_cache);
+    ProjectLoader::save(ctx.project, &ctx.model_cache, &ctx.material_cache, &ctx.shader_registry);
     SettingsLoader::save(ctx.settings);
 
     if (ctx.projectSwitch) main(argc, argv);
