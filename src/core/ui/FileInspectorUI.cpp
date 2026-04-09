@@ -179,8 +179,10 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
                         newProgram = false;
                     }
                 }
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 10.0f));
                 drawShaderLinkMenus(shaderLinkMenus, shaderRegPtr, fileRegPtr, inspectorEngPtr, styles);
                 ImGui::Unindent(window_padding);
+                ImGui::PopStyleVar(); 
             }
             
         }
@@ -421,35 +423,36 @@ void FileInspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuCho
     bool changed = false;
     ShaderLinkMenu oldMenu = menu;
     
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 8.0f));
-    // ImGui::PushStyleColor(ImGuiStyleVar_FramePadding, styles->inspectorBorderColor);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));  
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2.0f, 4.0f)); 
+ 
     if (ImGui::Combo("Vertex Shader", &menu.vertSelection, choices.vertChars.data(), (int)choices.vertChars.size())) {
         changed = true;
     }
-    ImGui::PopStyleVar();
-    // ImGui::PopStyleColor(); 
 
     /*
+    ImGui::Dummy(ImVec2(0.0f, 4.0f)); 
     if (ImGui::Combo("Geometry Shader", &menu.geometrySelection, choices.geoChars.data(), (int)choices.geoChars.size())) {
         changed = true;
     }
     */
     
-    ImGui::Dummy(ImVec2(0.0f, 4.0f)); 
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 8.0f));
-    // ImGui::PushStyleColor(ImGuiStyleVar_FramePadding, styles->inspectorBorderColor);
+    ImGui::Dummy(ImVec2(0.0f, 8.0f)); 
+
     if (ImGui::Combo("Fragment Shader", &menu.fragSelection, choices.fragChars.data(), (int)choices.fragChars.size())) {
         changed = true;
     }
-    ImGui::PopStyleVar();
-    // ImGui::PopStyleColor();
 
+    ImGui::Dummy(ImVec2(0.0f, 20.0f)); 
     bool validSelection = menu.fragSelection != 0 && menu.vertSelection != 0 && menu.shaderName != "";
     if (validSelection) {
         ImGui::Text("Valid");
     } else {
         ImGui::Text("Invalid! Using old program...");
     }
+
+    ImGui::PopStyleVar(2);
+
 
     if (validSelection && changed) {
         const ShaderFile* vertFile = choices.vertFiles[menu.vertSelection];
@@ -469,6 +472,8 @@ void FileInspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuCho
             menu = oldMenu;
         }
     }
+
+
 }
 
 void FileInspectorUI::drawShaderProgramCard(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, InspectorEngine* inspectorEngPtr, SettingsStyles* styles, ImGuiID guiID) {
