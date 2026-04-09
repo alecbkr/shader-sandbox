@@ -103,7 +103,9 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
             fileRegPtr->reloadMap();
             const auto& files = fileRegPtr->getFiles();
             if (!files.empty()) {
+                ImGui::PushFont(fonts->getL3());
                 ImGui::TextDisabled("Files");
+                ImGui::PopFont(); 
                 for (const auto& [fileName, fileData] : files) {
                     switch (fileData->state) {
                         case RENAME:
@@ -443,12 +445,16 @@ void FileInspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuCho
         changed = true;
     }
 
-    ImGui::Dummy(ImVec2(0.0f, 20.0f)); 
+    ImGui::Dummy(ImVec2(0.0f, 15.0f)); 
     bool validSelection = menu.fragSelection != 0 && menu.vertSelection != 0 && menu.shaderName != "";
     if (validSelection) {
-        ImGui::Text("Valid");
+        ImGui::PushStyleColor(ImGuiCol_Text, styles->consoleInfoColor); 
+        ImGui::Text("Valid. Program Linked");
+        ImGui::PopStyleColor(); 
     } else {
+        ImGui::PushStyleColor(ImGuiCol_Text, styles->consoleErrorColor); 
         ImGui::Text("Invalid! Using old program...");
+        ImGui::PopStyleColor(); 
     }
 
     ImGui::PopStyleVar(2);
