@@ -425,7 +425,7 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
 
         const Uniform* referencedUniform = uniformRegPtr->tryReadMaterialUniform(currentFunction.referencedMaterialID, currentFunction.referencedValueName); 
         if (referencedUniform == nullptr) {
-            loggerPtr->addLog(LogLevel::LOG_ERROR, "applyUniform: Function", "referenced uniform for " + std::to_string(currentFunction.referencedMaterialID) + ": " + currentFunction.referencedValueName + "does not exist!");
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "applyUniform: Function", "referenced uniform for " + std::to_string(currentFunction.referencedMaterialID) + ": " + currentFunction.referencedValueName + " does not exist!");
             validFunction = false;
             break;
         }
