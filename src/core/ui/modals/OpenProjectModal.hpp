@@ -2,6 +2,7 @@
 #include "IModal.hpp"
 #include "application/AppSettings.hpp"
 #include "application/Project.hpp"
+#include "persistence/ProjectSwitch.h"
 
 class ModelCache;
 class MaterialCache;
@@ -11,7 +12,7 @@ class OpenProjectModal final : public IModal {
 public:
     OpenProjectModal() = default;
 
-    bool initialize(Project* project, AppSettings* settings, ModelCache* _modelCachePtr, MaterialCache* _materialCachePtr, ShaderRegistry* _shaderRegPtr, bool* projectSwitch);
+    bool initialize(Project* project, AppSettings* settings, ModelCache* _modelCachePtr, MaterialCache* _materialCachePtr, ShaderRegistry* _shaderRegPtr, ProjectSwitch* projectSwitch);
     static constexpr const char* ID = "Open Project";
     std::string_view id() const override { return ID; }
     void draw() override;
@@ -22,6 +23,6 @@ private:
     ModelCache* modelCachePtr = nullptr;
     MaterialCache* materialCachePtr = nullptr;
     ShaderRegistry* shaderRegPtr = nullptr;
-    bool* projectSwitchPtr = nullptr;
+    ProjectSwitch* projectSwitchPtr = nullptr;
     bool initialized = false;
 };

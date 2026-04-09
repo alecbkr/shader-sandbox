@@ -1,6 +1,7 @@
 #include "core/MenuEngine.hpp"
 #include <array>
 #include "core/ui/modals/SettingsModal.hpp"
+#include "ui/modals/DeleteProjectModal.hpp"
 #include "ui/modals/OpenProjectModal.hpp"
 #include "ui/modals/SaveAsModal.hpp"
 
@@ -10,15 +11,16 @@ MenuItem::MenuItem(bool _isSeparator) : isSeparator(_isSeparator) {};
 MenuItem::MenuItem(std::string_view _name, std::string_view _modalName, bool _opensModal) : name(_name), modalName(_modalName), opensModal(_opensModal) {};
 MenuItem::MenuItem(std::string_view _name, std::span<const MenuItem> _children) : name(_name), children(_children) {};
 
-static const std::array<MenuItem, 12> fileMenu = {{
+static const std::array<MenuItem, 13> fileMenu = {{
     {"New Shader File", Action::NewShaderFile, EventType::NewFile},
-    {true},
     {"Save Active Shader File", Action::SaveActiveShaderFile, EventType::SaveActiveShaderFile},
+    {true},
     {"New Project", Action::NewProject, EventType::NewProject},
     {"Open Project", OpenProjectModal::ID, true},
     {"Save Project As", SaveAsModal::ID, true},
     {"Save Project", Action::SaveProject, EventType::SaveProject},
     {"Rename Project", Action::RenameProject, EventType::RenameProject},
+    {"Delete Project", DeleteProjectModal::ID, true},
     {true},
     {"Settings", SettingsModal::ID, true},
     {true},

@@ -41,7 +41,7 @@ void Application::addSubscriptions(AppContext& ctx) {
     ctx.events.Subscribe(EventType::NewProject, [&ctx](const EventPayload&) -> bool {
         ProjectLoader::save(ctx.project, &ctx.model_cache, &ctx.material_cache, &ctx.shader_registry);
         ctx.settings.projectToOpen = "";
-        ctx.projectSwitch = true;
+        ctx.projectSwitch = SWITCH;
         return false;
     });
     ctx.events.Subscribe(EventType::SaveProject, [&ctx](const EventPayload&) -> bool {
@@ -135,11 +135,13 @@ void Application::initializeUI(AppContext& ctx) {
     ctx.openProjectModal.initialize(&ctx.project, &ctx.settings, &ctx.model_cache, &ctx.material_cache, &ctx.shader_registry, &ctx.projectSwitch);
     ctx.addObjectModal.initialize(&ctx.model_cache, &ctx.inspector_engine, &ctx.project, &ctx.events);
     ctx.addTextureModal.initialize(&ctx.texture_cache, ctx.project.projectAssetsDir);
+    ctx.deleteProjectModal.initialize(&ctx.project, &ctx.projectSwitch, &ctx.logger);
     ctx.modals.registerModal(&ctx.settingsModal);
     ctx.modals.registerModal(&ctx.saveAsModal);
     ctx.modals.registerModal(&ctx.openProjectModal);
     ctx.modals.registerModal(&ctx.addObjectModal); 
     ctx.modals.registerModal(&ctx.addTextureModal);
+    ctx.modals.registerModal(&ctx.deleteProjectModal);
 
     if (!ctx.settings.settingsFound) {
         DefaultTheme::applyDefaultTheme(ctx.settings.styles);
