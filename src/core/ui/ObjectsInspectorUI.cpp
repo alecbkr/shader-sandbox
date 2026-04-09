@@ -339,9 +339,12 @@ bool ObjectsInspectorUI::drawInstancesMenu(Model* model, ModelCache* modelCacheP
         InstanceData currInstanceData = instanceData[idx];
         ImGui::Text("%s", ("Instance " + std::to_string(idx + 1)).c_str());
         ImGui::SameLine();
+        ImGui::SetNextItemWidth(140.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, theme.dragFloatPadding);
         if (ImGui::DragFloat3("##Position##xx", &currInstanceData.pos.x, .05f)) {
             model->setInstancePosition(idx, currInstanceData.pos);
         }
+        ImGui::PopStyleVar();
         
         ImGui::PopID();
     }
@@ -408,7 +411,10 @@ bool ObjectsInspectorUI::drawModelPositionInput(Model& model) {
     glm::vec3 position = model.getPosition();
     ImGui::Text("Position");
     ImGui::SameLine();
+    ImGui::SetNextItemWidth(140.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, theme.dragFloatPadding);
     changed |= ImGui::DragFloat3("##Position##xx", &position.x, .05f);
+    ImGui::PopStyleVar();
 
     ImGui::PopID();
     if (changed) model.setPosition(position);
@@ -422,7 +428,10 @@ bool ObjectsInspectorUI::drawModelScaleInput(Model& model) {
     glm::vec3 scale = model.getScale();
     ImGui::Text("Scale");
     ImGui::SameLine();
+    ImGui::SetNextItemWidth(140.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, theme.dragFloatPadding);
     changed |= ImGui::DragFloat3("##Scale##xx", &scale.x,  .05f);
+    ImGui::PopStyleVar();
 
     ImGui::PopID();
     if (changed) model.setScale(scale);
@@ -436,7 +445,10 @@ bool ObjectsInspectorUI::drawModelOrientationInput(Model& model) {
     glm::vec4 rotation = model.getRotation();
     ImGui::Text("Orientation");
     ImGui::SameLine();
+    ImGui::SetNextItemWidth(180.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, theme.dragFloatPadding);
     changed |= ImGui::DragFloat4("##Orientation##xx", &rotation.x,  .05f);
+    ImGui::PopStyleVar();
 
     ImGui::PopID();
     if (changed) model.setRotation(rotation.x, glm::vec3(rotation.y, rotation.z, rotation.w));

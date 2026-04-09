@@ -46,6 +46,7 @@ public:
         ImVec4 bgColorHovered = ImVec4(bgColor.x * 1.5, bgColor.y * 1.5, bgColor.z * 1.5, 1.0f);
         ImVec4 headerColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
         ImVec4 headerColorHovered = ImVec4(headerColor.x * 1.5f, headerColor.y * 1.5f, headerColor.z * 1.5f, 1.0f);
+        ImVec2 dragFloatPadding = ImVec2(4, 2);
         float indentSize = 10;
     };
 
