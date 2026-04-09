@@ -179,7 +179,7 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
                         newProgram = false;
                     }
                 }
-                drawShaderLinkMenus(shaderLinkMenus, shaderRegPtr, fileRegPtr, inspectorEngPtr);
+                drawShaderLinkMenus(shaderLinkMenus, shaderRegPtr, fileRegPtr, inspectorEngPtr, styles);
                 ImGui::Unindent(window_padding);
             }
             
@@ -284,7 +284,7 @@ void FileInspectorUI::drawPresetShaderEntry(std::filesystem::path filePath, Even
     }
 }
 
-void FileInspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, InspectorEngine* inspectorEngPtr) {
+void FileInspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, InspectorEngine* inspectorEngPtr, SettingsStyles* styles) {
     for (const auto& [ID, shader] : shaderRegPtr->getPrograms()) {
         if (!menus.contains(shader->name)) {
             menus[shader->name] = ShaderLinkMenu{
@@ -347,18 +347,31 @@ void FileInspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, Shader
         .geoFiles = geoFiles,
         .fragFiles = fragFiles
     };
+
+    size_t menuCount = menus.size(); 
+    size_t currIdx = 0; 
+
+    
     for (auto& [shaderName, menu] : menus) {
         if (!menu.initialized) {
             initializeMenu(menu, choices, shaderRegPtr);
         }
 
-        if (ImGui::TreeNode(menu.shaderName.c_str())) {
-            ImGui::PushID(guiID);
-            drawShaderLinkMenu(menu, choices, inspectorEngPtr);
-            ImGui::PopID();
-            guiID++;
-            ImGui::TreePop();
+        drawShaderProgramCard(menu, choices, inspectorEngPtr, styles, guiID);
+        guiID++;
+        currIdx++;
+        
+        if (currIdx < menuCount) {
+            ImGui::Dummy(ImVec2(0.0f, 2.0f));
         }
+
+        // if (ImGui::TreeNode(menu.shaderName.c_str())) {
+        //     ImGui::PushID(guiID);
+        //     drawShaderLinkMenu(menu, choices, inspectorEngPtr);
+        //     ImGui::PopID();
+        //     guiID++;
+        //     ImGui::TreePop();
+        // }
     }
 }
 
@@ -444,4 +457,48 @@ void FileInspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuCho
             menu = oldMenu;
         }
     }
+}
+
+void FileInspectorUI::drawShaderProgramCard(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, InspectorEngine* inspectorEngPtr, SettingsStyles* styles, ImGuiID guiID) {
+    ImGui::PushID(guiID);
+
+    ImVec4 headerNormal = styles->inspectorTitleBackgroundColor;
+    ImVec4 headerHighlight = ImVec4(headerNormal.x * 1.15f, headerNormal.y * 1.15f, headerNormal.z * 1.15f, headerNormal.w);
+
+    ImVec4 bodyColor = styles->inspectorBodyColor; 
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, bodyColor);
+    ImGui::PushStyleColor(ImGuiCol_Border, styles->shaderBorderColor);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles->shaderBodyRounding);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles->shaderBorderThickness);
+
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, headerHighlight);
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
+
+    ImGuiChildFlags cardFlags = ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding;  
+    if (ImGui::BeginChild(("ShaderCard##" + menu.shaderName).c_str(), ImVec2(0, 0), cardFlags)) {
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
+        bool isExpanded = ImGui::CollapsingHeader(menu.shaderName.c_str(), ImGuiTreeNodeFlags_SpanAvailWidth);
+        
+        if (isExpanded) {
+            ImGui::PushStyleColor(ImGuiCol_Separator, styles->shaderBorderColor);
+            ImGui::Separator();
+            ImGui::PopStyleColor();
+            ImGui::Dummy(ImVec2(0.0f, 2.0f));
+            ImGui::Indent(8.0f);
+
+            drawShaderLinkMenu(menu, choices, inspectorEngPtr);
+
+            ImGui::Unindent(8.0f);
+        }
+
+        ImGui::PopStyleVar(); 
+    }
+
+    ImGui::EndChild();
+
+    ImGui::PopStyleVar(3);   
+    ImGui::PopStyleColor(3);
+    ImGui::PopID();
 }
