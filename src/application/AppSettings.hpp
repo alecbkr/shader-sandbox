@@ -49,6 +49,7 @@ struct AppSettings {
         {"screenshotViewport", {18, {82}, 3, 0}},
         {"fullscreenViewport", {19, {75}, 2, 0}},
         {"editorFind", {20, {45, 6}, 1, 0}},
+        {"fastCameraMove", {21, {43}, 2, 2}}
     };
 
     // Styles

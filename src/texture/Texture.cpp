@@ -40,6 +40,10 @@ const std::string Texture::getPath() const {
     return path;
 }
 
+const unsigned int Texture::getTexUnit() const {
+    return texUnit;
+}
+
 
 void Texture::unloadFromGPU() {
     if (status == TextureStatus::Ready) return;

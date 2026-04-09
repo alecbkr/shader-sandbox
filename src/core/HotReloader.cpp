@@ -54,12 +54,12 @@ bool HotReloader::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, Sh
             std::string absSavedPath = std::filesystem::weakly_canonical(active->filePath).string();
 
             bool updatedOneProgram = false;
-            for (auto const& [name, prog] : shaderRegPtr->getPrograms()) {
+            for (auto const& [ID, prog] : shaderRegPtr->getPrograms()) {
                 if (std::filesystem::weakly_canonical(prog->vertPath).string() == absSavedPath ||
                     std::filesystem::weakly_canonical(prog->fragPath).string() == absSavedPath) {
-                    if (!name.empty()) {
+                    if (!prog->name.empty()) {
                         updatedOneProgram = true;
-                        this->compile(active->filePath, name);
+                        this->compile(active->filePath, prog->name, ID);
                     }
                 }
             }
@@ -91,14 +91,14 @@ void HotReloader::update() {
     
 }
 
-bool HotReloader::compile(const std::string &filepath, const std::string &programName) {
+bool HotReloader::compile(const std::string &filepath, const std::string &programName, const unsigned int progID) {
     std::string newSourceCode = readSourceFile(filepath);
     if (newSourceCode.empty()) {
         std::cerr << "[HotReloader] Failed to read source file: " << filepath << std::endl;
         return false;
     }
     
-    if (attemptCompile(filepath, programName)) {
+    if (attemptCompile(filepath, programName, progID)) {
         return true;
     }
     return false;
@@ -118,7 +118,7 @@ std::string HotReloader::readSourceFile(const std::string &filepath) {
     return "";
 }
 
-bool HotReloader::attemptCompile(const std::string &shaderPath, const std::string &programName) {
+bool HotReloader::attemptCompile(const std::string &shaderPath, const std::string& programName, const unsigned int progID) {
     ShaderProgram *oldProgram = shaderRegPtr->getProgram(programName);    
 
     if (programName.empty()) {
@@ -150,7 +150,7 @@ bool HotReloader::attemptCompile(const std::string &shaderPath, const std::strin
     }
 
     if (inspectorEngPtr->handleEditShaderProgram(vPath, fPath, programName)) {
-        ShaderProgram* updatedProg = shaderRegPtr->getProgram(programName);
+        ShaderProgram* updatedProg = shaderRegPtr->getProgram(progID);
         if (updatedProg) {
             updatedProg->vertPath = vPath;
             updatedProg->fragPath = fPath;

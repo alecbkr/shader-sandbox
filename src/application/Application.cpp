@@ -39,13 +39,13 @@ void Application::addSubscriptions(AppContext& ctx) {
         return true;
     });
     ctx.events.Subscribe(EventType::NewProject, [&ctx](const EventPayload&) -> bool {
-        ProjectLoader::save(ctx.project, &ctx.model_cache, &ctx.material_cache);
+        ProjectLoader::save(ctx.project, &ctx.model_cache, &ctx.material_cache, &ctx.shader_registry);
         ctx.settings.projectToOpen = "";
         ctx.projectSwitch = true;
         return false;
     });
     ctx.events.Subscribe(EventType::SaveProject, [&ctx](const EventPayload&) -> bool {
-        if (ctx.project.previouslySaved) ProjectLoader::save(ctx.project, &ctx.model_cache, &ctx.material_cache);
+        if (ctx.project.previouslySaved) ProjectLoader::save(ctx.project, &ctx.model_cache, &ctx.material_cache, &ctx.shader_registry);
         else ctx.modals.open(SaveAsModal::ID);
         ctx.logger.addLog(LogLevel::INFO, "ProjectLoader", "Project Saved");
         return false;
@@ -112,6 +112,7 @@ bool Application::addDefaultActionBinds(ActionRegistry* actionRegPtr, ViewportUI
     actionRegPtr->bind(Action::FullscreenViewport, [](){});
     actionRegPtr->bind(Action::MouseMove, [viewportUIPtr]() { viewportUIPtr->getCamera()->ProcessMouseMovement(); });
     actionRegPtr->bind(Action::EditorFind, [eventsPtr](){ eventsPtr->TriggerEvent({ EventType::ToggleEditorFind, false, std::monostate{} }); });
+    actionRegPtr->bind(Action::fastCameraMove, [viewportUIPtr](){ viewportUIPtr->getCamera()->MoveFast(); });
     return true;
 }
 
@@ -131,7 +132,7 @@ void Application::initializeUI(AppContext& ctx) {
 
     ctx.settingsModal.initialize(&ctx.logger, &ctx.inputs, &ctx.keybinds, &ctx.platform, &ctx.settings);
     ctx.saveAsModal.initialize(&ctx.logger, &ctx.project, &ctx.events, &ctx.settings, &ctx.projectSwitch);
-    ctx.openProjectModal.initialize(&ctx.project, &ctx.settings, &ctx.model_cache, &ctx.material_cache, &ctx.projectSwitch);
+    ctx.openProjectModal.initialize(&ctx.project, &ctx.settings, &ctx.model_cache, &ctx.material_cache, &ctx.shader_registry, &ctx.projectSwitch);
     ctx.addObjectModal.initialize(&ctx.model_cache, &ctx.inspector_engine, &ctx.project, &ctx.events);
     ctx.addTextureModal.initialize(&ctx.texture_cache, ctx.project.projectAssetsDir);
     ctx.modals.registerModal(&ctx.settingsModal);
@@ -282,7 +283,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Default actions were not bound correctly.");
         return false;
     }
-    if (!ctx.assimp_importer.initialize(&ctx.logger, &ctx.model_cache, &ctx.material_cache, &ctx.inspector_engine, &ctx.project)) {
+    if (!ctx.assimp_importer.initialize(&ctx.logger, &ctx.model_cache, &ctx.material_cache, &ctx.shader_registry, &ctx.inspector_engine, &ctx.project)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Model Cache was not initialized successfully.");
         return false;
     }
@@ -302,6 +303,7 @@ void Application::runLoop(AppContext& ctx) {
     while (!Application::shouldClose(ctx)) {
         ctx.timer.update();
         ctx.inputs.beginFrame();
+        ctx.viewport_ui.getCamera()->reset();
         ctx.platform.pollEvents();
         ctx.platform.processInput();
         ctx.hot_reloader.update();

@@ -5,10 +5,10 @@
 #include <memory>
 #include <string>
 
-#include "Texture.hpp"
-#include "TextureType.hpp"
-#include "Texture2D.hpp"
-#include "CubeMap.hpp"
+#include "texture/Texture.hpp"
+#include "texture/TextureType.hpp"
+#include "texture/Texture2D.hpp"
+#include "texture/CubeMap.hpp"
 
 class Logger;
 
@@ -32,6 +32,7 @@ public:
     void bindDefault(unsigned int texUnit);
 
     std::string getTexturePath(unsigned int textureID);
+    unsigned int getTextureTexUnit(unsigned int textureID);
 
 private:
     unsigned int nextTextureID = 0;

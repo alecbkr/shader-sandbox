@@ -146,8 +146,9 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                 }
                 //ModelTextureMenu& textureMenu = modelTextureMenus[modelID];
         
-                std::string label = "model " + std::to_string(modelID);
-                ImGui::PushID(label.c_str());
+                // std::string label = "model " + std::to_string(modelID);
+                // ImGui::PushID(label.c_str());
+                ImGui::PushID(modelID); 
                 ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.bgColor); // Blue-ish background
                 ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);   // <-- rounding radius
                 ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f); // optional
@@ -155,8 +156,8 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                 ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.bgColorHovered);
                 ImGui::PushStyleColor(ImGuiCol_HeaderActive,  theme.bgColor);
                 ImGui::BeginChild("Container##", ImVec2(0, 0),  ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar);
-        
-                if (ImGui::CollapsingHeader(label.c_str())) {
+
+                if (drawModelHeader(model, modelCachePtr)) {
                     ImGui::Separator();
                     ImGui::Indent(theme.indentSize);
         
@@ -196,7 +197,7 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
 }
 
 
-void ObjectsInspectorUI::initializeMenu(MaterialShaderMenu& menu, const std::vector<const char*>& shaderChoices, Logger* loggerPtr, ShaderRegistry* shaderRegPtr, MaterialCache* materialCachePtr) {
+void ObjectsInspectorUI::initializeMenu(MaterialShaderMenu& menu, const std::vector<unsigned int>& shaderChoices, Logger* loggerPtr, ShaderRegistry* shaderRegPtr, MaterialCache* materialCachePtr) {
     int i = 0;
     if (!materialCachePtr->contains(menu.matID)) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "ObjectsInspectorUI::initializeMenu (ModelShaderMenu)", "couldn't find material: " + std::to_string(menu.matID));
@@ -204,8 +205,8 @@ void ObjectsInspectorUI::initializeMenu(MaterialShaderMenu& menu, const std::vec
     }
     Material* mat  = materialCachePtr->getMaterial(menu.matID);
 
-    for (auto& shaderName : shaderChoices) {
-        const ShaderProgram* shader = shaderRegPtr->getProgram(shaderName);
+    for (auto& shaderID : shaderChoices) {
+        const ShaderProgram* shader = shaderRegPtr->getProgram(shaderID);
         if (shader == nullptr) {
             continue;
         }
@@ -217,7 +218,7 @@ void ObjectsInspectorUI::initializeMenu(MaterialShaderMenu& menu, const std::vec
             return;
         }
 
-        if (shaderName == modelProgram->name) {
+        if (shaderID == modelProgram->ID) {
             menu.selection = i;
             menu.initialized = true;
         }
@@ -409,4 +410,48 @@ bool ObjectsInspectorUI::drawModelOrientationInput(Model& model) {
     ImGui::PopID();
     if (changed) model.setRotation(rotation.x, glm::vec3(rotation.y, rotation.z, rotation.w));
     return changed;
+}
+
+bool ObjectsInspectorUI::drawModelHeader(Model* model, ModelCache* modelCachePtr) {
+    unsigned int modelID = model->getID();
+    std::string label = model->getName() + "##" + std::to_string(modelID);
+
+    if (renamingModelID == modelID) {
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+        bool enterPressed = ImGui::InputText(("##RenameInput_" + std::to_string(modelID)).c_str(), renameBuffer, sizeof(renameBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+    
+        ImGui::SameLine();
+        bool okPressed = ImGui::Button(("OK##" + std::to_string(modelID)).c_str());
+        
+        ImGui::SameLine();
+        bool cancelPressed = ImGui::Button(("CANCEL##" + std::to_string(modelID)).c_str());
+        ImGui::PopStyleVar();
+        if (enterPressed || okPressed) {
+            if (strlen(renameBuffer) > 0) modelCachePtr->changeModelName(modelID, std::string(renameBuffer));
+            renamingModelID = std::numeric_limits<unsigned int>::max(); 
+        }
+
+        if (cancelPressed) renamingModelID = std::numeric_limits<unsigned int>::max();     
+        return false;
+        
+    }
+
+    bool isOpen = ImGui::CollapsingHeader(label.c_str()); 
+
+    if (ImGui::BeginPopupContextItem(("Context##" + std::to_string(modelID)).c_str())) {
+        if (ImGui::Selectable("Rename")) {
+            renamingModelID = modelID; 
+            std::snprintf(renameBuffer, sizeof(renameBuffer), "%s", model->getName().c_str()); 
+        }
+        // // TODO: if we want to add these
+        // if (ImGui::Selectable("Duplicate")) {
+
+        // }
+
+        // if (ImGui::Selectable("Remove")) {
+
+        // }
+        ImGui::EndPopup(); 
+    }
+    return isOpen;
 }

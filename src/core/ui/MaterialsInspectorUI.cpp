@@ -76,6 +76,24 @@ void MaterialsInspectorUI::handlePendingDelete() {
     }
 }
 
+std::string makeRelativeToAssets(const std::string& fullPath) {
+    std::string key = "assets\\";
+    size_t pos = fullPath.find(key);
+
+    if (pos != std::string::npos) {
+        return fullPath.substr(pos + key.length());
+    }
+
+    key = "assets/";
+    pos = fullPath.find(key);
+
+    if (pos != std::string::npos) {
+        return fullPath.substr(pos + key.length());
+    }
+
+    return fullPath;
+}
+
 void MaterialsInspectorUI::draw() {
     ImGui::PushStyleColor(ImGuiCol_ChildBg, styles->materialsTabBackgroundColor);
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.0f);
@@ -168,12 +186,13 @@ void MaterialsInspectorUI::draw() {
 
                 std::string label = renaming
                     ? ("##material_header_" + std::to_string(mat->ID))
-                    : (mat->getName() + " (" + std::to_string(mat->ID) + ")##" + std::to_string(mat->ID));
+                    : (mat->getName() + "##" + std::to_string(mat->ID));
 
                 ImGui::PushID(mat->ID);
 
                 // Card styling
-                ImGui::PushStyleColor(ImGuiCol_ChildBg, styles->materialsTreeBodyColor);
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, styles->materialsTitleBackgroundColor);
+                ImGui::PushStyleColor(ImGuiCol_Border, styles->materialsBorderColor);
                 ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles->materialsBodyRounding);
                 ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles->materialsBorderThickness);
 
@@ -217,7 +236,9 @@ void MaterialsInspectorUI::draw() {
                     }
 
                     if (matOpen) {
+                        ImGui::PushStyleColor(ImGuiCol_Separator, styles->materialsBorderColor);
                         ImGui::Separator();
+                        ImGui::PopStyleColor();
                         ImGui::Dummy(ImVec2(0.0f, 2.0f));
                         ImGui::Indent(8.0f);
 
@@ -230,14 +251,16 @@ void MaterialsInspectorUI::draw() {
                             matCache->changeMaterialType(mat->ID, (MaterialType)currentType);
                             
                         }
+                        ShaderProgram* prog = shaderReg->getProgram(mat->getProgramID());
+                        std::string progName = prog ? prog->name : "select program";
 
-                        if (ImGui::BeginCombo(("Program##" + std::to_string(mat->ID)).c_str(), mat->getProgramID().c_str())) {
-                            for (auto& [name, program] : programs) {
-                                bool isSelected = (mat->getProgramID() == name);
+                        if (ImGui::BeginCombo(("Program##" + std::to_string(mat->ID)).c_str(), progName.c_str())) {
+                            for (auto& [ID, program] : programs) {
+                                bool isSelected = (mat->getProgramID() == ID);
 
-                                if (ImGui::Selectable(name.c_str(), isSelected)) {
-                                    matCache->changeMaterialProgram(mat->ID, name);
-                                    mat->setProgramID(name);
+                                if (ImGui::Selectable(program->name.c_str(), isSelected)) {
+                                    matCache->changeMaterialProgram(mat->ID, ID);
+                                    mat->setProgramID(ID);
                                 }
 
                                 if (isSelected) {
@@ -255,12 +278,15 @@ void MaterialsInspectorUI::draw() {
                                 }
                             }
 
-                            auto textures = mat->getAllTexturePaths(texCache);
+                            auto textureData = mat->getAllTextureUnitsAndPaths(texCache);
 
-                            for (int i = 0; i < (int)textures.size(); i++) {
+                            int i = 0;
+                            for (auto& [texUnit, path] : textureData) {
                                 ImGui::PushID(i);
 
-                                ImGui::TextUnformatted(textures[i].c_str());
+                                std::string relativePath = makeRelativeToAssets(path);
+
+                                ImGui::TextUnformatted(("Texture Unit: " + std::to_string(texUnit) + " | " + relativePath).c_str());
 
                                 if (ImGui::BeginPopupContextItem("TexturePopup")) {
                                     if (ImGui::MenuItem("Remove")) {
@@ -270,6 +296,7 @@ void MaterialsInspectorUI::draw() {
                                 }
 
                                 ImGui::PopID();
+                                i++;
                             }
                         }
                         ImGui::Unindent(8.0f);
@@ -281,11 +308,11 @@ void MaterialsInspectorUI::draw() {
                 ImGui::EndChild();
 
                 ImGui::PopStyleVar(3);   // WindowPadding, ChildBorderSize, ChildRounding
-                ImGui::PopStyleColor(4); // ChildBg + 3 header colors
+                ImGui::PopStyleColor(5); // ChildBg + 3 header colors
                 ImGui::PopID();
 
                 if (i + 1 < matCache->getAllMaterials().size()) {
-                    ImGui::Dummy(ImVec2(0.0f, 6.0f));
+                    ImGui::Dummy(ImVec2(0.0f, 2.0f));
                 }
             }
         }
