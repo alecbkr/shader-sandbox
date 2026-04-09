@@ -7,14 +7,21 @@
 #include "core/input/Keybinds.hpp"
 #include "platform/Platform.hpp"
 #include "core/ui/themes/default.hpp"
+#include "application/Project.hpp"
+#include "core/EventDispatcher.hpp"
+#include "core/EventTypes.hpp"
+#include <nfd/nfd.hpp>
+#include <filesystem>
 
-bool SettingsModal::initialize(Logger* logger, InputState* inputs, Keybinds* keybinds, Platform* platform, AppSettings* settings) {
+bool SettingsModal::initialize(Logger* logger, InputState* inputs, Keybinds* keybinds, Platform* platform, AppSettings* settings, Project* project, EventDispatcher* events) {
     if (initialized) return false;
     loggerPtr = logger;
     settingsPtr = settings;
     inputsPtr = inputs;
     keybindsPtr = keybinds;
     platformPtr = platform;
+    projectPtr = project;
+    eventsPtr = events;
     initialized = true;
     return true;
 }
@@ -624,6 +631,44 @@ void SettingsModal::drawGraphicsPage() {
     ImGui::TextDisabled("Prevents tearing but caps FPS to monitor refresh rate.");
 }
 
+void SettingsModal::drawFoldersPage() {
+    ImGui::TextUnformatted("Folders");
+    ImGui::Separator();
+    if (ImGui::Button("Open Projects Folder", ImVec2(220, 0))) {
+        openFolder(projectPtr->projectRoot);
+    }
+    ImGui::SameLine();
+    ImGui::Spacing();
+
+    if (ImGui::Button("Open Settings Folder", ImVec2(220, 0))) {
+        openFolder(settingsPtr->userConfigDir);
+    }
+    ImGui::SameLine();
+}
+
+void SettingsModal::openFolder(const std::filesystem::path& path) {
+    if (!std::filesystem::exists(path) || !eventsPtr) return;
+    
+    NFD::UniquePath outPath;
+    nfdresult_t result = NFD::OpenDialog(outPath, nullptr, 0, path.string().c_str());
+    // Commented this out, bc after opening a file, windows keeps reopening that same folder
+    /*
+    if (result == NFD_OKAY) {
+        std::filesystem::path selectedPath(outPath.get());
+        if (std::filesystem::is_regular_file(selectedPath)) {
+            eventsPtr->TriggerEvent(Event{ 
+                EventType::OpenFile, 
+                false, 
+                OpenFilePayload{ 
+                    selectedPath.string(), 
+                    selectedPath.filename().string(), 
+                    false 
+                } 
+            });
+        }
+    }
+    */
+}
 
 void SettingsModal::draw() {
     // ----- Modal body sizing -----
@@ -653,6 +698,11 @@ void SettingsModal::draw() {
         if (ImGui::Selectable("Graphics", selectedGraphics)) {
             page = SettingsPage::Graphics;
         }
+
+        const bool selectedFolders = (page == SettingsPage::Folders);
+        if (ImGui::Selectable("Folders", selectedFolders)) {
+            page = SettingsPage::Folders;
+        }
     }
     ImGui::EndChild();
 
@@ -667,6 +717,8 @@ void SettingsModal::draw() {
             drawStylesPage();
         } else if (page == SettingsPage::Graphics) {
             drawGraphicsPage();
+        } else if (page == SettingsPage::Folders) {
+            drawFoldersPage();
         }
 
     }

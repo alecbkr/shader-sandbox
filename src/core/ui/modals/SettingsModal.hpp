@@ -3,17 +3,21 @@
 #include <string>
 #include <vector>
 #include <types.hpp>
+#include <filesystem>
 
 class Logger;
 class InputState;
 class Keybinds;
 class Platform;
+class Project;
+class EventDispatcher;
 struct AppSettings;
 
 enum class SettingsPage {
     Keybinds,
     Styles,
-    Graphics
+    Graphics,
+    Folders
 };
 
 struct KeybindCapture {
@@ -26,7 +30,7 @@ class SettingsModal final : public IModal {
 public:
     SettingsModal() = default;
 
-    bool initialize(Logger* logger, InputState* inputs, Keybinds* keybinds, Platform* platform, AppSettings* settings);
+    bool initialize(Logger* logger, InputState* inputs, Keybinds* keybinds, Platform* platform, AppSettings* settings, Project* project, EventDispatcher* events);
     static constexpr const char* ID = "Settings";
     std::string_view id() const override { return ID; }
     void draw() override;
@@ -37,6 +41,8 @@ private:
     Keybinds* keybindsPtr = nullptr;
     Platform* platformPtr = nullptr;
     AppSettings* settingsPtr = nullptr;
+    Project* projectPtr = nullptr;
+    EventDispatcher* eventsPtr = nullptr;
     
     // UI state (persist between frames)
     bool initialized = false;
@@ -55,7 +61,9 @@ private:
     void drawKeybindsPage();
     void drawStylesPage();
     void drawGraphicsPage();
+    void drawFoldersPage();
 
     void syncFromSettings();
     void applyToSettings();
+    void openFolder(const std::filesystem::path& path);
 };

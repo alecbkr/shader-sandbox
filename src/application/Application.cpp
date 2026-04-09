@@ -130,7 +130,7 @@ void Application::initializeUI(AppContext& ctx) {
     ImGui_ImplGlfw_InitForOpenGL(ctx.platform.getWindow().getGLFWWindow(), true);
     ImGui_ImplOpenGL3_Init();
 
-    ctx.settingsModal.initialize(&ctx.logger, &ctx.inputs, &ctx.keybinds, &ctx.platform, &ctx.settings);
+    ctx.settingsModal.initialize(&ctx.logger, &ctx.inputs, &ctx.keybinds, &ctx.platform, &ctx.settings, &ctx.project, &ctx.events);
     ctx.saveAsModal.initialize(&ctx.logger, &ctx.project, &ctx.events, &ctx.settings, &ctx.projectSwitch);
     ctx.openProjectModal.initialize(&ctx.project, &ctx.settings, &ctx.model_cache, &ctx.material_cache, &ctx.shader_registry, &ctx.projectSwitch);
     ctx.addObjectModal.initialize(&ctx.model_cache, &ctx.inspector_engine, &ctx.project, &ctx.events);
