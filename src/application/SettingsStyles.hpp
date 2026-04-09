@@ -675,12 +675,16 @@ struct SettingsStyles {
         if (s.contains("inspector") && s["inspector"].is_object()) {
             const json& ins = s["inspector"];
 
-            if (ins.contains("inspectorBoderColor")) {
+            // Accept both legacy typo key and correct key for compatibility.
+            if (ins.contains("inspectorBorderColor") || ins.contains("inspectorBoderColor")) {
+                const json& inspectorBorderColorNode = ins.contains("inspectorBorderColor")
+                    ? ins["inspectorBorderColor"]
+                    : ins["inspectorBoderColor"];
                 inspectorBorderColor = ImVec4(
-                    ins["inspectorBorderColor"][0],
-                    ins["inspectorBorderColor"][1],
-                    ins["inspectorBorderColor"][2],
-                    ins["inspectorBorderColor"][3]
+                    inspectorBorderColorNode[0],
+                    inspectorBorderColorNode[1],
+                    inspectorBorderColorNode[2],
+                    inspectorBorderColorNode[3]
                 );
             }
             if (ins.contains("inspectorTabBackgroundColor")) {   

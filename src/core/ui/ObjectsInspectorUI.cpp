@@ -24,15 +24,12 @@ bool ObjectsInspectorUI::drawCompactTreeNode(const std::string& label) {
     ImGui::PushStyleColor(ImGuiCol_Header, theme.headerColor);
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.headerColorHovered);
     ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.headerColor);
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
-
-    const bool isOpen = ImGui::TreeNodeEx(
+    const bool isOpen = ImGui::CollapsingHeader(
         label.c_str(),
-        ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed
+        ImGuiTreeNodeFlags_SpanAvailWidth
     );
 
     ImGui::PopStyleColor(3); // pop header colors
-    ImGui::PopStyleVar(1);
 
     return isOpen;
 }
@@ -47,7 +44,8 @@ ObjectsInspectorUI::ObjectsInspectorUI(SettingsStyles* styles) : styles(styles) 
             theme.bgColor.z * 1.3f,
             theme.bgColor.w
         );
-        theme.indentSize = styles->indentSpacing * 0.5f;
+        // Match Materials tab indentation rhythm.
+        theme.indentSize = 8.0f;
         theme.headerColor = styles->inspectorTitleBackgroundColor;
         // Derive a hover color from the base color so it always differs visibly.
         theme.headerColorHovered = ImVec4(
@@ -173,19 +171,30 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
         
                 // std::string label = "model " + std::to_string(modelID);
                 // ImGui::PushID(label.c_str());
-                ImGui::PushID(modelID); 
-                ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.bgColor); // Blue-ish background
-                ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);   // <-- rounding radius
-                ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f); // optional
-                ImGui::PushStyleColor(ImGuiCol_Header,        theme.bgColor);
+                ImGui::PushID(modelID);
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.bgColor);
+                ImGui::PushStyleColor(ImGuiCol_Border, styles->inspectorBorderColor);
+                ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles->inspectorBodyRounding);
+                ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles->inspectorBorderThickness);
+                ImGui::PushStyleColor(ImGuiCol_Header, theme.bgColor);
                 ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.bgColorHovered);
-                ImGui::PushStyleColor(ImGuiCol_HeaderActive,  theme.bgColor);
-                ImGui::BeginChild("Container##", ImVec2(0, 0),  ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar);
+                ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.bgColor);
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
+                ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
+                ImGui::BeginChild(
+                    "Container##",
+                    ImVec2(0, 0),
+                    ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding,
+                    ImGuiWindowFlags_HorizontalScrollbar
+                );
 
                 if (drawModelTreeNode(model, modelCachePtr)) {
+                    ImGui::PushStyleColor(ImGuiCol_Separator, styles->inspectorBorderColor);
                     ImGui::Separator();
+                    ImGui::PopStyleColor();
+                    ImGui::Dummy(ImVec2(0.0f, 2.0f));
                     ImGui::Indent(theme.indentSize);
-        
                     if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth)) {
                         ImGui::Indent(theme.indentSize);
                         drawModelPositionInput(*model);
@@ -198,20 +207,15 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                     drawMeshesMenu(model, materialCachePtr, modelCachePtr, loggerPtr);
                     drawInstancesMenu(model, modelCachePtr, loggerPtr);
                     drawAdditionalMenu(model, modelCachePtr, loggerPtr);
-        
                     ImGui::Unindent(theme.indentSize);
 
-                    ImGui::TreePop();
                 }
                 ImGui::EndChild();
-                ImGui::PopStyleColor(3);
-                ImGui::PopStyleColor();
-                ImGui::PopStyleVar(2);
+                ImGui::PopStyleVar(5);
+                ImGui::PopStyleColor(5);
                 ImGui::PopID();
                 i++;
                 if (i < modelCachePtr->getNumberOfModels()) {
-                    ImGui::Dummy(ImVec2(0, 2));
-                    ImGui::Separator();
                     ImGui::Dummy(ImVec2(0, 2));
                 }
             }
