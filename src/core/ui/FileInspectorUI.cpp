@@ -417,21 +417,32 @@ void FileInspectorUI::initializeMenu(ShaderLinkMenu& menu, ShaderLinkMenuChoices
     menu.initialized = true;
 }
 
-void FileInspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, InspectorEngine* inspectorEngPtr) {
+void FileInspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, InspectorEngine* inspectorEngPtr, SettingsStyles *styles) {
     bool changed = false;
     ShaderLinkMenu oldMenu = menu;
-
+    
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 8.0f));
+    // ImGui::PushStyleColor(ImGuiStyleVar_FramePadding, styles->inspectorBorderColor);
     if (ImGui::Combo("Vertex Shader", &menu.vertSelection, choices.vertChars.data(), (int)choices.vertChars.size())) {
         changed = true;
     }
+    ImGui::PopStyleVar();
+    // ImGui::PopStyleColor(); 
+
     /*
     if (ImGui::Combo("Geometry Shader", &menu.geometrySelection, choices.geoChars.data(), (int)choices.geoChars.size())) {
         changed = true;
     }
     */
+    
+    ImGui::Dummy(ImVec2(0.0f, 4.0f)); 
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 8.0f));
+    // ImGui::PushStyleColor(ImGuiStyleVar_FramePadding, styles->inspectorBorderColor);
     if (ImGui::Combo("Fragment Shader", &menu.fragSelection, choices.fragChars.data(), (int)choices.fragChars.size())) {
         changed = true;
     }
+    ImGui::PopStyleVar();
+    // ImGui::PopStyleColor();
 
     bool validSelection = menu.fragSelection != 0 && menu.vertSelection != 0 && menu.shaderName != "";
     if (validSelection) {
@@ -439,6 +450,7 @@ void FileInspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuCho
     } else {
         ImGui::Text("Invalid! Using old program...");
     }
+
     if (validSelection && changed) {
         const ShaderFile* vertFile = choices.vertFiles[menu.vertSelection];
         const ShaderFile* fragFile = choices.fragFiles[menu.fragSelection];
@@ -462,43 +474,55 @@ void FileInspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuCho
 void FileInspectorUI::drawShaderProgramCard(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, InspectorEngine* inspectorEngPtr, SettingsStyles* styles, ImGuiID guiID) {
     ImGui::PushID(guiID);
 
-    ImVec4 headerNormal = styles->inspectorTitleBackgroundColor;
-    ImVec4 headerHighlight = ImVec4(headerNormal.x * 1.15f, headerNormal.y * 1.15f, headerNormal.z * 1.15f, headerNormal.w);
+    ImVec4 headerColor = styles->shaderTitleBackgroundColor;
+    ImVec4 headerHovered = ImVec4(headerColor.x * 1.15f, headerColor.y * 1.15f, headerColor.z * 1.15f, headerColor.w);
+    ImVec4 headerActive = headerColor;
 
-    ImVec4 bodyColor = styles->inspectorBodyColor; 
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, bodyColor);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, styles->shaderTreeBodyColor); 
     ImGui::PushStyleColor(ImGuiCol_Border, styles->shaderBorderColor);
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles->shaderBodyRounding);
     ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles->shaderBorderThickness);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGuiChildFlags shaderCardFlags = ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders; 
 
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, headerHighlight);
-
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
-
-    ImGuiChildFlags cardFlags = ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding;  
-    if (ImGui::BeginChild(("ShaderCard##" + menu.shaderName).c_str(), ImVec2(0, 0), cardFlags)) {
-
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
-        bool isExpanded = ImGui::CollapsingHeader(menu.shaderName.c_str(), ImGuiTreeNodeFlags_SpanAvailWidth);
+    if (ImGui::BeginChild(("ShaderCard##" + menu.shaderName).c_str(), ImVec2(0, 0), shaderCardFlags)) {
         
+        ImGui::PushStyleColor(ImGuiCol_Header, headerColor);
+        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, headerHovered);
+        ImGui::PushStyleColor(ImGuiCol_HeaderActive, headerActive);
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+        
+        ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, styles->shaderTitleInnerPadding + 2.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 6.0f));
+
+        bool isExpanded = ImGui::TreeNodeEx(
+            menu.shaderName.c_str(),
+            ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed
+        );
+
+        ImGui::PopStyleVar(3);
+
         if (isExpanded) {
+            ImGui::Dummy(ImVec2(0, 0.5f));
+            
             ImGui::PushStyleColor(ImGuiCol_Separator, styles->shaderBorderColor);
             ImGui::Separator();
             ImGui::PopStyleColor();
+            
             ImGui::Dummy(ImVec2(0.0f, 2.0f));
+
             ImGui::Indent(8.0f);
-
-            drawShaderLinkMenu(menu, choices, inspectorEngPtr);
-
+            drawShaderLinkMenu(menu, choices, inspectorEngPtr, styles);
             ImGui::Unindent(8.0f);
+
+            ImGui::Dummy(ImVec2(0, 4.0f));
+            ImGui::TreePop(); 
         }
-
-        ImGui::PopStyleVar(); 
+        ImGui::PopStyleColor(3);
     }
-
+    
     ImGui::EndChild();
-
-    ImGui::PopStyleVar(3);   
-    ImGui::PopStyleColor(3);
+    ImGui::PopStyleVar(3);
+    ImGui::PopStyleColor(2);
     ImGui::PopID();
 }
