@@ -20,24 +20,6 @@
 #include <unordered_map>
 #include <vector>
 
-bool UniformInspectorUI::drawCompactTreeNode(const std::string& label) {
-
-    // Set the header button color
-    ImGui::PushStyleColor(ImGuiCol_Header, theme.headerColor);
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.headerColorHovered);
-    ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.headerColor);
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
-
-    const bool open = ImGui::TreeNodeEx(
-        label.c_str(),
-        ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed
-    );
-
-    ImGui::PopStyleColor(3); // pop header colors
-    ImGui::PopStyleVar(1);
-
-    return open;
-}
 
 UniformInspectorUI::UniformInspectorUI(Fonts* fonts, SettingsStyles* styles, Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr, TextureCache* textureCachePtr) : fonts_(fonts), styles_(styles) {
     if (styles_) {
@@ -63,6 +45,23 @@ UniformInspectorUI::UniformInspectorUI(Fonts* fonts, SettingsStyles* styles, Log
 }
 
 UniformInspectorUI::~UniformInspectorUI() = default;
+
+bool UniformInspectorUI::drawCompactTreeNode(const std::string& label) {
+    ImGui::PushStyleColor(ImGuiCol_Header, theme.headerColor);
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.headerColorHovered);
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.headerColor);
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+
+    const bool isOpen = ImGui::TreeNodeEx(
+        label.c_str(),
+        ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed
+    );
+
+    ImGui::PopStyleColor(3); // pop header colors
+    ImGui::PopStyleVar(1);
+
+    return isOpen;
+}
 
 void UniformInspectorUI::draw() {
     inspectorEngPtr_->queueUpdateChoices();

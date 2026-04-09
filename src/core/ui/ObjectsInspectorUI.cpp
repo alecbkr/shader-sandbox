@@ -20,6 +20,23 @@
 #include <string>
 #include <vector>
 
+bool ObjectsInspectorUI::drawCompactTreeNode(const std::string& label) {
+    ImGui::PushStyleColor(ImGuiCol_Header, theme.headerColor);
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.headerColorHovered);
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.headerColor);
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+
+    const bool isOpen = ImGui::TreeNodeEx(
+        label.c_str(),
+        ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed
+    );
+
+    ImGui::PopStyleColor(3); // pop header colors
+    ImGui::PopStyleVar(1);
+
+    return isOpen;
+}
+
 ObjectsInspectorUI::ObjectsInspectorUI(SettingsStyles* styles) : styles(styles) {
     if (styles) {
         theme.bgColor = styles->assetsTreeBodyColor;
@@ -31,6 +48,14 @@ ObjectsInspectorUI::ObjectsInspectorUI(SettingsStyles* styles) : styles(styles) 
             theme.bgColor.w
         );
         theme.indentSize = styles->indentSpacing * 0.5f;
+        theme.headerColor = styles->inspectorTitleBackgroundColor;
+        // Derive a hover color from the base color so it always differs visibly.
+        theme.headerColorHovered = ImVec4(
+            theme.headerColor.x * 1.2f,
+            theme.headerColor.y * 1.2f,
+            theme.headerColor.z * 1.2f,
+            theme.headerColor.w
+        );
     }
 }
 
@@ -157,7 +182,7 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                 ImGui::PushStyleColor(ImGuiCol_HeaderActive,  theme.bgColor);
                 ImGui::BeginChild("Container##", ImVec2(0, 0),  ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar);
 
-                if (drawModelHeader(model, modelCachePtr)) {
+                if (drawModelTreeNode(model, modelCachePtr)) {
                     ImGui::Separator();
                     ImGui::Indent(theme.indentSize);
         
@@ -175,6 +200,8 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                     drawAdditionalMenu(model, modelCachePtr, loggerPtr);
         
                     ImGui::Unindent(theme.indentSize);
+
+                    ImGui::TreePop();
                 }
                 ImGui::EndChild();
                 ImGui::PopStyleColor(3);
@@ -412,7 +439,7 @@ bool ObjectsInspectorUI::drawModelOrientationInput(Model& model) {
     return changed;
 }
 
-bool ObjectsInspectorUI::drawModelHeader(Model* model, ModelCache* modelCachePtr) {
+bool ObjectsInspectorUI::drawModelTreeNode(Model* model, ModelCache* modelCachePtr) {
     unsigned int modelID = model->getID();
     std::string label = model->getName() + "##" + std::to_string(modelID);
 
@@ -436,7 +463,7 @@ bool ObjectsInspectorUI::drawModelHeader(Model* model, ModelCache* modelCachePtr
         
     }
 
-    bool isOpen = ImGui::CollapsingHeader(label.c_str()); 
+    bool isOpen = drawCompactTreeNode(label);
 
     if (ImGui::BeginPopupContextItem(("Context##" + std::to_string(modelID)).c_str())) {
         if (ImGui::Selectable("Rename")) {

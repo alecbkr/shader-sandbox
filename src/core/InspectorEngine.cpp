@@ -404,7 +404,7 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
                     finalValue = uniform;
                     finalValue.name = uniform.name;
                     finalValue.isFunction = false;
-                    finalValue.value = platform->getTime(); // doesn't render every frame yet
+                    finalValue.value = (float)platform->getTime(); // doesn't render every frame yet
                     validFunction = true;
                 }
                 break;
@@ -519,6 +519,7 @@ void InspectorEngine::reloadUniforms(unsigned int materialID) {
 
 
 void InspectorEngine::applyAllUniformsForPrimitive(unsigned int modelID, unsigned int meshID, unsigned int materialID) {
+    // as of 4-9-26, this runs every frame
     Material* mat = materialCachePtr->getMaterial(materialID);
     if (mat == nullptr) {
         loggerPtr->addLog(LogLevel::WARNING, "applyAllUniformsForPrimitive", "material " + std::to_string(materialID) + " does not exist!");

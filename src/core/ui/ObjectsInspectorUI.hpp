@@ -44,6 +44,8 @@ public:
     struct ObjectsInspectorThemeSettings {
         ImVec4 bgColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
         ImVec4 bgColorHovered = ImVec4(bgColor.x * 1.5, bgColor.y * 1.5, bgColor.z * 1.5, 1.0f);
+        ImVec4 headerColor = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
+        ImVec4 headerColorHovered = ImVec4(headerColor.x * 1.5f, headerColor.y * 1.5f, headerColor.z * 1.5f, 1.0f);
         float indentSize = 10;
     };
 
@@ -55,6 +57,7 @@ private:
     char renameBuffer[256] = ""; 
 
     //void drawAddObjectMenu(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, ModelCache* modelCachePtr);
+    bool drawCompactTreeNode(const std::string& label);
     void initializeMenu(MaterialShaderMenu& menu, const std::vector<unsigned int>& shaderChoices, Logger* loggerPtr, ShaderRegistry* shaderRegPtr, MaterialCache* materialCachePtr);
     void initializeMenu(ModelTextureMenu& menu, Logger* loggerPtr);
     // bool drawShaderProgramMenu(MaterialShaderMenu& menu, const std::vector<const char*>& shaderChoices, ShaderRegistry* shaderRegPtr, MaterialCache* materialCachePtr, InspectorEngine* inspectorEngPtr, Logger* logger);
@@ -66,7 +69,7 @@ private:
     bool drawModelPositionInput(Model& model);
     bool drawModelScaleInput(Model& model);
     bool drawModelOrientationInput(Model& model);
-    bool drawModelHeader(Model* model, ModelCache* modelCachePtr); 
+    bool drawModelTreeNode(Model* model, ModelCache* modelCachePtr); 
     ObjectsInspectorThemeSettings theme;
 
 };
