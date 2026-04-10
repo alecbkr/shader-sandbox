@@ -52,6 +52,12 @@ std::string Material::getProgramName() { return programName; }
 MaterialType Material::getMaterialType() { return type; }
 std::vector<unsigned int>& Material::getMaterialTextureIDs() { return textureIDs; }
 
+const bool Material::getValidity() const  { 
+    bool result;
+    programID != std::numeric_limits<unsigned int>::max() ? result = true : result = false;
+    return result;
+};
+
 std::unordered_map<unsigned int, std::string> Material::getAllTextureUnitsAndPaths(TextureCache* texCache) {
     std::unordered_map<unsigned int, std::string> data;
 

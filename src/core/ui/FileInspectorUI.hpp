@@ -54,7 +54,7 @@ private:
     void drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, InspectorEngine* inspectorEngPtr, SettingsStyles* styles);
     void drawShaderLinkMenu(ShaderLinkMenu& menu,ShaderLinkMenuChoices& choices, InspectorEngine* inspectorEngPtr, SettingsStyles* styles);
     void initializeMenu(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, ShaderRegistry* shaderRegPtr);
-    void drawShaderProgramCard(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, InspectorEngine* inspectorEngPtr, SettingsStyles* styles, ImGuiID guiID);
+    bool drawShaderProgramCard(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, ShaderRegistry* shaderRegPtr, InspectorEngine* inspectorEngPtr, SettingsStyles* styles, ImGuiID guiID);
     bool showPresets = true;
     bool newProgram = false;
     char newProgramBuf[256] = "";

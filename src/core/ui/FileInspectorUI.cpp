@@ -376,19 +376,31 @@ void FileInspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, Shader
     size_t menuCount = menus.size(); 
     size_t currIdx = 0; 
 
-    
-    for (auto& [shaderName, menu] : menus) {
+
+    for (auto it = menus.begin(); it != menus.end();) {
+        auto& [shaderName, menu] = *it;
+   
         if (!menu.initialized) {
             initializeMenu(menu, choices, shaderRegPtr);
         }
 
-        drawShaderProgramCard(menu, choices, inspectorEngPtr, styles, guiID);
+        bool shouldDelete = drawShaderProgramCard(menu, choices, shaderRegPtr, inspectorEngPtr, styles, guiID);
+        
         guiID++;
         currIdx++;
         
         if (currIdx < menuCount) {
             ImGui::Dummy(ImVec2(0.0f, 2.0f));
         }
+
+        if (shouldDelete) {
+            it = menus.erase(it);
+        }
+        else {
+            it++;
+        }
+
+        
 
         // if (ImGui::TreeNode(menu.shaderName.c_str())) {
         //     ImGui::PushID(guiID);
@@ -503,7 +515,8 @@ void FileInspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuCho
 
 }
 
-void FileInspectorUI::drawShaderProgramCard(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, InspectorEngine* inspectorEngPtr, SettingsStyles* styles, ImGuiID guiID) {
+bool FileInspectorUI::drawShaderProgramCard(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, ShaderRegistry* shaderRegPtr, InspectorEngine* inspectorEngPtr, SettingsStyles* styles, ImGuiID guiID) {
+    bool deleted = false;
     ImGui::PushID(guiID);
 
     ImVec4 headerColor = styles->shaderTitleBackgroundColor;
@@ -532,6 +545,14 @@ void FileInspectorUI::drawShaderProgramCard(ShaderLinkMenu& menu, ShaderLinkMenu
             ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed
         );
 
+        if (ImGui::BeginPopupContextItem("program_options")) {
+            if (ImGui::MenuItem("Delete")) {
+                shaderRegPtr->deleteProgram(menu.shaderName);
+                deleted = true;
+            }
+            ImGui::EndPopup();
+        }
+
         ImGui::PopStyleVar(3);
 
         if (isExpanded) {
@@ -552,9 +573,12 @@ void FileInspectorUI::drawShaderProgramCard(ShaderLinkMenu& menu, ShaderLinkMenu
         }
         ImGui::PopStyleColor(3);
     }
+
+    
     
     ImGui::EndChild();
     ImGui::PopStyleVar(3);
     ImGui::PopStyleColor(2);
     ImGui::PopID();
+    return deleted;
 }

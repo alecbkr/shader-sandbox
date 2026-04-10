@@ -196,7 +196,7 @@ void Model::setName(std::string name) {
 }
 
 
-void Model::setMeshMaterial(unsigned int meshIdx, unsigned int materialID) {
+void Model::setMeshMaterial(unsigned int meshIdx, unsigned int materialID, bool isMatValid) {
     if (meshIdx >= meshInstances.size()) {
         return;
     }
@@ -209,12 +209,16 @@ void Model::setMeshMaterial(unsigned int meshIdx, unsigned int materialID) {
         if (it != allMaterialReferences.end()) {
             if (--(it->second) == 0) {
                 allMaterialReferences.erase(it);
+                invalidMaterialIDs.erase(it->first);
             }
         }
     }
 
     // Assign new material
     meshInstance.materialID = materialID;
+    if (isMatValid == false) {
+        invalidMaterialIDs.insert(materialID);
+    }
 
     // Only track real materials
     if (materialID != UINT_MAX) {
@@ -229,12 +233,12 @@ void Model::setMeshMaterial(unsigned int meshIdx, unsigned int materialID) {
             break;
         }
     }
-
-    status.material = allMeshesHaveMaterial ? ModelState::Ready : ModelState::Building;
+    if (invalidMaterialIDs.empty() == false) status.material = ModelState::Invalid;
+    else status.material = allMeshesHaveMaterial ? ModelState::Ready : ModelState::Building;
 }
 
 
-void Model::setModelMaterial(unsigned int materialID) {
+void Model::setModelMaterial(unsigned int materialID, bool isMatValid) {
     allMaterialReferences.clear();
 
     for (MeshInstance& meshInstance : meshInstances) {
@@ -243,7 +247,14 @@ void Model::setModelMaterial(unsigned int materialID) {
 
     if (materialID != UINT_MAX) {
         allMaterialReferences.emplace(materialID, static_cast<unsigned int>(meshInstances.size()));
-        status.material = ModelState::Ready;
+        if (isMatValid == false) {
+            invalidMaterialIDs.insert(materialID);
+            status.material = ModelState::Invalid;
+        }
+        else {
+            status.material = ModelState::Ready;
+        }
+        
     } else {
         status.material = ModelState::Building;
     }
@@ -307,6 +318,7 @@ glm::vec4 Model::getRotation()    const {return rotation;}
 unsigned int Model::getInstanceCount() const { return modelInstanceCount; }
 const std::vector<InstanceData>& Model::getInstanceData() const { return instanceData; }
 const std::vector<MeshInstance>& Model::getMeshInstances() const { return meshInstances; }
+std::unordered_set<unsigned int>& Model::getInvalidMaterialIDs() { return invalidMaterialIDs; }
 const std::unordered_map<unsigned int, unsigned int>& Model::getAllMaterialReferences() const { return allMaterialReferences; }
 
 

@@ -53,8 +53,8 @@ bool AssimpImporter::initialize(Logger* _loggerPtr, ModelCache* _modelCachePtr, 
 bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntries, std::vector<MaterialEntry>& materialEntries) {
     // LOAD MATERIALS
     for (MaterialEntry& materialEntry : materialEntries) {
-        std::string name = materialEntry.name;
         unsigned int ID = materialEntry.ID;
+        std::string name = materialEntry.name;
         MaterialType type = materialEntry.type;
         MaterialProperties properties = materialEntry.properties;
         std::vector<std::string>& texture_paths = materialEntry.texture_paths;
@@ -106,14 +106,18 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
         }
 
         // LOAD BOUND MATERIALS PER MESH
-        model->loadMeshMaterialIDs(meshMaterialIDs);
+        // model->loadMeshMaterialIDs(meshMaterialIDs);
+        for (unsigned int idx = 0; idx < meshMaterialIDs.size(); idx++) {
+            unsigned int materialID = meshMaterialIDs[idx];
+            model->setMeshMaterial(idx, materialID, materialCachePtr->getMaterial(materialID)->getValidity());
+        }
         model->setPosition(position);
         model->setScale(scale);
         // model->setRotation(rotation); //nd
         model->setInstanceCount(instanceData.size());
         model->loadInstanceData(instanceData);
 
-        bool success = modelCachePtr->trySendingToRenderer(ID);
+        bool success = modelCachePtr->updateRenderer(ID);
         if (!success) {
             std::cout << "bad joojoo" << std::endl;
         }
@@ -143,7 +147,7 @@ unsigned int AssimpImporter::importModel(std::string path) {
     // PROCESS MESHES
     processNode(modelID, scene->mRootNode, scene);
     modelCachePtr->getModel(modelID)->finalizeMeshes();
-    modelCachePtr->trySendingToRenderer(modelID);
+    modelCachePtr->updateRenderer(modelID);
     return modelID;
 }
 

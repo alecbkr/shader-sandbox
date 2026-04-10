@@ -2,6 +2,7 @@
 
 #include <variant>
 #include <string>
+#include <vector>
 #include "object/MaterialType.hpp"
 
 enum class EventType {
@@ -20,13 +21,15 @@ enum class EventType {
     RenameFile,
     ET_DeleteFile,
     ContextSwitch,
-    CreateModel,
-    DeleteModel,
-    ModelMaterialChange,
-    MaterialTypeChange,
     CloneFile,
     ToggleEditorFind,
     LoadModel,
+    UploadToRenderer,
+    DeleteFromRenderer,
+    MaterialValidated,
+    MaterialsInvalidated,
+    MaterialTypeChange,
+    ProgramDeleted
 };
 
 struct SaveActiveShaderFilePayload { std::string filePath; unsigned int modelID; };
@@ -37,11 +40,13 @@ struct OpenFilePayload { std::string filePath; std::string fileName; bool readOn
 struct RenameFilePayload { std::string oldName, newName; };
 struct DeleteFilePayload { std::string fileName; };
 struct CloneFilePayload {std::string fileName; };
-struct ModelCreationPayload { unsigned int modelID; bool isSkyBox; };
-struct ModelDeletionPayload { unsigned int modelID; };
-struct ModelMaterialChangePayload { unsigned int modelID; unsigned int meshIdx; unsigned int materialID; };
-struct MaterialTypeChangePayload { unsigned int materialID; MaterialType newType; };
 struct LoadModelPayload { std::string filePath; }; 
+struct UploadToRendererPayload { unsigned int modelID; bool isSkybox; };
+struct DeleteFromRendererPayload { unsigned int modelID; };
+struct MaterialValidatedPayload { unsigned int materialID; };
+struct MaterialsInvalidatedPayload { std::vector<unsigned int> invalidMaterialIDs; };
+struct MaterialTypeChangePayload { unsigned int materialID; MaterialType newType; };
+struct ProgramDeletedPayload { unsigned int programID; };
 
 using EventPayload = std::variant<
     std::monostate,
@@ -53,11 +58,13 @@ using EventPayload = std::variant<
     RenameFilePayload,
     DeleteFilePayload,
     CloneFilePayload,
-    ModelCreationPayload,
-    ModelDeletionPayload,
-    ModelMaterialChangePayload,
+    LoadModelPayload,
+    UploadToRendererPayload,
+    DeleteFromRendererPayload,
+    MaterialValidatedPayload,
+    MaterialsInvalidatedPayload,
     MaterialTypeChangePayload,
-    LoadModelPayload
+    ProgramDeletedPayload
 >;
 
 struct Event {

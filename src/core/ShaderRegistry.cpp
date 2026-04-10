@@ -1,5 +1,6 @@
 #include "core/ShaderRegistry.hpp"
 #include "core/logging/Logger.hpp"
+#include "core/EventDispatcher.hpp"
 #include "application/Project.hpp"
 #include "engine/ShaderProgram.hpp"
 #include <memory>
@@ -12,13 +13,14 @@ ShaderRegistry::ShaderRegistry() {
     };
 }
 
-bool ShaderRegistry::initialize(Logger* _loggerPtr, Project* _project, bool registerDefaults) {
+bool ShaderRegistry::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, Project* _project, bool registerDefaults) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Shader Registry", "Shader Registry was already initialized.");
         return false;
     }
 
     loggerPtr = _loggerPtr;
+    eventsPtr = _eventsPtr;
     project = _project;
     project->programs.clear();
 
@@ -39,6 +41,7 @@ void ShaderRegistry::shutdown() {
     if (!initialized) return;
     project->programs.clear();
     loggerPtr = nullptr;
+    eventsPtr = nullptr;
     initialized = false;
 }
 
@@ -68,6 +71,28 @@ bool ShaderRegistry::registerProgram(const std::filesystem::path& vertex_file, c
     );
 
     return true;
+}
+
+void ShaderRegistry::deleteProgram(const unsigned int ID) {
+    ShaderProgram* prog = getProgram(ID);
+    if (prog == nullptr) {
+        loggerPtr->addLog(LogLevel::WARNING, "SHADERREGISTRY::deleteProgram", "Program with ID " + std::to_string(ID) + " not found");
+        return;
+    }
+    nameToIDMap.erase(prog->name);
+    project->programs.erase(ID);
+    eventsPtr->TriggerEvent(Event {EventType::ProgramDeleted, false, ProgramDeletedPayload { ID }});
+}
+
+void ShaderRegistry::deleteProgram(const std::string& name) {
+    ShaderProgram* prog = getProgram(name);
+    if (prog == nullptr) {
+        loggerPtr->addLog(LogLevel::WARNING, "SHADERREGISTRY::deleteProgram", "Program with name" + name + " not found");
+        return;
+    }
+    nameToIDMap.erase(prog->name);
+    project->programs.erase(prog->ID);
+    eventsPtr->TriggerEvent(Event {EventType::ProgramDeleted, false, ProgramDeletedPayload { prog->ID }});
 }
 
 ShaderProgram* ShaderRegistry::getProgram(const unsigned int ID) const {

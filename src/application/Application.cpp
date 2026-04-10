@@ -206,7 +206,7 @@ bool Application::initialize(AppContext& ctx) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Event Dispatcher was not initialized successfully.");
         return false;
     }
-    if (!ctx.shader_registry.initialize(&ctx.logger, &ctx.project)) {
+    if (!ctx.shader_registry.initialize(&ctx.logger, &ctx.events, &ctx.project)) {
         ctx.logger.addLog(LogLevel::CRITICAL, "Application Initialization", "Shader Registry was not initialized successfully.");
         return false;
     }

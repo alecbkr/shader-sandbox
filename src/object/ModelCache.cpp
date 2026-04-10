@@ -45,6 +45,39 @@ bool ModelCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr,  Pr
         return false;
     });
 
+    eventsPtr->Subscribe(EventType::MaterialValidated, [this](const EventPayload& payload) -> bool {
+        if (const auto* data = std::get_if<MaterialValidatedPayload>(&payload)) {
+            for (const auto& [ID, model] : modelIDMap) {
+                if (model->getInvalidMaterialIDs().erase(data->materialID)) {
+                    if (model->getInvalidMaterialIDs().empty()) {
+                    model->getModelStatus().material = ModelState::Ready;
+                    updateRenderer(ID);
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
+    });
+
+    eventsPtr->Subscribe(EventType::MaterialsInvalidated, [this](const EventPayload& payload) -> bool {
+        if (const auto* data = std::get_if<MaterialsInvalidatedPayload>(&payload)) {
+            for (const auto& [ID, model] : modelIDMap) {
+                for (unsigned int materialID : data->invalidMaterialIDs) {
+                    if (model->getAllMaterialReferences().contains(materialID)) {
+                        model->getInvalidMaterialIDs().insert(materialID);
+                    }
+                }
+                if (!model->getInvalidMaterialIDs().empty()) {
+                    model->getModelStatus().material = ModelState::Invalid;
+                    updateRenderer(ID);
+                }
+            }
+            return true;
+        }
+        return false;
+    });
+
     initialized = true;
     return true;
 }
@@ -77,7 +110,7 @@ unsigned int ModelCache::createPreset(ModelType type) {
         modelNumber++;
     }
 
-    trySendingToRenderer(presetModelID);
+    updateRenderer(presetModelID);
     nextModelID++;
     return presetModelID;
 }
@@ -113,7 +146,7 @@ void ModelCache::deleteModel(unsigned int modelID) {
     }
     
     modelIDMap.erase(modelID);
-    eventsPtr->TriggerEvent(Event { EventType::DeleteModel, false, ModelDeletionPayload{modelID} });
+    eventsPtr->TriggerEvent(Event { EventType::DeleteFromRenderer, false, DeleteFromRendererPayload{modelID} });
 }
 
 
@@ -129,16 +162,11 @@ void ModelCache::toggleAsSkybox(unsigned int modelID) {
     }
 
     modelID == skyboxModelID ? skyboxModelID = INVALID_MODEL_ID : skyboxModelID = modelID;
-    if (model->getModelStatus().wasSentToRenderer == true) {
-        eventsPtr->TriggerEvent(Event { EventType::DeleteModel, false, ModelDeletionPayload{modelID} });
-        model->getModelStatus().wasSentToRenderer = false;
-    }
-
-    trySendingToRenderer(modelID);
+    updateRenderer(modelID);
 }
 
 
-void ModelCache::changeMeshMaterial(unsigned int modelID, unsigned int meshIdx, unsigned int materialID) {
+void ModelCache::changeMeshMaterial(unsigned int modelID, unsigned int meshIdx, unsigned int materialID, bool isMatValid) {
     Model* foundModel = getModel(modelID);
     if (foundModel == nullptr) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::changeMeshMaterial()", "model not found from ID " + std::to_string(modelID));
@@ -151,31 +179,20 @@ void ModelCache::changeMeshMaterial(unsigned int modelID, unsigned int meshIdx, 
         return;
     }
 
-    foundModel->setMeshMaterial(meshIdx, materialID);
-    
-    if (foundModel->getModelStatus().wasSentToRenderer == false) {
-        trySendingToRenderer(modelID);
-    }
-    else {
-        eventsPtr->TriggerEvent(Event { EventType::ModelMaterialChange, false, ModelMaterialChangePayload{modelID, meshIdx, materialID} });
-    }
+    foundModel->setMeshMaterial(meshIdx, materialID, isMatValid);
+    updateRenderer(modelID);
 }
 
 
-void ModelCache::changeModelMaterial(unsigned int modelID, unsigned int materialID) {
+void ModelCache::changeModelMaterial(unsigned int modelID, unsigned int materialID, bool isMatValid) {
     Model* foundModel = getModel(modelID);
     if (foundModel == nullptr) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::changeModelMaterial()", "model not found from ID " + std::to_string(modelID));
         return;
     }
-    foundModel->setModelMaterial(materialID);
+    foundModel->setModelMaterial(materialID, isMatValid);
     
-    if (foundModel->getModelStatus().wasSentToRenderer == false) {
-        trySendingToRenderer(modelID);
-    } 
-    else {
-        eventsPtr->TriggerEvent(Event { EventType::ModelMaterialChange, false, ModelMaterialChangePayload{modelID, UINT_MAX, materialID} });
-    }
+    updateRenderer(modelID);
 }
 
 
@@ -251,16 +268,18 @@ bool ModelCache::reserveModelID(unsigned int modelID, std::string model_path, Mo
 }
 
 
-bool ModelCache::trySendingToRenderer(unsigned int modelID) {
-    ModelStatus& status = getModel(modelID)->getModelStatus();
-    if (status.wasSentToRenderer == true) return true;
+bool ModelCache::updateRenderer(unsigned int modelID) {
+    ModelStatus& modelStatus = getModel(modelID)->getModelStatus();
+    if (modelStatus.uploadedToRenderer == true) {
+        eventsPtr->TriggerEvent(Event { EventType::DeleteFromRenderer, false, DeleteFromRendererPayload{modelID}});
+    } 
 
-    if (status.meshes != ModelState::Ready || status.material != ModelState::Ready)  {
-        if (status.meshes == ModelState::Error) {
-            loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::trySendingToRenderer()", "mesh is in error state for model " + std::to_string(modelID));
+    if (modelStatus.meshes != ModelState::Ready || modelStatus.material != ModelState::Ready)  {
+        if (modelStatus.meshes == ModelState::Error) {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::updateRenderer()", "mesh is in error state for model " + std::to_string(modelID));
         }
-        if (status.material == ModelState::Error) {
-            loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::trySendingToRenderer()", "material(s) in error state for model " + std::to_string(modelID));
+        if (modelStatus.material == ModelState::Error) {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "MODELCACHE::updateRenderer()", "material(s) in error state for model " + std::to_string(modelID));
         }
         return false;
     }
@@ -268,8 +287,7 @@ bool ModelCache::trySendingToRenderer(unsigned int modelID) {
     bool isSkybox;
     modelID == skyboxModelID ? isSkybox = true : isSkybox = false;
 
-    eventsPtr->TriggerEvent(Event { EventType::CreateModel, false, ModelCreationPayload{modelID, isSkybox} });
-    status.wasSentToRenderer = true;
+    eventsPtr->TriggerEvent(Event { EventType::UploadToRenderer, false, UploadToRendererPayload{modelID, isSkybox} });
     return true;
 }
 

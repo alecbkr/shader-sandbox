@@ -28,8 +28,25 @@ bool MaterialCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, 
         loggerPtr->addLog(LogLevel::WARNING, "Material Cache Initialization", "Material Cache was already initialized.");
         return false;
     }
-    
 
+    eventsPtr->Subscribe(EventType::ProgramDeleted, [this](const EventPayload& payload) -> bool {
+        
+        if (const auto* data = std::get_if<ProgramDeletedPayload>(&payload)) {
+            
+            std::vector<unsigned int> invalidMaterialIDs;
+            unsigned int programID = data->programID;
+            for (auto& [ID, material] : materialIDMap) {
+                if (material->getProgramID() == programID) {
+                    material->setProgramID(std::numeric_limits<unsigned int>::max());
+                    invalidMaterialIDs.push_back(ID);
+                }
+            }
+            eventsPtr->TriggerEvent(Event{ EventType::MaterialsInvalidated, false, MaterialsInvalidatedPayload{ invalidMaterialIDs }});
+            return true;
+        }
+        return false;
+    });
+    
     initialized = true;
     return true;
 }
@@ -83,7 +100,7 @@ void MaterialCache::deleteMaterial(unsigned int materialID) {
     for (auto& model : modelCachePtr->getAllModels()) {
         for (auto& meshInstance : model->getMeshInstances()) {
             if (meshInstance.materialID == materialID) {
-                model->setMeshMaterial(meshInstance.meshIdx, std::numeric_limits<unsigned int>::max());
+                model->setMeshMaterial(meshInstance.meshIdx, std::numeric_limits<unsigned int>::max(), true);
                 rendererPtr->setMeshMaterial(model->getID(), meshInstance.meshIdx, std::numeric_limits<unsigned int>::max());
             }
         }
@@ -174,11 +191,16 @@ void MaterialCache::changeMaterialProgram(unsigned int materialID, unsigned int 
     ShaderProgram* program = shaderRegPtr->getProgram(programID);
     if (program == nullptr) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "MATERIALCACHE | changeMaterialProgram",
-            "program not found with ID: " + programID);
+            "program not found with ID: " + std::to_string(programID));
         return;
     }
 
+    unsigned int oldProgramID = foundMaterial->getProgramID();
     foundMaterial->setProgramID(programID);
+
+    if (oldProgramID == std::numeric_limits<unsigned int>::max()) {
+        eventsPtr->TriggerEvent(Event{ EventType::MaterialValidated, false, MaterialValidatedPayload { materialID}});
+    }
 
     // Clear old uniforms for this material, then let refreshUniforms rebuild them
     uniformRegPtr->eraseMaterial(materialID);

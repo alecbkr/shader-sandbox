@@ -254,7 +254,7 @@ bool ObjectsInspectorUI::drawMeshesMenu(Model* currModel, MaterialCache* materia
         if (ImGui::BeginPopup("MaterialSelect")) {
             for (unsigned int idx = 0; idx < materialIDs.size(); idx++) {
                 if (ImGui::Selectable(materialNames[idx])) {
-                    modelCachePtr->changeModelMaterial(currModel->ID, materialIDs[idx]);
+                    modelCachePtr->changeModelMaterial(currModel->ID, materialIDs[idx], materialCachePtr->getMaterial(materialIDs[idx])->getValidity());
                 }
             }
             ImGui::EndPopup();
@@ -275,7 +275,7 @@ bool ObjectsInspectorUI::drawMeshesMenu(Model* currModel, MaterialCache* materia
         ImGui::SameLine();
         if (ImGui::Combo(label.c_str(), &selectedItem, materialNames.data(), (int)materialNames.size())) {
             unsigned int assignedMaterialID = materialIDs[selectedItem];
-            modelCachePtr->changeMeshMaterial(currModel->ID, meshInstance.meshIdx, assignedMaterialID);
+            modelCachePtr->changeMeshMaterial(currModel->ID, meshInstance.meshIdx, assignedMaterialID, materialCachePtr->getMaterial(assignedMaterialID)->getValidity());
         }
     }
 
