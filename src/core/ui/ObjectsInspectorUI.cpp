@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-bool ObjectsInspectorUI::drawCompactTreeNode(const std::string& label) {
+bool ObjectsInspectorUI::drawCompactHeader(const std::string& label) {
     ImGui::PushStyleColor(ImGuiCol_Header, theme.headerColor);
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.headerColorHovered);
     ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.headerColor);
@@ -189,7 +189,7 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                     ImGuiWindowFlags_HorizontalScrollbar
                 );
 
-                if (drawModelTreeNode(model, modelCachePtr)) {
+                if (drawModelHeader(model, modelCachePtr)) {
                     ImGui::PushStyleColor(ImGuiCol_Separator, styles->inspectorBorderColor);
                     ImGui::Separator();
                     ImGui::PopStyleColor();
@@ -455,7 +455,7 @@ bool ObjectsInspectorUI::drawModelOrientationInput(Model& model) {
     return changed;
 }
 
-bool ObjectsInspectorUI::drawModelTreeNode(Model* model, ModelCache* modelCachePtr) {
+bool ObjectsInspectorUI::drawModelHeader(Model* model, ModelCache* modelCachePtr) {
     unsigned int modelID = model->getID();
     std::string label = model->getName() + "##" + std::to_string(modelID);
 
@@ -479,7 +479,7 @@ bool ObjectsInspectorUI::drawModelTreeNode(Model* model, ModelCache* modelCacheP
         
     }
 
-    bool isOpen = drawCompactTreeNode(label);
+    bool isOpen = drawCompactHeader(label);
 
     if (ImGui::BeginPopupContextItem(("Context##" + std::to_string(modelID)).c_str())) {
         if (ImGui::Selectable("Rename")) {

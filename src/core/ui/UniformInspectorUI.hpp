@@ -69,6 +69,7 @@ private:
     bool isSimpleType(UniformType type);
     void drawUniformsNested_byCursor(const std::unordered_map<std::string, Uniform>& uniforms, unsigned int matID, int& imGuiID);
     bool drawCompactTreeNode(const std::string& label);
+    bool drawCompactHeader(const std::string& label);
     
     UniformInspectorThemeSettings theme;
 };

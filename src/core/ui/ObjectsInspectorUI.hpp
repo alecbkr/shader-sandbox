@@ -58,7 +58,7 @@ private:
     char renameBuffer[256] = ""; 
 
     //void drawAddObjectMenu(Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, ModelCache* modelCachePtr);
-    bool drawCompactTreeNode(const std::string& label);
+    bool drawCompactHeader(const std::string& label);
     void initializeMenu(MaterialShaderMenu& menu, const std::vector<unsigned int>& shaderChoices, Logger* loggerPtr, ShaderRegistry* shaderRegPtr, MaterialCache* materialCachePtr);
     void initializeMenu(ModelTextureMenu& menu, Logger* loggerPtr);
     // bool drawShaderProgramMenu(MaterialShaderMenu& menu, const std::vector<const char*>& shaderChoices, ShaderRegistry* shaderRegPtr, MaterialCache* materialCachePtr, InspectorEngine* inspectorEngPtr, Logger* logger);
@@ -70,7 +70,7 @@ private:
     bool drawModelPositionInput(Model& model);
     bool drawModelScaleInput(Model& model);
     bool drawModelOrientationInput(Model& model);
-    bool drawModelTreeNode(Model* model, ModelCache* modelCachePtr); 
+    bool drawModelHeader(Model* model, ModelCache* modelCachePtr); 
     ObjectsInspectorThemeSettings theme;
 
 };
