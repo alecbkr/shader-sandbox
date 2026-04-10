@@ -42,7 +42,7 @@ struct MaterialEntry {
 
     MaterialProperties properties; //struct
     std::vector<std::string> texture_paths;
-    std::string programName;
+    std::string programID;
 };
 
 
@@ -59,7 +59,7 @@ struct Project {
     std::vector<ModelEntry> modelData;
     std::vector<MaterialEntry> materialData;
 
-    std::unordered_map<unsigned int, std::unique_ptr<ShaderProgram>> programs;
+    std::unordered_map<std::string, std::unique_ptr<ShaderProgram>> programs;
     std::unordered_map<unsigned int, Uniform> uniforms;
     ShaderRegistry* shaderRegistry = nullptr;
     UniformRegistry* uniformRegistry = nullptr;

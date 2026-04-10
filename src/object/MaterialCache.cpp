@@ -28,6 +28,22 @@ bool MaterialCache::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, 
         loggerPtr->addLog(LogLevel::WARNING, "Material Cache Initialization", "Material Cache was already initialized.");
         return false;
     }
+
+    eventsPtr->Subscribe(EventType::DeleteProgram, [this](const EventPayload& payload) -> bool {
+        
+        if (const auto* data = std::get_if<DeleteProgramPayload>(&payload)) {
+            
+            unsigned int programID = data->programID;
+            for (auto& [ID, material] : materialIDMap) {
+                if (material->getProgramID() == programID) {
+                    material->setProgramID(std::numeric_limits<unsigned int>::max());
+                }
+            }
+            // reorderByProgram();
+            return true;
+        }
+        return false;
+    });
     
 
     initialized = true;

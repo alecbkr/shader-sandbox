@@ -1,5 +1,6 @@
 #include "core/ShaderRegistry.hpp"
 #include "core/logging/Logger.hpp"
+#include "core/EventDispatcher.hpp"
 #include "application/Project.hpp"
 #include "engine/ShaderProgram.hpp"
 #include <memory>
@@ -12,13 +13,14 @@ ShaderRegistry::ShaderRegistry() {
     };
 }
 
-bool ShaderRegistry::initialize(Logger* _loggerPtr, Project* _project, bool registerDefaults) {
+bool ShaderRegistry::initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, Project* _project, bool registerDefaults) {
     if (initialized) {
         loggerPtr->addLog(LogLevel::WARNING, "Shader Registry", "Shader Registry was already initialized.");
         return false;
     }
 
     loggerPtr = _loggerPtr;
+    eventsPtr = _eventsPtr;
     project = _project;
     project->programs.clear();
 
@@ -97,6 +99,17 @@ std::string ShaderRegistry::getProgramName(const unsigned int ID) const {
         return prog->name;
     }
     return "";
+}
+
+void ShaderRegistry::deleteProgram(const unsigned int ID) {
+    ShaderProgram* prog = getProgram(ID);
+    if (prog == nullptr) {
+        loggerPtr->addLog(LogLevel::WARNING, "SHADERREGISTRY::deleteProgram", "Program with ID" + std::to_string(ID) + "not found");
+        return;
+    }
+    nameToIDMap.erase(prog->name);
+    project->programs.erase(ID);
+    eventsPtr->TriggerEvent(Event {EventType::DeleteProgram, false, DeleteProgramPayload { ID }});
 }
 
 void ShaderRegistry::replaceProgram(const unsigned int ID, std::unique_ptr<ShaderProgram> newProgram) {

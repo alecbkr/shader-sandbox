@@ -30,20 +30,16 @@
 #include "core/ui/Fonts.hpp"
 #include "core/ui/modals/OpenProjectModal.hpp"
 #include "core/ui/modals/SaveAsModal.hpp"
-#include "core/ui/modals/AddObjectModal.hpp"
 #include "object/MaterialCache.hpp"
 #include "object/Renderer.hpp"
 #include "object/AssimpImporter.hpp"
-#include "core/ui/modals/AddTextureModal.hpp"
-#include "core/ui/modals/DeleteProjectModal.hpp"
-#include "persistence/ProjectSwitch.h"
 
 struct AppContext {
     AppContext(const char* _app_title) : app_title(_app_title) {};
 
     const char* app_title;
     bool shouldClose = false;
-    ProjectSwitch projectSwitch = NO_SWITCH;
+    bool projectSwitch = false;
 
     AppSettings settings;
     Project project;
@@ -77,10 +73,7 @@ struct AppContext {
     SettingsModal settingsModal;
     SaveAsModal saveAsModal;
     OpenProjectModal openProjectModal;
-    AddObjectModal addObjectModal; 
     MaterialCache material_cache;
     Renderer renderer;
     AssimpImporter assimp_importer;
-    AddTextureModal addTextureModal;
-    DeleteProjectModal deleteProjectModal;
 };
