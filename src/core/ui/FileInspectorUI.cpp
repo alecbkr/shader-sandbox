@@ -327,7 +327,7 @@ void FileInspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, Shader
             vertChars.push_back(vertFiles[i]->fileName.c_str());
         }
         else {
-            vertChars.push_back("");
+            vertChars.push_back("None");
         }
     }
     for (size_t i = 0; i < fragFiles.size(); i++) {
@@ -336,7 +336,7 @@ void FileInspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, Shader
             fragChars.push_back(fragFiles[i]->fileName.c_str());
         }
         else {
-            fragChars.push_back("");
+            fragChars.push_back("None");
         }
     }
     for (size_t i = 0; i < geoFiles.size(); i++) {
