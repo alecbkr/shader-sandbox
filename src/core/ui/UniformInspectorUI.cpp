@@ -23,9 +23,9 @@
 
 UniformInspectorUI::UniformInspectorUI(Fonts* fonts, SettingsStyles* styles, Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr, TextureCache* textureCachePtr) : fonts_(fonts), styles_(styles) {
     if (styles_) {
-        // Match Materials-style cards: interior fill matches header (not file row color).
-        theme.cardBGColor = styles_->assetsTitleBackgroundColor;
+        theme.cardBGColor = styles_->assetsFileBackgroundColor;
         theme.headerColor = styles_->assetsTitleBackgroundColor;
+
         // Derive a hover color from the base color so it always differs visibly.
         theme.headerColorHovered = ImVec4(
             theme.headerColor.x * 1.2f,
@@ -166,7 +166,7 @@ void UniformInspectorUI::draw() {
                 styles_->assetsBorderThickness
             );
 
-            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 8.0f));
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 10.0f));
             ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
 
             if (modelCount == 0) {
@@ -348,7 +348,7 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
 
         std::string label = groupTypeLabel + " " + segment + "##uniform_";
 
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.cardBGColor);
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.headerColor);
         ImGui::PushStyleColor(ImGuiCol_Border, styles_->assetsBorderColor);
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles_->assetsBodyRounding);
         ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles_->assetsBorderThickness);
