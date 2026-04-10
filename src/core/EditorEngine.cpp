@@ -171,15 +171,9 @@ bool EditorEngine::spawnEditor(const EventPayload& payload) {
 bool EditorEngine::renameEditor(const EventPayload& payload) {
     if (const auto* data = std::get_if<RenameFilePayload>(&payload)) {
         for (auto* editor : editors) {
-            if (editor->fileName == data->oldName) {
-                editor->fileName = data->newName;
-
+            if (editor->fileName == data->oldName && !editor->readOnly) {
                 std::filesystem::path newPath = editor->filePath;
-                if (std::filesystem::exists(editor->filePath)) {
-                    loggerPtr->addLog(LogLevel::LOG_ERROR, "renameEditor", "File Name Already Exists");
-                    return false;
-                }
-
+                editor->fileName = data->newName;
                 newPath.replace_filename(data->newName);
                 editor->filePath = newPath.string();
             }

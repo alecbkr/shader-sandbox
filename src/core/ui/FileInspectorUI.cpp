@@ -214,6 +214,22 @@ void FileInspectorUI::drawRenameFileEntry(ShaderFile* fileData, EventDispatcher*
     bool buttonSumitted = ImGui::Button(("OK##" + fileData->fileName).c_str());
 
     if ((keyboardSubmitted || buttonSumitted) && !fileData->renameBuffer.empty()) {
+        std::filesystem::path newPath = fileData->filePath;
+        newPath.replace_filename(fileData->renameBuffer);
+
+        if (std::filesystem::exists(newPath) && fileData->fileName != fileData->renameBuffer) {
+            int i = 1;
+            std::string newName = fileData->renameBuffer + "(" + std::to_string(i) + ")";
+            newPath.replace_filename(newName);
+
+            while (std::filesystem::exists(fileData->filePath  + "/" + newName)) {
+                newName = fileData->renameBuffer + "(" + std::to_string(i) + ")";
+                i++;
+            }
+
+            fileData->renameBuffer = newName;
+        }
+
         eventsPtr->TriggerEvent(Event{ EventType::RenameFile, false, RenameFilePayload{ fileData->fileName, fileData->renameBuffer } });
     }
 
@@ -226,6 +242,7 @@ void FileInspectorUI::drawRenameFileEntry(ShaderFile* fileData, EventDispatcher*
 }
 
 void FileInspectorUI::drawDeleteFileEntity(ShaderFile* fileData, EventDispatcher* eventsPtr) {
+    ImGui::AlignTextToFramePadding();
     ImGui::Text("%s", fileData->fileName.c_str());
 
     ImGui::SameLine();

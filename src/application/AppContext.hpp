@@ -35,13 +35,15 @@
 #include "object/Renderer.hpp"
 #include "object/AssimpImporter.hpp"
 #include "core/ui/modals/AddTextureModal.hpp"
+#include "core/ui/modals/DeleteProjectModal.hpp"
+#include "persistence/ProjectSwitch.h"
 
 struct AppContext {
     AppContext(const char* _app_title) : app_title(_app_title) {};
 
     const char* app_title;
     bool shouldClose = false;
-    bool projectSwitch = false;
+    ProjectSwitch projectSwitch = NO_SWITCH;
 
     AppSettings settings;
     Project project;
@@ -80,4 +82,5 @@ struct AppContext {
     Renderer renderer;
     AssimpImporter assimp_importer;
     AddTextureModal addTextureModal;
+    DeleteProjectModal deleteProjectModal;
 };
