@@ -103,7 +103,7 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
             fileRegPtr->reloadMap();
             const auto& files = fileRegPtr->getFiles();
             if (!files.empty()) {
-                ImGui::PushFont(fonts->getL3());
+                ImGui::PushFont(fonts->getL5());
                 ImGui::TextDisabled("Files");
                 ImGui::PopFont(); 
                 for (const auto& [fileName, fileData] : files) {
@@ -125,6 +125,7 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
             }
             ImGui::Dummy(ImVec2(0, 20.0f));
 
+            ImGui::PushFont(fonts->getL5()); 
             ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
             if (ImGui::Selectable("Presets##Header", false, ImGuiSelectableFlags_AllowOverlap)) {
                 showPresets = !showPresets;
@@ -140,6 +141,7 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
             }
             ImGui::PopStyleColor(3);
             ImGui::PopStyleColor();
+            ImGui::PopFont(); 
             ImGui::PopStyleVar();
             if (showPresets) {
                 for (const auto& filePath : fileRegPtr->getPresetShaders()) {
@@ -149,7 +151,9 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
             ImGui::Dummy(ImVec2(0, 20.0f));
             const auto& programs = shaderRegPtr->getPrograms();
             if (newProgram || !programs.empty() || !shaderLinkMenus.empty()){
+                ImGui::PushFont(fonts->getL5()); 
                 ImGui::TextDisabled("Programs");
+                ImGui::PopFont(); 
                 if (newProgram) {
                     bool submitted = ImGui::InputText("##NewProgramInput", newProgramBuf, 256, ImGuiInputTextFlags_EnterReturnsTrue);
                     
