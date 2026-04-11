@@ -103,7 +103,9 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
             fileRegPtr->reloadMap();
             const auto& files = fileRegPtr->getFiles();
             if (!files.empty()) {
+                ImGui::PushFont(fonts->getL5());
                 ImGui::TextDisabled("Files");
+                ImGui::PopFont(); 
                 for (const auto& [fileName, fileData] : files) {
                     switch (fileData->state) {
                         case RENAME:
@@ -123,6 +125,7 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
             }
             ImGui::Dummy(ImVec2(0, 20.0f));
 
+            ImGui::PushFont(fonts->getL5()); 
             ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
             if (ImGui::Selectable("Presets##Header", false, ImGuiSelectableFlags_AllowOverlap)) {
                 showPresets = !showPresets;
@@ -138,6 +141,7 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
             }
             ImGui::PopStyleColor(3);
             ImGui::PopStyleColor();
+            ImGui::PopFont(); 
             ImGui::PopStyleVar();
             if (showPresets) {
                 for (const auto& filePath : fileRegPtr->getPresetShaders()) {
@@ -147,7 +151,9 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
             ImGui::Dummy(ImVec2(0, 20.0f));
             const auto& programs = shaderRegPtr->getPrograms();
             if (newProgram || !programs.empty() || !shaderLinkMenus.empty()){
+                ImGui::PushFont(fonts->getL5()); 
                 ImGui::TextDisabled("Programs");
+                ImGui::PopFont(); 
                 if (newProgram) {
                     bool submitted = ImGui::InputText("##NewProgramInput", newProgramBuf, 256, ImGuiInputTextFlags_EnterReturnsTrue);
                     
@@ -179,8 +185,10 @@ void FileInspectorUI::draw(Logger* loggerPtr_, InspectorEngine* inspectorEngPtr,
                         newProgram = false;
                     }
                 }
-                drawShaderLinkMenus(shaderLinkMenus, shaderRegPtr, fileRegPtr, inspectorEngPtr);
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 10.0f));
+                drawShaderLinkMenus(shaderLinkMenus, shaderRegPtr, fileRegPtr, inspectorEngPtr, styles);
                 ImGui::Unindent(window_padding);
+                ImGui::PopStyleVar(); 
             }
             
         }
@@ -206,6 +214,22 @@ void FileInspectorUI::drawRenameFileEntry(ShaderFile* fileData, EventDispatcher*
     bool buttonSumitted = ImGui::Button(("OK##" + fileData->fileName).c_str());
 
     if ((keyboardSubmitted || buttonSumitted) && !fileData->renameBuffer.empty()) {
+        std::filesystem::path newPath = fileData->filePath;
+        newPath.replace_filename(fileData->renameBuffer);
+
+        if (std::filesystem::exists(newPath) && fileData->fileName != fileData->renameBuffer) {
+            int i = 1;
+            std::string newName = fileData->renameBuffer + "(" + std::to_string(i) + ")";
+            newPath.replace_filename(newName);
+
+            while (std::filesystem::exists(fileData->filePath  + "/" + newName)) {
+                newName = fileData->renameBuffer + "(" + std::to_string(i) + ")";
+                i++;
+            }
+
+            fileData->renameBuffer = newName;
+        }
+
         eventsPtr->TriggerEvent(Event{ EventType::RenameFile, false, RenameFilePayload{ fileData->fileName, fileData->renameBuffer } });
     }
 
@@ -218,6 +242,7 @@ void FileInspectorUI::drawRenameFileEntry(ShaderFile* fileData, EventDispatcher*
 }
 
 void FileInspectorUI::drawDeleteFileEntity(ShaderFile* fileData, EventDispatcher* eventsPtr) {
+    ImGui::AlignTextToFramePadding();
     ImGui::Text("%s", fileData->fileName.c_str());
 
     ImGui::SameLine();
@@ -284,7 +309,7 @@ void FileInspectorUI::drawPresetShaderEntry(std::filesystem::path filePath, Even
     }
 }
 
-void FileInspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, InspectorEngine* inspectorEngPtr) {
+void FileInspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, InspectorEngine* inspectorEngPtr, SettingsStyles* styles) {
     for (const auto& [ID, shader] : shaderRegPtr->getPrograms()) {
         if (!menus.contains(shader->name)) {
             menus[shader->name] = ShaderLinkMenu{
@@ -319,7 +344,7 @@ void FileInspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, Shader
             vertChars.push_back(vertFiles[i]->fileName.c_str());
         }
         else {
-            vertChars.push_back("");
+            vertChars.push_back("None");
         }
     }
     for (size_t i = 0; i < fragFiles.size(); i++) {
@@ -328,7 +353,7 @@ void FileInspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, Shader
             fragChars.push_back(fragFiles[i]->fileName.c_str());
         }
         else {
-            fragChars.push_back("");
+            fragChars.push_back("None");
         }
     }
     for (size_t i = 0; i < geoFiles.size(); i++) {
@@ -347,18 +372,43 @@ void FileInspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, Shader
         .geoFiles = geoFiles,
         .fragFiles = fragFiles
     };
-    for (auto& [shaderName, menu] : menus) {
+
+    size_t menuCount = menus.size(); 
+    size_t currIdx = 0; 
+
+
+    for (auto it = menus.begin(); it != menus.end();) {
+        auto& [shaderName, menu] = *it;
+   
         if (!menu.initialized) {
             initializeMenu(menu, choices, shaderRegPtr);
         }
 
-        if (ImGui::TreeNode(menu.shaderName.c_str())) {
-            ImGui::PushID(guiID);
-            drawShaderLinkMenu(menu, choices, inspectorEngPtr);
-            ImGui::PopID();
-            guiID++;
-            ImGui::TreePop();
+        bool shouldDelete = drawShaderProgramCard(menu, choices, shaderRegPtr, inspectorEngPtr, styles, guiID);
+        
+        guiID++;
+        currIdx++;
+        
+        if (currIdx < menuCount) {
+            ImGui::Dummy(ImVec2(0.0f, 2.0f));
         }
+
+        if (shouldDelete) {
+            it = menus.erase(it);
+        }
+        else {
+            it++;
+        }
+
+        
+
+        // if (ImGui::TreeNode(menu.shaderName.c_str())) {
+        //     ImGui::PushID(guiID);
+        //     drawShaderLinkMenu(menu, choices, inspectorEngPtr);
+        //     ImGui::PopID();
+        //     guiID++;
+        //     ImGui::TreePop();
+        // }
     }
 }
 
@@ -404,28 +454,45 @@ void FileInspectorUI::initializeMenu(ShaderLinkMenu& menu, ShaderLinkMenuChoices
     menu.initialized = true;
 }
 
-void FileInspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, InspectorEngine* inspectorEngPtr) {
+void FileInspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, InspectorEngine* inspectorEngPtr, SettingsStyles *styles) {
     bool changed = false;
     ShaderLinkMenu oldMenu = menu;
-
+    
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));  
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2.0f, 4.0f)); 
+ 
     if (ImGui::Combo("Vertex Shader", &menu.vertSelection, choices.vertChars.data(), (int)choices.vertChars.size())) {
         changed = true;
     }
+
     /*
+    ImGui::Dummy(ImVec2(0.0f, 4.0f)); 
     if (ImGui::Combo("Geometry Shader", &menu.geometrySelection, choices.geoChars.data(), (int)choices.geoChars.size())) {
         changed = true;
     }
     */
+    
+    ImGui::Dummy(ImVec2(0.0f, 8.0f)); 
+
     if (ImGui::Combo("Fragment Shader", &menu.fragSelection, choices.fragChars.data(), (int)choices.fragChars.size())) {
         changed = true;
     }
 
+    ImGui::Dummy(ImVec2(0.0f, 15.0f)); 
     bool validSelection = menu.fragSelection != 0 && menu.vertSelection != 0 && menu.shaderName != "";
     if (validSelection) {
-        ImGui::Text("Valid");
+        ImGui::PushStyleColor(ImGuiCol_Text, styles->consoleInfoColor); 
+        ImGui::Text("Valid. Program Linked");
+        ImGui::PopStyleColor(); 
     } else {
+        ImGui::PushStyleColor(ImGuiCol_Text, styles->consoleErrorColor); 
         ImGui::Text("Invalid! Using old program...");
+        ImGui::PopStyleColor(); 
     }
+
+    ImGui::PopStyleVar(2);
+
+
     if (validSelection && changed) {
         const ShaderFile* vertFile = choices.vertFiles[menu.vertSelection];
         const ShaderFile* fragFile = choices.fragFiles[menu.fragSelection];
@@ -444,4 +511,74 @@ void FileInspectorUI::drawShaderLinkMenu(ShaderLinkMenu& menu, ShaderLinkMenuCho
             menu = oldMenu;
         }
     }
+
+
+}
+
+bool FileInspectorUI::drawShaderProgramCard(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, ShaderRegistry* shaderRegPtr, InspectorEngine* inspectorEngPtr, SettingsStyles* styles, ImGuiID guiID) {
+    bool deleted = false;
+    ImGui::PushID(guiID);
+
+    ImVec4 headerColor = styles->shaderTitleBackgroundColor;
+    ImVec4 headerHovered = ImVec4(headerColor.x * 1.15f, headerColor.y * 1.15f, headerColor.z * 1.15f, headerColor.w);
+    ImVec4 headerActive = headerColor;
+
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, styles->shaderTreeBodyColor); 
+    ImGui::PushStyleColor(ImGuiCol_Border, styles->shaderBorderColor);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles->shaderBodyRounding);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles->shaderBorderThickness);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGuiChildFlags shaderCardFlags = ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders; 
+
+    if (ImGui::BeginChild(("ShaderCard##" + menu.shaderName).c_str(), ImVec2(0, 0), shaderCardFlags)) {
+        
+        ImGui::PushStyleColor(ImGuiCol_Header, headerColor);
+        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, headerHovered);
+        ImGui::PushStyleColor(ImGuiCol_HeaderActive, headerActive);
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+        
+        ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, styles->shaderTitleInnerPadding + 2.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 6.0f));
+
+        bool isExpanded = ImGui::TreeNodeEx(
+            menu.shaderName.c_str(),
+            ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed
+        );
+
+        if (ImGui::BeginPopupContextItem("program_options")) {
+            if (ImGui::MenuItem("Delete")) {
+                shaderRegPtr->deleteProgram(menu.shaderName);
+                deleted = true;
+            }
+            ImGui::EndPopup();
+        }
+
+        ImGui::PopStyleVar(3);
+
+        if (isExpanded) {
+            ImGui::Dummy(ImVec2(0, 0.5f));
+            
+            ImGui::PushStyleColor(ImGuiCol_Separator, styles->shaderBorderColor);
+            ImGui::Separator();
+            ImGui::PopStyleColor();
+            
+            ImGui::Dummy(ImVec2(0.0f, 2.0f));
+
+            ImGui::Indent(8.0f);
+            drawShaderLinkMenu(menu, choices, inspectorEngPtr, styles);
+            ImGui::Unindent(8.0f);
+
+            ImGui::Dummy(ImVec2(0, 4.0f));
+            ImGui::TreePop(); 
+        }
+        ImGui::PopStyleColor(3);
+    }
+
+    
+    
+    ImGui::EndChild();
+    ImGui::PopStyleVar(3);
+    ImGui::PopStyleColor(2);
+    ImGui::PopID();
+    return deleted;
 }

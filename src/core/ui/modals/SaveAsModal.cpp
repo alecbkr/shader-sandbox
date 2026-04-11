@@ -2,7 +2,9 @@
 
 #include <imgui/imgui.h>
 
-bool SaveAsModal::initialize(Logger* logger, Project* project, EventDispatcher* events, AppSettings* settings, bool* projectSwitch) {
+#include "persistence/ProjectSwitch.h"
+
+bool SaveAsModal::initialize(Logger* logger, Project* project, EventDispatcher* events, AppSettings* settings, ProjectSwitch* projectSwitch) {
     if (initialized) return false;
     loggerPtr = logger;
     projectPtr = project;
@@ -15,6 +17,7 @@ bool SaveAsModal::initialize(Logger* logger, Project* project, EventDispatcher* 
 void SaveAsModal::draw() {
     if (projectPtr->previouslySaved) ImGui::TextUnformatted("This will create a copy of the existing project and open it in a new window.");
 
+    ImGui::AlignTextToFramePadding();
     ImGui::TextUnformatted("Project Name: ");
     ImGui::SameLine();
     ImGui::InputText("##saveAsFileName", inputBuffer, IM_ARRAYSIZE(inputBuffer));
@@ -38,7 +41,7 @@ void SaveAsModal::draw() {
                     std::filesystem::copy(dirEntry.path(), projectPtr->projectShadersDir / dirEntry.path().filename());
                 }
                 settingsPtr->projectToOpen = fileName;
-                *projectSwitchPtr = true;
+                *projectSwitchPtr = SWITCH;
             } else {
                 projectPtr->previouslySaved = true;
 

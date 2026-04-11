@@ -37,6 +37,7 @@ public:
     unsigned int getProgramID();
     std::string getProgramName();
     MaterialType getMaterialType();
+    const bool getValidity() const;
     float getOpacity();
     float getShininess();
     float getRoughness();

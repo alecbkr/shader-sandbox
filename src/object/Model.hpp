@@ -5,6 +5,7 @@
 #include <memory>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <unordered_set>
 
 #include "MeshAssimp.hpp"
 #include "ModelStatus.hpp"
@@ -39,8 +40,8 @@ public:
     void setInstancePosition(unsigned int instanceNum, glm::vec3 position);
     void setInstanceCount(unsigned int newInstanceCount);
     void setName(std::string name);
-    void setMeshMaterial(unsigned int meshIdx, unsigned int materialID);
-    void setModelMaterial(unsigned int materialID);
+    void setMeshMaterial(unsigned int meshIdx, unsigned int materialID, bool isMatValid);
+    void setModelMaterial(unsigned int materialID, bool isMatValid);
     bool eraseMaterial(unsigned int materialID);
 
     // GETTERS
@@ -55,6 +56,7 @@ public:
     unsigned int getInstanceCount() const;
     const std::vector<InstanceData>& getInstanceData() const;
     const std::vector<MeshInstance>& getMeshInstances() const;
+    std::unordered_set<unsigned int>& getInvalidMaterialIDs();
     const std::unordered_map<unsigned int, unsigned int>& getAllMaterialReferences() const;
 
     //LOADING
@@ -76,9 +78,11 @@ private:
     unsigned int nextMeshIdx = 0;
     std::vector<MeshA> meshes;
     std::unordered_map<unsigned int, unsigned int> allMaterialReferences; //[material id] <-> [# of meshes using material]
+    std::unordered_set<unsigned int> invalidMaterialIDs; // so the modelcache can tell if the model is ready to be rendered
     std::vector<MeshInstance> meshInstances;
     unsigned int modelInstanceCount = 1;
     std::vector<InstanceData> instanceData;
+    
 
     ModelStatus status;
     glm::mat4 modelM      = glm::mat4(1.0f);

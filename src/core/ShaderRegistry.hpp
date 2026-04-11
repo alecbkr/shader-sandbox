@@ -10,15 +10,18 @@
 #include "engine/ShaderProgram.hpp"
 
 class Logger;
+class EventDispatcher;
 struct Project;
 using ShaderFactoryFn = std::function<ShaderProgram*(const char* vert, const char* frag, const char* name, const unsigned int ID, Logger* logger)>;
 
 class ShaderRegistry {
 public:
     ShaderRegistry();
-    bool initialize(Logger* _loggerPtr, Project* project, bool registerDefaults = true);
+    bool initialize(Logger* _loggerPtr, EventDispatcher* _eventsPtr, Project* project, bool registerDefaults = true);
     void shutdown();
     bool registerProgram(const std::filesystem::path& vertex_file, const std::filesystem::path& fragment_file, const std::string& programName);
+    void deleteProgram(const unsigned int ID);
+    void deleteProgram(const std::string& name);
     ShaderProgram* getProgram(const unsigned int ID) const;
     ShaderProgram* getProgram(const std::string& name) const;
     std::string getProgramName(const unsigned int ID) const;
@@ -33,6 +36,7 @@ private:
     std::unordered_map<std::string, unsigned int> nameToIDMap;
     bool initialized = false;
     Logger* loggerPtr = nullptr;
+    EventDispatcher* eventsPtr = nullptr;
     Project* project = nullptr;
     ShaderFactoryFn factory_;
 };

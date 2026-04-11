@@ -31,8 +31,8 @@ bool Renderer::initialize(
     uniformRegPtr    = _uniformRegPtr;
     inspectorEngPtr  = _inspectorEngPtr;
 
-    eventsPtr->Subscribe(EventType::CreateModel, [this](const EventPayload& payload) -> bool {
-        if (const auto* data = std::get_if<ModelCreationPayload>(&payload)) {
+    eventsPtr->Subscribe(EventType::UploadToRenderer, [this](const EventPayload& payload) -> bool {
+        if (const auto* data = std::get_if<UploadToRendererPayload>(&payload)) {
             
             Model* newModel = modelCachePtr->getModel(data->modelID);
             for (const MeshInstance& meshInstance : newModel->getMeshInstances()) {
@@ -42,7 +42,7 @@ bool Renderer::initialize(
                 }
 
                 QueueType queueType;
-                if (data->isSkyBox == true) {
+                if (data->isSkybox == true) {
                     queueType = Skybox;
                 }
                 else {
@@ -68,13 +68,14 @@ bool Renderer::initialize(
 
                 nextPrimitiveID++;
             }
+            modelCachePtr->getModel(data->modelID)->getModelStatus().uploadedToRenderer = true;
             return true;
         }
         return false;
     });
 
-    eventsPtr->Subscribe(EventType::DeleteModel, [this](const EventPayload& payload) -> bool {
-        if (const auto* data = std::get_if<ModelDeletionPayload>(&payload)) {
+    eventsPtr->Subscribe(EventType::DeleteFromRenderer, [this](const EventPayload& payload) -> bool {
+        if (const auto* data = std::get_if<DeleteFromRendererPayload>(&payload)) {
             
             for (auto iter = primitiveIDMap.begin(); iter != primitiveIDMap.end(); ) {
                 if (iter->second.modelID == data->modelID) {
@@ -86,32 +87,7 @@ bool Renderer::initialize(
                 }
             
             }
-            return true;
-        }
-        return false;
-    });
-
-    eventsPtr->Subscribe(EventType::ModelMaterialChange, [this](const EventPayload& payload) -> bool {
-        if (const auto* data = std::get_if<ModelMaterialChangePayload>(&payload)) {
-
-            for (auto& [primitiveID, primitive] : primitiveIDMap) {
-                if (primitive.modelID == data->modelID && (data->meshIdx == UINT_MAX || primitive.meshIdx == data->meshIdx)) {
-
-                    primitive.materialID = data->materialID;
-                    QueueType newHostQueueType;
-                    switch (materialCachePtr->getMaterial(data->materialID)->getMaterialType()) {
-                        case MaterialType::Opaque:      newHostQueueType = Opaque;      break;
-                        case MaterialType::Cutout:      newHostQueueType = Cutout;      break;
-                        case MaterialType::Translucent: newHostQueueType = Translucent; break;
-                    } 
-                    QueueType oldHostQueueType = primitive.queuetype;
-                    if (newHostQueueType != oldHostQueueType) {
-                        primitive.queuetype = newHostQueueType;
-                        removeFromQueue(primitiveID, oldHostQueueType);
-                        placeInQueue(primitiveID, newHostQueueType);
-                    }
-                }
-            }
+            modelCachePtr->getModel(data->modelID)->getModelStatus().uploadedToRenderer = false;
             return true;
         }
         return false;
@@ -379,7 +355,7 @@ bool Renderer::validatePrimitive(unsigned int primitiveID) {
         result = false;
     }
     else if (shaderRegPtr->getProgram(foundMaterial->getProgramID()) == nullptr) {
-        feedback += "\nshader program not found: " + foundMaterial->getProgramID();
+        feedback += "\nshader program not found: " + std::to_string(foundMaterial->getProgramID());
         result = false;
     }
 

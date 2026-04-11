@@ -4,6 +4,7 @@
 #include <string>
 
 #include "core/ShaderRegistry.hpp"
+#include "core/EventDispatcher.hpp"
 #include "core/logging/Logger.hpp"
 #include "application/Project.hpp"
 
@@ -16,6 +17,7 @@ static bool initTestLogger(Logger& logger){
 
 TEST_CASE("ShaderRegistry: initialize(false) produces empty registry", "[shader][registry]") {
     Logger logger;
+    EventDispatcher events;
     Project project;
     REQUIRE(initTestLogger(logger));
 
@@ -26,13 +28,14 @@ TEST_CASE("ShaderRegistry: initialize(false) produces empty registry", "[shader]
         return nullptr;
     });
 
-    REQUIRE(reg.initialize(&logger, &project, false) == true);
+    REQUIRE(reg.initialize(&logger, &events, &project, false) == true);
     REQUIRE(reg.getNumberOfPrograms() == 0);
     REQUIRE(reg.getProgram(1) == nullptr);
 }
 
 TEST_CASE("ShaderRegistry: registerProgram rejects empty name", "[shader][registry]") {
     Logger logger;
+    EventDispatcher events;
     Project project;
     REQUIRE(initTestLogger(logger));
 
@@ -43,7 +46,7 @@ TEST_CASE("ShaderRegistry: registerProgram rejects empty name", "[shader][regist
         return nullptr;
     });
 
-    REQUIRE(reg.initialize(&logger, &project, false) == true);
+    REQUIRE(reg.initialize(&logger, &events, &project, false) == true);
     REQUIRE_FALSE(reg.registerProgram("v.vert", "f.frag", ""));
 }
 

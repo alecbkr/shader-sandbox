@@ -50,9 +50,11 @@ private:
     void drawContextMenu(ShaderFile* fileData, EventDispatcher* evnetsPtr);
     void drawStandardFileEntry(ShaderFile* fileData, EventDispatcher* eventsPtr);
     void drawPresetShaderEntry(std::filesystem::path filePath, EventDispatcher* eventsPtr);
-    void drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, InspectorEngine* inspectorEngPtr);
-    void drawShaderLinkMenu(ShaderLinkMenu& menu,ShaderLinkMenuChoices& choices, InspectorEngine* inspectorEngPtr);
+    // void drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, InspectorEngine* inspectorEngPtr);
+    void drawShaderLinkMenus(std::unordered_map<std::string, ShaderLinkMenu>& menus, ShaderRegistry* shaderRegPtr, FileRegistry* fileRegPtr, InspectorEngine* inspectorEngPtr, SettingsStyles* styles);
+    void drawShaderLinkMenu(ShaderLinkMenu& menu,ShaderLinkMenuChoices& choices, InspectorEngine* inspectorEngPtr, SettingsStyles* styles);
     void initializeMenu(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, ShaderRegistry* shaderRegPtr);
+    bool drawShaderProgramCard(ShaderLinkMenu& menu, ShaderLinkMenuChoices& choices, ShaderRegistry* shaderRegPtr, InspectorEngine* inspectorEngPtr, SettingsStyles* styles, ImGuiID guiID);
     bool showPresets = true;
     bool newProgram = false;
     char newProgramBuf[256] = "";

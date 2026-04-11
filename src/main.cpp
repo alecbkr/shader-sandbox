@@ -3,6 +3,7 @@
 #include "persistence/Paths.hpp"
 #include "persistence/SettingsLoader.hpp"
 #include "persistence/ProjectLoader.hpp"
+#include "persistence/ProjectSwitch.h"
 
 
 #define APPLICATION_TITLE "PrismTSS"
@@ -42,11 +43,13 @@ int main(int argc, char** argv) {
     Application::runLoop(ctx);
     Application::shutdown(ctx);
 
-    if (!ctx.projectSwitch) ctx.settings.projectToOpen = ctx.project.projectTitle;
+    if (ctx.projectSwitch == NO_SWITCH) ctx.settings.projectToOpen = ctx.project.projectTitle;
     ProjectLoader::save(ctx.project, &ctx.model_cache, &ctx.material_cache, &ctx.shader_registry);
     SettingsLoader::save(ctx.settings);
 
-    if (ctx.projectSwitch) main(argc, argv);
+    if (ctx.projectSwitch == SWITCH) main(argc, argv);
+
+    if (ctx.projectSwitch == DELETE_CURRENT_PROJECT) std::filesystem::remove_all(ctx.project.projectRoot);
 
     return 0;
 }
