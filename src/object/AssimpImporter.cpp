@@ -51,6 +51,8 @@ bool AssimpImporter::initialize(Logger* _loggerPtr, ModelCache* _modelCachePtr, 
 
 
 bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntries, std::vector<MaterialEntry>& materialEntries) {
+    std::string feedback = "";
+
     // LOAD MATERIALS
     for (MaterialEntry& materialEntry : materialEntries) {
         unsigned int ID = materialEntry.ID;
@@ -64,9 +66,11 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
             materialCachePtr->getMaterial(ID)->setProgramName(materialEntry.programName);
             materialCachePtr->changeMaterialName(ID, name);
         }
+        else {
+            feedback += "Material failed to load: \"" + name + "\"\n";
+        }
     }
     
-
     for (ModelEntry& modelEntry : modelEntries) {
 
         std::string name = modelEntry.name;
@@ -82,7 +86,10 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
 
         // LOAD MESHES
         bool reservationResult = modelCachePtr->reserveModelID(ID, path.string(), type);
-        if (reservationResult == false) continue;
+        if (reservationResult == false) {
+            feedback += "Model failed to load: \"" + name + "\". Reservation failure\n";
+            continue;
+        }
 
         if (type != ModelType::Imported) {
             modelCachePtr->addPresetMesh(ID, type);
@@ -91,7 +98,7 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
             Assimp::Importer import;
             const aiScene *scene = import.ReadFile(path.string(), aiProcess_Triangulate | aiProcess_FlipUVs);
             if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-                loggerPtr->addLog(LogLevel::WARNING, "ASSIMP_IMPORTER::loadAssetCachesFromSave()", "Skipping. Model not found with path " + path.string());
+                feedback += "Model failed to load: \"" + name + "\"" + "path not found " + path.string() + "\n";
                 continue;
             }
             processNode(ID, scene->mRootNode, scene);
@@ -109,7 +116,12 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
         // model->loadMeshMaterialIDs(meshMaterialIDs);
         for (unsigned int idx = 0; idx < meshMaterialIDs.size(); idx++) {
             unsigned int materialID = meshMaterialIDs[idx];
-            model->setMeshMaterial(idx, materialID, materialCachePtr->getMaterial(materialID)->getValidity());
+            if (materialCachePtr->getMaterialIDMap().contains(materialID)) {
+                model->setMeshMaterial(idx, materialID, materialCachePtr->getMaterial(materialID)->getValidity());
+            }
+            else if (materialID != std::numeric_limits<unsigned int>::max()){
+                feedback += "model \"" + name + "\" has missing material";
+            }
         }
         model->setPosition(position);
         model->setScale(scale);
@@ -118,12 +130,16 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
         model->loadInstanceData(instanceData);
 
         bool success = modelCachePtr->updateRenderer(ID);
-        if (!success) {
-            std::cout << "bad joojoo" << std::endl;
-        }
 
         // inspectorEngPtr->refreshUniforms();
     }
+    if (!feedback.empty()) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "ASSIMPIMPORTER::loadAssetCachesFromSave()\n", feedback);
+    }
+    else {
+        loggerPtr->addLog(LogLevel::INFO, "ASSIMPIMPORTER::loadAssetCachesFromSave()", "Asset caches loaded successfully");
+    }
+
     return true;
 }
 

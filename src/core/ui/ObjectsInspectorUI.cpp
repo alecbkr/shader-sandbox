@@ -273,9 +273,26 @@ bool ObjectsInspectorUI::drawMeshesMenu(Model* currModel, MaterialCache* materia
         std::string label = "##" + std::to_string(meshInstance.meshIdx);
         ImGui::Text("Mesh %u", meshInstance.meshIdx + 1);
         ImGui::SameLine();
+
+        bool hasMaterial = materialCachePtr->getMaterial(meshInstance.materialID) ? true : false;
+        bool materialIsValid = true;
+        if (hasMaterial) {
+            materialIsValid = materialCachePtr->getMaterial(meshInstance.materialID)->getValidity() ? true : false;
+            if (!materialIsValid) {
+                ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.7f, 0.55f, 0.15f, 1.0f)); //yellow warning
+            }
+        }
+        else {
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.6f, 0.2f, 0.2f, 1.0f)); //red missing
+        }
+        
+
         if (ImGui::Combo(label.c_str(), &selectedItem, materialNames.data(), (int)materialNames.size())) {
             unsigned int assignedMaterialID = materialIDs[selectedItem];
             modelCachePtr->changeMeshMaterial(currModel->ID, meshInstance.meshIdx, assignedMaterialID, materialCachePtr->getMaterial(assignedMaterialID)->getValidity());
+        }
+        if (!hasMaterial || !materialIsValid) {
+            ImGui::PopStyleColor();
         }
     }
 

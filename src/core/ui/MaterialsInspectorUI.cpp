@@ -252,7 +252,12 @@ void MaterialsInspectorUI::draw() {
                             
                         }
                         ShaderProgram* prog = shaderReg->getProgram(mat->getProgramID());
-                        std::string progName = prog ? prog->name : "select program";
+                        std::string progName = prog ? prog->name : "no program";
+
+                        bool noProgram = prog ? false : true;
+                        if (noProgram) {
+                            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.6f, 0.2f, 0.2f, 1.0f));
+                        }
 
                         if (ImGui::BeginCombo(("Program##" + std::to_string(mat->ID)).c_str(), progName.c_str())) {
                             for (auto& [ID, program] : programs) {
@@ -268,6 +273,10 @@ void MaterialsInspectorUI::draw() {
                                 }
                             }
                             ImGui::EndCombo();
+                        }
+
+                        if (noProgram){
+                            ImGui::PopStyleColor();
                         }
 
                         if (ImGui::CollapsingHeader(("Textures##" + std::to_string(mat->ID)).c_str())) {

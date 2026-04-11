@@ -255,6 +255,11 @@ std::vector<Material*> MaterialCache::getAllMaterials() {
 }
 
 
+const std::unordered_map<unsigned int, std::unique_ptr<Material>>& MaterialCache::getMaterialIDMap() const {
+    return materialIDMap;
+}
+
+
 std::vector<std::string> MaterialCache::getAllTexturePathsForMaterial(unsigned int materialID) {
     Material* material = getMaterial(materialID);
     if (material == nullptr) {

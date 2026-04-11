@@ -37,6 +37,7 @@ public:
     void updateMatIDs();
 
     Material* getMaterial(unsigned int materialID);
+    const std::unordered_map<unsigned int, std::unique_ptr<Material>>& getMaterialIDMap() const;
     std::vector<unsigned int> getAllMaterialIDs();
     std::vector<Material*> getAllMaterials();
     std::vector<std::string> getAllTexturePathsForMaterial(unsigned int materialID);
