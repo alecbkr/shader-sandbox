@@ -10,6 +10,7 @@
 #include "core/ui/Fonts.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "imgui.h"
+#include "object/Material.hpp"
 #include "object/MaterialCache.hpp"
 #include "object/ModelCache.hpp"
 #include "texture/TextureCache.hpp"
@@ -229,11 +230,16 @@ void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::
     size_t i = 0;
     bool useMaterialHeader = materialReferences.size() > 1;
     for (auto& [matID, matRefCount] : materialReferences) {
+        Material* referencedMat = materialCachePtr_->getMaterial(matID);
+        if (referencedMat == nullptr) {
+            loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawMaterialContainer", "material with id " + std::to_string(matID) + " does not exist!");
+            continue;
+        }
         bool showUniforms = true;
         bool mustTreePop = false;
         if (useMaterialHeader) {
             ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
-            std::string matHeader = "Material " + std::to_string(matID) + "##uniform_mat_" + std::to_string(matID);
+            std::string matHeader = referencedMat->getName() + "##uniform_mat_" + std::to_string(matID);
             showUniforms = mustTreePop = drawCompactTreeNode(matHeader);
             if (showUniforms) {
                 ImGui::Dummy(ImVec2(0.0f, 2.0f));
@@ -344,7 +350,7 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
 
         // Determine label
         const std::string groupTypeLabel =
-            (!segment.empty() && segment[0] == '[') ? "Array" : "Struct";
+            (!segment.empty() && segment[0] == '[') ? "Array" : "Struct"; // this is not right....
 
         std::string label = groupTypeLabel + " " + segment + "##uniform_";
 
