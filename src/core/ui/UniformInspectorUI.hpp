@@ -48,8 +48,8 @@ private:
     Fonts* fonts_ = nullptr;
     SettingsStyles* styles_ = nullptr;
     
-    void drawModelContainer(int& imGuiID, unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialRefernces);
-    void drawMaterialContainer(unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences, int& imGuiID);
+    void drawModelContainer(unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialRefernces);
+    void drawMaterialContainer(unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences);
     bool drawInput(int* value, Uniform* uniform = nullptr, Material* material = nullptr);
     bool drawInput(float* value, Uniform* uniform = nullptr, Material* material = nullptr);
     bool drawInput(glm::vec3* value, Uniform* uniform = nullptr, Material* material = nullptr);
@@ -67,9 +67,11 @@ private:
     std::string getUniformSummary(const Uniform& uniform) const;
     std::string getReferenceSummary(const Uniform& uniform) const;
     bool isSimpleType(UniformType type);
-    void drawUniformsNested_byCursor(const std::unordered_map<std::string, Uniform>& uniforms, unsigned int matID, int& imGuiID);
+    void drawUniformsNested_byCursor(const std::unordered_map<std::string, Uniform>& uniforms, unsigned int matID);
     bool drawCompactTreeNode(const std::string& label);
     bool drawCompactHeader(const std::string& label);
+
+    unsigned int imGUIID = 0; // reset it every frame pls;
     
     UniformInspectorThemeSettings theme;
 };

@@ -82,7 +82,7 @@ bool UniformInspectorUI::drawCompactTreeNode(const std::string& label) {
 void UniformInspectorUI::draw() {
     inspectorEngPtr_->queueUpdateChoices();
     
-    int imGuiID = 0;
+    imGUIID = 0;
     int modelIndex = 0;
     const int modelCount = static_cast<int>(modelCachePtr_->getNumberOfModels());
     bool hasActivePrograms = false;
@@ -179,7 +179,7 @@ void UniformInspectorUI::draw() {
             else {
                 for (auto& model : modelCachePtr_->getAllModels()) {
                     const std::unordered_map<unsigned int, unsigned int>& materialReferences = model->getAllMaterialReferences();
-                    drawModelContainer(imGuiID, model->ID, materialReferences);
+                    drawModelContainer(model->ID, materialReferences);
 
                     modelIndex++;
                 }
@@ -195,9 +195,10 @@ void UniformInspectorUI::draw() {
     ImGui::PopStyleColor();
 }
 
-void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences) {
+void UniformInspectorUI::drawModelContainer(unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences) {
     Model* model = modelCachePtr_->getModel(modelID);
-    std::string modelLabel = model ? model->getName() : "Object " + std::to_string(modelID);
+    std::string modelLabel = model ? model->getName() : "Object " + std::to_string(modelID) + std::to_string(imGUIID);
+    imGUIID++;
 
     ImGui::PushID(modelLabel.c_str());
 
@@ -213,11 +214,12 @@ void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, 
     ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
     ImGui::BeginChild("UniformContainer", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding);
 
-    std::string headerLabel = modelLabel + "##uniform_model_" + std::to_string(modelID);
+    std::string headerLabel = modelLabel + "##uniform_model_" + std::to_string(modelID) + std::to_string(imGUIID);
+    imGUIID++;
     const bool open = drawCompactHeader(headerLabel);
 
     if (open) {
-        drawMaterialContainer(modelID, materialReferences, imGuiID);
+        drawMaterialContainer(modelID, materialReferences);
     }
 
     ImGui::EndChild();
@@ -226,7 +228,7 @@ void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, 
     ImGui::PopID();
 }
 
-void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences, int& imGuiID) {
+void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences) {
     size_t i = 0;
     bool useMaterialHeader = materialReferences.size() > 1;
     for (auto& [matID, matRefCount] : materialReferences) {
@@ -253,7 +255,7 @@ void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::
                 loggerPtr_->addLog(LogLevel::WARNING, "drawMaterialContainer", "Material uniforms not found in registry for material: ", std::to_string(matID));
                 continue;
             } else {
-                drawUniformsNested_byCursor(*uniformMap, matID, imGuiID);
+                drawUniformsNested_byCursor(*uniformMap, matID);
             }
         }
         ++i;
@@ -269,7 +271,7 @@ void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::
     }
 }
 
-void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<std::string, Uniform>& uniforms, unsigned int matID, int& imGuiID) {
+void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<std::string, Uniform>& uniforms, unsigned int matID) {
     struct UniformTreeNode_byCursor {
         const Uniform* uniform = nullptr;
         std::unordered_map<std::string, UniformTreeNode_byCursor> children;
@@ -339,11 +341,11 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
 
         if (!hasChildren) {
             if (hasUniform || !node.uniform->invisible) {
-                ImGui::PushID(imGuiID);
+                ImGui::PushID(imGUIID);
                 Uniform uniformCopy = *node.uniform;
                 drawUniformRow(uniformCopy, matID);
                 ImGui::PopID();
-                ++imGuiID;
+                ++imGUIID;
             }
             return;
         }
@@ -352,7 +354,7 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
         const std::string groupTypeLabel =
             (!segment.empty() && segment[0] == '[') ? "Array" : "Struct"; // this is not right....
 
-        std::string label = groupTypeLabel + " " + segment + "##uniform_";
+        std::string label = groupTypeLabel + " " + segment + "##uniform_" + std::to_string(imGUIID);
 
         ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.headerColor);
         ImGui::PushStyleColor(ImGuiCol_Border, styles_->assetsBorderColor);
@@ -526,7 +528,8 @@ void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
     if (ImGui::BeginChild(("UniformCard##" + uniform.name).c_str(), ImVec2(0, 0),
                           ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding)) {
         
-        std::string label = typeSummary + " " + uniform.name + "##uniform_";
+        std::string label = typeSummary + " " + uniform.name + "##uniform_" + std::to_string(imGUIID);
+        imGUIID++;
         ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
         bool open = drawCompactTreeNode(label);
 
