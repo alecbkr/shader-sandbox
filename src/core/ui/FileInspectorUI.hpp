@@ -13,10 +13,10 @@ class ShaderFile;
 
 struct ShaderLinkMenu {
     std::string shaderName;
-    int vertSelection;
-    int geometrySelection;
-    int fragSelection;
-    bool initialized;
+    int vertSelection = 0;
+    int geometrySelection = 0;
+    int fragSelection = 0;
+    bool initialized = false;
 };
 
 struct ShaderLinkMenuChoices {
