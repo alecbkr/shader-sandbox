@@ -533,7 +533,9 @@ void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID, co
         if (open) {
             ImGui::Dummy(ImVec2(0, .5));
             ImGui::Separator();
-
+        }
+        
+        if (open && uniform.hasLocation) {
             ImGui::TextDisabled("Mode:  ");
             ImGui::SameLine();
             if (drawReferenceModePicker(&uniform.isFunction)) {
@@ -560,6 +562,12 @@ void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID, co
                 changed |= drawInput(value, &uniform, mat);
             }
             ImGui::Dummy(ImVec2(0, .5));
+        }
+        else if (open && !uniform.hasLocation) {
+            ImGui::TextDisabled("Uniform location not found!");
+        }
+
+        if (open) {
             ImGui::TreePop();
         }
         ImGui::PopStyleVar();

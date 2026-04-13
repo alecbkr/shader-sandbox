@@ -92,6 +92,7 @@ struct Uniform {
     bool isReadOnly = false; // does nothing right now. 
     bool useAlternateEditor = false; // This setting is for the color picker, etc.
     bool invisible = false;
+    bool hasLocation = true;
 };
 
 inline std::optional<std::vector<std::string>> getObjectData(UniformType type) {
