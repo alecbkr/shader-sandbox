@@ -71,7 +71,7 @@ bool UniformInspectorUI::drawCompactTreeNode(const std::string& label) {
 
     const bool isOpen = ImGui::TreeNodeEx(
         label.c_str(),
-        ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed
+        ImGuiTreeNodeFlags_SpanAvailWidth
     );
 
     ImGui::PopStyleColor(3); // pop header colors
