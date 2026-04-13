@@ -7,7 +7,7 @@
 
 // DEFAULT CAMERA VALUES
 const float YAW = -90.0f;
-const float PITCH = 0.0f;
+const float PITCH = -15.0f;
 const float SPEED = 3.5f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
@@ -19,7 +19,7 @@ const float ZOOM = 45.0f;
 
 Camera::Camera(AppTimer* _timerPtr, InputState* _inputPtr) : timerPtr(_timerPtr), inputPtr(_inputPtr) {
 
-    Position = glm::vec3(0.0f, 2.0f, 2.0f);
+    Position = glm::vec3(0.0f, 2.0f, 4.0f);
     WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
     Yaw = YAW;
     Pitch = PITCH;

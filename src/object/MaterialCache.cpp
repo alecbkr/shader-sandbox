@@ -111,20 +111,27 @@ void MaterialCache::deleteMaterial(unsigned int materialID) {
 }
 
 
-void MaterialCache::addTextureToMaterial(unsigned int materialID, std::string texture_path, bool isCubemap) {
+void MaterialCache::addTexture2DToMaterial(unsigned int materialID, std::string texture_path) {
     Material* foundMaterial = getMaterial(materialID);
     if (foundMaterial == nullptr) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "addTextureToMaterial", "materialID out of bounds: ", std::to_string(materialID));
         return;
     }
 
-
-    unsigned int textureID;
-    switch (isCubemap) {
-        case true:  textureID = textureCachePtr->createCubeMap(texture_path);   break;
-        case false: textureID = textureCachePtr->createTexture2D(texture_path); break;
-    }
+    unsigned int textureID = textureCachePtr->createTexture2D(texture_path);
     foundMaterial->addTexture(textureID);
+}
+
+
+void MaterialCache::addCubemapToMaterial(unsigned int materialID, std::vector<std::string> texture_paths) {
+    Material* foundMaterial = getMaterial(materialID);
+    if (foundMaterial == nullptr) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "addTextureToMaterial", "materialID out of bounds: ", std::to_string(materialID));
+        return;
+    }
+
+    unsigned int cubemapID = textureCachePtr->createCubeMap(texture_paths);
+    foundMaterial->addTexture(cubemapID);
 }
 
 
@@ -188,12 +195,17 @@ void MaterialCache::changeMaterialProgram(unsigned int materialID, unsigned int 
         return;
     }
 
-    ShaderProgram* program = shaderRegPtr->getProgram(programID);
-    if (program == nullptr) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "MATERIALCACHE | changeMaterialProgram",
-            "program not found with ID: " + std::to_string(programID));
-        return;
-    }
+
+    // had to remove verification that the program exists due to loading issues:
+    // shader registry data is loaded after assets are, meaning loading a material will
+    // get the program ID before it exists inside the shader registry :( 
+
+    // // ShaderProgram* program = shaderRegPtr->getProgram(programID);
+    // if (program == nullptr) {
+    //     loggerPtr->addLog(LogLevel::LOG_ERROR, "MATERIALCACHE | changeMaterialProgram",
+    //         "program not found with ID: " + std::to_string(programID));
+    //     return;
+    // }
 
     unsigned int oldProgramID = foundMaterial->getProgramID();
     foundMaterial->setProgramID(programID);
@@ -209,14 +221,24 @@ void MaterialCache::changeMaterialProgram(unsigned int materialID, unsigned int 
 }
 
 
-bool MaterialCache::loadMaterialFromSave(unsigned int materialID, MaterialType type, MaterialProperties properties, std::vector<std::string> texture_paths) {
+bool MaterialCache::loadMaterialFromSave(unsigned int materialID, MaterialType type, MaterialProperties properties, std::vector<std::vector<std::string>> texture_paths) {
     if (materialIDMap.contains(materialID)) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "MATERIALCACHE | loadMaterialsFromSave", "reservation failed. material already exists with ID " + std::to_string(materialID));
         return false;
     }
     materialIDMap.emplace(materialID, std::make_unique<Material>(materialID, type));
-    for(std::string texture_path : texture_paths) {
-        addTextureToMaterial(materialID, texture_path, false);
+    for(auto& path_set : texture_paths) {
+        if (path_set.size() == 1) {
+            addTexture2DToMaterial(materialID, path_set[0]);
+        }
+        else if (path_set.size() == 6) {
+            addCubemapToMaterial(materialID, path_set);
+        }
+        else {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "MATERIALCACHE | loadMaterialsFromSave", "list of texture paths dont meet texture type requirements " + std::to_string(materialID));
+            return false;
+        }
+        
     }
     getMaterial(materialID)->setProperties(properties);
     return true;
@@ -255,14 +277,19 @@ std::vector<Material*> MaterialCache::getAllMaterials() {
 }
 
 
-std::vector<std::string> MaterialCache::getAllTexturePathsForMaterial(unsigned int materialID) {
+const std::unordered_map<unsigned int, std::unique_ptr<Material>>& MaterialCache::getMaterialIDMap() const {
+    return materialIDMap;
+}
+
+
+std::vector<std::vector<std::string>> MaterialCache::getAllTexturePathsForMaterial(unsigned int materialID) {
     Material* material = getMaterial(materialID);
     if (material == nullptr) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "MATERIALCACHE | getAllTExturePathsForMaterial", "material not found with ID " + std::to_string(materialID));
     }
-    std::vector<std::string> texturePaths;
+    std::vector<std::vector<std::string>> texturePaths;
     for (unsigned int textureID : material->getMaterialTextureIDs()) {
-        texturePaths.push_back(textureCachePtr->getTexturePath(textureID));
+        texturePaths.push_back(textureCachePtr->getTexturePaths(textureID));
     }
     return texturePaths;
 }
@@ -290,11 +317,28 @@ bool MaterialCache::validateNextID() {
     return true;
 }
 
+
 void MaterialCache::updateMatIDs() {
     for (auto& [ID, mat] : materialIDMap) {
         ShaderProgram* prog = shaderRegPtr->getProgram(mat->getProgramName());
         if (prog) {
             mat->setProgramID(prog->ID);
+            eventsPtr->TriggerEvent(Event{ EventType::MaterialValidated, false, MaterialValidatedPayload { ID }});
         }
     }
+}
+
+
+std::vector<std::pair<std::string, unsigned int>> MaterialCache::getTextureNamesAndUnits(unsigned int materialID) {
+    std::vector<std::pair<std::string, unsigned int>> data;
+    Material* foundMaterial = getMaterial(materialID);
+    if (foundMaterial == nullptr) {
+        loggerPtr->addLog(LogLevel::WARNING, "MATERIALCACHE::getTextureNamesAndUnits", "material not found with ID " + std::to_string(materialID));
+        return data; //empty
+    }
+
+    for (unsigned int textureID : foundMaterial->getMaterialTextureIDs()) {
+        data.emplace_back("name", textureCachePtr->getTextureTexUnit(textureID));
+    }
+    return data;
 }

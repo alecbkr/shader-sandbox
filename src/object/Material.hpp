@@ -43,8 +43,8 @@ public:
     float getRoughness();
     float getMetalness();
     std::vector<unsigned int>& getMaterialTextureIDs();
-    std::unordered_map<unsigned int, std::string> getAllTextureUnitsAndPaths(TextureCache* texCache);
-    std::vector<std::string> getAllTexturePaths(TextureCache* texCache);
+    // std::unordered_map<unsigned int, std::string> getAllTextureUnitsAndPaths(TextureCache* texCache);
+    // std::vector<std::string> getAllTexturePaths(TextureCache* texCache);
     
 private:
     std::string name = "material";

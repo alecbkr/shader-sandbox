@@ -51,38 +51,47 @@ bool AssimpImporter::initialize(Logger* _loggerPtr, ModelCache* _modelCachePtr, 
 
 
 bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntries, std::vector<MaterialEntry>& materialEntries) {
+    std::string feedback = "";
+
     // LOAD MATERIALS
     for (MaterialEntry& materialEntry : materialEntries) {
         unsigned int ID = materialEntry.ID;
         std::string name = materialEntry.name;
         MaterialType type = materialEntry.type;
         MaterialProperties properties = materialEntry.properties;
-        std::vector<std::string>& texture_paths = materialEntry.texture_paths;
+        std::vector<std::vector<std::string>>& texture_paths = materialEntry.texture_paths;
 
         bool loadResult = materialCachePtr->loadMaterialFromSave(ID, type, properties, texture_paths);
         if (loadResult == true) {
             materialCachePtr->getMaterial(ID)->setProgramName(materialEntry.programName);
             materialCachePtr->changeMaterialName(ID, name);
+            materialCachePtr->changeMaterialType(ID, type);
+        }
+        else {
+            feedback += "Material failed to load: \"" + name + "\"\n";
         }
     }
     
-
     for (ModelEntry& modelEntry : modelEntries) {
 
         std::string name = modelEntry.name;
         unsigned int ID = modelEntry.ID;
         std::filesystem::path path = modelEntry.path;
         ModelType type = modelEntry.type;
+        bool isSkybox = modelEntry.isSkybox;
 
         std::vector<unsigned int> meshMaterialIDs = modelEntry.meshMaterialIDs;
         std::vector<InstanceData> instanceData = modelEntry.instanceData;
         glm::vec3 position = modelEntry.position;
         glm::vec3 scale = modelEntry.scale;
-        // glm::vec4 rotation = modelEntry.rotation;
+        glm::vec3 rotation = modelEntry.rotation;
 
         // LOAD MESHES
         bool reservationResult = modelCachePtr->reserveModelID(ID, path.string(), type);
-        if (reservationResult == false) continue;
+        if (reservationResult == false) {
+            feedback += "Model failed to load: \"" + name + "\". Reservation failure\n";
+            continue;
+        }
 
         if (type != ModelType::Imported) {
             modelCachePtr->addPresetMesh(ID, type);
@@ -91,7 +100,7 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
             Assimp::Importer import;
             const aiScene *scene = import.ReadFile(path.string(), aiProcess_Triangulate | aiProcess_FlipUVs);
             if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-                loggerPtr->addLog(LogLevel::WARNING, "ASSIMP_IMPORTER::loadAssetCachesFromSave()", "Skipping. Model not found with path " + path.string());
+                feedback += "Model failed to load: \"" + name + "\"" + "path not found " + path.string() + "\n";
                 continue;
             }
             processNode(ID, scene->mRootNode, scene);
@@ -106,24 +115,32 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
         }
 
         // LOAD BOUND MATERIALS PER MESH
-        // model->loadMeshMaterialIDs(meshMaterialIDs);
         for (unsigned int idx = 0; idx < meshMaterialIDs.size(); idx++) {
             unsigned int materialID = meshMaterialIDs[idx];
-            model->setMeshMaterial(idx, materialID, materialCachePtr->getMaterial(materialID)->getValidity());
+            if (materialCachePtr->getMaterialIDMap().contains(materialID)) {
+                model->setMeshMaterial(idx, materialID, materialCachePtr->getMaterial(materialID)->getValidity()); //validity will always be false because shaders arent directly attached yet
+            }
+            else if (materialID != std::numeric_limits<unsigned int>::max()){
+                feedback += "model \"" + name + "\" has missing material";
+            }
         }
         model->setPosition(position);
         model->setScale(scale);
-        // model->setRotation(rotation); //nd
+        model->setRotation(rotation); 
         model->setInstanceCount(instanceData.size());
         model->loadInstanceData(instanceData);
+        if (isSkybox) modelCachePtr->toggleAsSkybox(ID);
 
-        bool success = modelCachePtr->updateRenderer(ID);
-        if (!success) {
-            std::cout << "bad joojoo" << std::endl;
-        }
+        modelCachePtr->updateRenderer(ID); //will not render anything since materials are invalid (no shaders)
 
-        // inspectorEngPtr->refreshUniforms();
     }
+    if (!feedback.empty()) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "ASSIMPIMPORTER::loadAssetCachesFromSave()\n", feedback);
+    }
+    else {
+        loggerPtr->addLog(LogLevel::INFO, "ASSIMPIMPORTER::loadAssetCachesFromSave()", "Asset caches loaded successfully");
+    }
+
     return true;
 }
 
@@ -258,7 +275,7 @@ void AssimpImporter::getTextures(unsigned int materialID, aiMaterial *mat, std::
             }
 
             std::string filepath = directory + "/" + aiTex.C_Str();
-            materialCachePtr->addTextureToMaterial(materialID, filepath, false);
+            materialCachePtr->addTexture2DToMaterial(materialID, filepath);
         }
     }
 }

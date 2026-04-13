@@ -58,22 +58,22 @@ const bool Material::getValidity() const  {
     return result;
 };
 
-std::unordered_map<unsigned int, std::string> Material::getAllTextureUnitsAndPaths(TextureCache* texCache) {
-    std::unordered_map<unsigned int, std::string> data;
+// std::unordered_map<unsigned int, std::string> Material::getAllTextureUnitsAndPaths(TextureCache* texCache) {
+//     std::unordered_map<unsigned int, std::string> data;
 
-    for (auto texID : textureIDs) {
-        data.emplace(texCache->getTextureTexUnit(texID), texCache->getTexturePath(texID));
-    }
+//     for (auto texID : textureIDs) {
+//         data.emplace(texCache->getTextureTexUnit(texID), texCache->getTexturePath(texID));
+//     }
 
-    return data;
-}
+//     return data;
+// }
 
-std::vector<std::string> Material::getAllTexturePaths(TextureCache* texCache) {
-    std::vector<std::string> paths;
+// std::vector<std::string> Material::getAllTexturePaths(TextureCache* texCache) {
+//     std::vector<std::string> paths;
 
-    for (auto texID : textureIDs) {
-        paths.emplace_back(texCache->getTexturePath(texID));
-    }
+//     for (auto texID : textureIDs) {
+//         paths.emplace_back(texCache->getTexturePath(texID));
+//     }
 
-    return paths;
-}
+//     return paths;
+// }

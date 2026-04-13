@@ -37,6 +37,7 @@ public:
     void setPosition(glm::vec3 position);
     void setScale(glm::vec3 scale);
     void setRotation(float angle, glm::vec3 axis);
+    void setRotation(glm::vec3 rotation);
     void setInstancePosition(unsigned int instanceNum, glm::vec3 position);
     void setInstanceCount(unsigned int newInstanceCount);
     void setName(std::string name);
@@ -52,7 +53,7 @@ public:
     glm::mat4 getModelMatrix() const;
     glm::vec3 getPosition() const;
     glm::vec3 getScale() const;
-    glm::vec4 getRotation() const;
+    glm::vec3 getRotation() const;
     unsigned int getInstanceCount() const;
     const std::vector<InstanceData>& getInstanceData() const;
     const std::vector<MeshInstance>& getMeshInstances() const;
@@ -88,7 +89,7 @@ private:
     glm::mat4 modelM      = glm::mat4(1.0f);
     glm::vec3 position    = glm::vec3(0.0f);
     glm::vec3 scale       = glm::vec3(1.0f);
-    glm::vec4 rotation    = glm::vec4(0.0f); // raw values for orientation calc
+    glm::vec3 rotation    = glm::vec3(0.0f); // raw values for orientation calc
     glm::quat orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
     void calcModelM();

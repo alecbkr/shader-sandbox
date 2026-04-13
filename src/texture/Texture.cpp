@@ -5,7 +5,12 @@
 #include "core/logging/Logger.hpp"
 
 
-Texture::Texture(std::string texture_path) : path(texture_path) {
+Texture::Texture(std::string texture_path) : paths(std::vector<std::string>(1, texture_path)) {
+
+}
+
+
+Texture::Texture(std::vector<std::string> texture_paths) : paths(texture_paths) {
 
 }
 
@@ -27,18 +32,18 @@ TextureStatus Texture::getStatus() const {
 }
 
 
-void Texture::setPath(std::string newPath) {
-    if (path == newPath) return;
+// void Texture::setPath(std::string newPath) {
+//     if (path == newPath) return;
     
-    unloadFromGPU();
-    this->path = newPath;
-    status = TextureStatus::Ready;
-}
+//     unloadFromGPU();
+//     this->path = newPath;
+//     status = TextureStatus::Ready;
+// }
 
 
-const std::string Texture::getPath() const {
-    return path;
-}
+// const std::string Texture::getPath() const {
+//     return path;
+// }
 
 const unsigned int Texture::getTexUnit() const {
     return texUnit;

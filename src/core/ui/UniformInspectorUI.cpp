@@ -210,12 +210,11 @@ void UniformInspectorUI::drawModelContainer(unsigned int modelID, const std::uno
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles_->assetsBodyRounding);
     ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles_->assetsBorderThickness);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
-    ImGui::BeginChild("UniformContainer", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 4.0f));
 
-    std::string headerLabel = modelLabel + "##uniform_model_" + std::to_string(modelID) + std::to_string(imGUIID);
-    imGUIID++;
+    ImGui::BeginChild("UniformContainer", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding | ImGuiChildFlags_AlwaysAutoResize);
+
+    std::string headerLabel = modelLabel + "##uniform_model_" + std::to_string(modelID);
     const bool open = drawCompactHeader(headerLabel);
 
     if (open) {
@@ -224,7 +223,7 @@ void UniformInspectorUI::drawModelContainer(unsigned int modelID, const std::uno
 
     ImGui::EndChild();
     ImGui::PopStyleColor(5);
-    ImGui::PopStyleVar(5);
+    ImGui::PopStyleVar(4);
     ImGui::PopID();
 }
 
@@ -672,13 +671,61 @@ std::string makeRelativeToAssetsFolder(const std::string& fullPath) {
     return fullPath;
 }
 
+// bool UniformInspectorUI::drawInput(InspectorSampler2D* value, Uniform* uniform, Material* material) {
+//     if (!value || !material || !textureCachePtr_) {
+//         ImGui::TextDisabled("No textures available");
+//         return false;
+//     }
+
+//     std::vector<std::vector<std::string>> texPaths = materialCachePtr_->getAllTexturePathsForMaterial(material->ID);
+
+//     ImGui::TextDisabled("Texture Unit");
+//     ImGui::SetNextItemWidth(-1);
+
+//     if (texPaths.empty()) {
+//         ImGui::TextDisabled("This material has no textures");
+//         return false;
+//     }
+
+//     bool changed = false;
+
+//     std::string preview;
+//     if (value->textureUnit >= 0 && value->textureUnit < static_cast<int>(texPaths.size())) {
+//         preview = "Unit " + std::to_string(value->textureUnit) + " | " + makeRelativeToAssetsFolder(texPaths[value->textureUnit]);
+//     } else {
+//         preview = "None";
+//     }
+
+//     if (ImGui::BeginCombo("##Texture_unit", preview.c_str())) {
+//         for (int i = 0; i < static_cast<int>(texPaths.size()); i++) {
+//             std::string label = "Unit " + std::to_string(i) + " | " + makeRelativeToAssetsFolder(texPaths[i]);
+//             bool selected = (value->textureUnit == i);
+
+//             if (ImGui::Selectable(label.c_str(), selected)) {
+//                 value->textureUnit = i;
+//                 changed = true;
+//             }
+
+//             if (selected) {
+//                 ImGui::SetItemDefaultFocus();
+//             }
+//         }
+
+//         ImGui::EndCombo();
+//     }
+
+//     return changed;
+// }
+
+
 bool UniformInspectorUI::drawInput(InspectorSampler2D* value, Uniform* uniform, Material* material) {
     if (!value || !material || !textureCachePtr_) {
         ImGui::TextDisabled("No textures available");
         return false;
     }
 
-    std::vector<std::string> texPaths = material->getAllTexturePaths(textureCachePtr_);
+    std::vector<std::vector<std::string>> texPaths =
+        materialCachePtr_->getAllTexturePathsForMaterial(material->ID);
 
     ImGui::TextDisabled("Texture Unit");
     ImGui::SetNextItemWidth(-1);
@@ -690,16 +737,37 @@ bool UniformInspectorUI::drawInput(InspectorSampler2D* value, Uniform* uniform, 
 
     bool changed = false;
 
+    auto getLabelForUnit = [&](int unit) -> std::string {
+        if (unit < 0 || unit >= (int)texPaths.size())
+            return "None";
+
+        const auto& paths = texPaths[unit];
+
+        if (paths.empty())
+            return "Empty";
+
+        // Texture2D
+        if (paths.size() == 1) {
+            return makeRelativeToAssetsFolder(paths[0]);
+        }
+
+        // Cubemap (multiple paths)
+        return "Cubemap (" + std::to_string(paths.size()) + " faces)";
+    };
+
     std::string preview;
-    if (value->textureUnit >= 0 && value->textureUnit < static_cast<int>(texPaths.size())) {
-        preview = "Unit " + std::to_string(value->textureUnit) + " | " + makeRelativeToAssetsFolder(texPaths[value->textureUnit]);
+    if (value->textureUnit >= 0 && value->textureUnit < (int)texPaths.size()) {
+        preview = "Unit " + std::to_string(value->textureUnit) + " | " +
+                  getLabelForUnit(value->textureUnit);
     } else {
         preview = "None";
     }
 
     if (ImGui::BeginCombo("##Texture_unit", preview.c_str())) {
-        for (int i = 0; i < static_cast<int>(texPaths.size()); i++) {
-            std::string label = "Unit " + std::to_string(i) + " | " + makeRelativeToAssetsFolder(texPaths[i]);
+        for (int i = 0; i < (int)texPaths.size(); i++) {
+            std::string label = "Unit " + std::to_string(i) + " | " +
+                                getLabelForUnit(i);
+
             bool selected = (value->textureUnit == i);
 
             if (ImGui::Selectable(label.c_str(), selected)) {

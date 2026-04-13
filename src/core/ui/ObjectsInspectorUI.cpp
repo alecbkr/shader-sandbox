@@ -304,9 +304,26 @@ bool ObjectsInspectorUI::drawMeshesMenu(Model* currModel, MaterialCache* materia
         std::string label = "##" + std::to_string(meshInstance.meshIdx);
         ImGui::Text("Mesh %u", meshInstance.meshIdx + 1);
         ImGui::SameLine();
+
+        bool hasMaterial = materialCachePtr->getMaterial(meshInstance.materialID) ? true : false;
+        bool materialIsValid = true;
+        if (hasMaterial) {
+            materialIsValid = materialCachePtr->getMaterial(meshInstance.materialID)->getValidity() ? true : false;
+            if (!materialIsValid) {
+                ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.7f, 0.55f, 0.15f, 1.0f)); //yellow warning
+            }
+        }
+        else {
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.6f, 0.2f, 0.2f, 1.0f)); //red missing
+        }
+        
+
         if (ImGui::Combo(label.c_str(), &selectedItem, materialNames.data(), (int)materialNames.size())) {
             unsigned int assignedMaterialID = materialIDs[selectedItem];
             modelCachePtr->changeMeshMaterial(currModel->ID, meshInstance.meshIdx, assignedMaterialID, materialCachePtr->getMaterial(assignedMaterialID)->getValidity());
+        }
+        if (!hasMaterial || !materialIsValid) {
+            ImGui::PopStyleColor();
         }
     }
 
@@ -368,30 +385,30 @@ bool ObjectsInspectorUI::drawAdditionalMenu(Model* currModel, ModelCache* modelC
     return true;
 }
 
-bool ObjectsInspectorUI::drawTextureMenu(ModelTextureMenu& menu, Logger* loggerPtr, TextureRegistry* textureRegPtr) {
-    // bool changed = false;
-    std::vector<const char*> textureChoices;
-    const std::vector<const Texture*>& registryTextures = textureRegPtr->readTextures();
-    textureChoices.reserve(registryTextures.size());
-    for (const Texture* tex : registryTextures) {
-        textureChoices.push_back(tex->getPath().c_str());
-    }
+// bool ObjectsInspectorUI::drawTextureMenu(ModelTextureMenu& menu, Logger* loggerPtr, TextureRegistry* textureRegPtr) {
+//     // bool changed = false;
+//     std::vector<const char*> textureChoices;
+//     const std::vector<const Texture*>& registryTextures = textureRegPtr->readTextures();
+//     textureChoices.reserve(registryTextures.size());
+//     for (const Texture* tex : registryTextures) {
+//         textureChoices.push_back(tex->getPath().c_str());
+//     }
 
-    if (ImGui::Combo("Texture", &menu.textureSelection, textureChoices.data(), (int)textureChoices.size())) {
-        // changed = true;
-        loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed texture");
-    }
-    if (ImGui::InputInt("Unit", &menu.unitSelection)) {
-        // changed = true;
-        loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed unit");
-    }
-    if (drawTextInput(&menu.uniformName, "Uniform Name")) {
-        // changed = true;
-        loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed uniform name");
-    }
+//     if (ImGui::Combo("Texture", &menu.textureSelection, textureChoices.data(), (int)textureChoices.size())) {
+//         // changed = true;
+//         loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed texture");
+//     }
+//     if (ImGui::InputInt("Unit", &menu.unitSelection)) {
+//         // changed = true;
+//         loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed unit");
+//     }
+//     if (drawTextInput(&menu.uniformName, "Uniform Name")) {
+//         // changed = true;
+//         loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed uniform name");
+//     }
 
-    return false;
-}
+//     return false;
+// }
 
 bool ObjectsInspectorUI::drawTextInput(std::string* value, const char* label) {
     bool changed = false;
@@ -442,16 +459,16 @@ bool ObjectsInspectorUI::drawModelOrientationInput(Model& model) {
     bool changed = false;
     ImGui::PushID(&model);
 
-    glm::vec4 rotation = model.getRotation();
-    ImGui::Text("Orientation");
+    glm::vec3 rotation = model.getRotation();
+    ImGui::Text("Rotation");
     ImGui::SameLine();
-    ImGui::SetNextItemWidth(180.0f);
+    ImGui::SetNextItemWidth(140.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, theme.dragFloatPadding);
-    changed |= ImGui::DragFloat4("##Orientation##xx", &rotation.x,  .05f);
+    changed |= ImGui::DragFloat3("##Rotation##xx", &rotation.x,  .05f);
     ImGui::PopStyleVar();
 
     ImGui::PopID();
-    if (changed) model.setRotation(rotation.x, glm::vec3(rotation.y, rotation.z, rotation.w));
+    if (changed) model.setRotation(rotation);
     return changed;
 }
 

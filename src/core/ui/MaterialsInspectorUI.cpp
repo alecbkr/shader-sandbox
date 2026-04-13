@@ -252,7 +252,12 @@ void MaterialsInspectorUI::draw() {
                             
                         }
                         ShaderProgram* prog = shaderReg->getProgram(mat->getProgramID());
-                        std::string progName = prog ? prog->name : "select program";
+                        std::string progName = prog ? prog->name : "no program";
+
+                        bool noProgram = prog ? false : true;
+                        if (noProgram) {
+                            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.6f, 0.2f, 0.2f, 1.0f));
+                        }
 
                         if (ImGui::BeginCombo(("Program##" + std::to_string(mat->ID)).c_str(), progName.c_str())) {
                             for (auto& [ID, program] : programs) {
@@ -270,6 +275,10 @@ void MaterialsInspectorUI::draw() {
                             ImGui::EndCombo();
                         }
 
+                        if (noProgram){
+                            ImGui::PopStyleColor();
+                        }
+
                         if (ImGui::CollapsingHeader(("Textures##" + std::to_string(mat->ID)).c_str())) {
                             if (ImGui::Button(("Add Texture##" + std::to_string(mat->ID)).c_str())) {
                                 if (addTextureModal) {
@@ -278,15 +287,16 @@ void MaterialsInspectorUI::draw() {
                                 }
                             }
 
-                            auto textureData = mat->getAllTextureUnitsAndPaths(texCache);
+                            auto textureData = matCache->getTextureNamesAndUnits(mat->ID);
+
 
                             int i = 0;
-                            for (auto& [texUnit, path] : textureData) {
+                            for (auto& [name, texUnit] : textureData) {
                                 ImGui::PushID(i);
 
-                                std::string relativePath = makeRelativeToAssets(path);
+                                // std::string relativePath = makeRelativeToAssets(path);
 
-                                ImGui::TextUnformatted(("Texture Unit: " + std::to_string(texUnit) + " | " + relativePath).c_str());
+                                ImGui::TextUnformatted(("Texture Unit: " + std::to_string(texUnit) + " | " + name).c_str());
 
                                 if (ImGui::BeginPopupContextItem("TexturePopup")) {
                                     if (ImGui::MenuItem("Remove")) {

@@ -65,7 +65,7 @@ private:
     bool drawMeshesMenu(Model* currModel, MaterialCache* materialCachePtr, ModelCache* modelCachePtr, Logger* loggerPtr);
     bool drawInstancesMenu(Model* currModel, ModelCache* modelCachePtr, Logger* loggerPtr);
     bool drawAdditionalMenu(Model* currModel, ModelCache* modelCachePtr, Logger* loggerPtr);
-    bool drawTextureMenu(ModelTextureMenu& menu, Logger* loggerPtr, TextureRegistry* textureRegPtr);
+    // bool drawTextureMenu(ModelTextureMenu& menu, Logger* loggerPtr, TextureRegistry* textureRegPtr);
     bool drawTextInput(std::string* value, const char* label);
     bool drawModelPositionInput(Model& model);
     bool drawModelScaleInput(Model& model);
