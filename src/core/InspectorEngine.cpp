@@ -276,10 +276,16 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
         const InspectorReference* function = std::get_if<InspectorReference>(&uniform.value);
         if (function == nullptr) {
             loggerPtr->addLog(LogLevel::LOG_ERROR, "applyUniform", "isFunction is set but uniform: " + uniform.name + " does not have a function value!");
+            Uniform copy = uniform;
+            copy.isFunction = false;
+            if (uniformRegPtr->updateUniform(copy.ID, copy)) {
+                loggerPtr->addLog(LogLevel::LOG_ERROR, "applyUniform", "uniform with ID: " + std::to_string(copy.ID) + " does not exist!");
+            }
+        }
+        else {
+            applyFunction(program, uniform, *function);
             return;
         }
-        applyFunction(program, uniform, *function);
-        return;
     }
 
     switch (uniform.type)
@@ -404,7 +410,7 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
                     finalValue = uniform;
                     finalValue.name = uniform.name;
                     finalValue.isFunction = false;
-                    finalValue.value = platform->getTime(); // doesn't render every frame yet
+                    finalValue.value = (float)platform->getTime(); // doesn't render every frame yet
                     validFunction = true;
                 }
                 break;
@@ -426,6 +432,7 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
         const Uniform* referencedUniform = uniformRegPtr->tryReadMaterialUniform(currentFunction.referencedMaterialID, currentFunction.referencedValueName); 
         if (referencedUniform == nullptr) {
             loggerPtr->addLog(LogLevel::LOG_ERROR, "applyUniform: Function", "referenced uniform for " + std::to_string(currentFunction.referencedMaterialID) + ": " + currentFunction.referencedValueName + " does not exist!");
+            resetFunctionTree(currentUniform);
             validFunction = false;
             break;
         }
@@ -453,7 +460,6 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
 
         currentFunction = *referencedFunction;
         currentUniform = *referencedUniform;
-    
     }
 
     // in case of an invalid function, we need to just assign it a default value not to break things.
@@ -519,6 +525,7 @@ void InspectorEngine::reloadUniforms(unsigned int materialID) {
 
 
 void InspectorEngine::applyAllUniformsForPrimitive(unsigned int modelID, unsigned int meshID, unsigned int materialID) {
+    // as of 4-9-26, this runs every frame
     Material* mat = materialCachePtr->getMaterial(materialID);
     if (mat == nullptr) {
         loggerPtr->addLog(LogLevel::WARNING, "applyAllUniformsForPrimitive", "material " + std::to_string(materialID) + " does not exist!");
@@ -651,4 +658,14 @@ const std::optional<std::vector<const char*>> InspectorEngine::getUniformChoices
 
 void InspectorEngine::queueUpdateChoices() {
     mustUpdateChoices = true;
+}
+
+void InspectorEngine::resetFunctionTree(const Uniform& uni) {
+    auto currentUni = &uni;
+    while (auto resPtr = std::get_if<InspectorReference>(&currentUni->value)) {
+        setUniform(currentUni->materialID, currentUni->name, getDefaultValue(currentUni->type));
+        const Uniform* referencedUniform = uniformRegPtr->tryReadMaterialUniform(resPtr->referencedMaterialID, resPtr->referencedValueName); 
+        if (referencedUniform) currentUni = referencedUniform;
+        else return;
+    }
 }

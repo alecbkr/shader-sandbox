@@ -10,6 +10,7 @@
 #include "core/ui/Fonts.hpp"
 #include "engine/ShaderProgram.hpp"
 #include "imgui.h"
+#include "object/Material.hpp"
 #include "object/MaterialCache.hpp"
 #include "object/ModelCache.hpp"
 #include "texture/TextureCache.hpp"
@@ -20,29 +21,12 @@
 #include <unordered_map>
 #include <vector>
 
-bool UniformInspectorUI::drawCompactTreeNode(const std::string& label) {
-
-    // Set the header button color
-    ImGui::PushStyleColor(ImGuiCol_Header, theme.headerColor);
-    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.headerColorHovered);
-    ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.headerColor);
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
-
-    const bool open = ImGui::TreeNodeEx(
-        label.c_str(),
-        ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed
-    );
-
-    ImGui::PopStyleColor(3); // pop header colors
-    ImGui::PopStyleVar(1);
-
-    return open;
-}
 
 UniformInspectorUI::UniformInspectorUI(Fonts* fonts, SettingsStyles* styles, Logger* loggerPtr, InspectorEngine* inspectorEngPtr, ShaderRegistry* shaderRegPtr, UniformRegistry* uniformRegPtr, ModelCache* modelCachePtr, MaterialCache* materialCachePtr, TextureCache* textureCachePtr) : fonts_(fonts), styles_(styles) {
     if (styles_) {
         theme.cardBGColor = styles_->assetsFileBackgroundColor;
         theme.headerColor = styles_->assetsTitleBackgroundColor;
+
         // Derive a hover color from the base color so it always differs visibly.
         theme.headerColorHovered = ImVec4(
             theme.headerColor.x * 1.2f,
@@ -64,10 +48,41 @@ UniformInspectorUI::UniformInspectorUI(Fonts* fonts, SettingsStyles* styles, Log
 
 UniformInspectorUI::~UniformInspectorUI() = default;
 
+bool UniformInspectorUI::drawCompactHeader(const std::string& label) {
+    ImGui::PushStyleColor(ImGuiCol_Header, theme.headerColor);
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.headerColorHovered);
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.headerColor);
+    const bool isOpen = ImGui::CollapsingHeader(
+        label.c_str(),
+        ImGuiTreeNodeFlags_SpanAvailWidth
+    );
+
+    ImGui::PopStyleColor(3); // pop header colors
+
+    return isOpen;
+}
+
+bool UniformInspectorUI::drawCompactTreeNode(const std::string& label) {
+    ImGui::PushStyleColor(ImGuiCol_Header, theme.headerColor);
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.headerColorHovered);
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.headerColor);
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+
+    const bool isOpen = ImGui::TreeNodeEx(
+        label.c_str(),
+        ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed
+    );
+
+    ImGui::PopStyleColor(3); // pop header colors
+    ImGui::PopStyleVar(1);
+
+    return isOpen;
+}
+
 void UniformInspectorUI::draw() {
     inspectorEngPtr_->queueUpdateChoices();
     
-    int imGuiID = 0;
+    imGUIID = 0;
     int modelIndex = 0;
     const int modelCount = static_cast<int>(modelCachePtr_->getNumberOfModels());
     bool hasActivePrograms = false;
@@ -152,7 +167,7 @@ void UniformInspectorUI::draw() {
                 styles_->assetsBorderThickness
             );
 
-            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 8.0f));
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 10.0f));
             ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
 
             if (modelCount == 0) {
@@ -164,12 +179,9 @@ void UniformInspectorUI::draw() {
             else {
                 for (auto& model : modelCachePtr_->getAllModels()) {
                     const std::unordered_map<unsigned int, unsigned int>& materialReferences = model->getAllMaterialReferences();
-                    drawModelContainer(imGuiID, model->ID, materialReferences);
+                    drawModelContainer(model->ID, materialReferences);
 
                     modelIndex++;
-                    if (modelIndex < modelCount) {
-                        ImGui::Dummy(ImVec2(0.0f, 6.0f));
-                    }
                 }
             }
             ImGui::PopStyleVar(2);
@@ -183,49 +195,52 @@ void UniformInspectorUI::draw() {
     ImGui::PopStyleColor();
 }
 
-void UniformInspectorUI::drawModelContainer(int& imGuiID, unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences) {
+void UniformInspectorUI::drawModelContainer(unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences) {
     Model* model = modelCachePtr_->getModel(modelID);
-    std::string modelLabel = model ? model->getName() : "Object " + std::to_string(modelID);
+    std::string modelLabel = model ? model->getName() : "Object " + std::to_string(modelID) + std::to_string(imGUIID);
+    imGUIID++;
 
     ImGui::PushID(modelLabel.c_str());
 
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.cardBGColor);
-    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles_->assetsBodyRounding);
-    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles_->assetsBorderThickness);
-
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.headerColor);
+    ImGui::PushStyleColor(ImGuiCol_Border, styles_->assetsBorderColor);
     ImGui::PushStyleColor(ImGuiCol_Header, theme.headerColor);
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.headerColorHovered);
     ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.headerColor);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles_->assetsBodyRounding);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles_->assetsBorderThickness);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 4.0f));
 
     ImGui::BeginChild("UniformContainer", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding | ImGuiChildFlags_AlwaysAutoResize);
 
     std::string headerLabel = modelLabel + "##uniform_model_" + std::to_string(modelID);
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
-    if (drawCompactTreeNode(headerLabel.c_str())) {
-        drawMaterialContainer(modelID, materialReferences, imGuiID);
-        ImGui::TreePop();
+    const bool open = drawCompactHeader(headerLabel);
+
+    if (open) {
+        drawMaterialContainer(modelID, materialReferences);
     }
-    ImGui::PopStyleVar();
-    ImGui::PopStyleVar();
 
     ImGui::EndChild();
-    ImGui::PopStyleColor(3);
-    ImGui::PopStyleColor();
-    ImGui::PopStyleVar(3);
+    ImGui::PopStyleColor(5);
+    ImGui::PopStyleVar(4);
     ImGui::PopID();
 }
 
-void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences, int& imGuiID) {
+void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::unordered_map<unsigned int, unsigned int>& materialReferences) {
     size_t i = 0;
     bool useMaterialHeader = materialReferences.size() > 1;
     for (auto& [matID, matRefCount] : materialReferences) {
+        Material* referencedMat = materialCachePtr_->getMaterial(matID);
+        if (referencedMat == nullptr) {
+            loggerPtr_->addLog(LogLevel::LOG_ERROR, "UniformInspectorUI::drawMaterialContainer", "material with id " + std::to_string(matID) + " does not exist!");
+            continue;
+        }
         bool showUniforms = true;
         bool mustTreePop = false;
         if (useMaterialHeader) {
             ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
-            std::string matHeader = "Material " + std::to_string(matID) + "##uniform_mat_" + std::to_string(matID);
+            std::string matHeader = referencedMat->getName() + "##uniform_mat_" + std::to_string(matID);
             showUniforms = mustTreePop = drawCompactTreeNode(matHeader);
             if (showUniforms) {
                 ImGui::Dummy(ImVec2(0.0f, 2.0f));
@@ -239,7 +254,7 @@ void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::
                 loggerPtr_->addLog(LogLevel::WARNING, "drawMaterialContainer", "Material uniforms not found in registry for material: ", std::to_string(matID));
                 continue;
             } else {
-                drawUniformsNested_byCursor(*uniformMap, matID, imGuiID);
+                drawUniformsNested_byCursor(*uniformMap, matID);
             }
         }
         ++i;
@@ -255,7 +270,7 @@ void UniformInspectorUI::drawMaterialContainer(unsigned int modelID, const std::
     }
 }
 
-void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<std::string, Uniform>& uniforms, unsigned int matID, int& imGuiID) {
+void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<std::string, Uniform>& uniforms, unsigned int matID) {
     struct UniformTreeNode_byCursor {
         const Uniform* uniform = nullptr;
         std::unordered_map<std::string, UniformTreeNode_byCursor> children;
@@ -325,22 +340,23 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
 
         if (!hasChildren) {
             if (hasUniform || !node.uniform->invisible) {
-                ImGui::PushID(imGuiID);
+                ImGui::PushID(imGUIID);
                 Uniform uniformCopy = *node.uniform;
                 drawUniformRow(uniformCopy, matID);
                 ImGui::PopID();
-                ++imGuiID;
+                ++imGUIID;
             }
             return;
         }
 
         // Determine label
         const std::string groupTypeLabel =
-            (!segment.empty() && segment[0] == '[') ? "Array" : "Struct";
+            (!segment.empty() && segment[0] == '[') ? "Array" : "Struct"; // this is not right....
 
-        std::string label = groupTypeLabel + " " + segment + "##uniform_";
+        std::string label = groupTypeLabel + " " + segment + "##uniform_" + std::to_string(imGUIID);
 
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.cardBGColor); 
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.headerColor);
+        ImGui::PushStyleColor(ImGuiCol_Border, styles_->assetsBorderColor);
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles_->assetsBodyRounding);
         ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles_->assetsBorderThickness);
         ImGui::BeginChild(("Group##" + label).c_str(), ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding);
@@ -359,7 +375,7 @@ void UniformInspectorUI::drawUniformsNested_byCursor(const std::unordered_map<st
         ImGui::PopStyleVar();
         ImGui::EndChild();
         ImGui::PopStyleVar(2);
-        ImGui::PopStyleColor(1);
+        ImGui::PopStyleColor(2);
     };
 
     for (const auto& [seg, childNode] : root.children) {
@@ -503,14 +519,16 @@ void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
     bool changed = false;
     const std::string typeSummary = to_string(uniform.type);
 
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.cardBGColor); // same card background as model card
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.cardBGColor);
+    ImGui::PushStyleColor(ImGuiCol_Border, styles_->assetsBorderColor);
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles_->assetsBodyRounding);
     ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles_->assetsBorderThickness);
 
     if (ImGui::BeginChild(("UniformCard##" + uniform.name).c_str(), ImVec2(0, 0),
-                          ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders)) {
+                          ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding)) {
         
-        std::string label = typeSummary + " " + uniform.name + "##uniform_";
+        std::string label = typeSummary + " " + uniform.name + "##uniform_" + std::to_string(imGUIID);
+        imGUIID++;
         ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
         bool open = drawCompactTreeNode(label);
 
@@ -550,7 +568,7 @@ void UniformInspectorUI::drawUniformRow(Uniform& uniform, unsigned int matID) {
     }
     ImGui::EndChild();
     ImGui::PopStyleVar(2);
-    ImGui::PopStyleColor();
+    ImGui::PopStyleColor(2);
     // --- End uniform card ---
 
     if (changed) {

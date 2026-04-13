@@ -20,6 +20,20 @@
 #include <string>
 #include <vector>
 
+bool ObjectsInspectorUI::drawCompactHeader(const std::string& label) {
+    ImGui::PushStyleColor(ImGuiCol_Header, theme.headerColor);
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.headerColorHovered);
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.headerColor);
+    const bool isOpen = ImGui::CollapsingHeader(
+        label.c_str(),
+        ImGuiTreeNodeFlags_SpanAvailWidth
+    );
+
+    ImGui::PopStyleColor(3); // pop header colors
+
+    return isOpen;
+}
+
 ObjectsInspectorUI::ObjectsInspectorUI(SettingsStyles* styles) : styles(styles) {
     if (styles) {
         theme.bgColor = styles->assetsTreeBodyColor;
@@ -30,7 +44,16 @@ ObjectsInspectorUI::ObjectsInspectorUI(SettingsStyles* styles) : styles(styles) 
             theme.bgColor.z * 1.3f,
             theme.bgColor.w
         );
-        theme.indentSize = styles->indentSpacing * 0.5f;
+        // Match Materials tab indentation rhythm.
+        theme.indentSize = 8.0f;
+        theme.headerColor = styles->inspectorTitleBackgroundColor;
+        // Derive a hover color from the base color so it always differs visibly.
+        theme.headerColorHovered = ImVec4(
+            theme.headerColor.x * 1.2f,
+            theme.headerColor.y * 1.2f,
+            theme.headerColor.z * 1.2f,
+            theme.headerColor.w
+        );
     }
 }
 
@@ -148,19 +171,30 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
         
                 // std::string label = "model " + std::to_string(modelID);
                 // ImGui::PushID(label.c_str());
-                ImGui::PushID(modelID); 
-                ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.bgColor); // Blue-ish background
-                ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);   // <-- rounding radius
-                ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f); // optional
-                ImGui::PushStyleColor(ImGuiCol_Header,        theme.bgColor);
+                ImGui::PushID(modelID);
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, theme.bgColor);
+                ImGui::PushStyleColor(ImGuiCol_Border, styles->inspectorBorderColor);
+                ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles->inspectorBodyRounding);
+                ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles->inspectorBorderThickness);
+                ImGui::PushStyleColor(ImGuiCol_Header, theme.bgColor);
                 ImGui::PushStyleColor(ImGuiCol_HeaderHovered, theme.bgColorHovered);
-                ImGui::PushStyleColor(ImGuiCol_HeaderActive,  theme.bgColor);
-                ImGui::BeginChild("Container##", ImVec2(0, 0),  ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar);
+                ImGui::PushStyleColor(ImGuiCol_HeaderActive, theme.bgColor);
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
+                ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
+                ImGui::BeginChild(
+                    "Container##",
+                    ImVec2(0, 0),
+                    ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding,
+                    ImGuiWindowFlags_HorizontalScrollbar
+                );
 
                 if (drawModelHeader(model, modelCachePtr)) {
+                    ImGui::PushStyleColor(ImGuiCol_Separator, styles->inspectorBorderColor);
                     ImGui::Separator();
+                    ImGui::PopStyleColor();
+                    ImGui::Dummy(ImVec2(0.0f, 2.0f));
                     ImGui::Indent(theme.indentSize);
-        
                     if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth)) {
                         ImGui::Indent(theme.indentSize);
                         drawModelPositionInput(*model);
@@ -173,18 +207,15 @@ void ObjectsInspectorUI::draw(Logger* loggerPtr, InspectorEngine* inspectorEngPt
                     drawMeshesMenu(model, materialCachePtr, modelCachePtr, loggerPtr);
                     drawInstancesMenu(model, modelCachePtr, loggerPtr);
                     drawAdditionalMenu(model, modelCachePtr, loggerPtr);
-        
                     ImGui::Unindent(theme.indentSize);
+
                 }
                 ImGui::EndChild();
-                ImGui::PopStyleColor(3);
-                ImGui::PopStyleColor();
-                ImGui::PopStyleVar(2);
+                ImGui::PopStyleVar(5);
+                ImGui::PopStyleColor(5);
                 ImGui::PopID();
                 i++;
                 if (i < modelCachePtr->getNumberOfModels()) {
-                    ImGui::Dummy(ImVec2(0, 2));
-                    ImGui::Separator();
                     ImGui::Dummy(ImVec2(0, 2));
                 }
             }
@@ -325,9 +356,12 @@ bool ObjectsInspectorUI::drawInstancesMenu(Model* model, ModelCache* modelCacheP
         InstanceData currInstanceData = instanceData[idx];
         ImGui::Text("%s", ("Instance " + std::to_string(idx + 1)).c_str());
         ImGui::SameLine();
+        ImGui::SetNextItemWidth(140.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, theme.dragFloatPadding);
         if (ImGui::DragFloat3("##Position##xx", &currInstanceData.pos.x, .05f)) {
             model->setInstancePosition(idx, currInstanceData.pos);
         }
+        ImGui::PopStyleVar();
         
         ImGui::PopID();
     }
@@ -394,7 +428,10 @@ bool ObjectsInspectorUI::drawModelPositionInput(Model& model) {
     glm::vec3 position = model.getPosition();
     ImGui::Text("Position");
     ImGui::SameLine();
+    ImGui::SetNextItemWidth(140.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, theme.dragFloatPadding);
     changed |= ImGui::DragFloat3("##Position##xx", &position.x, .05f);
+    ImGui::PopStyleVar();
 
     ImGui::PopID();
     if (changed) model.setPosition(position);
@@ -408,7 +445,10 @@ bool ObjectsInspectorUI::drawModelScaleInput(Model& model) {
     glm::vec3 scale = model.getScale();
     ImGui::Text("Scale");
     ImGui::SameLine();
+    ImGui::SetNextItemWidth(140.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, theme.dragFloatPadding);
     changed |= ImGui::DragFloat3("##Scale##xx", &scale.x,  .05f);
+    ImGui::PopStyleVar();
 
     ImGui::PopID();
     if (changed) model.setScale(scale);
@@ -422,7 +462,10 @@ bool ObjectsInspectorUI::drawModelOrientationInput(Model& model) {
     glm::vec3 rotation = model.getRotation();
     ImGui::Text("Rotation");
     ImGui::SameLine();
+    ImGui::SetNextItemWidth(140.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, theme.dragFloatPadding);
     changed |= ImGui::DragFloat3("##Rotation##xx", &rotation.x,  .05f);
+    ImGui::PopStyleVar();
 
     ImGui::PopID();
     if (changed) model.setRotation(rotation);
@@ -453,7 +496,7 @@ bool ObjectsInspectorUI::drawModelHeader(Model* model, ModelCache* modelCachePtr
         
     }
 
-    bool isOpen = ImGui::CollapsingHeader(label.c_str()); 
+    bool isOpen = drawCompactHeader(label);
 
     if (ImGui::BeginPopupContextItem(("Context##" + std::to_string(modelID)).c_str())) {
         if (ImGui::Selectable("Rename")) {

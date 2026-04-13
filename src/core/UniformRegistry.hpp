@@ -27,8 +27,10 @@ class UniformRegistry {
     size_t getModelUniformsSize(unsigned int modelID);
     size_t getMaterialUniformsSize(unsigned int matID);
 
-    // Functions for material uniforms. These are the ones users will be editing & defining.
+    bool updateUniform(unsigned int id, Uniform uniform);
     const Uniform* tryReadUniform(unsigned int);
+
+    // Functions for material uniforms. These are the ones users will be editing & defining.
     const Uniform* tryReadMaterialUniform(unsigned int matID, const std::string& uniformName) const; // return false if we didn't find it.
     bool containsMaterial(unsigned int matID);
     bool containsMaterialUniform(unsigned int matID, const std::string& uniformName);

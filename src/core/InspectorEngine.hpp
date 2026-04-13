@@ -61,6 +61,7 @@ private:
     Platform* platform = nullptr;
     void applyUniform(unsigned int modelID, const Uniform& uniform);
     void applyUniform(ShaderProgram& program, const Uniform& uniform);
+    void resetFunctionTree(const Uniform& uni);
 
     bool mustUpdateChoices = true; // for now we can just set this to true every frame
     ModelChoices modelChoices;

@@ -62,11 +62,22 @@ Uniform UniformRegistry::getUniform(std::string shaderProgramName, std::string u
 const std::unordered_map<unsigned int, Uniform>& UniformRegistry::readUniforms() {
     return project->uniforms;
 }
+
 const Uniform* UniformRegistry::tryReadUniform(unsigned int id) {
     if (!project->uniforms.contains(id)) {
         return nullptr;
     }
     else return &project->uniforms[id];
+}
+
+bool UniformRegistry::updateUniform(unsigned int id, Uniform uniform) {
+    if (!project->uniforms.contains(id)) {
+        return false;;
+    }
+    else {
+        project->uniforms[id] = uniform;
+        return true;
+    }
 }
 
 // returns nullptr if uniform doesn't exist
