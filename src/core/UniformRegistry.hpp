@@ -17,7 +17,7 @@ class UniformRegistry {
     void registerSceneUniform(Uniform uniform);
     void registerModelUniform(unsigned int modelID, Uniform uniform);
     void registerMaterialUniform(unsigned int matID, Uniform uniform);
-    void registerMaterialUniformMap(unsigned int matID, const std::unordered_map<std::string, Uniform>& map);
+    void registerMaterialUniformMap(unsigned int matID, std::unordered_map<std::string, Uniform>& map);
 
     const std::unique_ptr<std::unordered_map<std::string, Uniform>> tryReadSceneUniforms() const;
     const std::unique_ptr<std::unordered_map<std::string, Uniform>> tryReadModelUniforms(unsigned int modelID) const;

@@ -268,17 +268,14 @@ void InspectorEngine::applyUniform(unsigned int materialID, const Uniform& unifo
 void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& uniform) {
     program.use();
 
-    // Get info from the reference and then apply it to this uniform.
-    // Add input validation here!!!
-    // Also, at some point, we're going to want a memo so we don't do link list traversal if things haven't changed
+    // at some point, we're going to want a memo so we don't redo linked list traversals.
     if (uniform.isFunction) {
-
         const InspectorReference* function = std::get_if<InspectorReference>(&uniform.value);
         if (function == nullptr) {
             loggerPtr->addLog(LogLevel::LOG_ERROR, "applyUniform", "isFunction is set but uniform: " + uniform.name + " does not have a function value!");
             Uniform copy = uniform;
             copy.isFunction = false;
-            if (uniformRegPtr->updateUniform(copy.ID, copy)) {
+            if (!uniformRegPtr->updateUniform(copy.ID, copy)) {
                 loggerPtr->addLog(LogLevel::LOG_ERROR, "applyUniform", "uniform with ID: " + std::to_string(copy.ID) + " does not exist!");
             }
         }
@@ -286,6 +283,26 @@ void InspectorEngine::applyUniform(ShaderProgram& program, const Uniform& unifor
             applyFunction(program, uniform, *function);
             return;
         }
+    }
+
+    // this stops us from getting an error every frame. instead, we'll show it in the UI
+    if (!program.hasUniform(uniform.name.c_str())) {
+        Uniform copy = uniform;
+        copy.hasLocation = false;
+        if (!uniformRegPtr->updateUniform(copy.ID, copy)) {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "applyUniform", "uniform with ID: " + std::to_string(copy.ID) + " does not exist!");
+        }
+
+        return;
+    }
+    else if (!uniform.hasLocation) {
+        // The uniform has a location, but it's not marked as such. we need to fix that.
+        Uniform copy = uniform;
+        copy.hasLocation = true;
+        if (!uniformRegPtr->updateUniform(copy.ID, copy)) {
+            loggerPtr->addLog(LogLevel::LOG_ERROR, "applyUniform", "uniform with ID: " + std::to_string(copy.ID) + " does not exist!");
+        }
+        
     }
 
     switch (uniform.type)
