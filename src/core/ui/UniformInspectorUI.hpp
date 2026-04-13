@@ -61,7 +61,7 @@ private:
     bool drawRefInput_Uniform(InspectorReference* value, Uniform* uniform = nullptr);
     bool drawRefInput_ObjectData(InspectorReference* value, Uniform* uniform = nullptr);
     bool drawRefInput_SceneVar(InspectorReference* value, Uniform* uniform = nullptr);
-    void drawUniformRow(Uniform& uniform, unsigned int matID);
+    void drawUniformRow(Uniform& uniform, unsigned int matID, const std::string& uniformPath);
     bool drawReferenceModePicker(bool *isRef);
     bool drawReferenceTypePicker(InspectorReferenceType* referenceType);
     std::string getUniformSummary(const Uniform& uniform) const;
@@ -71,7 +71,5 @@ private:
     bool drawCompactTreeNode(const std::string& label);
     bool drawCompactHeader(const std::string& label);
 
-    unsigned int imGUIID = 0; // reset it every frame pls;
-    
     UniformInspectorThemeSettings theme;
 };
