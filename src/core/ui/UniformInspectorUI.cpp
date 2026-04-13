@@ -34,7 +34,8 @@ UniformInspectorUI::UniformInspectorUI(Fonts* fonts, SettingsStyles* styles, Log
             theme.headerColor.z * 1.2f,
             theme.headerColor.w
         );
-        theme.indentSize = styles_->assetsTitleInnerPadding + 2.0f;
+        // Match Objects / Materials tab indentation rhythm.
+        theme.indentSize = 8.0f;
     }
 
     loggerPtr_ = loggerPtr;
@@ -70,7 +71,7 @@ bool UniformInspectorUI::drawCompactTreeNode(const std::string& label) {
 
     const bool isOpen = ImGui::TreeNodeEx(
         label.c_str(),
-        ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed
+        ImGuiTreeNodeFlags_SpanAvailWidth
     );
 
     ImGui::PopStyleColor(3); // pop header colors
@@ -81,8 +82,7 @@ bool UniformInspectorUI::drawCompactTreeNode(const std::string& label) {
 
 void UniformInspectorUI::draw() {
     inspectorEngPtr_->queueUpdateChoices();
-    
-    int modelIndex = 0;
+
     const int modelCount = static_cast<int>(modelCachePtr_->getNumberOfModels());
     bool hasActivePrograms = false;
 
@@ -179,8 +179,6 @@ void UniformInspectorUI::draw() {
                 for (auto& model : modelCachePtr_->getAllModels()) {
                     const std::unordered_map<unsigned int, unsigned int>& materialReferences = model->getAllMaterialReferences();
                     drawModelContainer(model->ID, materialReferences);
-
-                    modelIndex++;
                 }
             }
             ImGui::PopStyleVar(2);
@@ -208,9 +206,15 @@ void UniformInspectorUI::drawModelContainer(unsigned int modelID, const std::uno
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, styles_->assetsBodyRounding);
     ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, styles_->assetsBorderThickness);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 6.0f));
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6.0f, 4.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, theme.indentSize);
 
-    ImGui::BeginChild("UniformContainer", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding | ImGuiChildFlags_AlwaysAutoResize);
+    ImGui::BeginChild(
+        "UniformContainer",
+        ImVec2(0, 0),
+        ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders | ImGuiChildFlags_AlwaysUseWindowPadding,
+        ImGuiWindowFlags_HorizontalScrollbar
+    );
 
     std::string headerLabel = modelLabel + "##uniform_model_" + std::to_string(modelID);
     const bool open = drawCompactHeader(headerLabel);
@@ -221,7 +225,7 @@ void UniformInspectorUI::drawModelContainer(unsigned int modelID, const std::uno
 
     ImGui::EndChild();
     ImGui::PopStyleColor(5);
-    ImGui::PopStyleVar(4);
+    ImGui::PopStyleVar(5);
     ImGui::PopID();
 }
 
@@ -974,6 +978,7 @@ bool UniformInspectorUI::drawRefInput_SceneVar(InspectorReference* value, Unifor
     std::optional<std::vector<std::string>> sceneVarsOpt = getSceneVariables(uniform->type);
     if (!sceneVarsOpt) {
         ImGui::TextDisabled("%s", "No scene variables available for this type!");
+        value->referenceType = InspectorReferenceType::Uniform;
         return false;
     }
 
