@@ -123,18 +123,6 @@ bool UniformRegistry::containsMaterialUniform(unsigned int matID, const std::str
     return true;
 }
 
-void UniformRegistry::registerMaterialUniformMap(unsigned int matID, const std::unordered_map<std::string, Uniform>& map) {
-    materialUniforms[matID];
-    for (auto& [name, uniformRef] : map) {
-        project->uniforms[nextID] = uniformRef;
-        auto& uniform = project->uniforms[nextID];
-        uniform.ID = nextID;
-        nextID++;
-        uniform.materialID = matID;
-        materialUniforms[matID][uniform.name] = uniform.ID;
-    }
-}
-
 void UniformRegistry::eraseMaterialUniform(unsigned int matID, const std::string& uniformName) {
     if (!materialUniforms.contains(matID)) return;
     if (!materialUniforms.at(matID).contains(uniformName)) return;
@@ -145,29 +133,67 @@ void UniformRegistry::eraseMaterialUniform(unsigned int matID, const std::string
 
 }
 
+void UniformRegistry::registerMaterialUniformMap(unsigned int matID, std::unordered_map<std::string, Uniform>& map) {
+    if (!materialUniforms.contains(matID)) materialUniforms[matID]; 
+
+    for (auto& [name, uniformRef] : map) {
+        if (materialUniforms.at(matID).contains(name)) {
+            unsigned int prevId = materialUniforms.at(matID).at(name);
+            uniformRef.ID = prevId;
+        }
+        else {
+            uniformRef.ID = nextID;
+            nextID++;
+        }
+        uniformRef.materialID = matID;
+        project->uniforms[uniformRef.ID] = uniformRef;
+        materialUniforms[matID][name] = uniformRef.ID;
+    }
+}
+
+void UniformRegistry::registerMaterialUniform(unsigned int materialID, Uniform uniform) {
+    if (materialUniforms.contains(materialID) && materialUniforms.at(materialID).contains(uniform.name)) {
+        unsigned int prevId = materialUniforms.at(materialID).at(uniform.name);
+        uniform.ID = prevId;
+    }
+    else {
+        uniform.ID = nextID;
+        nextID++;
+        materialUniforms[materialID][uniform.name] = uniform.ID;
+    }
+    uniform.materialID = materialID;
+    project->uniforms[uniform.ID] = uniform;
+}
+
+
 void UniformRegistry::registerSceneUniform(Uniform uniform) {
-    uniform.ID = nextID;
-    nextID++;
-    sceneUniforms[uniform.name] = uniform.ID;
+    if (sceneUniforms.contains(uniform.name)) {
+        unsigned int prevId = sceneUniforms.at(uniform.name);
+        uniform.ID = prevId;
+    }
+    else {
+        uniform.ID = nextID;
+        nextID++;
+        sceneUniforms[uniform.name] = uniform.ID;
+    }
     project->uniforms[uniform.ID] = uniform;
 }
 
 
 void UniformRegistry::registerModelUniform(unsigned int modelID, Uniform uniform) {
-    uniform.ID = nextID;
-    nextID++;
-    modelUniforms[modelID][uniform.name] = uniform.ID;
+    if (modelUniforms.contains(modelID) && modelUniforms.at(modelID).contains(uniform.name)) {
+        unsigned int prevId = modelUniforms.at(modelID).at(uniform.name);
+        uniform.ID = prevId;
+    }
+    else {
+        uniform.ID = nextID;
+        nextID++;
+        modelUniforms[modelID][uniform.name] = uniform.ID;
+    }
     project->uniforms[uniform.ID] = uniform;
 }
 
 
-
-void UniformRegistry::registerMaterialUniform(unsigned int materialID, Uniform uniform) {
-    uniform.ID = nextID;
-    nextID++;
-    materialUniforms[materialID][uniform.name] = uniform.ID;
-    project->uniforms[uniform.ID] = uniform;
-}
 
 size_t UniformRegistry::getSceneUniformsSize() {
     return sceneUniforms.size();
