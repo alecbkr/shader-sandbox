@@ -44,25 +44,26 @@ unsigned int TextureCache::createTexture2D(std::string texture2D_path) {
 }
 
 
-unsigned int TextureCache::createCubeMap(std::string cubemap_dir_path) {
+unsigned int TextureCache::createCubeMap(std::vector<std::string> texture_paths) {
     unsigned int newTextureID;
 
-    auto iter = texturePathMap.find(cubemap_dir_path);
-    if (iter != texturePathMap.end()) {
-        iter->second.get()->refCount++;
-        newTextureID = iter->second.get()->ID;
+    // auto iter = texturePathMap.find(cubemap_dir_path);
+    // if (iter != texturePathMap.end()) {
+    //     iter->second.get()->refCount++;
+    //     newTextureID = iter->second.get()->ID;
+    // }
+    
+    if (validateNextID() == false) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "createTexture2D", "could not validate nextMaterialInstanceID");
+        return std::numeric_limits<unsigned int>::max();
     }
-    else {
-        if (validateNextID() == false) {
-            loggerPtr->addLog(LogLevel::LOG_ERROR, "createTexture2D", "could not validate nextMaterialInstanceID");
-        }
 
-        newTextureID = nextTextureID;
-        auto textureInstancePtr = std::make_shared<TextureInstance>(std::make_unique<CubeMap>(cubemap_dir_path), 1, newTextureID);
-        textureIDMap.emplace(newTextureID, textureInstancePtr);
-        texturePathMap.emplace(cubemap_dir_path, textureInstancePtr);
-        nextTextureID++;
-    }
+    newTextureID = nextTextureID;
+    auto textureInstancePtr = std::make_shared<TextureInstance>(std::make_unique<CubeMap>(texture_paths), 1, newTextureID);
+    textureIDMap.emplace(newTextureID, textureInstancePtr);
+    // texturePathMap.emplace(cubemap_dir_path, textureInstancePtr);
+    nextTextureID++;
+    
     return newTextureID;
 }
 
@@ -73,13 +74,13 @@ void TextureCache::deleteTexture(unsigned int textureID) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURECACHE | deleteTexture()", " textureID out of bounds: ", std::to_string(textureID));
         return;
     }
-    
-    if ((--foundTextureInstance->refCount) > 0) {
-        return;
-    }
 
-    texturePathMap.erase(foundTextureInstance->texture->getPath());
-    textureIDMap.erase(textureID);
+    if ((--foundTextureInstance->refCount) == 0) {
+        if (foundTextureInstance->texture->paths[1].empty()) {
+        texturePathMap.erase(foundTextureInstance->texture->paths[0]);
+        }
+        textureIDMap.erase(textureID);
+    }
 }
 
 
@@ -105,7 +106,7 @@ void TextureCache::bindTexture(unsigned int textureID, unsigned int texUnit) {
     if (foundTexture->bind(texUnit) == false) {
         switch (foundTexture->getStatus()) {
             case TextureStatus::FileNotFound: 
-                loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURECACHE | bindTexture()", " texture not found at path ", foundTexture->getPath());
+                loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURECACHE | bindTexture()", " texture path(s) could not be found");
                 break;
             case TextureStatus::InvalidFormat:
                 loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURECACHE | bindTexture()", " texUnit must be 0-31");
@@ -144,13 +145,14 @@ bool TextureCache::validateNextID() {
 }
 
 
-std::string TextureCache::getTexturePath(unsigned int textureID) {
+std::vector<std::string> TextureCache::getTexturePaths(unsigned int textureID) {
     if (textureIDMap.contains(textureID) == false) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURECACHE | getTexturePath", "texture not found with ID " + std::to_string(textureID));
-        return "";
+        std::vector<std::string> emptypaths;
+        return emptypaths;
     }
 
-    return textureIDMap.at(textureID)->texture->getPath();
+    return textureIDMap.at(textureID)->texture->paths;
 }
 
 unsigned int TextureCache::getTextureTexUnit(unsigned int textureID) {

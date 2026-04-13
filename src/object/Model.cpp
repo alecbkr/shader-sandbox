@@ -109,20 +109,20 @@ void Model::rescale(glm::vec3 vector) {
 }
 
 
-void Model::rotate(float angle, glm::vec3 axis) {
-    float processedAngle = fmod((rotation.x + angle), 360.0f);
-    if (processedAngle < 0) processedAngle += 360.0f;
+// void Model::rotate(float angle, glm::vec3 axis) {
+//     float processedAngle = fmod((rotation.x + angle), 360.0f);
+//     if (processedAngle < 0) processedAngle += 360.0f;
 
-    glm::vec3 processedAxis = glm::clamp(glm::vec3(rotation.y+axis.x, rotation.z+axis.y, rotation.w+axis.z), -1.0f, 1.0f);
-    glm::vec3 normalizedAxis = processedAxis;
-    if (glm::length(normalizedAxis) > 0.0001f) {
-        normalizedAxis = glm::normalize(normalizedAxis);
-    }
+//     glm::vec3 processedAxis = glm::clamp(glm::vec3(rotation.y+axis.x, rotation.z+axis.y, rotation.w+axis.z), -1.0f, 1.0f);
+//     glm::vec3 normalizedAxis = processedAxis;
+//     if (glm::length(normalizedAxis) > 0.0001f) {
+//         normalizedAxis = glm::normalize(normalizedAxis);
+//     }
 
-    rotation = glm::vec4(processedAngle, processedAxis);
-    this->orientation = glm::angleAxis(glm::radians(processedAngle), normalizedAxis);
-    calcModelM();
-}
+//     rotation = glm::vec4(processedAngle, processedAxis);
+//     this->orientation = glm::angleAxis(glm::radians(processedAngle), normalizedAxis);
+//     calcModelM();
+// }
 
 
 void Model::setPosition(glm::vec3 position) {
@@ -149,6 +149,14 @@ void Model::setRotation(float angle, glm::vec3 axis) {
 
     rotation = glm::vec4(processedAngle, processedAxis);
     this->orientation = glm::angleAxis(glm::radians(processedAngle), normalizedAxis);
+    calcModelM();
+}
+
+
+void Model::setRotation(glm::vec3 rotation) {
+    
+    this->rotation = glm::mod(rotation, 360.0f);
+    this->orientation = glm::quat(glm::radians(this->rotation));
     calcModelM();
 }
 
@@ -314,7 +322,7 @@ ModelStatus& Model::getModelStatus() { return status; }
 glm::mat4 Model::getModelMatrix() const {return modelM;}
 glm::vec3 Model::getPosition()    const {return position;}
 glm::vec3 Model::getScale()       const {return scale;}
-glm::vec4 Model::getRotation()    const {return rotation;}
+glm::vec3 Model::getRotation()    const {return rotation;}
 unsigned int Model::getInstanceCount() const { return modelInstanceCount; }
 const std::vector<InstanceData>& Model::getInstanceData() const { return instanceData; }
 const std::vector<MeshInstance>& Model::getMeshInstances() const { return meshInstances; }

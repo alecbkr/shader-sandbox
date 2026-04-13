@@ -287,15 +287,16 @@ void MaterialsInspectorUI::draw() {
                                 }
                             }
 
-                            auto textureData = mat->getAllTextureUnitsAndPaths(texCache);
+                            auto textureData = matCache->getTextureNamesAndUnits(mat->ID);
+
 
                             int i = 0;
-                            for (auto& [texUnit, path] : textureData) {
+                            for (auto& [name, texUnit] : textureData) {
                                 ImGui::PushID(i);
 
-                                std::string relativePath = makeRelativeToAssets(path);
+                                // std::string relativePath = makeRelativeToAssets(path);
 
-                                ImGui::TextUnformatted(("Texture Unit: " + std::to_string(texUnit) + " | " + relativePath).c_str());
+                                ImGui::TextUnformatted(("Texture Unit: " + std::to_string(texUnit) + " | " + name).c_str());
 
                                 if (ImGui::BeginPopupContextItem("TexturePopup")) {
                                     if (ImGui::MenuItem("Remove")) {

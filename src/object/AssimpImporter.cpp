@@ -59,12 +59,13 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
         std::string name = materialEntry.name;
         MaterialType type = materialEntry.type;
         MaterialProperties properties = materialEntry.properties;
-        std::vector<std::string>& texture_paths = materialEntry.texture_paths;
+        std::vector<std::vector<std::string>>& texture_paths = materialEntry.texture_paths;
 
         bool loadResult = materialCachePtr->loadMaterialFromSave(ID, type, properties, texture_paths);
         if (loadResult == true) {
             materialCachePtr->getMaterial(ID)->setProgramName(materialEntry.programName);
             materialCachePtr->changeMaterialName(ID, name);
+            materialCachePtr->changeMaterialType(ID, type);
         }
         else {
             feedback += "Material failed to load: \"" + name + "\"\n";
@@ -77,12 +78,13 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
         unsigned int ID = modelEntry.ID;
         std::filesystem::path path = modelEntry.path;
         ModelType type = modelEntry.type;
+        bool isSkybox = modelEntry.isSkybox;
 
         std::vector<unsigned int> meshMaterialIDs = modelEntry.meshMaterialIDs;
         std::vector<InstanceData> instanceData = modelEntry.instanceData;
         glm::vec3 position = modelEntry.position;
         glm::vec3 scale = modelEntry.scale;
-        // glm::vec4 rotation = modelEntry.rotation;
+        glm::vec3 rotation = modelEntry.rotation;
 
         // LOAD MESHES
         bool reservationResult = modelCachePtr->reserveModelID(ID, path.string(), type);
@@ -113,11 +115,10 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
         }
 
         // LOAD BOUND MATERIALS PER MESH
-        // model->loadMeshMaterialIDs(meshMaterialIDs);
         for (unsigned int idx = 0; idx < meshMaterialIDs.size(); idx++) {
             unsigned int materialID = meshMaterialIDs[idx];
             if (materialCachePtr->getMaterialIDMap().contains(materialID)) {
-                model->setMeshMaterial(idx, materialID, materialCachePtr->getMaterial(materialID)->getValidity());
+                model->setMeshMaterial(idx, materialID, materialCachePtr->getMaterial(materialID)->getValidity()); //validity will always be false because shaders arent directly attached yet
             }
             else if (materialID != std::numeric_limits<unsigned int>::max()){
                 feedback += "model \"" + name + "\" has missing material";
@@ -125,13 +126,13 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
         }
         model->setPosition(position);
         model->setScale(scale);
-        // model->setRotation(rotation); //nd
+        model->setRotation(rotation); 
         model->setInstanceCount(instanceData.size());
         model->loadInstanceData(instanceData);
+        if (isSkybox) modelCachePtr->toggleAsSkybox(ID);
 
-        bool success = modelCachePtr->updateRenderer(ID);
+        modelCachePtr->updateRenderer(ID); //will not render anything since materials are invalid (no shaders)
 
-        // inspectorEngPtr->refreshUniforms();
     }
     if (!feedback.empty()) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "ASSIMPIMPORTER::loadAssetCachesFromSave()\n", feedback);
@@ -274,7 +275,7 @@ void AssimpImporter::getTextures(unsigned int materialID, aiMaterial *mat, std::
             }
 
             std::string filepath = directory + "/" + aiTex.C_Str();
-            materialCachePtr->addTextureToMaterial(materialID, filepath, false);
+            materialCachePtr->addTexture2DToMaterial(materialID, filepath);
         }
     }
 }

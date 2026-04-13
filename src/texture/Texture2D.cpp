@@ -27,7 +27,7 @@ void Texture2D::loadToGPU() {
     unsigned char* data;
     GLenum format;
     int width, height, channelCnt;
-    data = stbi_load(path.c_str(), &width, &height, &channelCnt, 0);
+    data = stbi_load(paths[0].c_str(), &width, &height, &channelCnt, 0);
     if (data == nullptr) {
         status = TextureStatus::FileNotFound;
         return;

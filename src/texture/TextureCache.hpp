@@ -13,6 +13,8 @@
 class Logger;
 
 class TextureCache {
+public:
+    
 private:
     struct TextureInstance {
         std::unique_ptr<Texture> texture;
@@ -26,12 +28,12 @@ public:
     ~TextureCache() = default;
 
     unsigned int createTexture2D(std::string texture2D_path);
-    unsigned int createCubeMap(std::string cubemap_dir_path);
+    unsigned int createCubeMap(std::vector<std::string> texture_paths);
     void deleteTexture(unsigned int ID);
     void bindTexture(unsigned int ID, unsigned int texUnit);
     void bindDefault(unsigned int texUnit);
 
-    std::string getTexturePath(unsigned int textureID);
+    std::vector<std::string> getTexturePaths(unsigned int textureID);
     unsigned int getTextureTexUnit(unsigned int textureID);
 
 private:

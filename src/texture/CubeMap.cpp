@@ -4,16 +4,7 @@
 #include "core/logging/LogSink.hpp"
 #include <stb_image.h>
 
-CubeMap::CubeMap(std::string cubemap_dir) : Texture(cubemap_dir) {
-    cubemap_paths = {
-        cubemap_dir + "/right.jpg",
-        cubemap_dir + "/left.jpg",
-        cubemap_dir + "/top.jpg",
-        cubemap_dir + "/bottom.jpg",
-        cubemap_dir + "/front.jpg",
-        cubemap_dir + "/back.jpg"
-    };
-
+CubeMap::CubeMap(std::vector<std::string> cubemap_paths) : Texture(cubemap_paths) {
     status = TextureStatus::Ready;
 }
 
@@ -39,8 +30,8 @@ void CubeMap::loadToGPU() {
     glBindTexture(GL_TEXTURE_CUBE_MAP, gl_ID);
     stbi_set_flip_vertically_on_load(false);
     
-    for (unsigned int i = 0; i < cubemap_paths.size(); i++) {
-        data = stbi_load(cubemap_paths[i].c_str(), &width, &height, &channelCnt, 0);
+    for (unsigned int i = 0; i < paths.size(); i++) {
+        data = stbi_load(paths[i].c_str(), &width, &height, &channelCnt, 0);
         if (data == nullptr) {
             status = TextureStatus::FileNotFound;
             return;

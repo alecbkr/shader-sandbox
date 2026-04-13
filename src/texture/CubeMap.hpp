@@ -8,8 +8,7 @@
 
 class CubeMap final : public Texture{
     public:
-        std::vector<std::string> cubemap_paths;
-        CubeMap(std::string cubemap_dir);
+        CubeMap(std::vector<std::string> cubemap_paths);
         ~CubeMap() = default;
         bool bind(unsigned int texUnit) override;
 

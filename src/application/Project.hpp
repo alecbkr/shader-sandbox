@@ -26,12 +26,13 @@ struct ModelEntry {
     unsigned int ID;
     std::filesystem::path path;
     ModelType type; //enum
+    bool isSkybox;
 
     std::vector<unsigned int> meshMaterialIDs;
     std::vector<InstanceData> instanceData; //struct
     glm::vec3 position;
     glm::vec3 scale;
-    glm::vec4 rotation;
+    glm::vec3 rotation;
 };
 
 
@@ -41,7 +42,7 @@ struct MaterialEntry {
     MaterialType type; //enum
 
     MaterialProperties properties; //struct
-    std::vector<std::string> texture_paths;
+    std::vector<std::vector<std::string>> texture_paths;
     std::string programName;
 };
 

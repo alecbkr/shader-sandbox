@@ -44,12 +44,13 @@ inline void to_json(json& j, const ModelEntry& modelData){
         {"ID", modelData.ID},
         {"path", modelData.path.string()},
         {"type", static_cast<int>(modelData.type)},
+        {"isSkybox", modelData.isSkybox},
 
         {"meshMaterialIDs", modelData.meshMaterialIDs},
         {"instanceData", modelData.instanceData},
         {"position", {modelData.position.x, modelData.position.y, modelData.position.z}},
         {"scale", {modelData.scale.x, modelData.scale.y, modelData.scale.z}},
-        {"rotation", {modelData.rotation.x, modelData.rotation.y, modelData.rotation.z, modelData.rotation.w}}
+        {"rotation", {modelData.rotation.x, modelData.rotation.y, modelData.rotation.z}}
     };
 }
 
@@ -86,6 +87,7 @@ inline void from_json(const json& j, ModelEntry& modelData) {
     modelData.ID = j.at("ID").get<unsigned int>();
     modelData.path = j.at("path").get<std::string>();
     modelData.type = static_cast<ModelType>(j.at("type").get<int>());
+    modelData.isSkybox = j.at("isSkybox").get<bool>();
 
     modelData.meshMaterialIDs = j.at("meshMaterialIDs").get<std::vector<unsigned int>>();
     modelData.instanceData = j.at("instanceData").get<std::vector<InstanceData>>(); // uses InstanceData::from_json
@@ -105,11 +107,10 @@ inline void from_json(const json& j, ModelEntry& modelData) {
     );
 
     auto rotation = j.at("rotation");
-    modelData.rotation = glm::vec4(
+    modelData.rotation = glm::vec3(
         rotation.at(0).get<float>(),
         rotation.at(1).get<float>(),
-        rotation.at(2).get<float>(),
-        rotation.at(3).get<float>()
+        rotation.at(2).get<float>()
     );
 }
 
@@ -126,7 +127,7 @@ inline void from_json(const json& j, MaterialEntry& materialData) {
     materialData.type = static_cast<MaterialType>(j.at("type").get<int>());
 
     materialData.properties = j.at("properties").get<MaterialProperties>();
-    materialData.texture_paths = j.at("texture_paths").get<std::vector<std::string>>();
+    materialData.texture_paths = j.at("texture_paths").get<std::vector<std::vector<std::string>>>();
     materialData.programName = j.at("programName").get<std::string>();
 }
 
@@ -308,6 +309,7 @@ void ProjectLoader::save(Project& project, ModelCache* modelCachePtr, MaterialCa
             .ID = model->getID(),
             .path = model->getPath(),
             .type = model->type,
+            .isSkybox = model->getID() == modelCachePtr->getSkyboxModelID(),
 
             .meshMaterialIDs = model->getAllMaterialIDsPerMesh(),
             .instanceData = model->getInstanceData(),
@@ -328,7 +330,7 @@ void ProjectLoader::save(Project& project, ModelCache* modelCachePtr, MaterialCa
             
             .properties = material->properties,
             .texture_paths = materialCachePtr->getAllTexturePathsForMaterial(material->ID),
-            .programName = shaderRegPtr->getProgramName(material->getProgramID())
+            .programName = material->getProgramID() == std::numeric_limits<unsigned int>::max() ? "" : shaderRegPtr->getProgram(material->getProgramID())->name
         };
         project.materialData.push_back(materialEntry);
     }

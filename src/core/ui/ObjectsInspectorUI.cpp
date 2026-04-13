@@ -351,30 +351,30 @@ bool ObjectsInspectorUI::drawAdditionalMenu(Model* currModel, ModelCache* modelC
     return true;
 }
 
-bool ObjectsInspectorUI::drawTextureMenu(ModelTextureMenu& menu, Logger* loggerPtr, TextureRegistry* textureRegPtr) {
-    // bool changed = false;
-    std::vector<const char*> textureChoices;
-    const std::vector<const Texture*>& registryTextures = textureRegPtr->readTextures();
-    textureChoices.reserve(registryTextures.size());
-    for (const Texture* tex : registryTextures) {
-        textureChoices.push_back(tex->getPath().c_str());
-    }
+// bool ObjectsInspectorUI::drawTextureMenu(ModelTextureMenu& menu, Logger* loggerPtr, TextureRegistry* textureRegPtr) {
+//     // bool changed = false;
+//     std::vector<const char*> textureChoices;
+//     const std::vector<const Texture*>& registryTextures = textureRegPtr->readTextures();
+//     textureChoices.reserve(registryTextures.size());
+//     for (const Texture* tex : registryTextures) {
+//         textureChoices.push_back(tex->getPath().c_str());
+//     }
 
-    if (ImGui::Combo("Texture", &menu.textureSelection, textureChoices.data(), (int)textureChoices.size())) {
-        // changed = true;
-        loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed texture");
-    }
-    if (ImGui::InputInt("Unit", &menu.unitSelection)) {
-        // changed = true;
-        loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed unit");
-    }
-    if (drawTextInput(&menu.uniformName, "Uniform Name")) {
-        // changed = true;
-        loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed uniform name");
-    }
+//     if (ImGui::Combo("Texture", &menu.textureSelection, textureChoices.data(), (int)textureChoices.size())) {
+//         // changed = true;
+//         loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed texture");
+//     }
+//     if (ImGui::InputInt("Unit", &menu.unitSelection)) {
+//         // changed = true;
+//         loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed unit");
+//     }
+//     if (drawTextInput(&menu.uniformName, "Uniform Name")) {
+//         // changed = true;
+//         loggerPtr->addLog(LogLevel::INFO, "Inspector UI Draw Texture Menu", "changed uniform name");
+//     }
 
-    return false;
-}
+//     return false;
+// }
 
 bool ObjectsInspectorUI::drawTextInput(std::string* value, const char* label) {
     bool changed = false;
@@ -419,13 +419,13 @@ bool ObjectsInspectorUI::drawModelOrientationInput(Model& model) {
     bool changed = false;
     ImGui::PushID(&model);
 
-    glm::vec4 rotation = model.getRotation();
-    ImGui::Text("Orientation");
+    glm::vec3 rotation = model.getRotation();
+    ImGui::Text("Rotation");
     ImGui::SameLine();
-    changed |= ImGui::DragFloat4("##Orientation##xx", &rotation.x,  .05f);
+    changed |= ImGui::DragFloat3("##Rotation##xx", &rotation.x,  .05f);
 
     ImGui::PopID();
-    if (changed) model.setRotation(rotation.x, glm::vec3(rotation.y, rotation.z, rotation.w));
+    if (changed) model.setRotation(rotation);
     return changed;
 }
 
