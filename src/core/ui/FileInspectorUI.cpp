@@ -379,10 +379,8 @@ void FileInspectorUI::drawShaderLinkMenus(std::unordered_map<std::string, Shader
 
     for (auto it = menus.begin(); it != menus.end();) {
         auto& [shaderName, menu] = *it;
-   
-        if (!menu.initialized) {
-            initializeMenu(menu, choices, shaderRegPtr);
-        }
+
+        initializeMenu(menu, choices, shaderRegPtr);
 
         bool shouldDelete = drawShaderProgramCard(menu, choices, shaderRegPtr, inspectorEngPtr, styles, guiID);
         
@@ -416,9 +414,6 @@ void FileInspectorUI::initializeMenu(ShaderLinkMenu& menu, ShaderLinkMenuChoices
     const ShaderProgram* oldProgram = shaderRegPtr->getProgram(menu.shaderName);
     bool isNewProgram = oldProgram == nullptr;
     if (isNewProgram) {
-        menu.vertSelection = 0;
-        menu.fragSelection = 0;
-        menu.geometrySelection = 0;
         menu.initialized = true;
         return;
     }
@@ -434,19 +429,26 @@ void FileInspectorUI::initializeMenu(ShaderLinkMenu& menu, ShaderLinkMenuChoices
     std::string registryVert = getNormalizedPath(oldProgram->vertPath);
     std::string registryFrag = getNormalizedPath(oldProgram->fragPath);
 
-    for (size_t i = 0; i < choices.vertFiles.size(); i++) {
-        if (i > 0 && choices.vertFiles[i] != nullptr) {
-            if (getNormalizedPath(choices.vertFiles[i]->filePath) == registryVert) {
-                menu.vertSelection = (int)i;
-                break;
+    if (menu.vertSelection != 0 || !menu.initialized) {
+        menu.vertSelection = 0;
+        for (size_t i = 0; i < choices.vertFiles.size(); i++) {
+            if (i > 0 && choices.vertFiles[i] != nullptr) {
+                if (getNormalizedPath(choices.vertFiles[i]->filePath) == registryVert) {
+                    menu.vertSelection = (int)i;
+                    break;
+                }
             }
         }
     }
-    for (size_t i = 0; i < choices.fragFiles.size(); i++) {
-        if (i > 0 && choices.fragFiles[i] != nullptr) {
-            if (getNormalizedPath(choices.fragFiles[i]->filePath) == registryFrag) {
-                menu.fragSelection = (int)i;
-                break;
+
+    if (menu.fragSelection != 0 || !menu.initialized) {
+        menu.fragSelection = 0;
+        for (size_t i = 0; i < choices.fragFiles.size(); i++) {
+            if (i > 0 && choices.fragFiles[i] != nullptr) {
+                if (getNormalizedPath(choices.fragFiles[i]->filePath) == registryFrag) {
+                    menu.fragSelection = (int)i;
+                    break;
+                }
             }
         }
     }

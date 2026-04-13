@@ -648,26 +648,24 @@ void SettingsModal::drawFoldersPage() {
 
 void SettingsModal::openFolder(const std::filesystem::path& path) {
     if (!std::filesystem::exists(path) || !eventsPtr) return;
-    
-    NFD::UniquePath outPath;
-    nfdresult_t result = NFD::OpenDialog(outPath, nullptr, 0, path.string().c_str());
-    // Commented this out, bc after opening a file, windows keeps reopening that same folder
-    /*
-    if (result == NFD_OKAY) {
-        std::filesystem::path selectedPath(outPath.get());
-        if (std::filesystem::is_regular_file(selectedPath)) {
-            eventsPtr->TriggerEvent(Event{ 
-                EventType::OpenFile, 
-                false, 
-                OpenFilePayload{ 
-                    selectedPath.string(), 
-                    selectedPath.filename().string(), 
-                    false 
-                } 
-            });
-        }
-    }
-    */
+
+    std::filesystem::path absPath = std::filesystem::absolute(path);
+    absPath.make_preferred();
+    std::string finalPath = absPath.string();
+    std::string folderPath;
+
+    #if defined(_WIN32) || defined(__CYGWIN__)
+        folderPath = "explorer.exe /e, \"" + finalPath +"\"";
+
+    #elif defined(__APPLE__)
+        folderPath = "open \"" + finalPath + "\"";
+
+    #elif defined(__linux__)
+        folderPath = "xdg-open \"" + finalPath + "\"";
+
+    #endif
+
+    std::system(folderPath.c_str());
 }
 
 void SettingsModal::draw() {
