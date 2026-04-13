@@ -363,23 +363,23 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
 
         if (currentFunction.referenceType == InspectorReferenceType::ObjectData) {
             // need a better way of doing this...
-            Model* referencedModel = modelCachePtr->getModel(function.referencedModelID);
+            Model* referencedModel = modelCachePtr->getModel(currentFunction.referencedModelID);
             if (referencedModel == nullptr) {
                 loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", "referenced Model does not exist!");
                 break;
             }
 
 
-            switch (function.returnType) {
+            switch (currentFunction.returnType) {
             case UniformType::Vec3: {
-                if (function.referencedValueName == "position") {
+                if (currentFunction.referencedValueName == "position") {
                     finalValue = uniform;
                     finalValue.name = uniform.name;
                     finalValue.isFunction = false;
                     finalValue.value = referencedModel->getPosition();
                     validFunction = true;
                 }
-                else if (function.referencedValueName == "scale") {
+                else if (currentFunction.referencedValueName == "scale") {
                     finalValue = uniform;
                     finalValue.name = uniform.name;
                     finalValue.isFunction = false;
@@ -389,7 +389,7 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
                 break;
             }
             case UniformType::Vec4: {
-                if (function.referencedValueName == "orientation") {
+                if (currentFunction.referencedValueName == "orientation") {
                     finalValue = uniform;
                     finalValue.name = uniform.name;
                     finalValue.isFunction = false;
@@ -399,7 +399,8 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
                 break;
             }
             default: 
-                loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", "This type " + to_string(function.returnType) + " does not support world Data!");
+                // UI will show this, no need to log it
+                // loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", "type for " + currentUniform.name + ": " + to_string(currentFunction.returnType) + " does not support world Data!");
                 break;
             }
 
@@ -413,7 +414,7 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
                     loggerPtr->addLog(LogLevel::LOG_ERROR, "applyFunction", "camera is null!");
                     continue;
                 }
-                if (function.referencedValueName == "Camera Position") {
+                if (currentFunction.referencedValueName == "Camera Position") {
                     finalValue = uniform;
                     finalValue.name = uniform.name;
                     finalValue.isFunction = false;
@@ -423,7 +424,7 @@ void InspectorEngine::applyFunction(ShaderProgram& program, const Uniform& unifo
                 break;
             }
             case UniformType::Float: {
-                if (function.referencedValueName == "getTime") {
+                if (currentFunction.referencedValueName == "getTime") {
                     finalValue = uniform;
                     finalValue.name = uniform.name;
                     finalValue.isFunction = false;

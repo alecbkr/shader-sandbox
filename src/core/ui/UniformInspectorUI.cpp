@@ -974,6 +974,7 @@ bool UniformInspectorUI::drawRefInput_SceneVar(InspectorReference* value, Unifor
     std::optional<std::vector<std::string>> sceneVarsOpt = getSceneVariables(uniform->type);
     if (!sceneVarsOpt) {
         ImGui::TextDisabled("%s", "No scene variables available for this type!");
+        value->referenceType = InspectorReferenceType::Uniform;
         return false;
     }
 
