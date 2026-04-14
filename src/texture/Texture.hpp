@@ -4,6 +4,7 @@
 #include "platform/GL.hpp"
 #include <string>
 #include <vector>
+#include <limits> 
 #include "TextureStatus.hpp"
 
 class Logger;
