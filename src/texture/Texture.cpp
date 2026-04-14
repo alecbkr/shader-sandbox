@@ -27,6 +27,11 @@ void Texture::unbind() {
 }
 
 
+std::string Texture::getName() const {
+    return name;
+}
+
+
 TextureStatus Texture::getStatus() const {
     return status;
 }
@@ -47,6 +52,11 @@ TextureStatus Texture::getStatus() const {
 
 const unsigned int Texture::getTexUnit() const {
     return texUnit;
+}
+
+
+void Texture::setName(std::string name) {
+    this->name = name;
 }
 
 

@@ -3,6 +3,7 @@
 #include "../core/logging/LogSink.hpp"
 #include <stb_image.h>
 
+#include <iostream> //TEMPADD
 
 Texture2D::Texture2D(std::string texture_path) : Texture(texture_path) {
     status = TextureStatus::Ready;
@@ -30,6 +31,7 @@ void Texture2D::loadToGPU() {
     data = stbi_load(paths[0].c_str(), &width, &height, &channelCnt, 0);
     if (data == nullptr) {
         status = TextureStatus::FileNotFound;
+        
         return;
     }
 

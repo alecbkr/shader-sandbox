@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <filesystem>
 #include "object/Material.hpp"
 
 
@@ -28,13 +29,13 @@ public:
     void deleteMaterial(unsigned int materialID);
     
 
-    void addTexture2DToMaterial(unsigned int materialID, std::string texture_path);
-    void addCubemapToMaterial(unsigned int materialID, std::vector<std::string> texture_paths);
+    void addTexture2DToMaterial(unsigned int materialID, std::filesystem::path texture_path);
+    void addCubemapToMaterial(unsigned int materialID, std::vector<std::filesystem::path> texture_paths);
     void removeTextureFromMaterial(unsigned int materialID, unsigned int textureID);
     bool changeMaterialName(unsigned int materialID, std::string name);
     void changeMaterialType(unsigned int materialID, MaterialType type);
     void changeMaterialProgram(unsigned int materialID, unsigned int programID);
-    bool loadMaterialFromSave(unsigned int ID, MaterialType type, MaterialProperties properties, std::vector<std::vector<std::string>> texture_paths);
+    bool loadMaterialFromSave(unsigned int ID, MaterialType type, MaterialProperties properties, std::vector<std::vector<std::filesystem::path>> texture_paths);
     void updateMatIDs();
 
     std::vector<std::pair<std::string, unsigned int>> getTextureNamesAndUnits(unsigned int materialID);
@@ -43,7 +44,7 @@ public:
     const std::unordered_map<unsigned int, std::unique_ptr<Material>>& getMaterialIDMap() const;
     std::vector<unsigned int> getAllMaterialIDs();
     std::vector<Material*> getAllMaterials();
-    std::vector<std::vector<std::string>> getAllTexturePathsForMaterial(unsigned int materialID);
+    std::vector<std::vector<std::filesystem::path>> getAllTexturePathsForMaterial(unsigned int materialID);
 
     bool contains(unsigned int materialID);
     unsigned int getNextMaterialID();

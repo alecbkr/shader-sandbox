@@ -42,7 +42,7 @@ struct MaterialEntry {
     MaterialType type; //enum
 
     MaterialProperties properties; //struct
-    std::vector<std::vector<std::string>> texture_paths;
+    std::vector<std::vector<std::filesystem::path>> texture_paths;
     std::string programName;
 };
 

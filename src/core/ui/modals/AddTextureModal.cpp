@@ -146,12 +146,12 @@ void AddTextureModal::drawCubemapPage() {
 
 bool AddTextureModal::addTexture() {
     if (type == AddedType::Texture2D && !selectedPaths[0].empty()) {
-        unsigned int textureID = texCachePtr->createTexture2D(selectedPaths[0].string().c_str());
+        unsigned int textureID = texCachePtr->createTexture2D(selectedPaths[0]);
         targetMaterial->addTexture(textureID);
         return true;
     }
     else if (type == AddedType::Cubemap) {
-        std::vector<std::string> cubemap_paths(6);
+        std::vector<std::filesystem::path> cubemap_paths(6);
         bool hasAllTextures = true;
         for (int idx = 0; idx < 6; idx++) {
             if (selectedPaths[idx].empty()) {
@@ -159,7 +159,7 @@ bool AddTextureModal::addTexture() {
                 break;
             }
             else {
-                cubemap_paths[idx] = selectedPaths[idx].string();
+                cubemap_paths[idx] = selectedPaths[idx];
             }
         }
 

@@ -6,6 +6,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <algorithm>
 
 #include "core/logging/Logger.hpp"
 #include "ModelCache.hpp"
@@ -59,7 +60,9 @@ bool AssimpImporter::loadAssetCachesFromSave(std::vector<ModelEntry>& modelEntri
         std::string name = materialEntry.name;
         MaterialType type = materialEntry.type;
         MaterialProperties properties = materialEntry.properties;
-        std::vector<std::vector<std::string>>& texture_paths = materialEntry.texture_paths;
+        std::vector<std::vector<std::filesystem::path>>& texture_paths = materialEntry.texture_paths;
+
+        
 
         bool loadResult = materialCachePtr->loadMaterialFromSave(ID, type, properties, texture_paths);
         if (loadResult == true) {
@@ -154,7 +157,7 @@ unsigned int AssimpImporter::importModel(std::string path) {
     }
 
     unsigned int modelID = modelCachePtr->createModelForImportSetup(path);
-    std::string directory = path.substr(0, path.find_last_of('/'));
+    std::string directory = path.substr(0, path.find_last_of('\\'));
     
     // GRAB MATERIALS -- starts as 1 to avoid creating an unused default mat from assimp
     for (unsigned int i = 1; i < scene->mNumMaterials; i++) {
@@ -274,7 +277,7 @@ void AssimpImporter::getTextures(unsigned int materialID, aiMaterial *mat, std::
                 continue;
             }
 
-            std::string filepath = directory + "/" + aiTex.C_Str();
+            std::string filepath = directory + "\\" + aiTex.C_Str();
             materialCachePtr->addTexture2DToMaterial(materialID, filepath);
         }
     }
