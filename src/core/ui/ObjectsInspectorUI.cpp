@@ -294,7 +294,7 @@ bool ObjectsInspectorUI::drawMeshesMenu(Model* currModel, MaterialCache* materia
     
     // PRINTS ALL MESHES + MATERIAL
     for (auto& meshInstance : currModel->getMeshInstances()) {
-        int selectedItem;
+        int selectedItem = -1;
         for (unsigned int i = 0; i < materialIDs.size(); i++) {
             if (meshInstance.materialID == materialIDs[i]) {
                 selectedItem = i;
