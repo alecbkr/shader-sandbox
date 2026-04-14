@@ -43,6 +43,10 @@ void Material::setMaterialType(MaterialType type) {
 
 
 void Material::addTexture(unsigned int textureID) {
+    for (unsigned int existingID : textureIDs) {
+        if (textureID == existingID) return;
+    }
+    
     textureIDs.push_back(textureID);
 }
 

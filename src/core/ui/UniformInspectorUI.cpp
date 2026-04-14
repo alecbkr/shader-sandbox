@@ -734,7 +734,7 @@ bool UniformInspectorUI::drawInput(InspectorSampler2D* value, Uniform* uniform, 
         return false;
     }
 
-    std::vector<std::vector<std::string>> texPaths =
+    std::vector<std::vector<std::filesystem::path>> texPaths =
         materialCachePtr_->getAllTexturePathsForMaterial(material->ID);
 
     ImGui::TextDisabled("Texture Unit");
@@ -758,7 +758,7 @@ bool UniformInspectorUI::drawInput(InspectorSampler2D* value, Uniform* uniform, 
 
         // Texture2D
         if (paths.size() == 1) {
-            return makeRelativeToAssetsFolder(paths[0]);
+            return makeRelativeToAssetsFolder(paths[0].string());
         }
 
         // Cubemap (multiple paths)

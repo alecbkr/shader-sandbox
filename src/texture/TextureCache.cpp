@@ -1,5 +1,6 @@
 #include "TextureCache.hpp"
 
+#include <algorithm>
 #include "core/logging/Logger.hpp"
 #include "TextureStatus.hpp"
 
@@ -7,12 +8,10 @@
 bool TextureCache::initialize(Logger* _loggerPtr) {
     
     loggerPtr = _loggerPtr;
+    std::vector<std::string> missingTexturePaths(6, "../assets/textures/missingTexture.png");
 
-    defaultTexture = std::make_unique<Texture2D>(Texture2D("../assets/textures/default.jpeg"));
-    // defaultTexture = std::make_unique<Texture2D>(Texture2D("../assets/textures/water.png", TEX_DIFFUSE, loggerPtr));
-    // if (defaultTexture->isValid() == false) {
-    //     return false;
-    // }
+    missingTexture2D = std::make_unique<Texture2D>(Texture2D(missingTexturePaths[0]));
+    missingCubemap = std::make_unique<CubeMap>(CubeMap(missingTexturePaths));
     
     return true;
 }
@@ -21,10 +20,10 @@ bool TextureCache::initialize(Logger* _loggerPtr) {
 TextureCache::TextureCache() {}
 
 
-unsigned int TextureCache::createTexture2D(std::string texture2D_path) {
+unsigned int TextureCache::createTexture2D(std::filesystem::path texture2D_path) {
     unsigned int newTextureID;
 
-    auto iter = texturePathMap.find(texture2D_path);
+    auto iter = texturePathMap.find(texture2D_path.string());
     if (iter != texturePathMap.end()) {
         iter->second.get()->refCount++;
         newTextureID = iter->second.get()->ID;
@@ -35,33 +34,33 @@ unsigned int TextureCache::createTexture2D(std::string texture2D_path) {
         }
 
         newTextureID = nextTextureID;
-        auto textureInstancePtr = std::make_shared<TextureInstance>(std::make_unique<Texture2D>(texture2D_path), 1, newTextureID);
+        auto textureInstancePtr = std::make_shared<TextureInstance>(std::make_unique<Texture2D>(texture2D_path.string()), 1, newTextureID);
         textureIDMap.emplace(newTextureID, textureInstancePtr);
-        texturePathMap.emplace(texture2D_path, textureInstancePtr);
+        texturePathMap.emplace(texture2D_path.string(), textureInstancePtr);
+        assignName(newTextureID, texture2D_path.filename().string());
         nextTextureID++;
     }
     return newTextureID;
 }
 
 
-unsigned int TextureCache::createCubeMap(std::vector<std::string> texture_paths) {
+unsigned int TextureCache::createCubeMap(std::vector<std::filesystem::path> texture_paths) {
     unsigned int newTextureID;
-
-    // auto iter = texturePathMap.find(cubemap_dir_path);
-    // if (iter != texturePathMap.end()) {
-    //     iter->second.get()->refCount++;
-    //     newTextureID = iter->second.get()->ID;
-    // }
-    
     if (validateNextID() == false) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "createTexture2D", "could not validate nextMaterialInstanceID");
         return std::numeric_limits<unsigned int>::max();
     }
 
+    std::vector<std::string> paths_str(texture_paths.size());
+    std::transform(texture_paths.begin(), texture_paths.end(), paths_str.begin(), 
+        [](const std::filesystem::path& path) {
+            return path.string();
+        });
+
     newTextureID = nextTextureID;
-    auto textureInstancePtr = std::make_shared<TextureInstance>(std::make_unique<CubeMap>(texture_paths), 1, newTextureID);
+    auto textureInstancePtr = std::make_shared<TextureInstance>(std::make_unique<CubeMap>(paths_str), 1, newTextureID);
     textureIDMap.emplace(newTextureID, textureInstancePtr);
-    // texturePathMap.emplace(cubemap_dir_path, textureInstancePtr);
+    assignName(newTextureID, "cubemap");
     nextTextureID++;
     
     return newTextureID;
@@ -120,7 +119,7 @@ void TextureCache::bindTexture(unsigned int textureID, unsigned int texUnit) {
 
 
 void TextureCache::bindDefault(unsigned int texUnit) {
-    defaultTexture->bind(texUnit);
+    missingTexture2D->bind(texUnit);
 }
 
 
@@ -145,14 +144,22 @@ bool TextureCache::validateNextID() {
 }
 
 
-std::vector<std::string> TextureCache::getTexturePaths(unsigned int textureID) {
+std::vector<std::filesystem::path> TextureCache::getTexturePaths(unsigned int textureID) {
     if (textureIDMap.contains(textureID) == false) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURECACHE | getTexturePath", "texture not found with ID " + std::to_string(textureID));
-        std::vector<std::string> emptypaths;
+        std::vector<std::filesystem::path> emptypaths;
         return emptypaths;
     }
 
-    return textureIDMap.at(textureID)->texture->paths;
+    std::vector<std::string> paths_str = textureIDMap.at(textureID)->texture->paths;
+    std::vector<std::filesystem::path> texture_paths(paths_str.size());
+    std::transform(paths_str.begin(), paths_str.end(), texture_paths.begin(), 
+        [](const std::string& path) {
+            return std::filesystem::path(path);
+        }
+    );
+
+    return texture_paths;
 }
 
 unsigned int TextureCache::getTextureTexUnit(unsigned int textureID) {
@@ -162,4 +169,38 @@ unsigned int TextureCache::getTextureTexUnit(unsigned int textureID) {
     }
 
     return textureIDMap.at(textureID)->texture->getTexUnit();
+}
+
+
+std::string TextureCache::getName(unsigned int textureID) {
+    if (!textureIDMap.contains(textureID)) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURECACHE | getName", "texture not found with ID " + std::to_string(textureID));
+        return "";
+    }
+
+    return textureIDMap.at(textureID)->texture->getName();
+}
+
+
+bool TextureCache::assignName(unsigned int textureID, std::string name) {
+    bool success = false;
+    if (!textureIDMap.contains(textureID)) {
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "TEXTURECACHE | assignName", "texture not found with ID " + std::to_string(textureID));
+        return success;
+    }
+
+    int maxAttempts = 100;
+    std::string namePostfix = "";
+    int postfix = 1;
+    do {
+        if (!allTextureNames.contains(name + namePostfix)) {
+            textureIDMap.at(textureID)->texture->setName(name + namePostfix);
+            allTextureNames.emplace(name + namePostfix);
+            success = true;
+        }
+        namePostfix = std::to_string(postfix++);
+    }
+    while (!success && postfix < maxAttempts);
+    
+    return success;
 }

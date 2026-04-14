@@ -20,14 +20,18 @@ public:
 
     // void setPath(std::string path);
     // const std::string getPath() const;
+    std::string getName() const;
     const unsigned int getTexUnit() const;
     TextureStatus getStatus() const;
+    void setName(std::string);
+    
     
 
 protected:
+    std::string name = "";
     mutable GLuint gl_ID = 0;
     TextureStatus status;
-    unsigned int texUnit;
+    unsigned int texUnit = std::numeric_limits<unsigned int>::max();
     
     virtual void loadToGPU() = 0;
     void unloadFromGPU();  

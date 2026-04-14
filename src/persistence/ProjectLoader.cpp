@@ -17,6 +17,16 @@ using json = nlohmann::json;
 
 int ProjectLoader::version = 1;
 
+namespace std {
+    namespace filesystem {
+
+        inline void from_json(const nlohmann::json& j, path& p) {
+            p = j.get<std::string>();
+        }
+
+    }
+}
+
 namespace {
     struct {
         const char* listLabel = "programs";
@@ -76,11 +86,11 @@ inline void to_json(json& j, const MaterialEntry& materialData) {
 }
 
 
-inline void from_json(const json& j, InstanceData& instData) {
-    instData.pos.x = j.at(0).get<float>();
-    instData.pos.y = j.at(1).get<float>();
-    instData.pos.z = j.at(2).get<float>();
-}
+    inline void from_json(const json& j, InstanceData& instData) {
+        instData.pos.x = j.at(0).get<float>();
+        instData.pos.y = j.at(1).get<float>();
+        instData.pos.z = j.at(2).get<float>();
+    }
 
 inline void from_json(const json& j, ModelEntry& modelData) {
     modelData.name = j.at("name").get<std::string>();
@@ -127,7 +137,7 @@ inline void from_json(const json& j, MaterialEntry& materialData) {
     materialData.type = static_cast<MaterialType>(j.at("type").get<int>());
 
     materialData.properties = j.at("properties").get<MaterialProperties>();
-    materialData.texture_paths = j.at("texture_paths").get<std::vector<std::vector<std::string>>>();
+    materialData.texture_paths = j.at("texture_paths").get<std::vector<std::vector<std::filesystem::path>>>();
     materialData.programName = j.at("programName").get<std::string>();
 }
 

@@ -111,7 +111,7 @@ void MaterialCache::deleteMaterial(unsigned int materialID) {
 }
 
 
-void MaterialCache::addTexture2DToMaterial(unsigned int materialID, std::string texture_path) {
+void MaterialCache::addTexture2DToMaterial(unsigned int materialID, std::filesystem::path texture_path) {
     Material* foundMaterial = getMaterial(materialID);
     if (foundMaterial == nullptr) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "addTextureToMaterial", "materialID out of bounds: ", std::to_string(materialID));
@@ -123,7 +123,7 @@ void MaterialCache::addTexture2DToMaterial(unsigned int materialID, std::string 
 }
 
 
-void MaterialCache::addCubemapToMaterial(unsigned int materialID, std::vector<std::string> texture_paths) {
+void MaterialCache::addCubemapToMaterial(unsigned int materialID, std::vector<std::filesystem::path> texture_paths) {
     Material* foundMaterial = getMaterial(materialID);
     if (foundMaterial == nullptr) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "addTextureToMaterial", "materialID out of bounds: ", std::to_string(materialID));
@@ -221,7 +221,7 @@ void MaterialCache::changeMaterialProgram(unsigned int materialID, unsigned int 
 }
 
 
-bool MaterialCache::loadMaterialFromSave(unsigned int materialID, MaterialType type, MaterialProperties properties, std::vector<std::vector<std::string>> texture_paths) {
+bool MaterialCache::loadMaterialFromSave(unsigned int materialID, MaterialType type, MaterialProperties properties, std::vector<std::vector<std::filesystem::path>> texture_paths) {
     if (materialIDMap.contains(materialID)) {
         loggerPtr->addLog(LogLevel::LOG_ERROR, "MATERIALCACHE | loadMaterialsFromSave", "reservation failed. material already exists with ID " + std::to_string(materialID));
         return false;
@@ -282,12 +282,12 @@ const std::unordered_map<unsigned int, std::unique_ptr<Material>>& MaterialCache
 }
 
 
-std::vector<std::vector<std::string>> MaterialCache::getAllTexturePathsForMaterial(unsigned int materialID) {
+std::vector<std::vector<std::filesystem::path>> MaterialCache::getAllTexturePathsForMaterial(unsigned int materialID) {
     Material* material = getMaterial(materialID);
     if (material == nullptr) {
-        loggerPtr->addLog(LogLevel::LOG_ERROR, "MATERIALCACHE | getAllTExturePathsForMaterial", "material not found with ID " + std::to_string(materialID));
+        loggerPtr->addLog(LogLevel::LOG_ERROR, "MATERIALCACHE | getAllTexturePathsForMaterial", "material not found with ID " + std::to_string(materialID));
     }
-    std::vector<std::vector<std::string>> texturePaths;
+    std::vector<std::vector<std::filesystem::path>> texturePaths;
     for (unsigned int textureID : material->getMaterialTextureIDs()) {
         texturePaths.push_back(textureCachePtr->getTexturePaths(textureID));
     }
@@ -336,9 +336,10 @@ std::vector<std::pair<std::string, unsigned int>> MaterialCache::getTextureNames
         loggerPtr->addLog(LogLevel::WARNING, "MATERIALCACHE::getTextureNamesAndUnits", "material not found with ID " + std::to_string(materialID));
         return data; //empty
     }
-
-    for (unsigned int textureID : foundMaterial->getMaterialTextureIDs()) {
-        data.emplace_back("name", textureCachePtr->getTextureTexUnit(textureID));
+    std::vector<unsigned int> textureIDs = foundMaterial->getMaterialTextureIDs();
+    for (int idx = 0; idx < textureIDs.size(); idx++) {
+        data.emplace_back(textureCachePtr->getName(textureIDs[idx]), idx);
     }
+
     return data;
 }
